@@ -5,9 +5,9 @@ WaveSyn is a platform for testing and evaluating radar waveform synthesis algori
 
 Pattern synthesis for MIMO radars
 -------
-This work is based on the theory provided in [Waveform Synthesis for Diversity-Based Transmit Beampattern Design](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?tp=&arnumber=4524058&queryText%3D%E2%80%9CWaveform+synthesis+for+diversity-basedtransmit+beampattern+design%2C). For co-located MIMO radars, to synthesize a beampattern which is close to an ideal beampattern, one should synthesize a correlation matrix R at first. This application can help the users to generate a optimized correlation matrix based on a given ideal beampattern. 
-![github](https://github.com/xialulee/WaveSyn/blob/1b7866c7df1dfcb73dea6376d118990d58116ad2/doc/PatternFitting-Snapshot.png "github")
-As shown above, one can simply enter the parameters of the ideal pattern, and after click the "solve" button, the application will solve the semidefinite quadratic programming problem behind the scene. The users can export the generated correlation matrix as Matlab .mat data file or Excel data sheet. 
+This work is based on the theory provided in [Waveform Synthesis for Diversity-Based Transmit Beampattern Design](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?tp=&arnumber=4524058&queryText%3D%E2%80%9CWaveform+synthesis+for+diversity-basedtransmit+beampattern+design%2C). For co-located MIMO radars, to synthesize a beampattern which is close to an ideal beampattern, one should synthesize a correlation matrix R at first. This application can help the users to generate an optimized correlation matrix based on a given ideal beampattern. 
+![github](https://github.com/xialulee/WaveSyn/blob/1b7866c7df1dfcb73dea6376d118990d58116ad2/doc/PatternFitting-Snapshot.png?raw=true "github")
+As shown above, one can simply enter the parameters of the ideal pattern, and after click the "solve" button, the application will solve the semidefinite quadratic programming problem behind the scene. The users can export the generated correlation matrix as Matlab .mat data file or Excel data sheet. The code used in WaveSyn for solving the optimization problem is originally written by Tao Zhang who is a work mate of Feng-cong Li.
 
 Waveform synthesis for SISO and MIMO radars
 -------
