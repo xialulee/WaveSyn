@@ -12,3 +12,13 @@ As shown above, one can simply enter the parameters of the ideal pattern, and af
 Waveform synthesis for SISO and MIMO radars
 -------
 Though this functionalities have already been implemented, they still have some problems for general usage. Thus we did not publish the corresponding source code. We will upload the code the first time we solved the problems. 
+
+Features of WaveSyn
+-------
+WaveSyn have some features to make your work easier. These features includes a multimedia console, a help system which is very helpful, and a scripting system which can prevent you from clicking the mouse and stroking the keyboard thousands of times.
+###The multimedia console of WaveSyn
+The console window is the first window appears on the screen after WaveSyn is launched. This console displays all of the meaning messages including stdout, stderr, command history, error messages, and embedded multimedia help & information.
+![](https://github.com/xialulee/WaveSyn/raw/master/doc/images/Features-Console-Snapshot1.PNG "Console window of WaveSyn")<br/>
+
+###The scripting system
+The scripting system helps you to automate WaveSyn. To help you write your own script, WaveSyn is obliging and prints the corresponding commands in the console for most GUI operations, and these printed commands can help you to figure out the object model of WaveSyn. 
