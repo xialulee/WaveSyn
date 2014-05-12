@@ -1370,9 +1370,7 @@ You can extract the data in Matlab using the following command:'''.format(filena
 (Click the underlined Matlab command and copy it to the clipboard)'''}
         ]
         self._app.printTip(tip)
-        #########################################
-        #self.__topwin.figureBook.exportMatlabScript()
-        #########################################
+
         
         
         
@@ -1381,8 +1379,15 @@ class PatternFigureExportGroup(Group):
         self._app   = Application.instance
         self.__topwin   = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
-        Button(self, text='Matlab Script', command=self.onExportMatlabScript).pack(side=TOP, fill=Y)
+        self.__uiImages = []
+        imageFigureExportBtn   = ImageTk.PhotoImage(file='Pattern_ExportFigure_Button.png')    
+        self.__uiImages.append(imageFigureExportBtn)
+        frm = Frame(self); frm.pack(side=LEFT)
+        Button(frm, image=imageFigureExportBtn, command=self.onExportMatlabScript).pack(side=TOP)
+        Button(frm, text='Script', command=self.onExportMatlabScript, width=6).pack(side=TOP)
+        
         self.name   = 'Figure'
+        
 
     def onExportMatlabScript(self):
         filename    = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
