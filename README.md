@@ -17,7 +17,7 @@ Features of WaveSyn
 -------
 WaveSyn have some features to make your work easier. These features includes a multimedia console, a help system which is very helpful, and a scripting system which can prevent you from clicking the mouse and stroking the keyboard thousands of times.
 ###The multimedia console of WaveSyn
-The console window is the first window appears on the screen after WaveSyn is launched. This console displays all of the meaning messages including stdout, stderr, command history, error messages, and embedded multimedia help & information.
+The console window is the first window appears on the screen after WaveSyn is launched. This console displays all of the meaningful messages including stdout, stderr, command history, error messages, and embedded multimedia help & information.
 ![](https://github.com/xialulee/WaveSyn/raw/master/doc/images/Features-Console-Snapshot1.PNG "Console window of WaveSyn")<br/>
 
 ###The scripting system
