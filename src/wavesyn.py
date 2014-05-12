@@ -7,7 +7,6 @@ Created on Fri May 02 15:48:27 2014
 from __future__ import division
 from __future__ import print_function
 
-from datetime import datetime
 
 def dependenciesForMyprogram():
     '''This function is used to solve the bugs of py2exe'''
@@ -40,8 +39,9 @@ import matplotlib.pyplot as pyplot
 from numpy import *
 from scipy.io import savemat
 
-
 from functools import partial
+from datetime import datetime
+import webbrowser
 
 #import guitools
 from guicomponents import Group, ConsoleText, TaskbarIcon, ParamItem
@@ -255,6 +255,7 @@ since the instance of Application is the first node created on the model tree.''
         ModelNode.__init__(self, nodeName=Scripting.rootName, isRoot=True)
         Scripting.nameSpace['locals'][Scripting.rootName]    = self
         Scripting.nameSpace['globals']  = globals()
+        self.homePage   = 'https://github.com/xialulee/WaveSyn'
 
         root    = Tix.Tk()
         self.__root = root
@@ -370,6 +371,10 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         self.printTip('{0} is closed, and its ID becomes defunct for scripting system hereafter.'\
             .format(win.nodePath))
         self.window.pop(id(win))
+        
+        
+    def openHomePage(self):
+        webbrowser.open(self.homePage, new=1, autoraise=True)
              
                     
     def mainloop(self):
@@ -693,7 +698,7 @@ Have a nice day.
         txtStdOutErr.pack(expand=YES, fill=BOTH)
         
         entCommand      = Entry(root)
-        entCommand.pack(expand=YES, fill=X) 
+        entCommand.pack(fill=X) 
         def onReturn(event):
             code    = entCommand.get()
             self.write(code+'\n', 'HISTORY')
@@ -721,6 +726,16 @@ Have a nice day.
             {
                 'Name':'Console',   'TearOff':0,    'UnderLine':0,  'SubMenu':[
                     {'Name':'Clear',    'UnderLine':0,  'Command':lambda: self.callMethod('clear')}
+                ]
+            },
+            {
+                'Name':'Script',    'TearOff':0,    'UnderLine':0,  'SubMenu':[
+                    {'Name':'Load and Run script file', 'UnderLine':0,  'Command':lambda: 0}
+                ]
+            },
+            {
+                'Name':'Help',  'TearOff':0,    'UnderLine':0,  'SubMenu':[
+                    {'Name':'Home Page',    'UnderLine':0,  'Command':lambda: app.callMethod('openHomePage')}
                 ]
             }
         
