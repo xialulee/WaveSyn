@@ -16,15 +16,15 @@ def dependenciesForMyprogram():
 import threading
 
 import sys
-REALSTDOUT  = sys.stdout
-REALSTDERR  = sys.stderr
+REALSTDOUT = sys.stdout
+REALSTDERR = sys.stderr
 
 from Tkinter import *
 from ttk import *
 import Tix
 from Tkinter import Frame, PanedWindow
 from tkColorChooser import askcolor
-from tkFileDialog   import askopenfilename, asksaveasfilename
+from tkFileDialog import askopenfilename, asksaveasfilename
 
 from PIL import Image, ImageTk
 
@@ -35,7 +35,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import matplotlib.pyplot as pyplot
 
-#import numpy
+
 from numpy import *
 from scipy.io import savemat
 
@@ -43,7 +43,7 @@ from functools import partial
 from datetime import datetime
 import webbrowser
 
-#import guitools
+
 from guicomponents import Group, ConsoleText, TaskbarIcon, ParamItem
 import guicomponents
 
@@ -73,22 +73,22 @@ class ModelNode(object):
     '''This class defines the node of the model tree of this application.
 The model tree is illustrated as follows:
 wavesyn
-    -console
-    -clipboard
-    -window[id]
-        -instance of PatternFitting
-            -figureBook
-        -instance of SingleSyn
-            -figureBook
-        -instance of MIMOSyn
-            -figureBook
-    ''' 
+-console
+-clipboard
+-window[id]
+-instance of PatternFitting
+-figureBook
+-instance of SingleSyn
+-figureBook
+-instance of MIMOSyn
+-figureBook
+'''
     def __init__(self, nodeName='', isRoot=False):
         if '_attributeLock' not in self.__dict__:
             object.__setattr__(self, '_attributeLock', set())
-        self.parentNode   = None
-        self.__isRoot       = isRoot
-        self.nodeName     = nodeName
+        self.parentNode = None
+        self.__isRoot = isRoot
+        self.nodeName = nodeName
         
     def lockAttribute(self, attrName):
         self._attributeLock.add(attrName)
@@ -104,7 +104,7 @@ wavesyn
         if key in self._attributeLock:
             raise AttributeError, 'Attribute "{0}" is not changable.'.format(key)
         if isinstance(val, ModelNode) and not val.isRoot and val.parentNode==None:
-            val.nodeName    = val.nodeName if val.nodeName else key
+            val.nodeName = val.nodeName if val.nodeName else key
             object.__setattr__(val, 'parentNode', self)
             val.lockAttribute('parentNode')
         object.__setattr__(self, key, val)
@@ -121,14 +121,14 @@ wavesyn
     '''This class is a mixin class, which helps the system to evaluate and print command on the console.
 A mixin class does not have a __init__ method.'''
     def callMethod(self, name, *args, **kwargs):
-        strParams   = Scripting.paramsToStr(*args, **kwargs)
-        Application.instance.printAndEval(self.nodePath+'.{0}({1})'.format(name, strParams))        
+        strParams = Scripting.paramsToStr(*args, **kwargs)
+        Application.instance.printAndEval(self.nodePath+'.{0}({1})'.format(name, strParams))
         
     def callMethodAndPrintDoc(self, name, *args, **kwargs):
         self.callMethod(name, *args, **kwargs)
         doc = Application.instance.eval(self.nodePath+'.{0}.__doc__'.format(name))
-        Application.instance.printTip(doc)        
-# End Object Model        
+        Application.instance.printTip(doc)
+# End Object Model
         
         
         
@@ -143,21 +143,21 @@ class NodeHub(ModelNode, dict):
         if key != id(val):
             raise ValueError, 'The key should be identical to the ID of the window.'
         object.__setattr__(val, 'parentNode', self)
-        val.lockAttribute('parentNode')            
+        val.lockAttribute('parentNode')
         dict.__setitem__(self, key, val)
         
     def add(self, node):
-        self[id(node)]  = node
+        self[id(node)] = node
         return id(node)
         
 # Scripting Sub-System
 class ScriptCode(object):
     def __init__(self, code):
-        self.code   = code
+        self.code = code
         
 class Scripting(ModelNode):
-    rootName    = 'wavesyn' # The name of the object model tree's root  
-    nameSpace   = {'locals':{}, 'globals':{}}
+    rootName = 'wavesyn' # The name of the object model tree's root
+    nameSpace = {'locals':{}, 'globals':{}}
     
     @staticmethod
     def paramsToStr(*args, **kwargs):
@@ -172,13 +172,13 @@ class Scripting(ModelNode):
                 return str(param)
                 
         strArgs = ', '.join([paramToStr(arg) for arg in args]) if args else ''
-        strKwargs   = ', '.join(['{0}={1}'.format(key, paramToStr(kwargs[key])) for key in kwargs]) \
+        strKwargs = ', '.join(['{0}={1}'.format(key, paramToStr(kwargs[key])) for key in kwargs]) \
             if kwargs else ''
             
         if strArgs and strKwargs:
-            params  = ', '.join((strArgs, strKwargs))
+            params = ', '.join((strArgs, strKwargs))
         else:
-            params  = strArgs if strArgs else strKwargs
+            params = strArgs if strArgs else strKwargs
         return params
         
     def __init__(self, rootNode):
@@ -188,10 +188,10 @@ class Scripting(ModelNode):
         
     def execute(self, code):
         if isinstance(code, ScriptCode):
-            code    = code.code
+            code = code.code
         if not code.strip():
-            code    = '\n'.join(self.__codeList)
-            self.__codeList = []           
+            code = '\n'.join(self.__codeList)
+            self.__codeList = []
         if code.strip()[-1] == ':' or self.__codeList:
             self.__codeList.append(code)
             return
@@ -204,7 +204,7 @@ class Scripting(ModelNode):
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
         
-# End Scripting Sub-System            
+# End Scripting Sub-System
         
         
 class MenuMaker(object):
@@ -215,7 +215,7 @@ A mixin class does not have a __init__ method.'''
         win = app.root
         def make(top, tree):
             for topItem in tree:
-                if 'Command' in topItem:            
+                if 'Command' in topItem:
                     top.add_command(label=topItem['Name'], command=topItem['Command'], underline=topItem['UnderLine'])
                 else:
                     tearoff = 1 if 'TearOff' not in topItem else topItem['TearOff']
@@ -237,68 +237,65 @@ class Singleton(type):
         if hasattr(self, 'instance'):
             return self.instance
         else:
-            self.instance   = object.__new__(self)
+            self.instance = object.__new__(self)
             # In this circumstance, the __init__ should be called explicitly.
             self.__init__(self.instance, *args, **kwargs)
-            return self.instance    
+            return self.instance
 
 class Application(ModelNode):
-    '''This class is the root of the model tree. 
+    '''This class is the root of the model tree.
 In the scripting system, it is named as "wavesyn" (case sensitive).
 It also manages the whole application and provide services for other components.
 For other nodes on the model tree, the instance of Application can be accessed by Application.instance,
 since the instance of Application is the first node created on the model tree.'''
-    __metaclass__   = Singleton
+    __metaclass__ = Singleton
     ''' '''
     def __init__(self):
         # The instance of this class is the root of the model tree. Thus isRoot is set to True
         ModelNode.__init__(self, nodeName=Scripting.rootName, isRoot=True)
-        Scripting.nameSpace['locals'][Scripting.rootName]    = self
-        Scripting.nameSpace['globals']  = globals()
-        self.homePage   = 'https://github.com/xialulee/WaveSyn'
+        Scripting.nameSpace['locals'][Scripting.rootName] = self
+        Scripting.nameSpace['globals'] = globals()
+        self.homePage = 'https://github.com/xialulee/WaveSyn'
 
-        root    = Tix.Tk()
+        root = Tix.Tk()
         self.__root = root
         
-        self.__balloon  = Tix.Balloon(root)
-        self.__tbicon   = TaskbarIcon(root)
+        self.__balloon = Tix.Balloon(root)
+        self.__tbicon = TaskbarIcon(root)
         
         # Validation Functions
-        self.__checkInt =  (root.register(partial(checkValue, func=int)), 
+        self.__checkInt = (root.register(partial(checkValue, func=int)),
                 '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.__checkFloat  = (root.register(partial(checkValue, func=float)), 
+        self.__checkFloat = (root.register(partial(checkValue, func=float)),
                 '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.__checkPositiveFloat   = (root.register(checkPositiveFloat),
-                   '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W') 
+        self.__checkPositiveFloat = (root.register(checkPositiveFloat),
+                   '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
         # End Validation Functions
                
-        self.window  = NodeHub()           
+        self.window = NodeHub()
         
         frm = Frame(root)
-        frm.pack(side=TOP, fill=X)        
+        frm.pack(side=TOP, fill=X)
                   
-        self.console  = ConsoleWindow()
-        self.clipboard  = Clipboard()
-        self.scripting  = Scripting(self)        
-        self.noTip  = False
+        self.console = ConsoleWindow()
+        self.clipboard = Clipboard()
+        self.scripting = Scripting(self)
+        self.noTip = False
 
     def newSingleWin(self):
-#        newwin  = SingleWindow(self)
-#        self.window[id(newwin)]    = newwin
-#        return id(newwin)
+# newwin = SingleWindow(self)
+# self.window[id(newwin)] = newwin
+# return id(newwin)
         print('Not Implemented.', file=sys.stderr)
         
     def newMIMOWin(self):
         print('Not Implemented.', file=sys.stderr)
         
     def newPatternWin(self):
-        '''This method creates a new PatternFitting window. 
+        '''This method creates a new PatternFitting window.
 Its return value is the ID of the new window.
-You can access the created window using its ID in the scripting system. 
+You can access the created window using its ID in the scripting system.
 A PatternWindow can synthesize a correlation matrix of which the beam pattern fits the given ideal pattern best.'''
-        #newwin  = PatternWindow()
-        #self.window[id(newwin)]    = newwin # addWindow method, return id, set key-value pair automatically.
-        #return id(newwin)
         return self.window.add(node=PatternWindow())
 
      
@@ -331,8 +328,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         
         
     def printAndEval(self, expr):
-        self.console.write(expr+'\n', 'HISTORY')        
-        #ret = eval(expr, {self.nodePath:self, 'numpy':numpy})        
+        self.console.write(expr+'\n', 'HISTORY')
         ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
         if ret != None:
             self.console.write(str(ret)+'\n', 'RETVAL')
@@ -352,9 +348,9 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
                 self.console.write(''.join((item['content'],'\n')), 'TIP')
             elif item['type'] == 'link':
                 command = item['command']
-                tagName = 'link' + str(id(command))                
+                tagName = 'link' + str(id(command))
                 self.console.write(item['content'], tagName)
-                r, c  = self.console.text.index(END).split('.')
+                r, c = self.console.text.index(END).split('.')
                 self.console.text.tag_config(tagName, underline=1, foreground='blue')
                 self.console.text.tag_bind(tagName, '<Button-1>', command) # href implementation
                 self.console.text.tag_bind(tagName, '<Enter>', lambda dumb: self.console.text.config(cursor='hand2'))
@@ -382,7 +378,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         
         
 
-class Clipboard(ModelNode): 
+class Clipboard(ModelNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
        
@@ -390,18 +386,18 @@ class Clipboard(ModelNode):
         Application.instance.root.clipboard_clear()
     
     def append(self, content):
-        Application.instance.root.clipboard_append(content)        
+        Application.instance.root.clipboard_append(content)
         
         
         
-colorMap   = {
-    'c':    'cyan',
-    'm':    'magenta',
-    'y':    'yellow',
-    'k':    'black',
-    'r':    'red',
-    'g':    'forestgreen',
-    'b':    'blue'
+colorMap = {
+    'c': 'cyan',
+    'm': 'magenta',
+    'y': 'yellow',
+    'k': 'black',
+    'r': 'red',
+    'g': 'forestgreen',
+    'b': 'blue'
 }
 
 
@@ -409,15 +405,15 @@ colorMap   = {
 class ScrolledList(Frame, object):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
-        sbar    = Scrollbar(self)
-        list    = Listbox(self)
+        sbar = Scrollbar(self)
+        list = Listbox(self)
         sbar.config(command=list.yview)
         list.config(yscrollcommand=sbar.set)
         sbar.pack(side=RIGHT, fill=Y)
         list.pack(side=LEFT, expand=YES, fill=BOTH)
         list.bind('<<ListboxSelect>>', self.onListboxClick)
         
-        self.__listClick  = None
+        self.__listClick = None
         self.__list = list
         self.__sbar = sbar
         
@@ -434,7 +430,7 @@ class ScrolledList(Frame, object):
         return self.__list.insert(*args, **kwargs)
         
     def itemConfig(self, *args, **kwargs):
-        return self.__list.itemconfig(*args, **kwargs)        
+        return self.__list.itemconfig(*args, **kwargs)
 
     def clear(self):
         self.__list.delete(0, END)
@@ -450,33 +446,32 @@ class ScrolledList(Frame, object):
     def listClick(self, val):
         if not callable(val):
             raise TypeError
-        self.__listClick    = val
+        self.__listClick = val
 
-    def onListboxClick(self, event):        
-        index   = self.__list.curselection()
+    def onListboxClick(self, event):
+        index = self.__list.curselection()
         if len(index) > 0:
-            index   = index[0]
-            #print index
-            label   = self.__list.get(index)
+            index = index[0]
+            label = self.__list.get(index)
             if self.listClick:
-                self.listClick(index, label)  
+                self.listClick(index, label)
   
   
 
 class DataFigure(object):
     def __init__(self, master, figsize=(5,4), dpi=100, polar=False):
-        self.__fig  = Figure(figsize, dpi)
-        canvas  = FigureCanvasTkAgg(self.__fig, master=master)
+        self.__fig = Figure(figsize, dpi)
+        canvas = FigureCanvasTkAgg(self.__fig, master=master)
         canvas.show()
         canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=YES)
-        self.__canvas   = canvas
+        self.__canvas = canvas
         toolbar = NavigationToolbar2TkAgg(canvas, master)
         toolbar.update()
         toolbar.pack()
         self.__lineObjects = []
         self.__axes = self.__fig.add_subplot(111, polar=polar)
-        self.__polar    = polar
-        self.plotFunction   = None
+        self.__polar = polar
+        self.plotFunction = None
         
     @property
     def figure(self):
@@ -495,85 +490,85 @@ class DataFigure(object):
         return self.__lineObjects
         
     def plot(self, *args, **kwargs):
-        lineObject  = self.__axes.plot(*args, **kwargs)
+        lineObject = self.__axes.plot(*args, **kwargs)
         self.__lineObjects.append(lineObject)
         self.update()
-        self.update_axispanel()  
+        self.update_axispanel()
         
 
         
-    def update(self):        
+    def update(self):
         self.__canvas.show()
 
     def update_axispanel(self):
         pass
         #Temprorily disabled
-#        if self.axispanel:
-#            ap  = self.axispanel
-#            ap.xlim = self.__axes.get_xlim()
-#            ap.ylim = self.__axes.get_ylim()
+# if self.axispanel:
+# ap = self.axispanel
+# ap.xlim = self.__axes.get_xlim()
+# ap.ylim = self.__axes.get_ylim()
 #
-#            attr_func    = {
-#                'major_xtick':  self.__axes.xaxis.get_major_locator,
-#                'major_ytick':  self.__axes.yaxis.get_major_locator,
-#                'minor_xtick':  self.__axes.xaxis.get_minor_locator,
-#                'minor_ytick':  self.__axes.yaxis.get_minor_locator
-#            }
-#            for attr in attr_func:
-#                tick    = attr_func[attr]()()
-#                if len(tick) >= 2:
-#                    tick    = tick[1] - tick[0]
-#                    setattr(ap, attr, tick)   
-#    def plot_acorr(self, s, db=True, unif=True):
-#        color_map   = {
-#            'c':    'cyan',
-#            'm':    'magenta',
-#            'y':    'yellow',
-#            'k':    'black',
-#            'r':    'red',
-#            'g':    'green',
-#            'b':    'blue'
-#        }
-#        ac  = abs(convolve(s, conj(s[::-1])))
-#        if unif:
-#            ac /= max(ac)
-#        if db:
-#            ac  = 20*log10(ac)
-#        N   = len(s)
-#        lineobj = self.__axes.plot(r_[(-N+1):N], ac)[0]
-#        ######################################################
-#        #print pyplot.getp(lineobj, 'color')
-#        ######################################################
-#        self.__meta_of_lines.append(LineMeta(s, 'acorr', ac, lineobj))
-#        pos = len(self.__meta_of_lines) - 1
-#        self.__slist.list.insert(pos, 'acorr of s{0}'.format(pos))
-#        line_color  = pyplot.getp(lineobj, 'color')
-#        self.__slist.list.itemconfig(pos, fg=color_map[line_color], bg='gray')
-#        self.update()
-#        self.update_axispanel()
+# attr_func = {
+# 'major_xtick': self.__axes.xaxis.get_major_locator,
+# 'major_ytick': self.__axes.yaxis.get_major_locator,
+# 'minor_xtick': self.__axes.xaxis.get_minor_locator,
+# 'minor_ytick': self.__axes.yaxis.get_minor_locator
+# }
+# for attr in attr_func:
+# tick = attr_func[attr]()()
+# if len(tick) >= 2:
+# tick = tick[1] - tick[0]
+# setattr(ap, attr, tick)
+# def plot_acorr(self, s, db=True, unif=True):
+# color_map = {
+# 'c': 'cyan',
+# 'm': 'magenta',
+# 'y': 'yellow',
+# 'k': 'black',
+# 'r': 'red',
+# 'g': 'green',
+# 'b': 'blue'
+# }
+# ac = abs(convolve(s, conj(s[::-1])))
+# if unif:
+# ac /= max(ac)
+# if db:
+# ac = 20*log10(ac)
+# N = len(s)
+# lineobj = self.__axes.plot(r_[(-N+1):N], ac)[0]
+# ######################################################
+# #print pyplot.getp(lineobj, 'color')
+# ######################################################
+# self.__meta_of_lines.append(LineMeta(s, 'acorr', ac, lineobj))
+# pos = len(self.__meta_of_lines) - 1
+# self.__slist.list.insert(pos, 'acorr of s{0}'.format(pos))
+# line_color = pyplot.getp(lineobj, 'color')
+# self.__slist.list.itemconfig(pos, fg=color_map[line_color], bg='gray')
+# self.update()
+# self.update_axispanel()
 
 
     def clear(self):
         self.__axes.clear()
-        self.__lineObjects    = []
+        self.__lineObjects = []
         #self.__list.clear()
         self.update()
-#        if self.gridpanel:
-#            self.gridpanel.major = 0
-#            self.gridpanel.minor = 0
+# if self.gridpanel:
+# self.gridpanel.major = 0
+# self.gridpanel.minor = 0
 
-#    def remove_sel_line(self):
-#        sel = self.__slist.list.curselection()
-#        if len(sel) > 0:
-#            sel = int(sel[0])
-#            linemeta    = self.__meta_of_lines[sel]
-#            linemeta.lineobj.remove()
-#            self.__slist.list.delete(ANCHOR)
-#            del self.__meta_of_lines[sel]
-#            self.update()
+# def remove_sel_line(self):
+# sel = self.__slist.list.curselection()
+# if len(sel) > 0:
+# sel = int(sel[0])
+# linemeta = self.__meta_of_lines[sel]
+# linemeta.lineobj.remove()
+# self.__slist.list.delete(ANCHOR)
+# del self.__meta_of_lines[sel]
+# self.update()
             
     def deleteLine(self, idx):
-        lineObject    = self.__lineObjects[idx]
+        lineObject = self.__lineObjects[idx]
         lineObject.remove()
         del self.__lineObjects[idx]
 
@@ -581,8 +576,8 @@ class DataFigure(object):
         sel = self.__slist.list.curselection()
         if len(sel) > 0:
             sel = int(sel[0])
-            linemeta    = self.__meta_of_lines[sel]
-            k   = 0
+            linemeta = self.__meta_of_lines[sel]
+            k = 0
             for idx in range(len(self.__meta_of_lines)):
                 if self.__meta_of_lines[k] != linemeta:
                     self.__meta_of_lines[k].lineobj.remove()
@@ -590,24 +585,24 @@ class DataFigure(object):
                     del self.__meta_of_lines[0]
                     self.update()
                 else:
-                    k += 1        
+                    k += 1
         
 
 
 class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
     def __init__(self, *args, **kwargs):
-        ModelNode.__init__(self)        
+        ModelNode.__init__(self)
         figureMeta = kwargs.pop('figureMeta')
-        kwargs['orient']    = HORIZONTAL
+        kwargs['orient'] = HORIZONTAL
         PanedWindow.__init__(self, *args, **kwargs)
 
-        self['sashwidth']   = 4
-        self['sashrelief']  = GROOVE
-        self['bg']          = 'forestgreen'
+        self['sashwidth'] = 4
+        self['sashrelief'] = GROOVE
+        self['bg'] = 'forestgreen'
         
-        self.__figures  = []
+        self.__figures = []
         
-        tabpages    = Notebook(self)
+        tabpages = Notebook(self)
         for meta in figureMeta:
             frm = Frame(tabpages)
             fig = DataFigure(frm, polar=meta['polar'])
@@ -617,9 +612,9 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
         self.add(tabpages, stretch='always')
         
         self.__list = ScrolledList(self, relief=GROOVE)
-        #self.__list.list['width']   = 20
+        #self.__list.list['width'] = 20
         self.__list.listConfig(width=20)
-        self.__list.listClick   = self.onListClick
+        self.__list.listClick = self.onListClick
         self.add(self.__list, stretch='never')
         
     @property
@@ -628,9 +623,9 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
         
     def plot(self, *args, **kwargs):
         try:
-            curveName   = kwargs.pop('curveName')
+            curveName = kwargs.pop('curveName')
         except KeyError:
-            curveName   = 'curve'
+            curveName = 'curve'
         for fig in self.__figures:
             fig.plotFunction(*args, **kwargs)
         self.__list.insert(END, curveName)
@@ -644,13 +639,13 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
         
         
     def onListClick(self, index, label):
-#            index   = int(index)
-#            for linemeta in self.__meta_of_lines:
-#                pyplot.setp(linemeta.lineobj, linewidth=1)
-#            print 'set width'
-#            pyplot.setp(self.__meta_of_lines[index].lineobj, 'linewidth', 3)
-#            self.update()      
-        index   = int(index)   
+# index = int(index)
+# for linemeta in self.__meta_of_lines:
+# pyplot.setp(linemeta.lineobj, linewidth=1)
+# print 'set width'
+# pyplot.setp(self.__meta_of_lines[index].lineobj, 'linewidth', 3)
+# self.update()
+        index = int(index)
 
         for figure in self.__figures:
             for line in figure.lineObjects:
@@ -658,20 +653,20 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
             pyplot.setp(figure.lineObjects[index], linewidth=2)
             figure.update()
             
-    def exportMatlabScript(self, filename='d:/test.m'):
+    def exportMatlabScript(self, filename):
         with open(filename, 'w') as file:
             pass
             for figure in self.__figures:
-                print('%Generated by WaveSyn.', 
+                print('%Generated by WaveSyn.',
                       'figure;', sep = '\n',
                       file=file)
                 for line in figure.lineObjects:
-                    params  = {}
+                    params = {}
                     for name in ('xdata', 'ydata', 'color'):
-                        params[name]    = pyplot.getp(line[0], name)
-                    params['func']      = 'polar' if figure.polar else 'plot'
-                    params['xdata']     = ','.join((str(i) for i in params['xdata']))
-                    params['ydata']     = ','.join((str(i) for i in params['ydata']))
+                        params[name] = pyplot.getp(line[0], name)
+                    params['func'] = 'polar' if figure.polar else 'plot'
+                    params['xdata'] = ','.join((str(i) for i in params['xdata']))
+                    params['ydata'] = ','.join((str(i) for i in params['ydata']))
                     print("{func}([{xdata}], [{ydata}], '{color}');hold on".format(**params), file=file)
                 
         
@@ -682,7 +677,7 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
         
         
 class ConsoleWindow(MenuMaker, ModelNode):
-    strWelcome  = '''Good {0}, dear user(s). Welcome to WaveSyn!
+    strWelcome = '''Good {0}, dear user(s). Welcome to WaveSyn!
 WaveSyn is a platform for testing and evaluating waveform synthesis algorithms.
 The following modules are imported and all the objects in them can be used directly in the scripting system:
 numpy.
@@ -691,16 +686,16 @@ Have a nice day.
 '''
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
-        app     = Application.instance
-        root    = app.root
+        app = Application.instance
+        root = app.root
         root.title('WaveSyn-Console')
-        txtStdOutErr    = ConsoleText(root)
+        txtStdOutErr = ConsoleText(root)
         txtStdOutErr.pack(expand=YES, fill=BOTH)
         
-        entCommand      = Entry(root)
-        entCommand.pack(fill=X) 
+        entCommand = Entry(root)
+        entCommand.pack(fill=X)
         def onReturn(event):
-            code    = entCommand.get()
+            code = entCommand.get()
             self.write(code+'\n', 'HISTORY')
             entCommand.delete(0, END)
             app.scripting.execute(code)
@@ -708,60 +703,60 @@ Have a nice day.
         
         nowtime = datetime.now().hour
         if nowtime >= 19:
-            greetings   = 'evening'
+            greetings = 'evening'
         elif nowtime >= 12:
-            greetings   = 'afternoon'
+            greetings = 'afternoon'
         else:
-            greetings   = 'morning'
+            greetings = 'morning'
         txtStdOutErr.write(self.strWelcome.format(greetings), 'TIP')
         self.__txtStdOutErr = txtStdOutErr
-        menu    = [
+        menu = [
             {
-                'Name':'Window',   'TearOff':0,    'UnderLine':0,  'SubMenu':[
-                    {'Name':'New SingleSyn Window', 'UnderLine':4,  'Command':lambda: app.callMethod('newSingleWin')},
-                    {'Name':'New MIMOSyn Window',   'UnderLine':4,  'Command':lambda: app.callMethod('newMIMOWin')},
-                    {'Name':'New MIMO PatternFitting Window',   'UnderLine':9, 'Command':lambda: app.callMethodAndPrintDoc('newPatternWin')}
+                'Name':'Window', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
+                    {'Name':'New SingleSyn Window', 'UnderLine':4, 'Command':lambda: app.callMethod('newSingleWin')},
+                    {'Name':'New MIMOSyn Window', 'UnderLine':4, 'Command':lambda: app.callMethod('newMIMOWin')},
+                    {'Name':'New MIMO PatternFitting Window', 'UnderLine':9, 'Command':lambda: app.callMethodAndPrintDoc('newPatternWin')}
                 ]
             },
             {
-                'Name':'Console',   'TearOff':0,    'UnderLine':0,  'SubMenu':[
-                    {'Name':'Clear',    'UnderLine':0,  'Command':lambda: self.callMethod('clear')}
+                'Name':'Console', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
+                    {'Name':'Clear', 'UnderLine':0, 'Command':lambda: self.callMethod('clear')}
                 ]
             },
             {
-                'Name':'Script',    'TearOff':0,    'UnderLine':0,  'SubMenu':[
-                    {'Name':'Load and Run script file', 'UnderLine':0,  'Command':lambda: 0}
+                'Name':'Script', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
+                    {'Name':'Load and Run script file', 'UnderLine':0, 'Command':lambda: 0}
                 ]
             },
             {
-                'Name':'Help',  'TearOff':0,    'UnderLine':0,  'SubMenu':[
-                    {'Name':'Home Page',    'UnderLine':0,  'Command':lambda: app.callMethod('openHomePage')}
+                'Name':'Help', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
+                    {'Name':'Home Page', 'UnderLine':0, 'Command':lambda: app.callMethod('openHomePage')}
                 ]
             }
         
         ]
-        self._makeMenu(menu)   
-        self.__defaultCursor    = self.__txtStdOutErr.text['cursor']
+        self._makeMenu(menu)
+        self.__defaultCursor = self.__txtStdOutErr.text['cursor']
         
     @property
     def defaultCursor(self):
         return self.__defaultCursor
                                                                
-    @property                                                        
-    def text(self):                                                        
+    @property
+    def text(self):
         return self.__txtStdOutErr.text
                                                         
     def write(self, *args, **kwargs):
         self.__txtStdOutErr.write(*args, **kwargs)
         
     def clear(self):
-        self.__txtStdOutErr.clear()      
+        self.__txtStdOutErr.clear()
         
 
 class ToolWindow(ModelNode):
     '''Window is build around matplotlib Figure.
 '''
-    windowName  = ''
+    windowName = ''
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         self._toplevel = Toplevel()
@@ -777,17 +772,17 @@ class ToolWindow(ModelNode):
         
 class GridGroup(Group):
     def __init__(self, *args, **kwargs):
-        self.__topwin   = kwargs['topwin']
+        self.__topwin = kwargs['topwin']
         del kwargs['topwin']
         Group.__init__(self, *args, **kwargs)
-        major    = IntVar(0)
-        minor   = IntVar(0)
-        self.__major    = major
-        self.__minor    = minor
+        major = IntVar(0)
+        minor = IntVar(0)
+        self.__major = major
+        self.__minor = minor
         
 
         def setgrid():
-            currentFigure  = self.__topwin.currentFigure
+            currentFigure = self.__topwin.currentFigure
             currentFigure.axes.grid(major.get(), 'major')
             currentFigure.axes.grid(minor.get(), 'minor')
             currentFigure.update()
@@ -795,25 +790,25 @@ class GridGroup(Group):
 
         def askgridprop():
             win = Toplevel()
-            color   = ['#000000', '#000000']
+            color = ['#000000', '#000000']
 
-            propvars    = [StringVar() for i in range(4)]
-            guidata     = (
+            propvars = [StringVar() for i in range(4)]
+            guidata = (
                 {
-                    'linestyle':    ('Major Line Style', propvars[0], None),
+                    'linestyle': ('Major Line Style', propvars[0], None),
 ########################################################################################################
-                    'linewidth':    ('Major Line Width', propvars[1], checkPositiveFloat) 
+                    'linewidth': ('Major Line Width', propvars[1], checkPositiveFloat)
                 },
                 {
-                    'linestyle':    ('Minor Line Style', propvars[2], None),
-                    'linewidth':    ('Minor Line Width', propvars[3], checkPositiveFloat)
-#########################################################################################################                    
+                    'linestyle': ('Minor Line Style', propvars[2], None),
+                    'linewidth': ('Minor Line Width', propvars[3], checkPositiveFloat)
+#########################################################################################################
                 }
             )
 
             for d in guidata:
                 for key in d:
-                    pitem   = ParamItem(win)
+                    pitem = ParamItem(win)
                     pitem.pack()
                     pitem.labeltext = d[key][0]
                     pitem.entry['textvariable'] = d[key][1]
@@ -821,12 +816,12 @@ class GridGroup(Group):
                         pitem.checkfunc = d[key][2]
 
             def setmajorcolor():
-                c   = askcolor()
-                color[0]    = c[1]
+                c = askcolor()
+                color[0] = c[1]
 
             def setminorcolor():
-                c   = askcolor()
-                color[1]    = c[1]
+                c = askcolor()
+                color[1] = c[1]
             Button(win, text='Major Line Color', command=setmajorcolor).pack()
             Button(win, text='Minor Line Color', command=setminorcolor).pack()
 
@@ -846,17 +841,17 @@ class GridGroup(Group):
 
             for idx, name in enumerate(('major', 'minor')):
                 for key in ret[idx]:
-                    value   = ret[idx][key][1].get()
+                    value = ret[idx][key][1].get()
                     if value:
                         self.__topwin.currentFigure.axes.grid(None, name, **{key: value})
             major.set(1)
             minor.set(1)
-            self.__topwin.currentFigure.update()            
+            self.__topwin.currentFigure.update()
                                     
         Checkbutton(self, text='Grid Major', variable=major, command=setgrid).pack(fill=X)
         Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid).pack(fill=X)
         Button(self, text='Property', command=onPropertyClick).pack()
-        self.name   = 'Grid'
+        self.name = 'Grid'
 
 
 
@@ -874,35 +869,35 @@ class GridGroup(Group):
 
     @minor.setter
     def minor(self, value):
-        self.__minor.set(value)        
+        self.__minor.set(value)
         
 
 class AxisGroup(Group):
     def __init__(self, *args, **kwargs):
-        self.__topwin   = kwargs['topwin']
+        self.__topwin = kwargs['topwin']
         del kwargs['topwin']
         application = Application.instance
        
         Group.__init__(self, *args, **kwargs)
-        self.__params   = [StringVar() for i in range(8)]    
-        paramfrm    =Frame(self)
+        self.__params = [StringVar() for i in range(8)]
+        paramfrm =Frame(self)
         paramfrm.pack()
-        names   = ['xmin', 'xmax', 'ymin', 'ymax', 'major xtick', 'major ytick', 'minor xtick', 'minor ytick']
+        names = ['xmin', 'xmax', 'ymin', 'ymax', 'major xtick', 'major ytick', 'minor xtick', 'minor ytick']
         for c in range(4):
             for r in range(2):
-                temp    = ParamItem(paramfrm)
-                temp.checkfunc  = application.checkFloat
-                temp.labeltext  = names[c*2+r]
+                temp = ParamItem(paramfrm)
+                temp.checkfunc = application.checkFloat
+                temp.labeltext = names[c*2+r]
                 temp.labelwidth = 5 if c*2+r < 4 else 10
                 temp.entrywidth = 5
                 temp.entry.config(textvariable=self.__params[c*2+r])
                 temp.grid(row=r, column=c)
 
-        btnfrm  = Frame(self)
+        btnfrm = Frame(self)
         btnfrm.pack()
         Button(btnfrm, text='Confirm', command=self.onConfirmClick).pack(side=LEFT)
         Button(btnfrm, text='Auto', command=self.onAutoClick).pack(side=RIGHT)
-        self.name   = 'Axis'
+        self.name = 'Axis'
 
 
 
@@ -973,14 +968,14 @@ class AxisGroup(Group):
 
 class ClearGroup(Group):
     def __init__(self, *args, **kwargs):
-        self.__topwin   = kwargs['topwin']
+        self.__topwin = kwargs['topwin']
         del kwargs['topwin']
         Group.__init__(self, *args, **kwargs)
-        self.__currentFigure   = None
+        self.__currentFigure = None
         Button(self, text='Clear All', command=self.onClearAll).pack()
         Button(self, text='Del Sel', command=self.onDelSel).pack()
         Button(self, text='Del UnSel', command=self.onDelUnSel).pack()
-        self.name   = 'Clear Plot'
+        self.name = 'Clear Plot'
 
     def onClearAll(self):
         self.__topwin.figureBook.clear()
@@ -998,20 +993,20 @@ class AlgoSelGroup(Group):
         self.__algolist = Combobox(self, value=['ISAA-DIAC'], takefocus=1, stat='readonly', width=12)
         self.__algolist.current(0)
         self.__algolist.pack()
-        self.name   = 'Algorithms'
+        self.name = 'Algorithms'
 
 
 
 class AlgoParamsGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app  = Application.instance
+        self._app = Application.instance
 
         Group.__init__(self, *args, **kwargs)
         self.__algo = None
-        self.__MAXROW   = 3
-        self.__params   = {}
-        self.balloon    = None
-        self.name   = 'Parameters'
+        self.__MAXROW = 3
+        self.__params = {}
+        self.balloon = None
+        self.name = 'Parameters'
 
     @property
     def algo(self):
@@ -1020,90 +1015,90 @@ class AlgoParamsGroup(Group):
     @algo.setter
     def algo(self, algorithm):
         #To do: when algo is reset, the frm should be removed
-        frm     = Frame(self)
+        frm = Frame(self)
         frm.pack()
-        params  = algorithm.meta.params
+        params = algorithm.meta.params
         for idx, name in enumerate(params):
-            param   = params[name]
-            paramitem   = ParamItem(frm)
+            param = params[name]
+            paramitem = ParamItem(frm)
             paramitem.labeltext = name
-            paramitem.label['width']    = 5
-            paramitem.entry['width']    = 8
+            paramitem.label['width'] = 5
+            paramitem.entry['width'] = 8
             if self.balloon:
                 self.balloon.bind_widget(paramitem.label, balloonmsg=param.shortdesc)
             if param.type == 'int':
-                paramitem.checkfunc     = self._app.checkInt
+                paramitem.checkfunc = self._app.checkInt
             elif param.type == 'float':
-                paramitem.checkfunc     = checkFloat
+                paramitem.checkfunc = checkFloat
             paramitem.grid(row=idx%self.__MAXROW, column=idx//self.__MAXROW)
-            self.__params[param.name]   = {'gui':paramitem, 'meta':param}            
+            self.__params[param.name] = {'gui':paramitem, 'meta':param}
         self.__algo = algorithm
 
     def getparams(self):
-        params  = self.__params
+        params = self.__params
         convert = {'int':int, 'float':float, 'expression':eval, '':lambda x: x}
         return {name: convert[params[name]['meta'].type](params[name]['gui'].entrytext) for name in params}
 
 class InitGroup(Group):
     def __init__(self, *args, **kwargs):
         Group.__init__(self, *args, **kwargs)
-        self.__initsel  = IntVar(0)
+        self.__initsel = IntVar(0)
         Radiobutton(self, text='Random', value=0, variable=self.__initsel).pack(expand=True, fill=X)
-        self.name   = 'Initialization'
+        self.name = 'Initialization'
 
 class GenGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app  = Application.instance
+        self._app = Application.instance
 
-        self.__topwin   = kwargs['topwin']
+        self.__topwin = kwargs['topwin']
         del kwargs['topwin']
         Group.__init__(self, *args, **kwargs)
-        self.__num  = ParamItem(self)
+        self.__num = ParamItem(self)
         self.__num.label.config(text='num')
-        self.__num.entrytext    = '1'
+        self.__num.entrytext = '1'
         self.__num.entry.bind('<Return>', lambda event: self.onGenBtnClick())
-        self.__num.checkfunc    = self._app.checkInt
+        self.__num.checkfunc = self._app.checkInt
         self.__num.pack()
         self.__progress = IntVar()
-        self.__finishedwav  = IntVar()
-        progfrm    = Frame(self)
+        self.__finishedwav = IntVar()
+        progfrm = Frame(self)
         progfrm.pack()
-        self.__progbar  = Progressbar(progfrm, orient='horizontal', variable=self.__progress, maximum=100)
+        self.__progbar = Progressbar(progfrm, orient='horizontal', variable=self.__progress, maximum=100)
         self.__progbar.pack(side=LEFT)
-        self.__finishedwavbar  = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav, length=70)
+        self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav, length=70)
         self.__finishedwavbar.pack(side=RIGHT)
-        self.__genbtn   = Button(self, text='Generate', command=self.onGenBtnClick)
+        self.__genbtn = Button(self, text='Generate', command=self.onGenBtnClick)
         self.__genbtn.pack(side=LEFT)
         Button(self, text='Stop', command=self.onStopBtnClick).pack(side=RIGHT)
-        self.name   = 'Generate'
+        self.name = 'Generate'
         self.algo = None
-        self.getparams   = None
-        #self.figfrm = None  # figfrm: the container of the matplotlib canvas
+        self.getparams = None
+        #self.figfrm = None # figfrm: the container of the matplotlib canvas
         self.__stopflag = False
 
     def onGenBtnClick(self):
-        tbicon  = self._app.taskbaricon
+        tbicon = self._app.taskbaricon
         self.__stopflag = False
-        wavnum      = self.__num.getint()
-        progress    = [0]
-        waveform    = [0]
+        wavnum = self.__num.getint()
+        progress = [0]
+        waveform = [0]
         def exitcheck(k, K, y, y_last):
             progress[0] = int(k / K * 100)
-        self.algo.exitcond['func']      = exitcheck
-        self.algo.exitcond['interval']  = 1
-        params      = self.getparams()
+        self.algo.exitcond['func'] = exitcheck
+        self.algo.exitcond['interval'] = 1
+        params = self.getparams()
 
         class AlgoThread(threading.Thread):
             def __init__(self, algo, params, waveform, progress):
-                self.algo       = algo
-                self.progress   = progress
+                self.algo = algo
+                self.progress = progress
                 threading.Thread.__init__(self)
             def run(self):
-                waveform[0]     = self.algo(**params)
+                waveform[0] = self.algo(**params)
 
-        self.__finishedwavbar['maximum']    = wavnum
+        self.__finishedwavbar['maximum'] = wavnum
         for cnt in range(wavnum):
-            algothread  = AlgoThread(self.algo, params, waveform, progress)
+            algothread = AlgoThread(self.algo, params, waveform, progress)
             algothread.start()
             while algothread.isAlive():
                 self.__progress.set(progress[0])
@@ -1111,14 +1106,14 @@ class GenGroup(Group):
                 self.__topwin.update()
                 if self.__stopflag:
                     break
-##                time.sleep(0.1)
+## time.sleep(0.1)
             self.__progress.set(0)
             if self.__stopflag:
                 break
             self.__topwin.currentFigure.plot_acorr(waveform[0])
             self.__finishedwav.set(cnt+1)
         self.__finishedwav.set(0)
-        tbicon.state    = guicomponents.TBPF_NOPROGRESS
+        tbicon.state = guicomponents.TBPF_NOPROGRESS
 
     def onStopBtnClick(self):
         self.__stopflag = True
@@ -1131,7 +1126,7 @@ def create_viewtab(tabpages, application, topwin):
     grpGrid.pack(side=LEFT, fill=Y)
     grpAxis = AxisGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
     grpAxis.pack(side=LEFT, fill=Y)
-    grpClear    = ClearGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
+    grpClear = ClearGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
     grpClear.pack(side=LEFT, fill=Y)
     tabpages.add(frmView, text='View')
         # End View Tab
@@ -1139,74 +1134,74 @@ def create_viewtab(tabpages, application, topwin):
 #import isaa
 
 #class SingleWindow(object):
-#    def __init__(self, application):
-#        self.__toplevel = Toplevel()
-#        self.__toplevel.title(' '.join(('Single-Syn', str(id(self)))))  
-#        self._app  = application
-#        self.__currentFigure   = None
-#        # The toolbar
-#        tabpages    = Notebook(self.__toplevel)
-#        tabpages.pack(fill=X)
-#            # Algorithm Tab
-#        frmAlgo = Frame(tabpages)
-#        grpAlgoSel  = AlgoSelGroup(frmAlgo, bd=2, relief=GROOVE)
-#        grpAlgoSel.pack(side=LEFT, fill=Y)
-#        grpParams   = AlgoParamsGroup(frmAlgo, bd=2, relief=GROOVE, application=application)
-#        grpParams.balloon   = application.balloon
-#        grpParams.algo      = isaa.diac
-#        grpParams.pack(side=LEFT, fill=Y)
-#        grpInit = InitGroup(frmAlgo, bd=2, relief=GROOVE)
-#        grpInit.pack(side=LEFT, fill=Y)
-#        grpGen  = GenGroup(frmAlgo, bd=2, relief=GROOVE, application=application, topwin=self)
-#        grpGen.pack(side=LEFT, fill=Y)
-#        grpGen.getparams    = grpParams.getparams
-#        grpGen.algo         = isaa.diac
-#        tabpages.add(frmAlgo, text='Algorithm')
-#            # End Algorithm Tab        
-#        create_viewtab(tabpages, application, self)
-#        # End toolbar
-#        
-#        # The Figure
-#        self.__currentFigure   = guitools.FigureFrame(self.__toplevel)
-#        self.__currentFigure.pack(expand=YES, fill=BOTH)
-#        # End Figure
-#        
-#    @property
-#    def currentFigure(self):
-#        return self.__currentFigure
-#        
-#    def update(self):
-#        self.__toplevel.update()
+# def __init__(self, application):
+# self.__toplevel = Toplevel()
+# self.__toplevel.title(' '.join(('Single-Syn', str(id(self)))))
+# self._app = application
+# self.__currentFigure = None
+# # The toolbar
+# tabpages = Notebook(self.__toplevel)
+# tabpages.pack(fill=X)
+# # Algorithm Tab
+# frmAlgo = Frame(tabpages)
+# grpAlgoSel = AlgoSelGroup(frmAlgo, bd=2, relief=GROOVE)
+# grpAlgoSel.pack(side=LEFT, fill=Y)
+# grpParams = AlgoParamsGroup(frmAlgo, bd=2, relief=GROOVE, application=application)
+# grpParams.balloon = application.balloon
+# grpParams.algo = isaa.diac
+# grpParams.pack(side=LEFT, fill=Y)
+# grpInit = InitGroup(frmAlgo, bd=2, relief=GROOVE)
+# grpInit.pack(side=LEFT, fill=Y)
+# grpGen = GenGroup(frmAlgo, bd=2, relief=GROOVE, application=application, topwin=self)
+# grpGen.pack(side=LEFT, fill=Y)
+# grpGen.getparams = grpParams.getparams
+# grpGen.algo = isaa.diac
+# tabpages.add(frmAlgo, text='Algorithm')
+# # End Algorithm Tab
+# create_viewtab(tabpages, application, self)
+# # End toolbar
+#
+# # The Figure
+# self.__currentFigure = guitools.FigureFrame(self.__toplevel)
+# self.__currentFigure.pack(expand=YES, fill=BOTH)
+# # End Figure
+#
+# @property
+# def currentFigure(self):
+# return self.__currentFigure
+#
+# def update(self):
+# self.__toplevel.update()
             
             
 import pattern2corrmtx
 
 class PatternSolveGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app  = Application.instance
+        self._app = Application.instance
         self.__uiImages = []
-        self.__topwin   = kwargs.pop('topwin')
+        self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
         frm = Frame(self)
         frm.pack(side=TOP)
         
-        imageMLbl   = ImageTk.PhotoImage(file='Pattern_M_Label.png', master=frm)
+        imageMLbl = ImageTk.PhotoImage(file='Pattern_M_Label.png', master=frm)
         self.__uiImages.append(imageMLbl)
         Label(frm, image=imageMLbl).pack(side=LEFT)
         
-        self.__M  = ParamItem(frm)
+        self.__M = ParamItem(frm)
         self.__M.label.config(text='M')
         self.__M.entrywidth = 6
-        self.__M.entrytext  = 10
+        self.__M.entrytext = 10
         self.__M.entry.bind('<Return>', lambda dumb: self.onSolve())
-        self.__M.checkfunc  = self._app.checkInt
+        self.__M.checkfunc = self._app.checkInt
         self.__M.pack(side=RIGHT)
         
         self._app.balloon.bind_widget(frm, balloonmsg='The number of the array elements.')
 
-        imageSolveBtn   = ImageTk.PhotoImage(file='Pattern_Solve_Button.png', master=self)
-        self.__uiImages.append(imageSolveBtn)                
-#        self.__btnSolve    = Button(self, text='Solve', command=self.onSolve)
+        imageSolveBtn = ImageTk.PhotoImage(file='Pattern_Solve_Button.png', master=self)
+        self.__uiImages.append(imageSolveBtn)
+
         self.__btnSolve = Button(self, image=imageSolveBtn, command=self.onSolve)
         self.__btnSolve.pack(side=TOP)
         self._app.balloon.bind_widget(self.__btnSolve, balloonmsg='Launch the solver to synthesize the correlation matrix.')
@@ -1216,20 +1211,19 @@ class PatternSolveGroup(Group):
         imageDisplayBtn = ImageTk.PhotoImage(file='Pattern_Display_Button.png')
         self.__uiImages.append(imageDisplayBtn)
         Label(frm, image=imageDisplayBtn).pack(side=LEFT)
-        self.__bDisplay     = IntVar(0)
-        chkDisplay  = Checkbutton(frm, text="Display", variable=self.__bDisplay)
-        chkDisplay.pack(side=TOP)        
+        self.__bDisplay = IntVar(0)
+        chkDisplay = Checkbutton(frm, text="Display", variable=self.__bDisplay)
+        chkDisplay.pack(side=TOP)
         self._app.balloon.bind_widget(frm, balloonmsg='Display solver output.')
         
-        self.name   = 'Optimize'
+        self.name = 'Optimize'
                 
     def onSolve(self):
-        #self.__topwin.callMethod('plotIdealPattern', 'numpy.r_[-90:90.1:0.1]', center, width)
-        topwin  = self.__topwin
-        center, width   = topwin.grpEdit.beamData
+        topwin = self.__topwin
+        center, width = topwin.grpEdit.beamData
         topwin.figureBook.callMethod('clear')
-        callMethod  = topwin.callMethod
-        #callMethod('clearFigureBook')
+        callMethod = topwin.callMethod
+
         callMethod('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
         callMethod('setIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
         callMethod('solve', M=self.__M.getint(), display=self.__bDisplay.get())
@@ -1240,50 +1234,50 @@ class PatternSolveGroup(Group):
         
 class PatternEditGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app  = Application.instance
-        self.__topwin   = kwargs.pop('topwin')
+        self._app = Application.instance
+        self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
         frm = Frame(self)
-        self.__center   = ParamItem(frm)
+        self.__center = ParamItem(frm)
         self.__center.label.config(text='center(deg)')
         self.__center.entrytext = 0
         self.__center.checkfunc = self._app.checkInt
-        self.__center.entrywidth    = 5
-        self.__center.labelwidth    = 10
+        self.__center.entrywidth = 5
+        self.__center.labelwidth = 10
         self.__center.pack(side=TOP)
         self._app.balloon.bind_widget(self.__center, balloonmsg='Specify the beam center here.')
         
-        self.__width    = ParamItem(frm)
+        self.__width = ParamItem(frm)
         self.__width.label.config(text='width(deg)')
-        self.__width.entrytext  = 20
-        self.__width.checkfunc  = self._app.checkInt
+        self.__width.entrytext = 20
+        self.__width.checkfunc = self._app.checkInt
         self.__width.entrywidth = 5
         self.__width.labelwidth = 10
         self.__width.pack(side=TOP)
-        self._app.balloon.bind_widget(self.__width, balloonmsg='Specify the beam width here.')        
+        self._app.balloon.bind_widget(self.__width, balloonmsg='Specify the beam width here.')
         
         self.__uiImages = []
                 
                 
-        imageAddBtn   = ImageTk.PhotoImage(file='Pattern_Add_Button.png', master=frm)
+        imageAddBtn = ImageTk.PhotoImage(file='Pattern_Add_Button.png', master=frm)
         self.__uiImages.append(imageAddBtn)
         btn = Button(frm, image=imageAddBtn, command=self.onAdd)
-        btn.pack(side=LEFT)        
+        btn.pack(side=LEFT)
         self._app.balloon.bind_widget(btn, balloonmsg='Add new beam to the ideal pattern.')
         
-        imageDelBtn = ImageTk.PhotoImage(file='Pattern_Del_Button.png', master=frm)        
+        imageDelBtn = ImageTk.PhotoImage(file='Pattern_Del_Button.png', master=frm)
         self.__uiImages.append(imageDelBtn)
         btn = Button(frm, image=imageDelBtn, command=self.onDel)
         btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Remove the selected beam in the listbox.')        
+        self._app.balloon.bind_widget(btn, balloonmsg='Remove the selected beam in the listbox.')
         
         imageClrBtn = ImageTk.PhotoImage(file='Pattern_Clear_Button.png', master=frm)
         self.__uiImages.append(imageClrBtn)
         btn = Button(frm, image=imageClrBtn, command=self.onClear)
-        btn.pack(side=LEFT)   
+        btn.pack(side=LEFT)
         self._app.balloon.bind_widget(btn, balloonmsg='Clear the listbox of the beam parameters.')
         
-        imagePlotBtn    = ImageTk.PhotoImage(file='Pattern_Plot_Button.png', master=frm)
+        imagePlotBtn = ImageTk.PhotoImage(file='Pattern_Plot_Button.png', master=frm)
         self.__uiImages.append(imagePlotBtn)
         btn = Button(frm, image=imagePlotBtn, command=self.onPlotIdealPattern)
         btn.pack(side=LEFT)
@@ -1291,10 +1285,10 @@ class PatternEditGroup(Group):
         
         frm.pack(side=LEFT, fill=Y)
         
-        self.__paramlist    = ScrolledList(self)
+        self.__paramlist = ScrolledList(self)
         self.__paramlist.list.config(height=4, width=10)
-        self.__paramlist.pack(side=LEFT)        
-        self.name   = 'Edit Ideal Pattern'
+        self.__paramlist.pack(side=LEFT)
+        self.name = 'Edit Ideal Pattern'
         
         self.optgrp = None
         
@@ -1307,13 +1301,13 @@ class PatternEditGroup(Group):
     def onClear(self):
         self.__paramlist.clear()
         
-    def onPlotIdealPattern(self):        
-        center, width   = self.beamData
+    def onPlotIdealPattern(self):
+        center, width = self.beamData
         self.__topwin.callMethod('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
         
     @property
     def beamData(self):
-        beamParams   = self.__paramlist.list.get(0, END)
+        beamParams = self.__paramlist.list.get(0, END)
         if not beamParams:
             # stderr print 'no beam is specified'
             self._app.printError('An error occurred!')
@@ -1323,65 +1317,65 @@ class PatternEditGroup(Group):
                     {
                         'type':'text',
                         'content':'''This exception happens when the listbox of the beam parameters are empty.
-To make a valid ideal pattern, at least one beam should be specified.                        
-                        '''
+To make a valid ideal pattern, at least one beam should be specified.
+'''
                     }
                 ]
             )
             return
-        center, width   = zip(*[map(float, param.split(',')) for param in beamParams])
-        return center, width        
+        center, width = zip(*[map(float, param.split(',')) for param in beamParams])
+        return center, width
 
 
         
 class LoadGroup(Group):
     def __init__(self, *args, **kwargs):
         Group.__init__(self, *args, **kwargs)
-        self.name   = 'Load Pattern' 
+        self.name = 'Load Pattern'
         
         
 class PatternFileExportGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app   = Application.instance
-        self.__topwin   = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs) 
+        self._app = Application.instance
+        self.__topwin = kwargs.pop('topwin')
+        Group.__init__(self, *args, **kwargs)
         
         frm = Frame(self)
         self.__uiImages = []
-        imageMatFileBtn    = ImageTk.PhotoImage(file='Pattern_SaveMat_Button.png', master=frm)
-        self.__uiImages.append(imageMatFileBtn)                
+        imageMatFileBtn = ImageTk.PhotoImage(file='Pattern_SaveMat_Button.png', master=frm)
+        self.__uiImages.append(imageMatFileBtn)
         Button(frm, image=imageMatFileBtn, command=self.onSaveMat).pack(side=TOP)
-        Button(frm, text='mat', width=6).pack(side=TOP)        
-        frm.pack(side=LEFT)        
+        Button(frm, text='mat', width=6).pack(side=TOP)
+        frm.pack(side=LEFT)
         
         frm = Frame(self)
-        imageExcelFileBtn   = ImageTk.PhotoImage(file='Pattern_SaveExcel_Button.png', master=frm)
+        imageExcelFileBtn = ImageTk.PhotoImage(file='Pattern_SaveExcel_Button.png', master=frm)
         self.__uiImages.append(imageExcelFileBtn)
         Button(frm, image=imageExcelFileBtn).pack(side=TOP)
         Button(frm, text='xlsx', width=6).pack(side=TOP)
-        frm.pack(side=LEFT)        
+        frm.pack(side=LEFT)
         
-        self.name   = 'Corr Matrix'
+        self.name = 'Corr Matrix'
         
     def onSaveMat(self):
-        filename    = asksaveasfilename(filetypes=[('Matlab mat files', '*.mat')])
+        filename = asksaveasfilename(filetypes=[('Matlab mat files', '*.mat')])
         if not filename:
-            return 
-        #self.__topwin.callMethod('saveMat', '"{0}"'.format(filename))
+            return
+
         self.__topwin.callMethod('saveMat', filename)
         tip = [
             {'type':'text', 'content':'''The correlation matrix has been saved in the mat file "{filename}" successully.
 You can extract the data in Matlab using the following command:'''.format(filename=filename)},
-            {'type':'link', 'content':'>> load {filename}'.format(filename=filename),   
+            {'type':'link', 'content':'>> load {filename}'.format(filename=filename),
                  'command':lambda dumb: (
-                     Application.instance.clipboard.callMethod('clear'), 
+                     Application.instance.clipboard.callMethod('clear'),
                      Application.instance.clipboard.callMethod(
-                         'append', 
+                         'append',
                          'load {filename}'.format(filename=filename)
                      )
                   )
             },
-            {'type':'text', 'content':'''and variable named "R" will appear in your Matlab workspace. 
+            {'type':'text', 'content':'''and variable named "R" will appear in your Matlab workspace.
 (Click the underlined Matlab command and copy it to the clipboard)'''}
         ]
         self._app.printTip(tip)
@@ -1391,47 +1385,47 @@ You can extract the data in Matlab using the following command:'''.format(filena
         
 class PatternFigureExportGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app   = Application.instance
-        self.__topwin   = kwargs.pop('topwin')
+        self._app = Application.instance
+        self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
         self.__uiImages = []
-        imageFigureExportBtn   = ImageTk.PhotoImage(file='Pattern_ExportFigure_Button.png')    
+        imageFigureExportBtn = ImageTk.PhotoImage(file='Pattern_ExportFigure_Button.png')
         self.__uiImages.append(imageFigureExportBtn)
         frm = Frame(self); frm.pack(side=LEFT)
         Button(frm, image=imageFigureExportBtn, command=self.onExportMatlabScript).pack(side=TOP)
         Button(frm, text='Script', command=self.onExportMatlabScript, width=6).pack(side=TOP)
         
-        self.name   = 'Figure'
+        self.name = 'Figure'
         
 
     def onExportMatlabScript(self):
-        filename    = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
+        filename = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
         if not filename:
             return
         self.__topwin.figureBook.callMethod('exportMatlabScript', filename)
         self._app.printTip(
 '''A Matlab script file has been saved as {filename}.
-By running this script, Matlab will literally "re-plot" the curves shown here.'''.format(filename=filename)        
+By running this script, Matlab will literally "re-plot" the curves shown here.'''.format(filename=filename)
         )
 
 
         
 
 class PatternWindow(ToolWindow):
-    windowName  = 'WaveSyn-PatternFitting'
+    windowName = 'WaveSyn-PatternFitting'
     def __init__(self, *args, **kwargs):
-        ToolWindow.__init__(self, *args, **kwargs)   
+        ToolWindow.__init__(self, *args, **kwargs)
         # The toolbar
-        tabpages    = Notebook(self._toplevel)
+        tabpages = Notebook(self._toplevel)
         tabpages.pack(fill=X)
             # Algorithm tab
-        frmAlgo     = Frame(tabpages)
-        grpSolve      = PatternSolveGroup(frmAlgo, topwin=self)
+        frmAlgo = Frame(tabpages)
+        grpSolve = PatternSolveGroup(frmAlgo, topwin=self)
         grpSolve.pack(side=LEFT, fill=Y)
-        grpEdit     = PatternEditGroup(frmAlgo, topwin=self)
-        #grpEdit.optgrp  = grpGen
+        grpEdit = PatternEditGroup(frmAlgo, topwin=self)
+        #grpEdit.optgrp = grpGen
         grpEdit.pack(side=LEFT, fill=Y)
-        self.__grpEdit  = grpEdit        
+        self.__grpEdit = grpEdit
         
         tabpages.add(frmAlgo, text='Algorithm')
             # End Algorithm tab
@@ -1441,52 +1435,43 @@ class PatternWindow(ToolWindow):
             # End View tab
         
             # Export tab
-        frmExport   = Frame(tabpages)
-        grpExport   = PatternFileExportGroup(frmExport, topwin=self)
+        frmExport = Frame(tabpages)
+        grpExport = PatternFileExportGroup(frmExport, topwin=self)
         grpExport.pack(side=LEFT, fill=Y)
         grpFigureExport = PatternFigureExportGroup(frmExport, topwin=self)
         grpFigureExport.pack(side=LEFT, fill=Y)
-        tabpages.add(frmExport, text='Export')        
+        tabpages.add(frmExport, text='Export')
             # End Export tab
         # End toolbar
         
         self.idealPattern = None
-        self.angles       = None
+        self.angles = None
 
-        figureBook    = FigureBook(self._toplevel, \
+        figureBook = FigureBook(self._toplevel, \
             figureMeta=[
-                {'name':'Cartesian',    'polar':False}, 
-                {'name':'Polar',        'polar':True}
+                {'name':'Cartesian', 'polar':False},
+                {'name':'Polar', 'polar':True}
             ]
         )
         figureBook.pack(expand=YES, fill=BOTH)
         figCart = figureBook.figures[0]
-        figCart.plotFunction    = lambda *args, **kwargs: figCart.plot(*args, **kwargs)        
-        figPolar    = figureBook.figures[1]
-        figPolar.plotFunction   = lambda angles, pattern, **kwargs: figPolar.plot(angles/180.*pi, pattern, **kwargs)
+        figCart.plotFunction = lambda *args, **kwargs: figCart.plot(*args, **kwargs)
+        figPolar = figureBook.figures[1]
+        figPolar.plotFunction = lambda angles, pattern, **kwargs: figPolar.plot(angles/180.*pi, pattern, **kwargs)
         
-        #print(figureBook.nodePath)
-        self.figureBook   = figureBook
-        #print(figureBook.nodePath)
+        self.figureBook = figureBook        
+        self.__problem = pattern2corrmtx.Problem()
+        self.R = None
         
-        self.__problem  = pattern2corrmtx.Problem()
-        self.R  = None
-        
-#    @property
-#    def figureBook(self):
-#        return self.__figureBook
-        
-#    def clearFigureBook(self):
-#        self.figureBook.clear()
         
     @property
     def grpEdit(self):
         return self.__grpEdit
         
     def setIdealPattern(self, angles, center, width):
-        self.angles = angles  = r_[-90:90.1:0.1]
-        self.idealPattern   = pattern2corrmtx.ideal_pattern(angles, center, width)      
-        # self.figureBook.plot(angles, self.idealPattern, curveName='Ideal Pattern', color='b')
+        self.angles = angles = r_[-90:90.1:0.1]
+        self.idealPattern = pattern2corrmtx.ideal_pattern(angles, center, width)
+
         
     def plotIdealPattern(self, angles, center, width):
         self.figureBook.plot(angles, pattern2corrmtx.ideal_pattern(angles, center, width),
@@ -1494,18 +1479,18 @@ class PatternWindow(ToolWindow):
             
     def plotCorrMatrixPattern(self, R=None):
         if R == None:
-            R   = self.R
+            R = self.R
         if R == None:
             pass # To do: raise a error
         self.figureBook.plot(self.angles, pattern2corrmtx.corrmtx2pattern(R, self.angles),
-            curveName='Synthesized Pattern', color='g')            
+            curveName='Synthesized Pattern', color='g')
             
         
     def solve(self, M, display=False):
-        self.__problem.M    = M
-        self.__problem.angles   = self.angles
+        self.__problem.M = M
+        self.__problem.angles = self.angles
         self.__problem.idealpattern = self.idealPattern
-        self.R   = self.__problem.solve(verbose=display)  
+        self.R = self.__problem.solve(verbose=display)
         
         
     def saveMat(self, filename, varname='R', format='5'):
