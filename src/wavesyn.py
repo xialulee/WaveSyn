@@ -15,6 +15,7 @@ def dependenciesForMyprogram():
 
 import threading
 
+import os
 import sys
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
@@ -43,7 +44,8 @@ from functools import partial
 from datetime import datetime
 import webbrowser
 import subprocess
-from tempfile import NamedTemporaryFile
+import tempfile
+import json
 
 
 from guicomponents import Group, ConsoleText, TaskbarIcon, ParamItem
@@ -205,7 +207,9 @@ class Scripting(ModelNode):
             return
         try:
             ret = eval(code, self.nameSpace['globals'], self.nameSpace['locals'])
-            if ret!=None: print(repr(ret))
+            if ret!=None: 
+                Application.instance.console.write(repr(ret), 'RETVAL')
+                print()
         except SyntaxError:
             exec code in self.nameSpace['globals'], self.nameSpace['locals']
             
@@ -215,24 +219,27 @@ class Scripting(ModelNode):
 # End Scripting Sub-System
         
         
-class MenuMaker(object):
-    '''This class is a mixin class, which helps a toplevel window creates its own menu.
-A mixin class does not have a __init__ method.'''
-    def _makeMenu(self, menu):
-        app = Application.instance
-        win = app.root
-        def make(top, tree):
-            for topItem in tree:
-                if 'Command' in topItem:
-                    top.add_command(label=topItem['Name'], command=topItem['Command'], underline=topItem['UnderLine'])
+
+
+def makeMenu(win, menu, json=False):
+    def funcGen(code):
+        return lambda: Application.instance.printAndEval(code)
+    def make(top, tree):
+        for topItem in tree:
+            if 'Command' in topItem:
+                if json: # json cannot store callable objects.
+                    cmd = funcGen(topItem['Command'])
                 else:
-                    tearoff = 1 if 'TearOff' not in topItem else topItem['TearOff']
-                    submenu = Menu(top, tearoff=tearoff)
-                    make(submenu, topItem['SubMenu']) # recursion
-                    top.add_cascade(label=topItem['Name'], menu=submenu, underline=topItem['UnderLine'])
-        top = Menu(win)
-        make(top, menu)
-        win.config(menu=top)
+                    cmd = topItem['Command'] # topItem['Command'] is a callable object
+                top.add_command(label=topItem['Name'], command=cmd, underline=topItem['UnderLine'])
+            else:
+                tearoff = 1 if 'TearOff' not in topItem else int(topItem['TearOff'])
+                submenu = Menu(top, tearoff=tearoff)
+                make(submenu, topItem['SubMenu']) # recursion
+                top.add_cascade(label=topItem['Name'], menu=submenu, underline=int(topItem['UnderLine']))
+    top = Menu(win)
+    make(top, menu)
+    win.config(menu=top)        
         
 
         
@@ -290,21 +297,24 @@ since the instance of Application is the first node created on the model tree.''
         self.scripting = Scripting(self)
         self.noTip = False
 
-    def newSingleWin(self):
+    def newSingleWin(self, printDoc=False):
 # newwin = SingleWindow(self)
 # self.window[id(newwin)] = newwin
 # return id(newwin)
         print('Not Implemented.', file=sys.stderr)
         
-    def newMIMOWin(self):
+    def newMIMOWin(self, printDoc=False):
         print('Not Implemented.', file=sys.stderr)
         
-    def newPatternWin(self):
+    def newPatternWin(self, printDoc=False):
         '''This method creates a new PatternFitting window.
 Its return value is the ID of the new window.
 You can access the created window using its ID in the scripting system.
-A PatternWindow can synthesize a correlation matrix of which the beam pattern fits the given ideal pattern best.'''
-        return self.window.add(node=PatternWindow())
+A PatternWindow can synthesize a correlation matrix of which the beam pattern fits the given ideal pattern best.'''        
+        winid   = self.window.add(node=PatternWindow())
+        if printDoc:
+            self.printTip(self.newPatternWin.__doc__)
+        return winid
 
      
         
@@ -340,6 +350,8 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
         if ret != None:
             self.console.write(str(ret)+'\n', 'RETVAL')
+      
+            
             
     def eval(self, expr):
         return eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
@@ -684,7 +696,7 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
         
         
         
-class ConsoleWindow(MenuMaker, ObjectWithLock, ModelNode):
+class ConsoleWindow(ObjectWithLock, ModelNode):
     strWelcome = '''Good {0}, dear user(s). Welcome to WaveSyn!
 WaveSyn is a platform for testing and evaluating waveform synthesis algorithms.
 The following modules are imported and all the objects in them can be used directly in the scripting system:
@@ -718,34 +730,9 @@ Have a nice day.
             greetings = 'morning'
         txtStdOutErr.write(self.strWelcome.format(greetings), 'TIP')
         self.__txtStdOutErr = txtStdOutErr
-        menu = [
-            {
-                'Name':'Window', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
-                    {'Name':'New SingleSyn Window', 'UnderLine':4, 'Command':lambda: app.callMethod('newSingleWin')},
-                    {'Name':'New MIMOSyn Window', 'UnderLine':4, 'Command':lambda: app.callMethod('newMIMOWin')},
-                    {'Name':'New MIMO PatternFitting Window', 'UnderLine':9, 'Command':lambda: app.callMethodAndPrintDoc('newPatternWin')}
-                ]
-            },
-            {
-                'Name':'Console', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
-                    {'Name':'Save As...',   'TearOff':0,    'UnderLine':0,  'Command':self.onSaveAs},
-                    {'Name':'Clear', 'UnderLine':0, 'Command':self.onClear}
-                ]
-            },
-            {
-                'Name':'Script', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
-                    {'Name':'Load and Run Script File', 'UnderLine':0, 'Command':lambda: 0},
-                    {'Name':'Edit Script Using External Editor and Run',    'UnderLine':0,  'Command':self.onEditScript}
-                ]
-            },
-            {
-                'Name':'Help', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
-                    {'Name':'Home Page', 'UnderLine':0, 'Command':lambda: app.callMethod('openHomePage')}
-                ]
-            }
-        
-        ]
-        self._makeMenu(menu)
+        with open('config.json') as f:
+            menu    = json.load(f)['ConsoleMenu']
+        makeMenu(root, menu, json=True)
         self.__defaultCursor = self.__txtStdOutErr.text['cursor']
         
     @property
@@ -777,19 +764,29 @@ Have a nice day.
         self.callMethod('clear')
         
     def editScript(self):
+        app = Application.instance
         class EditorThread(threading.Thread):
             def __init__(self, filename):
                 self.__filename = filename
                 threading.Thread.__init__(self)
             def run(self):
                 subprocess.call([r'D:\Programs\Vim\vim73\gvim.exe', self.__filename]) # for Testing only!!!
+                #subprocess.call([r'notepad.exe', self.__filename]) # for Testing only!!!
             
-        with NamedTemporaryFile(mode='w+', suffix='.py') as f:
-            editorThread    = EditorThread(f.name)
+        fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
+        with os.fdopen(fd):
+            pass # Close the temp file, and the external editor can edit it freely.
+        try:
+            editorThread    = EditorThread(filename)
             editorThread.start()
             while editorThread.isAlive():
-                Application.instance.root.update()
-            self.write(f.read())
+                app.root.update()
+            with open(filename, 'r') as f:
+                code    = f.read()
+                self.write(code, 'HISTORY')
+                app.scripting.execute(code)
+        finally:            
+            os.remove(filename)
             
     def onEditScript(self):
         self.callMethod('editScript')

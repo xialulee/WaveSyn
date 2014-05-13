@@ -1,0 +1,28 @@
+{
+	"ConsoleMenu":[
+	    {
+		"Name":"Window", "TearOff":0, "UnderLine":0, "SubMenu":[
+		    {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.newSingleWin()"},
+		    {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"wavesyn.newMIMOWin()"},
+		    {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.newPatternWin(printDoc=True)"}
+		]
+	    },
+	    {
+		"Name":"Console", "TearOff":0, "UnderLine":0, "SubMenu":[
+		    {"Name":"Save As...",   "TearOff":0,    "UnderLine":0,  "Command":"wavesyn.console.onSaveAs()"},
+		    {"Name":"Clear", "UnderLine":0, "Command":"wavesyn.console.clear()"}
+		]
+	    },
+	    {
+		"Name":"Script", "TearOff":0, "UnderLine":0, "SubMenu":[
+		    {"Name":"Load and Run Script File", "UnderLine":0, "Command":"0"},
+		    {"Name":"Edit Script Using External Editor and Run",    "UnderLine":0,  "Command":"wavesyn.console.editScript()"}
+		]
+	    },
+	    {
+		"Name":"Help", "TearOff":0, "UnderLine":0, "SubMenu":[
+		    {"Name":"Home Page", "UnderLine":0, "Command":"wavesyn.openHomePage()"}
+		]
+	    }        
+	]
+}
