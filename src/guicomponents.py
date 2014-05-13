@@ -244,7 +244,6 @@ class StreamChain(object):
 class ConsoleText(ScrolledText):
     '''see http://effbot.org/zone/tkinter-threads.htm'''
     def __init__(self, *args, **kwargs):
-        #self.__app  = kwargs.pop('application')
         ScrolledText.__init__(self, *args, **kwargs)
         self.text.tag_configure('STDOUT',   foreground='black')
         self.text.tag_configure('STDERR',   foreground='red')
@@ -274,12 +273,62 @@ class ConsoleText(ScrolledText):
 
     def write(self, content, tag=None):
         self.text.insert(END, content, tag)
-        #self.__app.root.update()
-        # set view
         self.text.see(END)
         self.text.update()
 
+class ScrolledList(Frame, object):
+    def __init__(self, *args, **kwargs):
+        Frame.__init__(self, *args, **kwargs)
+        sbar = Scrollbar(self)
+        list = Listbox(self)
+        sbar.config(command=list.yview)
+        list.config(yscrollcommand=sbar.set)
+        sbar.pack(side=RIGHT, fill=Y)
+        list.pack(side=LEFT, expand=YES, fill=BOTH)
+        list.bind('<<ListboxSelect>>', self.onListboxClick)
+        
+        self.__listClick = None
+        self.__list = list
+        self.__sbar = sbar
+        
 
+    @property
+    def list(self):
+        return self.__list
+
+    @property
+    def sbar(self):
+        return self.__sbar
+
+    def insert(self, *args, **kwargs):
+        return self.__list.insert(*args, **kwargs)
+        
+    def itemConfig(self, *args, **kwargs):
+        return self.__list.itemconfig(*args, **kwargs)
+
+    def clear(self):
+        self.__list.delete(0, END)
+        
+    def listConfig(self, **kwargs):
+        self.__list.config(**kwargs)
+        
+    @property
+    def listClick(self):
+        return self.__listClick
+
+    @listClick.setter
+    def listClick(self, val):
+        if not callable(val):
+            raise TypeError
+        self.__listClick = val
+
+    def onListboxClick(self, event):
+        index = self.__list.curselection()
+        if len(index) > 0:
+            index = index[0]
+            label = self.__list.get(index)
+            if self.listClick:
+                self.listClick(index, label)
 
 class Group(Frame, object):
     def __init__(self, *args, **kwargs):

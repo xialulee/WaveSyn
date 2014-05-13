@@ -27,7 +27,7 @@ from Tkinter import Frame, PanedWindow
 from tkColorChooser import askcolor
 from tkFileDialog import askopenfilename, asksaveasfilename
 
-from PIL import Image, ImageTk
+from PIL import ImageTk
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -48,7 +48,7 @@ import tempfile
 import json
 
 
-from guicomponents import Group, ConsoleText, TaskbarIcon, ParamItem
+from guicomponents import Group, ConsoleText, TaskbarIcon, ParamItem, ScrolledList
 import guicomponents
 
 
@@ -93,7 +93,7 @@ wavesyn
 -instance of MIMOSyn
 -figureBook
 '''
-    def __init__(self, nodeName='', isRoot=False):
+    def __init__(self, nodeName='', isRoot=False, **kwargs):
         if '_attributeLock' not in self.__dict__:
             object.__setattr__(self, '_attributeLock', set())
         self.parentNode = None
@@ -202,7 +202,10 @@ class Scripting(ModelNode):
         if not code.strip():
             code = '\n'.join(self.__codeList)
             self.__codeList = []
-        if code.strip()[-1] == ':' or self.__codeList:
+        strippedCode    = code.strip()
+        if strippedCode == '':
+            return
+        if strippedCode[-1] == ':' or self.__codeList:
             self.__codeList.append(code)
             return
         try:
@@ -222,13 +225,18 @@ class Scripting(ModelNode):
 
 
 def makeMenu(win, menu, json=False):
-    def funcGen(code):
-        return lambda: Application.instance.printAndEval(code)
+    def funcGen(code, printCode=True):
+        if printCode:
+            f   = Application.instance.printAndEval
+        else:
+            f   = Application.instance.eval
+        return lambda: f(code)
     def make(top, tree):
         for topItem in tree:
             if 'Command' in topItem:
                 if json: # json cannot store callable objects.
-                    cmd = funcGen(topItem['Command'])
+                    printCode   = topItem.get('Print', True)
+                    cmd = funcGen(topItem['Command'], printCode)
                 else:
                     cmd = topItem['Command'] # topItem['Command'] is a callable object
                 top.add_command(label=topItem['Name'], command=cmd, underline=topItem['UnderLine'])
@@ -243,7 +251,15 @@ def makeMenu(win, menu, json=False):
         
 
         
-
+def callAndPrintDoc(func):
+    '''This function is used as a decorator.'''
+    def f(*args, **kwargs):
+        ret = func(*args, **kwargs)
+        if 'printDoc' in kwargs and kwargs['printDoc']:
+            Application.instance.printTip(func.__doc__)
+        return ret
+    f.__doc__   = func.__doc__
+    return f
 
 
 class Singleton(type):
@@ -271,6 +287,13 @@ since the instance of Application is the first node created on the model tree.''
         Scripting.nameSpace['locals'][Scripting.rootName] = self
         Scripting.nameSpace['globals'] = globals()
         self.homePage = 'https://github.com/xialulee/WaveSyn'
+        
+        # load config file
+        with open('config.json') as f:
+            config  = json.load(f)
+        consoleMenu = config['ConsoleMenu']
+        self.__editorInfo  = config['EditorInfo']
+        # End load config file
 
         root = Tix.Tk()
         self.__root = root
@@ -292,7 +315,7 @@ since the instance of Application is the first node created on the model tree.''
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)
                   
-        self.console = ConsoleWindow()
+        self.console = ConsoleWindow(menu=consoleMenu)
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
         self.noTip = False
@@ -305,19 +328,16 @@ since the instance of Application is the first node created on the model tree.''
         
     def newMIMOWin(self, printDoc=False):
         print('Not Implemented.', file=sys.stderr)
-        
+
+    @callAndPrintDoc        
     def newPatternWin(self, printDoc=False):
         '''This method creates a new PatternFitting window.
 Its return value is the ID of the new window.
 You can access the created window using its ID in the scripting system.
 A PatternWindow can synthesize a correlation matrix of which the beam pattern fits the given ideal pattern best.'''        
-        winid   = self.window.add(node=PatternWindow())
-        if printDoc:
-            self.printTip(self.newPatternWin.__doc__)
-        return winid
+        return self.window.add(node=PatternWindow())
 
-     
-        
+             
     @property
     def root(self):
         return self.__root
@@ -329,6 +349,10 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
     @property
     def balloon(self):
         return self.__balloon
+        
+    @property
+    def editorInfo(self):
+        return self.__editorInfo
         
     # The validation functions for entry widgets
     @property
@@ -422,59 +446,7 @@ colorMap = {
 
 
   
-class ScrolledList(Frame, object):
-    def __init__(self, *args, **kwargs):
-        Frame.__init__(self, *args, **kwargs)
-        sbar = Scrollbar(self)
-        list = Listbox(self)
-        sbar.config(command=list.yview)
-        list.config(yscrollcommand=sbar.set)
-        sbar.pack(side=RIGHT, fill=Y)
-        list.pack(side=LEFT, expand=YES, fill=BOTH)
-        list.bind('<<ListboxSelect>>', self.onListboxClick)
-        
-        self.__listClick = None
-        self.__list = list
-        self.__sbar = sbar
-        
 
-    @property
-    def list(self):
-        return self.__list
-
-    @property
-    def sbar(self):
-        return self.__sbar
-
-    def insert(self, *args, **kwargs):
-        return self.__list.insert(*args, **kwargs)
-        
-    def itemConfig(self, *args, **kwargs):
-        return self.__list.itemconfig(*args, **kwargs)
-
-    def clear(self):
-        self.__list.delete(0, END)
-        
-    def listConfig(self, **kwargs):
-        self.__list.config(**kwargs)
-        
-    @property
-    def listClick(self):
-        return self.__listClick
-
-    @listClick.setter
-    def listClick(self, val):
-        if not callable(val):
-            raise TypeError
-        self.__listClick = val
-
-    def onListboxClick(self, event):
-        index = self.__list.curselection()
-        if len(index) > 0:
-            index = index[0]
-            label = self.__list.get(index)
-            if self.listClick:
-                self.listClick(index, label)
   
   
 
@@ -609,7 +581,7 @@ class DataFigure(object):
         
 
 
-class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
+class FigureBook(PanedWindow, ModelNode): 
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self)
         figureMeta = kwargs.pop('figureMeta')
@@ -632,7 +604,6 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
         self.add(tabpages, stretch='always')
         
         self.__list = ScrolledList(self, relief=GROOVE)
-        #self.__list.list['width'] = 20
         self.__list.listConfig(width=20)
         self.__list.listClick = self.onListClick
         self.add(self.__list, stretch='never')
@@ -659,12 +630,6 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
         
         
     def onListClick(self, index, label):
-# index = int(index)
-# for linemeta in self.__meta_of_lines:
-# pyplot.setp(linemeta.lineobj, linewidth=1)
-# print 'set width'
-# pyplot.setp(self.__meta_of_lines[index].lineobj, 'linewidth', 3)
-# self.update()
         index = int(index)
 
         for figure in self.__figures:
@@ -730,8 +695,7 @@ Have a nice day.
             greetings = 'morning'
         txtStdOutErr.write(self.strWelcome.format(greetings), 'TIP')
         self.__txtStdOutErr = txtStdOutErr
-        with open('config.json') as f:
-            menu    = json.load(f)['ConsoleMenu']
+        menu    = kwargs['menu']
         makeMenu(root, menu, json=True)
         self.__defaultCursor = self.__txtStdOutErr.text['cursor']
         
@@ -770,8 +734,7 @@ Have a nice day.
                 self.__filename = filename
                 threading.Thread.__init__(self)
             def run(self):
-                subprocess.call([r'D:\Programs\Vim\vim73\gvim.exe', self.__filename]) # for Testing only!!!
-                #subprocess.call([r'notepad.exe', self.__filename]) # for Testing only!!!
+                subprocess.call([app.editorInfo['Path'], self.__filename]) 
             
         fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
         with os.fdopen(fd):
@@ -784,7 +747,9 @@ Have a nice day.
             with open(filename, 'r') as f:
                 code    = f.read()
                 self.write(code, 'HISTORY')
-                app.scripting.execute(code)
+                self.write('\n')
+                if code:
+                    app.scripting.execute(code)
         finally:            
             os.remove(filename)
             

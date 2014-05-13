@@ -9,14 +9,14 @@
 	    },
 	    {
 		"Name":"Console", "TearOff":0, "UnderLine":0, "SubMenu":[
-		    {"Name":"Save As...",   "TearOff":0,    "UnderLine":0,  "Command":"wavesyn.console.onSaveAs()"},
+		    {"Name":"Save As...",   "TearOff":0,    "UnderLine":0,  "Command":"wavesyn.console.onSaveAs()",	"Print":false},
 		    {"Name":"Clear", "UnderLine":0, "Command":"wavesyn.console.clear()"}
 		]
 	    },
 	    {
 		"Name":"Script", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Load and Run Script File", "UnderLine":0, "Command":"0"},
-		    {"Name":"Edit Script Using External Editor and Run",    "UnderLine":0,  "Command":"wavesyn.console.editScript()"}
+		    {"Name":"Edit Script Using External Editor and Run",    "UnderLine":0,  "Command":"wavesyn.console.onEditScript()",	"Print":false}
 		]
 	    },
 	    {
@@ -24,5 +24,10 @@
 		    {"Name":"Home Page", "UnderLine":0, "Command":"wavesyn.openHomePage()"}
 		]
 	    }        
-	]
+	],
+	
+	"EditorInfo":{
+		"Path":"notepad.exe",
+		"Name":"notepad"
+	}
 }
