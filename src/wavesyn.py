@@ -42,6 +42,8 @@ from scipy.io import savemat
 from functools import partial
 from datetime import datetime
 import webbrowser
+import subprocess
+from tempfile import NamedTemporaryFile
 
 
 from guicomponents import Group, ConsoleText, TaskbarIcon, ParamItem
@@ -64,7 +66,13 @@ def checkPositiveFloat(d, i, P, s, S, v, V, W):
         return True if P=='' else False
 
 
-
+class ObjectWithLock(object):    
+    '''This is a mixin class.'''
+    @property
+    def lock(self):
+        if not hasattr(self, '_lock'):
+            self._lock  = threading.Lock()
+        return self._lock
     
     
 # Object Model Sub-System
@@ -676,7 +684,7 @@ class FigureBook(PanedWindow, ModelNode): # Should be a subclass of ModelNode
         
         
         
-class ConsoleWindow(MenuMaker, ModelNode):
+class ConsoleWindow(MenuMaker, ObjectWithLock, ModelNode):
     strWelcome = '''Good {0}, dear user(s). Welcome to WaveSyn!
 WaveSyn is a platform for testing and evaluating waveform synthesis algorithms.
 The following modules are imported and all the objects in them can be used directly in the scripting system:
@@ -720,12 +728,14 @@ Have a nice day.
             },
             {
                 'Name':'Console', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
-                    {'Name':'Clear', 'UnderLine':0, 'Command':lambda: self.callMethod('clear')}
+                    {'Name':'Save As...',   'TearOff':0,    'UnderLine':0,  'Command':self.onSaveAs},
+                    {'Name':'Clear', 'UnderLine':0, 'Command':self.onClear}
                 ]
             },
             {
                 'Name':'Script', 'TearOff':0, 'UnderLine':0, 'SubMenu':[
-                    {'Name':'Load and Run script file', 'UnderLine':0, 'Command':lambda: 0}
+                    {'Name':'Load and Run Script File', 'UnderLine':0, 'Command':lambda: 0},
+                    {'Name':'Edit Script Using External Editor and Run',    'UnderLine':0,  'Command':self.onEditScript}
                 ]
             },
             {
@@ -747,10 +757,42 @@ Have a nice day.
         return self.__txtStdOutErr.text
                                                         
     def write(self, *args, **kwargs):
-        self.__txtStdOutErr.write(*args, **kwargs)
+        with self.lock:
+            self.__txtStdOutErr.write(*args, **kwargs)
+        
+    def save(self, filename): # for scripting system
+        with open(filename, 'w') as f:
+            f.write(self.__txtStdOutErr.getText())
+            
+    def onSaveAs(self):
+        filename    = asksaveasfilename(filetypes=[('All types of files', '*.*')])
+        if not filename:
+            return
+        self.callMethod('save', filename)
         
     def clear(self):
         self.__txtStdOutErr.clear()
+        
+    def onClear(self):
+        self.callMethod('clear')
+        
+    def editScript(self):
+        class EditorThread(threading.Thread):
+            def __init__(self, filename):
+                self.__filename = filename
+                threading.Thread.__init__(self)
+            def run(self):
+                subprocess.call([r'D:\Programs\Vim\vim73\gvim.exe', self.__filename]) # for Testing only!!!
+            
+        with NamedTemporaryFile(mode='w+', suffix='.py') as f:
+            editorThread    = EditorThread(f.name)
+            editorThread.start()
+            while editorThread.isAlive():
+                Application.instance.root.update()
+            self.write(f.read())
+            
+    def onEditScript(self):
+        self.callMethod('editScript')
         
 
 class ToolWindow(ModelNode):
@@ -810,10 +852,10 @@ class GridGroup(Group):
                 for key in d:
                     pitem = ParamItem(win)
                     pitem.pack()
-                    pitem.labeltext = d[key][0]
+                    pitem.labelText = d[key][0]
                     pitem.entry['textvariable'] = d[key][1]
                     if d[key][2]:
-                        pitem.checkfunc = d[key][2]
+                        pitem.checkFunc = d[key][2]
 
             def setmajorcolor():
                 c = askcolor()
@@ -886,10 +928,10 @@ class AxisGroup(Group):
         for c in range(4):
             for r in range(2):
                 temp = ParamItem(paramfrm)
-                temp.checkfunc = application.checkFloat
-                temp.labeltext = names[c*2+r]
-                temp.labelwidth = 5 if c*2+r < 4 else 10
-                temp.entrywidth = 5
+                temp.checkFunc = application.checkFloat
+                temp.labelText = names[c*2+r]
+                temp.labelWidth = 5 if c*2+r < 4 else 10
+                temp.entryWidth = 5
                 temp.entry.config(textvariable=self.__params[c*2+r])
                 temp.grid(row=r, column=c)
 
@@ -1021,15 +1063,15 @@ class AlgoParamsGroup(Group):
         for idx, name in enumerate(params):
             param = params[name]
             paramitem = ParamItem(frm)
-            paramitem.labeltext = name
+            paramitem.labelText = name
             paramitem.label['width'] = 5
             paramitem.entry['width'] = 8
             if self.balloon:
                 self.balloon.bind_widget(paramitem.label, balloonmsg=param.shortdesc)
             if param.type == 'int':
-                paramitem.checkfunc = self._app.checkInt
+                paramitem.checkFunc = self._app.checkInt
             elif param.type == 'float':
-                paramitem.checkfunc = checkFloat
+                paramitem.checkFunc = checkFloat
             paramitem.grid(row=idx%self.__MAXROW, column=idx//self.__MAXROW)
             self.__params[param.name] = {'gui':paramitem, 'meta':param}
         self.__algo = algorithm
@@ -1037,7 +1079,7 @@ class AlgoParamsGroup(Group):
     def getparams(self):
         params = self.__params
         convert = {'int':int, 'float':float, 'expression':eval, '':lambda x: x}
-        return {name: convert[params[name]['meta'].type](params[name]['gui'].entrytext) for name in params}
+        return {name: convert[params[name]['meta'].type](params[name]['gui'].entryText) for name in params}
 
 class InitGroup(Group):
     def __init__(self, *args, **kwargs):
@@ -1055,9 +1097,9 @@ class GenGroup(Group):
         Group.__init__(self, *args, **kwargs)
         self.__num = ParamItem(self)
         self.__num.label.config(text='num')
-        self.__num.entrytext = '1'
+        self.__num.entryText = '1'
         self.__num.entry.bind('<Return>', lambda event: self.onGenBtnClick())
-        self.__num.checkfunc = self._app.checkInt
+        self.__num.checkFunc = self._app.checkInt
         self.__num.pack()
         self.__progress = IntVar()
         self.__finishedwav = IntVar()
@@ -1079,7 +1121,7 @@ class GenGroup(Group):
     def onGenBtnClick(self):
         tbicon = self._app.taskbaricon
         self.__stopflag = False
-        wavnum = self.__num.getint()
+        wavnum = self.__num.getInt()
         progress = [0]
         waveform = [0]
         def exitcheck(k, K, y, y_last):
@@ -1191,10 +1233,10 @@ class PatternSolveGroup(Group):
         
         self.__M = ParamItem(frm)
         self.__M.label.config(text='M')
-        self.__M.entrywidth = 6
-        self.__M.entrytext = 10
+        self.__M.entryWidth = 6
+        self.__M.entryText = 10
         self.__M.entry.bind('<Return>', lambda dumb: self.onSolve())
-        self.__M.checkfunc = self._app.checkInt
+        self.__M.checkFunc = self._app.checkInt
         self.__M.pack(side=RIGHT)
         
         self._app.balloon.bind_widget(frm, balloonmsg='The number of the array elements.')
@@ -1226,7 +1268,7 @@ class PatternSolveGroup(Group):
 
         callMethod('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
         callMethod('setIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        callMethod('solve', M=self.__M.getint(), display=self.__bDisplay.get())
+        callMethod('solve', M=self.__M.getInt(), display=self.__bDisplay.get())
         callMethod('plotCorrMatrixPattern')
         
         
@@ -1240,19 +1282,19 @@ class PatternEditGroup(Group):
         frm = Frame(self)
         self.__center = ParamItem(frm)
         self.__center.label.config(text='center(deg)')
-        self.__center.entrytext = 0
-        self.__center.checkfunc = self._app.checkInt
-        self.__center.entrywidth = 5
-        self.__center.labelwidth = 10
+        self.__center.entryText = 0
+        self.__center.checkFunc = self._app.checkInt
+        self.__center.entryWidth = 5
+        self.__center.labelWidth = 10
         self.__center.pack(side=TOP)
         self._app.balloon.bind_widget(self.__center, balloonmsg='Specify the beam center here.')
         
         self.__width = ParamItem(frm)
         self.__width.label.config(text='width(deg)')
-        self.__width.entrytext = 20
-        self.__width.checkfunc = self._app.checkInt
-        self.__width.entrywidth = 5
-        self.__width.labelwidth = 10
+        self.__width.entryText = 20
+        self.__width.checkFunc = self._app.checkInt
+        self.__width.entryWidth = 5
+        self.__width.labelWidth = 10
         self.__width.pack(side=TOP)
         self._app.balloon.bind_widget(self.__width, balloonmsg='Specify the beam width here.')
         
@@ -1293,7 +1335,7 @@ class PatternEditGroup(Group):
         self.optgrp = None
         
     def onAdd(self):
-        self.__paramlist.list.insert(END, '{0}, {1}'.format(self.__center.getint(), self.__width.getint()))
+        self.__paramlist.list.insert(END, '{0}, {1}'.format(self.__center.getInt(), self.__width.getInt()))
         
     def onDel(self):
         self.__paramlist.list.delete(ANCHOR)

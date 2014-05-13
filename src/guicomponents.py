@@ -87,7 +87,7 @@ class ParamItem(Frame, object):
         self.__label.pack(side=LEFT)
         self.__entry    = Entry(self)
         self.__entry.pack(fill=X, expand=YES)
-        self.__checkfunc    = None
+        self.__checkFunc    = None
 
     @property
     def label(self):
@@ -98,51 +98,51 @@ class ParamItem(Frame, object):
         return self.__entry
 
     @property
-    def labeltext(self):
+    def labelText(self):
         return self.__label['text']
 
-    @labeltext.setter
-    def labeltext(self, text):
+    @labelText.setter
+    def labelText(self, text):
         self.__label['text']    = text
 
     @property
-    def entrytext(self):
+    def entryText(self):
         return self.__entry.get()
 
-    @entrytext.setter
-    def entrytext(self, text):
+    @entryText.setter
+    def entryText(self, text):
         self.__entry.delete(0, END)
         self.__entry.insert(0, text)
 
-    def getint(self):
+    def getInt(self):
         return int(self.__entry.get())
 
-    def getfloat(self):
+    def getFloat(self):
         return float(self.__entry.get())
 
     @property
-    def labelwidth(self):
+    def labelWidth(self):
         return self.__label['width']
 
-    @labelwidth.setter
-    def labelwidth(self, width):
+    @labelWidth.setter
+    def labelWidth(self, width):
         self.__label['width']   = width
 
     @property
-    def entrywidth(self):
+    def entryWidth(self):
         return self.__entry['width']
 
-    @entrywidth.setter
-    def entrywidth(self, width):
+    @entryWidth.setter
+    def entryWidth(self, width):
         self.__entry['width']   = width
 
     @property
-    def checkfunc(self):
-        return self.__checkfunc
+    def checkFunc(self):
+        return self.__checkFunc
 
-    @checkfunc.setter
-    def checkfunc(self, func):
-        self.__checkfunc    = func
+    @checkFunc.setter
+    def checkFunc(self, func):
+        self.__checkFunc    = func
         self.__entry.config(validate='key', validatecommand=func)
                 
 
@@ -165,12 +165,12 @@ class ScrolledText(Frame):
     def __init__(self, parent=None, text='', file=None):
         Frame.__init__(self, parent)
         self.pack(expand=YES, fill=BOTH)
-        self.makewidgets()
-        self.settext(text, file)
+        self.makeWidgets()
+        self.setText(text, file)
         
 
 
-    def makewidgets(self):
+    def makeWidgets(self):
         sbar    = Scrollbar(self)
         text    = TextWinHotkey(self, relief=SUNKEN)
         sbar.config(command=text.yview)
@@ -179,7 +179,7 @@ class ScrolledText(Frame):
         text.pack(side=LEFT, expand=YES, fill=BOTH)
         self.text   = text
 
-    def settext(self, text='', file=None):
+    def setText(self, text='', file=None):
         if file:
             with open(file, 'r') as f:
                 text    = f.read().decode('gbk')
@@ -189,18 +189,18 @@ class ScrolledText(Frame):
         self.text.focus()
         
     def clear(self):
-        self.settext()
+        self.setText()
 
-    def appendtext(self, text=''):
+    def appendText(self, text=''):
         self.text.insert(END, text)
 
-    def gettext(self):
+    def getText(self):
         return self.text.get('1.0', END+'-1c')
 
     def selectAll(self):
         return self.text.selectAll()
 
-    def findtext(self, target):
+    def findText(self, target):
         if target:
             where   = self.text.search(target, INSERT, END)
             if where:
