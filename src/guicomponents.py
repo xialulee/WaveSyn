@@ -250,6 +250,8 @@ class ConsoleText(ScrolledText):
         self.text.tag_configure('TIP', foreground='forestgreen')
         self.text.tag_configure('HISTORY',   foreground='purple')
         self.text.tag_configure('RETVAL',    foreground='orange')
+        
+        self.text.bind('<KeyPress>', self.onKeyPress)
 
         
         class StdOut:
@@ -275,6 +277,21 @@ class ConsoleText(ScrolledText):
         self.text.insert(END, content, tag)
         self.text.see(END)
         self.text.update()
+        
+    def onKeyPress(self, evt):        
+        if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
+            r, c    = self.getCursorPos()
+            start3  = self.text.get('{r}.0'.format(r=r), '{r}.3'.format(r=r))
+            if start3 != '>>>':
+                return 'break'
+            if c < 4:
+                return 'break'
+            
+    
+    def getCursorPos(self):
+        pos = self.text.index(INSERT)
+        r, c    = pos.split('.')
+        return int(r), int(c)
 
 class ScrolledList(Frame, object):
     def __init__(self, *args, **kwargs):
