@@ -241,57 +241,7 @@ class StreamChain(object):
         for stream in self.__streamlist:
             stream.write(content)
 
-class ConsoleText(ScrolledText):
-    '''see http://effbot.org/zone/tkinter-threads.htm'''
-    def __init__(self, *args, **kwargs):
-        ScrolledText.__init__(self, *args, **kwargs)
-        self.text.tag_configure('STDOUT',   foreground='black')
-        self.text.tag_configure('STDERR',   foreground='red')
-        self.text.tag_configure('TIP', foreground='forestgreen')
-        self.text.tag_configure('HISTORY',   foreground='purple')
-        self.text.tag_configure('RETVAL',    foreground='orange')
-        
-        self.text.bind('<KeyPress>', self.onKeyPress)
 
-        
-        class StdOut:
-            def write(obj, content):
-                self.write(content, 'STDOUT')
-
-        class StdErr:
-            def write(obj, content):
-                self.write(content, 'STDERR')
-                
-        self.__stdout   = StreamChain()
-        self.__stdout   += sys.stdout
-        self.__stdout   += StdOut()
-
-        self.__stderr   = StreamChain()
-        self.__stderr   += sys.stderr
-        self.__stderr   += StdErr()
-
-        sys.stdout      = self.__stdout
-        sys.stderr      = self.__stderr
-
-    def write(self, content, tag=None):
-        self.text.insert(END, content, tag)
-        self.text.see(END)
-        self.text.update()
-        
-    def onKeyPress(self, evt):        
-        if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
-            r, c    = self.getCursorPos()
-            start3  = self.text.get('{r}.0'.format(r=r), '{r}.3'.format(r=r))
-            if start3 != '>>>':
-                return 'break'
-            if c < 4:
-                return 'break'
-            
-    
-    def getCursorPos(self):
-        pos = self.text.index(INSERT)
-        r, c    = pos.split('.')
-        return int(r), int(c)
 
 class ScrolledList(Frame, object):
     def __init__(self, *args, **kwargs):

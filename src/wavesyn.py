@@ -46,9 +46,10 @@ import webbrowser
 import subprocess
 import tempfile
 import json
+import traceback
 
 
-from guicomponents import Group, ConsoleText, TaskbarIcon, ParamItem, ScrolledList
+from guicomponents import Group, StreamChain, TaskbarIcon, ParamItem, ScrolledList, ScrolledText
 import guicomponents
 
 
@@ -197,6 +198,7 @@ class Scripting(ModelNode):
         self.__codeList = []
         
     def execute(self, code):
+        app = Application.instance
         if isinstance(code, ScriptCode):
             code = code.code
         if not code.strip():
@@ -204,17 +206,27 @@ class Scripting(ModelNode):
             self.__codeList = []
         strippedCode    = code.strip()
         if strippedCode == '':
-            return
+            app.console.promptSymbol    = '>>> '
+            app.console.write('\n')
+            return True
         if strippedCode[-1] == ':' or self.__codeList:
             self.__codeList.append(code)
-            return
+            app.console.promptSymbol    = '... '
+            app.console.write('\n')
+            return False
+        app.console.promptSymbol    = '>>> '
+        app.console.write('\n')
         try:
             ret = eval(code, self.nameSpace['globals'], self.nameSpace['locals'])
             if ret!=None: 
                 Application.instance.console.write(repr(ret), 'RETVAL')
                 print()
         except SyntaxError:
+            #exec code in self.nameSpace['globals'], self.nameSpace['locals']
             exec code in self.nameSpace['globals'], self.nameSpace['locals']
+
+
+        return True
             
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
@@ -292,7 +304,8 @@ since the instance of Application is the first node created on the model tree.''
         with open('config.json') as f:
             config  = json.load(f)
         consoleMenu = config['ConsoleMenu']
-        self.__editorInfo  = config['EditorInfo']
+        self.__editorInfo   = config['EditorInfo']
+        self.promptSymbols  = config['PromptSymbols']
         # End load config file
 
         root = Tix.Tk()
@@ -658,7 +671,82 @@ class FigureBook(PanedWindow, ModelNode):
                 
 
 
+class ConsoleText(ScrolledText):
+    '''see http://effbot.org/zone/tkinter-threads.htm'''
+    def __init__(self, *args, **kwargs):
+        ScrolledText.__init__(self, *args, **kwargs)
+        self.text.tag_configure('STDOUT',   foreground='black')
+        self.text.tag_configure('STDERR',   foreground='red')
+        self.text.tag_configure('TIP', foreground='forestgreen')
+        self.text.tag_configure('HISTORY',   foreground='purple')
+        self.text.tag_configure('RETVAL',    foreground='orange')
         
+        self.text.bind('<KeyPress>', self.onKeyPress)
+
+        
+        class StdOut:
+            def write(obj, content):
+                self.write(content, 'STDOUT')
+
+        class StdErr:
+            def write(obj, content):
+                self.write(content, 'STDERR')
+                
+        self.__stdout   = StreamChain()
+        self.__stdout   += sys.stdout
+        self.__stdout   += StdOut()
+
+        self.__stderr   = StreamChain()
+        self.__stderr   += sys.stderr
+        self.__stderr   += StdErr()
+
+        sys.stdout      = self.__stdout
+        sys.stderr      = self.__stderr
+        
+        self.promptSymbol = '>>> '
+        
+
+    def write(self, content, tag=None):
+        r, c    = self.getCursorPos(END)
+        start   = 'end-5c'
+        stop    = 'end-1c'
+        if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
+            self.text.delete(start, stop)
+        self.text.insert(END, content, tag)
+        self.text.insert(END, self.promptSymbol)
+        self.text.see(END)
+        self.text.update()
+        
+    def onKeyPress(self, evt):        
+        if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
+            r, c    = self.getCursorPos()
+            prompt  = self.text.get('{r}.0'.format(r=r), '{r}.4'.format(r=r))
+            if prompt != '>>> ' and prompt != '... ':
+                return 'break'
+            if evt.keycode==8 and c <= 4:
+                return 'break'
+            if c < 4:
+                return 'break'
+            if evt.keycode == 13:
+                code    = self.text.get('{r}.4'.format(r=r), '{r}.end'.format(r=r))
+                #self.text.insert(END, '\n')
+                #self.write('\n')
+                try:
+                    Application.instance.scripting.execute(code)
+#                if execState:
+#                    self.text.insert(END, '>>> ')
+#                else:
+#                    self.text.insert(END, '... ')
+                except:
+                    traceback.print_exc()
+                finally:
+                    return 'break'
+            
+    
+    def getCursorPos(self, mark=INSERT):
+        pos = self.text.index(mark)
+        r, c    = pos.split('.')
+        return int(r), int(c)        
         
         
 class ConsoleWindow(ObjectWithLock, ModelNode):
@@ -677,14 +765,23 @@ Have a nice day.
         txtStdOutErr = ConsoleText(root)
         txtStdOutErr.pack(expand=YES, fill=BOTH)
         
-        entCommand = Entry(root)
-        entCommand.pack(fill=X)
-        def onReturn(event):
-            code = entCommand.get()
-            self.write(code+'\n', 'HISTORY')
-            entCommand.delete(0, END)
-            app.scripting.execute(code)
-        entCommand.bind('<Return>', onReturn)
+        
+#        entCommand = Entry(root)
+#        entCommand.pack(fill=X)
+#        entCommand.config(font=txtStdOutErr.text['font'])
+#        self.__currentPS    = app.promptSymbols[0]
+#        entCommand.insert(0, self.__currentPS)
+#        def onReturn(event):
+#            code = entCommand.get()[len(self.__currentPS):]
+#            self.write(''.join((self.__currentPS, code, '\n')), 'HISTORY')
+#            entCommand.delete(0, END)
+#            execState   = app.scripting.execute(code)
+#            if not execState:
+#                self.__currentPS    = app.promptSymbols[1]                
+#            else:
+#                self.__currentPS    = app.promptSymbols[0]
+#            entCommand.insert(0, self.__currentPS)
+#        entCommand.bind('<Return>', onReturn)
         
         nowtime = datetime.now().hour
         if nowtime >= 19:
@@ -698,6 +795,14 @@ Have a nice day.
         menu    = kwargs['menu']
         makeMenu(root, menu, json=True)
         self.__defaultCursor = self.__txtStdOutErr.text['cursor']
+        
+    @property
+    def promptSymbol(self):
+        return self.__txtStdOutErr.promptSymbol
+        
+    @promptSymbol.setter
+    def promptSymbol(self, val):
+        self.__txtStdOutErr.promptSymbol    = val
         
     @property
     def defaultCursor(self):
