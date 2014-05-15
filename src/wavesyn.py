@@ -49,7 +49,9 @@ import json
 import traceback
 
 ##########################
-from idlelib import AutoComplete
+from idlelib.AutoComplete import AutoComplete
+from idlelib.Percolator import Percolator
+from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from guicomponents import Group, StreamChain, TaskbarIcon, ParamItem, ScrolledList, ScrolledText
@@ -334,6 +336,12 @@ since the instance of Application is the first node created on the model tree.''
         frm.pack(side=TOP, fill=X)
                   
         self.console = ConsoleWindow(menu=consoleMenu)
+        ############################################
+#        self.percolator = Percolator(console.text)
+#        d = ColorDelegator()
+#        p.insertfilter(d)        
+        ############################################        
+        
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
         self.noTip = False
@@ -700,8 +708,14 @@ class ConsoleText(ScrolledText):
         self.indentwidth    = 4
         self.tabwidth       = 4
         self.context_use_ps1    = '>>> '
-        self.__autoComplete = AutoComplete.AutoComplete(self)        
+        self.__autoComplete = AutoComplete(self)        
         #############################################################
+        
+        ############################################
+        self.percolator = Percolator(self.text)
+        self.colorDelegator = ColorDelegator()
+        self.percolator.insertfilter(self.colorDelegator)   
+        ############################################        
 
 
 
@@ -734,8 +748,22 @@ class ConsoleText(ScrolledText):
         stop    = 'end-1c'
         if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
             self.text.delete(start, stop)
+        ##################################################
+        start    = self.text.index(END)
+        ##################################################
         self.text.insert(END, content, tag)
+        ##################################################
+        #pos2    = self.text.index(END)
+        for tag in self.colorDelegator.tagdefs:
+            self.text.tag_remove(tag, start, "end")
+            #print (tag)
+        ##################################################
         self.text.insert(END, self.promptSymbol)
+        ##################################################
+        #self.colorDelegator.recolorize_main()
+        self.text.tag_remove("TODO", "1.0", END)
+        self.text.tag_add("SYNC", "1.0", END)
+        ##################################################
         self.text.see(END)
         self.text.update()
         
@@ -811,6 +839,11 @@ Have a nice day.
         root.title('WaveSyn-Console')
         txtStdOutErr = ConsoleText(root)
         txtStdOutErr.pack(expand=YES, fill=BOTH)
+        ############################################
+#        self.percolator = Percolator(txtStdOutErr.text)
+#        self.colorDelegator = ColorDelegator()
+#        self.percolator.insertfilter(self.colorDelegator)   
+        ############################################
 
         nowtime = datetime.now().hour
         if nowtime >= 19:
@@ -844,6 +877,7 @@ Have a nice day.
     def write(self, *args, **kwargs):
         with self.lock:
             self.__txtStdOutErr.write(*args, **kwargs)
+
         
     def save(self, filename): # for scripting system
         with open(filename, 'w') as f:
@@ -884,7 +918,7 @@ Have a nice day.
                 self.write(code, 'HISTORY')
                 self.write('\n')
                 if code:
-                    app.scripting.execute(code)
+                    app.execute(code)
         finally:            
             os.remove(filename)
             
