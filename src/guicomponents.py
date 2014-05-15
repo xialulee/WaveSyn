@@ -152,6 +152,7 @@ class TextWinHotkey(Text):
     def __init__(self, *args, **kwargs):
         Text.__init__(self, *args, **kwargs)
         self.bind('<Control-Key-a>', lambda event: self.selectAll())
+        self.bind('<Control-Key-c>', lambda event: 0)
 
     def selectAll(self):
         self.tag_add(SEL, '1.0', 'end-1c')

@@ -25,9 +25,11 @@
 		]
 	    }        
 	],
+
+	"PromptSymbols":[">>> ", "... "],
 	
 	"EditorInfo":{
-		"Path":"notepad.exe",
+		"Path":"notepad",
 		"Name":"notepad"
 	}
 }

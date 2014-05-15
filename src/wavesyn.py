@@ -48,6 +48,9 @@ import tempfile
 import json
 import traceback
 
+##########################
+from idlelib import AutoComplete
+##########################
 
 from guicomponents import Group, StreamChain, TaskbarIcon, ParamItem, ScrolledList, ScrolledText
 import guicomponents
@@ -87,12 +90,12 @@ wavesyn
 -console
 -clipboard
 -window[id]
--instance of PatternFitting
--figureBook
--instance of SingleSyn
--figureBook
--instance of MIMOSyn
--figureBook
+    -instance of PatternFitting
+        -figureBook
+    -instance of SingleSyn
+        -figureBook
+    -instance of MIMOSyn
+        -figureBook
 '''
     def __init__(self, nodeName='', isRoot=False, **kwargs):
         if '_attributeLock' not in self.__dict__:
@@ -195,39 +198,41 @@ class Scripting(ModelNode):
     def __init__(self, rootNode):
         ModelNode.__init__(self)
         self.__rootNode = rootNode
-        self.__codeList = []
+
+        # self.__codeList = []
         
-    def execute(self, code):
-        app = Application.instance
-        if isinstance(code, ScriptCode):
-            code = code.code
-        if not code.strip():
-            code = '\n'.join(self.__codeList)
-            self.__codeList = []
-        strippedCode    = code.strip()
-        if strippedCode == '':
-            app.console.promptSymbol    = '>>> '
-            app.console.write('\n')
-            return True
-        if strippedCode[-1] == ':' or self.__codeList:
-            self.__codeList.append(code)
-            app.console.promptSymbol    = '... '
-            app.console.write('\n')
-            return False
-        app.console.promptSymbol    = '>>> '
-        app.console.write('\n')
-        try:
-            ret = eval(code, self.nameSpace['globals'], self.nameSpace['locals'])
-            if ret!=None: 
-                Application.instance.console.write(repr(ret), 'RETVAL')
-                print()
-        except SyntaxError:
-            #exec code in self.nameSpace['globals'], self.nameSpace['locals']
-            exec code in self.nameSpace['globals'], self.nameSpace['locals']
-
-
-        return True
+#    def execute(self, code):
+#        app = Application.instance
+#        if isinstance(code, ScriptCode):
+#            code = code.code
+#        if not code.strip():
+#            code = '\n'.join(self.__codeList)
+#            self.__codeList = []
+#        strippedCode    = code.strip()
+#        if strippedCode == '':
+#            app.console.promptSymbol    = '>>> '
+#            app.console.write('\n')
+#            return True
+#        if strippedCode[-1] == ':' or self.__codeList:
+#            self.__codeList.append(code)
+#            app.console.promptSymbol    = '... '
+#            app.console.write('\n')
+#            return False
+#        app.console.promptSymbol    = '>>> '
+#        app.console.write('\n')
+#        try:
+#            ret = eval(code, self.nameSpace['globals'], self.nameSpace['locals'])
+#            if ret!=None: 
+#                Application.instance.console.write(repr(ret), 'RETVAL')
+#                print()
+#        except SyntaxError:
+#            #exec code in self.nameSpace['globals'], self.nameSpace['locals']
+#            exec code in self.nameSpace['globals'], self.nameSpace['locals']
+#
+#
+#        return True
             
+
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
         
@@ -387,11 +392,18 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
         if ret != None:
             self.console.write(str(ret)+'\n', 'RETVAL')
-      
-            
-            
+                              
     def eval(self, expr):
         return eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
+        
+    def execute(self, code):
+        ret = None
+        try:
+            ret = self.eval(code)
+        except SyntaxError:
+            exec code in Scripting.nameSpace['globals'], Scripting.nameSpace['locals']
+        return ret
+        
             
     def printTip(self, contents):
         if self.noTip:
@@ -684,6 +696,16 @@ class ConsoleText(ScrolledText):
         self.text.bind('<KeyPress>', self.onKeyPress)
 
         
+        #############################################################
+        self.indentwidth    = 4
+        self.tabwidth       = 4
+        self.context_use_ps1    = '>>> '
+        self.__autoComplete = AutoComplete.AutoComplete(self)        
+        #############################################################
+
+
+
+        
         class StdOut:
             def write(obj, content):
                 self.write(content, 'STDOUT')
@@ -717,7 +739,9 @@ class ConsoleText(ScrolledText):
         self.text.see(END)
         self.text.update()
         
-    def onKeyPress(self, evt):        
+
+    def onKeyPress(self, evt, codeList=[]):   
+        #print (evt.keycode)        
         if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
             r, c    = self.getCursorPos()
             prompt  = self.text.get('{r}.0'.format(r=r), '{r}.4'.format(r=r))
@@ -728,19 +752,42 @@ class ConsoleText(ScrolledText):
             if c < 4:
                 return 'break'
             if evt.keycode == 13:
+                rend, cend  = self.getCursorPos('end-1c')
+                if r < rend:
+                    return 'break'
+                app = Application.instance
                 code    = self.text.get('{r}.4'.format(r=r), '{r}.end'.format(r=r))
-                #self.text.insert(END, '\n')
-                #self.write('\n')
                 try:
-                    Application.instance.scripting.execute(code)
-#                if execState:
-#                    self.text.insert(END, '>>> ')
-#                else:
-#                    self.text.insert(END, '... ')
-                except:
-                    traceback.print_exc()
+                    strippedCode     = code.strip()
+                    if strippedCode == '':
+                        code    = '\n'.join(codeList)
+                        del codeList[:]
+                    strippedCode    = code.strip()
+                    if strippedCode == '':
+                        self.promptSymbol   = '>>> '
+                        self.write('\n') 
+                    elif strippedCode[-1] in (':', '\\') or codeList:
+                        codeList.append(code)
+                        self.promptSymbol   = '... '
+                        self.write('\n')
+                    else:
+                        self.promptSymbol   = '>>> '
+                        self.write('\n')
+                        try:
+                            ret = app.execute(code)
+                        except:
+                            traceback.print_exc()
+                        if ret != None:
+                            self.write(repr(ret)+'\n', 'RETVAL')
+    
                 finally:
                     return 'break'
+
+            #######################################################
+            if evt.keycode == 9:
+                return self.__autoComplete.autocomplete_event(evt)
+            #######################################################
+
             
     
     def getCursorPos(self, mark=INSERT):
@@ -764,25 +811,7 @@ Have a nice day.
         root.title('WaveSyn-Console')
         txtStdOutErr = ConsoleText(root)
         txtStdOutErr.pack(expand=YES, fill=BOTH)
-        
-        
-#        entCommand = Entry(root)
-#        entCommand.pack(fill=X)
-#        entCommand.config(font=txtStdOutErr.text['font'])
-#        self.__currentPS    = app.promptSymbols[0]
-#        entCommand.insert(0, self.__currentPS)
-#        def onReturn(event):
-#            code = entCommand.get()[len(self.__currentPS):]
-#            self.write(''.join((self.__currentPS, code, '\n')), 'HISTORY')
-#            entCommand.delete(0, END)
-#            execState   = app.scripting.execute(code)
-#            if not execState:
-#                self.__currentPS    = app.promptSymbols[1]                
-#            else:
-#                self.__currentPS    = app.promptSymbols[0]
-#            entCommand.insert(0, self.__currentPS)
-#        entCommand.bind('<Return>', onReturn)
-        
+
         nowtime = datetime.now().hour
         if nowtime >= 19:
             greetings = 'evening'
@@ -828,6 +857,7 @@ Have a nice day.
         
     def clear(self):
         self.__txtStdOutErr.clear()
+        self.__txtStdOutErr.write('') # By calling write('') the prompt symbol will be printed.
         
     def onClear(self):
         self.callMethod('clear')
