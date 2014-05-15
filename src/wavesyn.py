@@ -313,6 +313,7 @@ since the instance of Application is the first node created on the model tree.''
         consoleMenu = config['ConsoleMenu']
         self.__editorInfo   = config['EditorInfo']
         self.promptSymbols  = config['PromptSymbols']
+        tagDefs = config['TagDefs']
         # End load config file
 
         root = Tix.Tk()
@@ -335,12 +336,8 @@ since the instance of Application is the first node created on the model tree.''
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)
                   
-        self.console = ConsoleWindow(menu=consoleMenu)
-        ############################################
-#        self.percolator = Percolator(console.text)
-#        d = ColorDelegator()
-#        p.insertfilter(d)        
-        ############################################        
+        self.console = ConsoleWindow(menu=consoleMenu, tagDefs=tagDefs)
+     
         
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
@@ -839,11 +836,11 @@ Have a nice day.
         root.title('WaveSyn-Console')
         txtStdOutErr = ConsoleText(root)
         txtStdOutErr.pack(expand=YES, fill=BOTH)
-        ############################################
-#        self.percolator = Percolator(txtStdOutErr.text)
-#        self.colorDelegator = ColorDelegator()
-#        self.percolator.insertfilter(self.colorDelegator)   
-        ############################################
+        self.__txtStdOutErr = txtStdOutErr
+        tagDefs = kwargs['tagDefs']
+        for key in tagDefs:
+            self.text.tag_configure(key, **tagDefs[key])        
+
 
         nowtime = datetime.now().hour
         if nowtime >= 19:
@@ -853,10 +850,13 @@ Have a nice day.
         else:
             greetings = 'morning'
         txtStdOutErr.write(self.strWelcome.format(greetings), 'TIP')
-        self.__txtStdOutErr = txtStdOutErr
+
         menu    = kwargs['menu']
         makeMenu(root, menu, json=True)
         self.__defaultCursor = self.__txtStdOutErr.text['cursor']
+        ##################################
+        #self.consoleText    = txtStdOutErr
+        ##################################
         
     @property
     def promptSymbol(self):

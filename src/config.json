@@ -31,5 +31,13 @@
 	"EditorInfo":{
 		"Path":"notepad",
 		"Name":"notepad"
+	},
+
+	"TagDefs":{
+		"COMMENT": {"foreground":"#009900"},
+		"KEYWORD": {"foreground":"#00a0ff"},
+		"BUILTIN": {"foreground":"#e58600"},
+		"STRING":  {"foreground":"#a020f0"},
+		"DEFINITION":{"foreground":"#0000ff"}
 	}
 }
