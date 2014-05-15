@@ -25,4 +25,5 @@ The console window is the first window appears on the screen after WaveSyn is la
 The scripting system helps users to automate WaveSyn. To help users write their own script, WaveSyn is obliging and prints the corresponding commands in the console for most GUI operations, and these printed commands can help users to figure out the object model of WaveSyn. <br/>
 Users can enter a piece of code directly in the console window, shown as follows.
 ![](https://github.com/xialulee/WaveSyn/raw/master/doc/images/Features-Scripting-Snapshot1.png "Console window of WaveSyn")<br/>
-The scripting system also supports single tab text editor such as notepad.exe (default on Windows) and Vim (GVim).
+The scripting system also supports single tab text editor such as notepad.exe (default on Windows) and Vim (GVim).<br/>
+[Learn more about the scripting system.](https://github.com/xialulee/WaveSyn/blob/master/doc/ScriptingIntroduction.md)
