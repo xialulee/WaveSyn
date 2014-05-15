@@ -7,8 +7,10 @@ WaveSyn provides a scripting system for automation. The core of the system is a 
 >>window[id]
 >>>instance of PatternFitting window
 >>>>figureBook
+
 >>>instance of SingleSyn window
 >>>>figureBook
+
 >>>instance of MIMOSyn window
 >>>>figureBook
 
