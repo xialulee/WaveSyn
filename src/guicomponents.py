@@ -271,6 +271,9 @@ class ScrolledList(Frame, object):
     def insert(self, *args, **kwargs):
         return self.__list.insert(*args, **kwargs)
         
+    def delete(self, *args, **kwargs):
+        return self.__list.delete(*args, **kwargs)
+        
     def itemConfig(self, *args, **kwargs):
         return self.__list.itemconfig(*args, **kwargs)
 
@@ -279,6 +282,10 @@ class ScrolledList(Frame, object):
         
     def listConfig(self, **kwargs):
         self.__list.config(**kwargs)
+        
+    @property
+    def curSelection(self):
+        return self.__list.curselection()
         
     @property
     def listClick(self):

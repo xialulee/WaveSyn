@@ -91,7 +91,7 @@ The model tree is illustrated as follows:
 wavesyn
 -console
 -clipboard
--window[id]
+-windows[id]
     -instance of PatternFitting
         -figureBook
     -instance of SingleSyn
@@ -200,41 +200,7 @@ class Scripting(ModelNode):
     def __init__(self, rootNode):
         ModelNode.__init__(self)
         self.__rootNode = rootNode
-
-        # self.__codeList = []
-        
-#    def execute(self, code):
-#        app = Application.instance
-#        if isinstance(code, ScriptCode):
-#            code = code.code
-#        if not code.strip():
-#            code = '\n'.join(self.__codeList)
-#            self.__codeList = []
-#        strippedCode    = code.strip()
-#        if strippedCode == '':
-#            app.console.promptSymbol    = '>>> '
-#            app.console.write('\n')
-#            return True
-#        if strippedCode[-1] == ':' or self.__codeList:
-#            self.__codeList.append(code)
-#            app.console.promptSymbol    = '... '
-#            app.console.write('\n')
-#            return False
-#        app.console.promptSymbol    = '>>> '
-#        app.console.write('\n')
-#        try:
-#            ret = eval(code, self.nameSpace['globals'], self.nameSpace['locals'])
-#            if ret!=None: 
-#                Application.instance.console.write(repr(ret), 'RETVAL')
-#                print()
-#        except SyntaxError:
-#            #exec code in self.nameSpace['globals'], self.nameSpace['locals']
-#            exec code in self.nameSpace['globals'], self.nameSpace['locals']
-#
-#
-#        return True
             
-
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
         
@@ -331,7 +297,7 @@ since the instance of Application is the first node created on the model tree.''
                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
         # End Validation Functions
                
-        self.window = NodeHub()
+        self.windows = NodeHub()
         
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)
@@ -344,9 +310,6 @@ since the instance of Application is the first node created on the model tree.''
         self.noTip = False
 
     def newSingleWin(self, printDoc=False):
-# newwin = SingleWindow(self)
-# self.window[id(newwin)] = newwin
-# return id(newwin)
         print('Not Implemented.', file=sys.stderr)
         
     def newMIMOWin(self, printDoc=False):
@@ -358,7 +321,7 @@ since the instance of Application is the first node created on the model tree.''
 Its return value is the ID of the new window.
 You can access the created window using its ID in the scripting system.
 A PatternWindow can synthesize a correlation matrix of which the beam pattern fits the given ideal pattern best.'''        
-        return self.window.add(node=PatternWindow())
+        return self.windows.add(node=PatternWindow())
 
              
     @property
@@ -440,7 +403,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
     def notifyWinQuit(self, win):
         self.printTip('{0} is closed, and its ID becomes defunct for scripting system hereafter.'\
             .format(win.nodePath))
-        self.window.pop(id(win))
+        self.windows.pop(id(win))
         
         
     def openHomePage(self):
@@ -481,7 +444,7 @@ colorMap = {
   
 
 class DataFigure(object):
-    def __init__(self, master, figsize=(5,4), dpi=100, polar=False):
+    def __init__(self, master, figsize=(5,4), dpi=100, isPolar=False):
         self.__fig = Figure(figsize, dpi)
         canvas = FigureCanvasTkAgg(self.__fig, master=master)
         canvas.show()
@@ -491,8 +454,8 @@ class DataFigure(object):
         toolbar.update()
         toolbar.pack()
         self.__lineObjects = []
-        self.__axes = self.__fig.add_subplot(111, polar=polar)
-        self.__polar = polar
+        self.__axes = self.__fig.add_subplot(111, polar=isPolar)
+        self.__isPolar = isPolar
         self.plotFunction = None
         
     @property
@@ -504,8 +467,8 @@ class DataFigure(object):
         return self.__axes
         
     @property
-    def polar(self):
-        return self.__polar
+    def isPolar(self):
+        return self.__isPolar
         
     @property
     def lineObjects(self):
@@ -579,15 +542,6 @@ class DataFigure(object):
 # self.gridpanel.major = 0
 # self.gridpanel.minor = 0
 
-# def remove_sel_line(self):
-# sel = self.__slist.list.curselection()
-# if len(sel) > 0:
-# sel = int(sel[0])
-# linemeta = self.__meta_of_lines[sel]
-# linemeta.lineobj.remove()
-# self.__slist.list.delete(ANCHOR)
-# del self.__meta_of_lines[sel]
-# self.update()
             
     def deleteLine(self, idx):
         lineObject = self.__lineObjects[idx]
@@ -627,7 +581,7 @@ class FigureBook(PanedWindow, ModelNode):
         tabpages = Notebook(self)
         for meta in figureMeta:
             frm = Frame(tabpages)
-            fig = DataFigure(frm, polar=meta['polar'])
+            fig = DataFigure(frm, isPolar=meta['polar'])
             tabpages.add(frm, text=meta['name'])
             self.__figures.append(fig)
             
@@ -683,6 +637,23 @@ class FigureBook(PanedWindow, ModelNode):
                     params['xdata'] = ','.join((str(i) for i in params['xdata']))
                     params['ydata'] = ','.join((str(i) for i in params['ydata']))
                     print("{func}([{xdata}], [{ydata}], '{color}');hold on".format(**params), file=file)
+                    
+
+    def deleteSelLines(self, idx=None):
+        if idx is None:
+            idx = self.__list.curSelection
+        #print (idx)
+            if len(idx) <= 0:
+                return
+            if len(idx) > 1:
+                raise ValueError, 'Multi-selection is not supported.'
+            idx = int(idx[0])
+        for fig in self.__figures:
+            fig.lineObjects[idx][0].remove()
+            del fig.lineObjects[idx]
+            fig.update()
+        self.__list.delete(idx)
+                
                 
         
                 
@@ -701,6 +672,7 @@ class ConsoleText(ScrolledText):
         self.text.bind('<KeyPress>', self.onKeyPress)
 
         
+        # Experimenting with idlelib.AutoComplete
         #############################################################
         self.indentwidth    = 4
         self.tabwidth       = 4
@@ -708,13 +680,13 @@ class ConsoleText(ScrolledText):
         self.__autoComplete = AutoComplete(self)        
         #############################################################
         
-        ############################################
+
+        
+        # Syntax highlight is implemented by idlelib
         self.percolator = Percolator(self.text)
         self.colorDelegator = ColorDelegator()
         self.percolator.insertfilter(self.colorDelegator)   
-        ############################################        
-
-
+        
 
         
         class StdOut:
@@ -745,22 +717,25 @@ class ConsoleText(ScrolledText):
         stop    = 'end-1c'
         if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
             self.text.delete(start, stop)
-        ##################################################
+
+        # Record the position of the END before inserting anything.
         start    = self.text.index(END)
-        ##################################################
+
         self.text.insert(END, content, tag)
-        ##################################################
-        #pos2    = self.text.index(END)
+
+        # Remove unnecessary highlighting
         for tag in self.colorDelegator.tagdefs:
             self.text.tag_remove(tag, start, "end")
-            #print (tag)
-        ##################################################
+            
+
         self.text.insert(END, self.promptSymbol)
-        ##################################################
-        #self.colorDelegator.recolorize_main()
+        
+        
+        # Remove unnecessary highlighting
         self.text.tag_remove("TODO", "1.0", END)
         self.text.tag_add("SYNC", "1.0", END)
-        ##################################################
+        
+        
         self.text.see(END)
         self.text.update()
         
@@ -776,10 +751,10 @@ class ConsoleText(ScrolledText):
                 return 'break'
             if c < 4:
                 return 'break'
+            rend, cend  = self.getCursorPos('end-1c')
+            if r < rend:
+                return 'break'                
             if evt.keycode == 13:
-                rend, cend  = self.getCursorPos('end-1c')
-                if r < rend:
-                    return 'break'
                 app = Application.instance
                 code    = self.text.get('{r}.4'.format(r=r), '{r}.end'.format(r=r))
                 try:
@@ -1151,10 +1126,12 @@ class ClearGroup(Group):
         self.name = 'Clear Plot'
 
     def onClearAll(self):
-        self.__topwin.figureBook.clear()
+        # self.__topwin.figureBook.clear()
+        self.__topwin.figureBook.callMethod('clear')
 
     def onDelSel(self):
-        self.__topwin.figureBook.remove_sel_line()
+        # self.__topwin.figureBook.deleteSelLines()
+        self.__topwin.figureBook.callMethod('deleteSelLines', idx=None)
 
     def onDelUnSel(self):
         self.__topwin.figureBook.remove_unsel_lines()
@@ -1635,6 +1612,11 @@ class PatternWindow(ToolWindow):
         self.figureBook = figureBook        
         self.__problem = pattern2corrmtx.Problem()
         self.R = None
+        
+        #########################
+#        print(tabpages.select())
+#        print(tabpages.index(CURRENT))
+        #########################
         
         
     @property
