@@ -48,6 +48,7 @@ import tempfile
 import json
 import traceback
 
+# Some console functionalities are implemented by idlelib
 ##########################
 from idlelib.AutoComplete import AutoComplete
 from idlelib.Percolator import Percolator
@@ -81,10 +82,18 @@ class ObjectWithLock(object):
         if not hasattr(self, '_lock'):
             self._lock  = threading.Lock()
         return self._lock
+        
+      
+
+def setMultiAttr(obj, **kwargs):
+    '''This function mimics the VisualBasic "with" statement.'''    
+    for attrName in kwargs:
+        setattr(obj, attrName, kwargs[attrName])
+
     
     
 # Object Model Sub-System
-# In fact, the functionality of this sub-system is serving the scripting system.
+# It is a part of the scripting system.
 class ModelNode(object):
     '''This class defines the node of the model tree of this application.
 The model tree is illustrated as follows:
@@ -118,11 +127,16 @@ wavesyn
             # This circumstance happens when __setattr__ called before __init__ being called.
             object.__setattr__(self, '_attributeLock', set())
         if key in self._attributeLock:
-            raise AttributeError, 'Attribute "{0}" is not changable.'.format(key)
+            raise AttributeError, 'Attribute "{0}" is unchangeable.'.format(key)
         if isinstance(val, ModelNode) and not val.isRoot and val.parentNode==None:
             val.nodeName = val.nodeName if val.nodeName else key
             object.__setattr__(val, 'parentNode', self)
+            
+            # The autolock mechanism will lock the node after you attach it to the model tree.
+            # A child node cannot change its parent
             val.lockAttribute('parentNode')
+            # and the parent node's child node cannot be re-assinged. 
+            self.lockAttribute(key)
         object.__setattr__(self, key, val)
         
     @property
@@ -178,9 +192,7 @@ class Scripting(ModelNode):
     @staticmethod
     def paramsToStr(*args, **kwargs):
         def paramToStr(param):
-            #print (type(param))
             if isinstance(param, str) or isinstance(param, unicode):
-                #print ('"{0}"'.format(param))
                 return '"{0}"'.format(param)
             elif isinstance(param, ScriptCode):
                 return param.code
@@ -223,7 +235,9 @@ def makeMenu(win, menu, json=False):
                     printCode   = topItem.get('Print', True)
                     cmd = funcGen(topItem['Command'], printCode)
                 else:
-                    cmd = topItem['Command'] # topItem['Command'] is a callable object
+                    # Python data object can store callable object, 
+                    # and topItem['Command'] should be a callable object in this circumstance.
+                    cmd = topItem['Command'] 
                 top.add_command(label=topItem['Name'], command=cmd, underline=topItem['UnderLine'])
             else:
                 tearoff = 1 if 'TearOff' not in topItem else int(topItem['TearOff'])
@@ -277,25 +291,29 @@ since the instance of Application is the first node created on the model tree.''
         with open('config.json') as f:
             config  = json.load(f)
         consoleMenu = config['ConsoleMenu']
-        self.__editorInfo   = config['EditorInfo']
+        self.editorInfo   = config['EditorInfo']
         self.promptSymbols  = config['PromptSymbols']
         tagDefs = config['TagDefs']
         # End load config file
 
         root = Tix.Tk()
-        self.__root = root
-        
-        self.__balloon = Tix.Balloon(root)
-        self.__tbicon = TaskbarIcon(root)
+        self.root = root        
+        self.balloon = Tix.Balloon(root)
+        self.tbicon = TaskbarIcon(root)
         
         # Validation Functions
-        self.__checkInt = (root.register(partial(checkValue, func=int)),
+        self.checkInt = (root.register(partial(checkValue, func=int)),
                 '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.__checkFloat = (root.register(partial(checkValue, func=float)),
+        self.checkFloat = (root.register(partial(checkValue, func=float)),
                 '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.__checkPositiveFloat = (root.register(checkPositiveFloat),
+        self.checkPositiveFloat = (root.register(checkPositiveFloat),
                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
         # End Validation Functions
+          
+        # lock attributes which should be unchangeable. Tired of using @property.  
+        for attrName in ('root', 'balloon', 'tbicon', 'checkInt', 'checkFloat', 
+                         'checkPositiveFloat', 'editorInfo'):
+            self.lockAttribute(attrName)                   
                
         self.windows = NodeHub()
         
@@ -322,38 +340,7 @@ Its return value is the ID of the new window.
 You can access the created window using its ID in the scripting system.
 A PatternWindow can synthesize a correlation matrix of which the beam pattern fits the given ideal pattern best.'''        
         return self.windows.add(node=PatternWindow())
-
-             
-    @property
-    def root(self):
-        return self.__root
-                
-    @property
-    def taskbaricon(self):
-        return self.__tbicon
-        
-    @property
-    def balloon(self):
-        return self.__balloon
-        
-    @property
-    def editorInfo(self):
-        return self.__editorInfo
-        
-    # The validation functions for entry widgets
-    @property
-    def checkInt(self):
-        return self.__checkInt
-    
-    @property
-    def checkFloat(self):
-        return self.__checkFloat
-        
-    @property
-    def checkPositiveFloat(self):
-        return self.__checkPositiveFloat
-    # End
-        
+                     
         
     def printAndEval(self, expr):
         self.console.write(expr+'\n', 'HISTORY')
@@ -411,7 +398,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
              
                     
     def mainloop(self):
-        return self.__root.mainloop()
+        return self.root.mainloop()
         
         
 
@@ -437,12 +424,7 @@ colorMap = {
     'b': 'blue'
 }
 
-
   
-
-  
-  
-
 class DataFigure(object):
     def __init__(self, master, figsize=(5,4), dpi=100, isPolar=False):
         self.__fig = Figure(figsize, dpi)
@@ -576,14 +558,18 @@ class FigureBook(PanedWindow, ModelNode):
         self['sashrelief'] = GROOVE
         self['bg'] = 'forestgreen'
         
-        self.__figures = []
+        self.figures = []
+        self.lockAttribute('figures')
         
         tabpages = Notebook(self)
+        self.tabpages   = tabpages
+        self.lockAttribute('tabpages')
+        
         for meta in figureMeta:
             frm = Frame(tabpages)
             fig = DataFigure(frm, isPolar=meta['polar'])
             tabpages.add(frm, text=meta['name'])
-            self.__figures.append(fig)
+            self.figures.append(fig)
             
         self.add(tabpages, stretch='always')
         
@@ -591,24 +577,24 @@ class FigureBook(PanedWindow, ModelNode):
         self.__list.listConfig(width=20)
         self.__list.listClick = self.onListClick
         self.add(self.__list, stretch='never')
-        
-    @property
-    def figures(self):
-        return self.__figures
-        
+
+    @property        
+    def currentFigure(self):
+        return self.figures[self.tabpages.index(CURRENT)]
+                
     def plot(self, *args, **kwargs):
         try:
             curveName = kwargs.pop('curveName')
         except KeyError:
             curveName = 'curve'
-        for fig in self.__figures:
+        for fig in self.figures:
             fig.plotFunction(*args, **kwargs)
         self.__list.insert(END, curveName)
         if 'color' in kwargs:
             self.__list.itemConfig(END, fg=colorMap[kwargs['color']])
             
     def clear(self):
-        for fig in self.__figures:
+        for fig in self.figures:
             fig.clear()
         self.__list.clear()
         
@@ -616,7 +602,7 @@ class FigureBook(PanedWindow, ModelNode):
     def onListClick(self, index, label):
         index = int(index)
 
-        for figure in self.__figures:
+        for figure in self.figures:
             for line in figure.lineObjects:
                 pyplot.setp(line, linewidth=1)
             pyplot.setp(figure.lineObjects[index], linewidth=2)
@@ -625,7 +611,7 @@ class FigureBook(PanedWindow, ModelNode):
     def exportMatlabScript(self, filename):
         with open(filename, 'w') as file:
             pass
-            for figure in self.__figures:
+            for figure in self.figures:
                 print('%Generated by WaveSyn.',
                       'figure;', sep = '\n',
                       file=file)
@@ -641,14 +627,13 @@ class FigureBook(PanedWindow, ModelNode):
 
     def deleteSelLines(self, idx=None):
         if idx is None:
-            idx = self.__list.curSelection
-        #print (idx)
+            idx = self.__list.curSelection # idx is a tuple of strings.
             if len(idx) <= 0:
                 return
             if len(idx) > 1:
                 raise ValueError, 'Multi-selection is not supported.'
             idx = int(idx[0])
-        for fig in self.__figures:
+        for fig in self.figures:
             fig.lineObjects[idx][0].remove()
             del fig.lineObjects[idx]
             fig.update()
@@ -783,6 +768,7 @@ class ConsoleText(ScrolledText):
                 finally:
                     return 'break'
 
+            # Experimenting with idlelib's AutoComplete
             #######################################################
             if evt.keycode == 9:
                 return self.__autoComplete.autocomplete_event(evt)
@@ -829,9 +815,6 @@ Have a nice day.
         menu    = kwargs['menu']
         makeMenu(root, menu, json=True)
         self.__defaultCursor = self.__txtStdOutErr.text['cursor']
-        ##################################
-        #self.consoleText    = txtStdOutErr
-        ##################################
         
     @property
     def promptSymbol(self):
@@ -920,17 +903,17 @@ class ToolWindow(ModelNode):
         
 class GridGroup(Group):
     def __init__(self, *args, **kwargs):
-        self.__topwin = kwargs['topwin']
-        del kwargs['topwin']
+        self.__topwin   = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
+        app = Application.instance
         major = IntVar(0)
         minor = IntVar(0)
         self.__major = major
         self.__minor = minor
-        
-
+                        
+                        
         def setgrid():
-            currentFigure = self.__topwin.currentFigure
+            currentFigure = self.__topwin.figureBook.currentFigure
             currentFigure.axes.grid(major.get(), 'major')
             currentFigure.axes.grid(minor.get(), 'minor')
             currentFigure.update()
@@ -945,11 +928,11 @@ class GridGroup(Group):
                 {
                     'linestyle': ('Major Line Style', propvars[0], None),
 ########################################################################################################
-                    'linewidth': ('Major Line Width', propvars[1], checkPositiveFloat)
+                    'linewidth': ('Major Line Width', propvars[1], app.checkPositiveFloat)
                 },
                 {
                     'linestyle': ('Minor Line Style', propvars[2], None),
-                    'linewidth': ('Minor Line Width', propvars[3], checkPositiveFloat)
+                    'linewidth': ('Minor Line Width', propvars[3], app.checkPositiveFloat)
 #########################################################################################################
                 }
             )
@@ -991,10 +974,10 @@ class GridGroup(Group):
                 for key in ret[idx]:
                     value = ret[idx][key][1].get()
                     if value:
-                        self.__topwin.currentFigure.axes.grid(None, name, **{key: value})
+                        self.__topwin.figureBook.currentFigure.axes.grid(None, name, **{key: value})
             major.set(1)
             minor.set(1)
-            self.__topwin.currentFigure.update()
+            self.__topwin.figureBook.currentFigure.update()
                                     
         Checkbutton(self, text='Grid Major', variable=major, command=setgrid).pack(fill=X)
         Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid).pack(fill=X)
@@ -1024,7 +1007,7 @@ class AxisGroup(Group):
     def __init__(self, *args, **kwargs):
         self.__topwin = kwargs['topwin']
         del kwargs['topwin']
-        application = Application.instance
+        app = Application.instance
        
         Group.__init__(self, *args, **kwargs)
         self.__params = [StringVar() for i in range(8)]
@@ -1034,11 +1017,14 @@ class AxisGroup(Group):
         for c in range(4):
             for r in range(2):
                 temp = ParamItem(paramfrm)
-                temp.checkFunc = application.checkFloat
-                temp.labelText = names[c*2+r]
-                temp.labelWidth = 5 if c*2+r < 4 else 10
-                temp.entryWidth = 5
-                temp.entry.config(textvariable=self.__params[c*2+r])
+                setMultiAttr(temp,
+                    checkFunc   = app.checkFloat,
+                    labelText   = names[c*2+r],
+                    labelWidth  = 5 if c*2+r < 4 else 10,
+                    entryWidth  = 5,
+                    entryVar    = self.__params[c*2+r]
+                )
+                #temp.entry.config(textvariable=self.__params[c*2+r])
                 temp.grid(row=r, column=c)
 
         btnfrm = Frame(self)
@@ -1269,7 +1255,7 @@ class GenGroup(Group):
         self.__stopflag = True
 
 
-def create_viewtab(tabpages, application, topwin):
+def createViewTab(tabpages, application, topwin):
         # View Tab
     frmView = Frame(tabpages)
     grpGrid = GridGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
@@ -1372,12 +1358,12 @@ class PatternSolveGroup(Group):
         topwin = self.__topwin
         center, width = topwin.grpEdit.beamData
         topwin.figureBook.callMethod('clear')
-        callMethod = topwin.callMethod
-
-        callMethod('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        callMethod('setIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        callMethod('solve', M=self.__M.getInt(), display=self.__bDisplay.get())
-        callMethod('plotCorrMatrixPattern')
+        
+        call    = topwin.callMethod
+        call('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        call('setIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        call('solve', M=self.__M.getInt(), display=self.__bDisplay.get())
+        call('plotCorrMatrixPattern')
         
         
         
@@ -1388,21 +1374,26 @@ class PatternEditGroup(Group):
         self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
         frm = Frame(self)
+        
         self.__center = ParamItem(frm)
-        self.__center.label.config(text='center(deg)')
-        self.__center.entryText = 0
-        self.__center.checkFunc = self._app.checkInt
-        self.__center.entryWidth = 5
-        self.__center.labelWidth = 10
-        self.__center.pack(side=TOP)
+        setMultiAttr(self.__center,        
+            labelText   = 'center(deg)',        
+            entryText   = 0,    
+            checkFunc   = self._app.checkInt,
+            entryWidth  = 5,    
+            labelWidth  = 10
+        )                       
+        self.__center.pack(side=TOP)        
         self._app.balloon.bind_widget(self.__center, balloonmsg='Specify the beam center here.')
         
         self.__width = ParamItem(frm)
-        self.__width.label.config(text='width(deg)')
-        self.__width.entryText = 20
-        self.__width.checkFunc = self._app.checkInt
-        self.__width.entryWidth = 5
-        self.__width.labelWidth = 10
+        setMultiAttr(self.__width,
+            labelText   = 'width(deg)',
+            entryText   = 20,
+            checkFunc   = self._app.checkInt,
+            entryWidth  = 5,
+            labelWidth  = 10
+        )
         self.__width.pack(side=TOP)
         self._app.balloon.bind_widget(self.__width, balloonmsg='Specify the beam width here.')
         
@@ -1573,7 +1564,6 @@ class PatternWindow(ToolWindow):
         grpSolve = PatternSolveGroup(frmAlgo, topwin=self)
         grpSolve.pack(side=LEFT, fill=Y)
         grpEdit = PatternEditGroup(frmAlgo, topwin=self)
-        #grpEdit.optgrp = grpGen
         grpEdit.pack(side=LEFT, fill=Y)
         self.__grpEdit = grpEdit
         
@@ -1581,7 +1571,7 @@ class PatternWindow(ToolWindow):
             # End Algorithm tab
             
             # View Tab
-        create_viewtab(tabpages, application, self)
+        createViewTab(tabpages, application, self)
             # End View tab
         
             # Export tab

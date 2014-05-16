@@ -54,6 +54,14 @@ else:
             pass
 
 
+class MethodDelegator(object):
+    def __init__(self, attrName, methodName)   :
+        self.attrName   = attrName
+        self.methodName = methodName
+    
+    def __get__(self, obj, type=None):
+        return getattr(getattr(obj, self.attrName), self.methodName)  
+
 
 class LabeledEntry(Frame, object):
     def __init__(self, *args, **kwargs):
@@ -113,6 +121,14 @@ class ParamItem(Frame, object):
     def entryText(self, text):
         self.__entry.delete(0, END)
         self.__entry.insert(0, text)
+        
+    @property
+    def entryVar(self):
+        return self.__entry['textvariable']
+        
+    @entryVar.setter
+    def entryVar(self, val):
+        self.__entry.config(textvariable=val)
 
     def getInt(self):
         return int(self.__entry.get())
@@ -245,6 +261,16 @@ class StreamChain(object):
 
 
 class ScrolledList(Frame, object):
+    methodNameMap   = {
+        'insert':'insert', 
+        'delete':'delete', 
+        'itemConfig':'itemconfig',
+        'listConfig':'config'
+    }
+    
+    for methodName in methodNameMap:
+        locals()[methodName]    = MethodDelegator('list', methodNameMap[methodName])
+    
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         sbar = Scrollbar(self)
@@ -268,21 +294,9 @@ class ScrolledList(Frame, object):
     def sbar(self):
         return self.__sbar
 
-    def insert(self, *args, **kwargs):
-        return self.__list.insert(*args, **kwargs)
-        
-    def delete(self, *args, **kwargs):
-        return self.__list.delete(*args, **kwargs)
-        
-    def itemConfig(self, *args, **kwargs):
-        return self.__list.itemconfig(*args, **kwargs)
-
     def clear(self):
         self.__list.delete(0, END)
-        
-    def listConfig(self, **kwargs):
-        self.__list.config(**kwargs)
-        
+                
     @property
     def curSelection(self):
         return self.__list.curselection()
