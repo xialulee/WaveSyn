@@ -58,6 +58,8 @@ from idlelib.ColorDelegator import ColorDelegator
 from guicomponents import Group, StreamChain, TaskbarIcon, ParamItem, ScrolledList, ScrolledText
 import guicomponents
 
+from common import setMultiAttr, autoSubs
+
 
 
 def checkValue(d, i, P, s, S, v, V, W, func):
@@ -85,15 +87,31 @@ class ObjectWithLock(object):
         
       
 
-def setMultiAttr(obj, **kwargs):
-    '''This function mimics the VisualBasic "with" statement.'''    
-    for attrName in kwargs:
-        setattr(obj, attrName, kwargs[attrName])
+
 
     
     
 # Object Model Sub-System
 # It is a part of the scripting system.
+    
+# How to implement a context manager? See:
+# http://pypix.com/python/context-managers/
+        
+class AttributeLock(object):
+    def __init__(self, node):
+        if not isinstance(node, ModelNode):
+            raise TypeError, 'Only the instance of ModelNode is accepted.'
+        self.node   = node
+            
+    def __enter__(self):
+        self.node.autoLockAttribute = True
+        return self.node
+        
+    def __exit__(self, *dumb):
+        self.node.autoLockAttribute = False
+        
+        
+    
 class ModelNode(object):
     '''This class defines the node of the model tree of this application.
 The model tree is illustrated as follows:
@@ -114,9 +132,28 @@ wavesyn
         self.parentNode = None
         self.__isRoot = isRoot
         self.nodeName = nodeName
+        #self.autoLockAttribute   = False
         
     def lockAttribute(self, attrName):
+        '''Lock a specified attribute, i.e. the attribute cannot be re-assigned.
+For example:        
+node.a = 0
+node.lockAttribute("a")
+If you try to give node.a a new value
+node.a = 1
+then an AttributeError will be raised.
+'''
         self._attributeLock.add(attrName)
+        
+    @property
+    def attributeLock(self):
+        '''This attribute is in fact a context manager.
+if the following statements are executed:
+with node.attributeLock:
+  node.a = 0
+then node will have a property named 'a', which cannot be re-assigned.
+'''
+        return AttributeLock(self)        
         
     @property
     def isRoot(self):
@@ -126,8 +163,10 @@ wavesyn
         if '_attributeLock' not in self.__dict__:
             # This circumstance happens when __setattr__ called before __init__ being called.
             object.__setattr__(self, '_attributeLock', set())
+        if 'autoLockAttribute' not in self.__dict__:
+            object.__setattr__(self, 'autoLockAttribute', False)
         if key in self._attributeLock:
-            raise AttributeError, 'Attribute "{0}" is unchangeable.'.format(key)
+            raise AttributeError, autoSubs('Attribute "$key" is unchangeable.')
         if isinstance(val, ModelNode) and not val.isRoot and val.parentNode==None:
             val.nodeName = val.nodeName if val.nodeName else key
             object.__setattr__(val, 'parentNode', self)
@@ -137,14 +176,15 @@ wavesyn
             val.lockAttribute('parentNode')
             # and the parent node's child node cannot be re-assinged. 
             self.lockAttribute(key)
+                    
         object.__setattr__(self, key, val)
+        if self.autoLockAttribute and key != 'autoLockAttribute': # autoLockAttribute cannot be locked
+            self.lockAttribute(key)        
         
     @property
     def nodePath(self):
         if self.isRoot:
             return self.nodeName
-        if isinstance(self.parentNode, NodeHub):
-            return '{parentPath}[{id}]'.format(parentPath=self.parentNode.nodePath, id=id(self))
         else:
             return '.'.join((self.parentNode.nodePath, self.nodeName))
         
@@ -152,33 +192,21 @@ wavesyn
 A mixin class does not have a __init__ method.'''
     def callMethod(self, name, *args, **kwargs):
         strParams = Scripting.paramsToStr(*args, **kwargs)
-        Application.instance.printAndEval(self.nodePath+'.{0}({1})'.format(name, strParams))
+        nodePath    = self.nodePath
+        #Application.instance.printAndEval(self.nodePath+'.{0}({1})'.format(name, strParams))
+        Application.instance.printAndEval(autoSubs('$nodePath.$name($strParams)'))
         
     def callMethodAndPrintDoc(self, name, *args, **kwargs):
         self.callMethod(name, *args, **kwargs)
-        doc = Application.instance.eval(self.nodePath+'.{0}.__doc__'.format(name))
+        nodePath    = self.nodePath
+        #doc = Application.instance.eval(self.nodePath+'.{0}.__doc__'.format(name))
+        doc = Application.instance.eval(autoSubs('$nodePath.{$name}.__doc__'))
         Application.instance.printTip(doc)
+                        
 # End Object Model
         
         
-        
-class NodeHub(ModelNode, dict):
-    def __init__(self, nodeName=''):
-        dict.__init__(self)
-        ModelNode.__init__(self, nodeName=nodeName)
-                
-    def __setitem__(self, key, val):
-        if not isinstance(val, ModelNode):
-            raise TypeError, '{nodePath} only accepts instance of ToolWindow and its subclass.'.format(nodePath=self.nodePath)
-        if key != id(val):
-            raise ValueError, 'The key should be identical to the ID of the window.'
-        object.__setattr__(val, 'parentNode', self)
-        val.lockAttribute('parentNode')
-        dict.__setitem__(self, key, val)
-        
-    def add(self, node):
-        self[id(node)] = node
-        return id(node)
+
         
 # Scripting Sub-System
 class ScriptCode(object):
@@ -193,7 +221,8 @@ class Scripting(ModelNode):
     def paramsToStr(*args, **kwargs):
         def paramToStr(param):
             if isinstance(param, str) or isinstance(param, unicode):
-                return '"{0}"'.format(param)
+                #return '"{0}"'.format(param)
+                return autoSubs('"$param"')
             elif isinstance(param, ScriptCode):
                 return param.code
             else:
@@ -202,6 +231,7 @@ class Scripting(ModelNode):
         strArgs = ', '.join([paramToStr(arg) for arg in args]) if args else ''
         strKwargs = ', '.join(['{0}={1}'.format(key, paramToStr(kwargs[key])) for key in kwargs]) \
             if kwargs else ''
+       
             
         if strArgs and strKwargs:
             params = ', '.join((strArgs, strKwargs))
@@ -292,30 +322,35 @@ since the instance of Application is the first node created on the model tree.''
             config  = json.load(f)
         consoleMenu = config['ConsoleMenu']
         self.editorInfo   = config['EditorInfo']
+        self.lockAttribute('editorInfo')
         self.promptSymbols  = config['PromptSymbols']
         tagDefs = config['TagDefs']
         # End load config file
 
         root = Tix.Tk()
-        self.root = root        
-        self.balloon = Tix.Balloon(root)
-        self.tbicon = TaskbarIcon(root)
         
-        # Validation Functions
-        self.checkInt = (root.register(partial(checkValue, func=int)),
-                '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.checkFloat = (root.register(partial(checkValue, func=float)),
-                '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.checkPositiveFloat = (root.register(checkPositiveFloat),
-                   '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        with self.attributeLock:
+            setMultiAttr(self,
+                root = root,        
+                balloon = Tix.Balloon(root),
+                tbicon = TaskbarIcon(root),
+            
+                # Validation Functions
+                checkInt = (root.register(partial(checkValue, func=int)),
+                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'),
+                checkFloat = (root.register(partial(checkValue, func=float)),
+                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'),
+                checkPositiveFloat = (root.register(checkPositiveFloat),
+                       '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+            )
         # End Validation Functions
           
         # lock attributes which should be unchangeable. Tired of using @property.  
-        for attrName in ('root', 'balloon', 'tbicon', 'checkInt', 'checkFloat', 
-                         'checkPositiveFloat', 'editorInfo'):
-            self.lockAttribute(attrName)                   
+#        for attrName in ('root', 'balloon', 'tbicon', 'checkInt', 'checkFloat', 
+#                         'checkPositiveFloat', 'editorInfo'):
+#            self.lockAttribute(attrName)                   
                
-        self.windows = NodeHub()
+        self.windows = WindowHub()
         
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)
@@ -349,7 +384,9 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
             self.console.write(str(ret)+'\n', 'RETVAL')
                               
     def eval(self, expr):
-        return eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
+        ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
+        Scripting.nameSpace['locals']['_']  = ret
+        return ret
         
     def execute(self, code):
         ret = None
@@ -388,8 +425,8 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         
             
     def notifyWinQuit(self, win):
-        self.printTip('{0} is closed, and its ID becomes defunct for scripting system hereafter.'\
-            .format(win.nodePath))
+        nodePath    = win.nodePath
+        self.printTip(autoSubs('$nodePath is closed, and its ID becomes defunct for scripting system hereafter'))
         self.windows.pop(id(win))
         
         
@@ -424,111 +461,111 @@ colorMap = {
     'b': 'blue'
 }
 
+
+
+
+
+
   
-class DataFigure(object):
-    def __init__(self, master, figsize=(5,4), dpi=100, isPolar=False):
-        self.__fig = Figure(figsize, dpi)
-        canvas = FigureCanvasTkAgg(self.__fig, master=master)
+class DataFigure(ModelNode):
+    def __init__(self, master, topwin, nodeName='', figsize=(5,4), dpi=100, isPolar=False):
+        ModelNode.__init__(self, nodeName=nodeName)
+        
+        figure = Figure(figsize, dpi)
+        self.__topwin   = topwin
+        
+        canvas = FigureCanvasTkAgg(figure, master=master)
         canvas.show()
         canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=YES)
         self.__canvas = canvas
         toolbar = NavigationToolbar2TkAgg(canvas, master)
         toolbar.update()
         toolbar.pack()
-        self.__lineObjects = []
-        self.__axes = self.__fig.add_subplot(111, polar=isPolar)
-        self.__isPolar = isPolar
+        
+        with self.attributeLock:
+            # All the properties being set in this block will be locked automatically,
+            # i.e. these properties cannot be replaced.
+            setMultiAttr(self,
+                figure      = figure,
+                lineObjects = [],       
+                axes        = figure.add_subplot(111, polar=isPolar),
+                isPolar     = isPolar
+            )
+
+        
         self.plotFunction = None
         
-    @property
-    def figure(self):
-        return self.__fig
+        self.index  = None # Used by FigureHub
         
-    @property
-    def axes(self):
-        return self.__axes
+        self.__majorGrid    = isPolar
+        self.__minorGrid    = False
         
-    @property
-    def isPolar(self):
-        return self.__isPolar
-        
-    @property
-    def lineObjects(self):
-        return self.__lineObjects
         
     def plot(self, *args, **kwargs):
-        lineObject = self.__axes.plot(*args, **kwargs)
-        self.__lineObjects.append(lineObject)
+        lineObject = self.axes.plot(*args, **kwargs)
+        self.lineObjects.append(lineObject)
         self.update()
-        self.update_axispanel()
+                       
+    @property
+    def majorGrid(self):
+        return self.__majorGrid
+        
+    @majorGrid.setter
+    def majorGrid(self, val):
+        self.__majorGrid    = val
+        self.axes.grid(val, 'major')
+        
+    @property
+    def minorGrid(self):
+        return self.__minorGrid
+        
+    @minorGrid.setter
+    def minorGrid(self, val):
+        self.__minorGrid    = val
+        self.axes.grid(val, 'minor')
         
 
         
     def update(self):
         self.__canvas.show()
 
-    def update_axispanel(self):
-        pass
-        #Temprorily disabled
-# if self.axispanel:
-# ap = self.axispanel
-# ap.xlim = self.__axes.get_xlim()
-# ap.ylim = self.__axes.get_ylim()
-#
-# attr_func = {
-# 'major_xtick': self.__axes.xaxis.get_major_locator,
-# 'major_ytick': self.__axes.yaxis.get_major_locator,
-# 'minor_xtick': self.__axes.xaxis.get_minor_locator,
-# 'minor_ytick': self.__axes.yaxis.get_minor_locator
-# }
-# for attr in attr_func:
-# tick = attr_func[attr]()()
-# if len(tick) >= 2:
-# tick = tick[1] - tick[0]
-# setattr(ap, attr, tick)
-# def plot_acorr(self, s, db=True, unif=True):
-# color_map = {
-# 'c': 'cyan',
-# 'm': 'magenta',
-# 'y': 'yellow',
-# 'k': 'black',
-# 'r': 'red',
-# 'g': 'green',
-# 'b': 'blue'
-# }
-# ac = abs(convolve(s, conj(s[::-1])))
-# if unif:
-# ac /= max(ac)
-# if db:
-# ac = 20*log10(ac)
-# N = len(s)
-# lineobj = self.__axes.plot(r_[(-N+1):N], ac)[0]
-# ######################################################
-# #print pyplot.getp(lineobj, 'color')
-# ######################################################
-# self.__meta_of_lines.append(LineMeta(s, 'acorr', ac, lineobj))
-# pos = len(self.__meta_of_lines) - 1
-# self.__slist.list.insert(pos, 'acorr of s{0}'.format(pos))
-# line_color = pyplot.getp(lineobj, 'color')
-# self.__slist.list.itemconfig(pos, fg=color_map[line_color], bg='gray')
-# self.update()
-# self.update_axispanel()
-
+    def updateViewTab(self):    
+        grpAxis = self.__topwin.grpAxis
+        axes    = self.axes
+        
+        grpAxis.xlim    = axes.get_xlim()
+        grpAxis.ylim    = axes.get_ylim()
+        
+        attr_func   = {
+            'major_xtick':  axes.xaxis.get_major_locator,
+            'major_ytick':  axes.yaxis.get_major_locator,
+            'minor_xtick':  axes.xaxis.get_minor_locator,
+            'minor_ytick':  axes.yaxis.get_minor_locator
+        }
+        
+        for attr in attr_func:
+            tick    = attr_func[attr]()()
+            if len(tick) >= 2:
+                tick    = tick[1] - tick[0]
+                setattr(grpAxis, attr, tick)
+                
+        self.__topwin.grpGrid.major = self.majorGrid
+        self.__topwin.grpGrid.minor = self.minorGrid                
 
     def clear(self):
-        self.__axes.clear()
-        self.__lineObjects = []
-        #self.__list.clear()
+        self.axes.clear()
+        del self.lineObjects[:]
         self.update()
-# if self.gridpanel:
-# self.gridpanel.major = 0
-# self.gridpanel.minor = 0
-
+        self.__topwin.grpGrid.major = 0
+        self.__topwin.grpGrid.minor = 0
+        
+    def axis(self, r):
+        return self.axes.axis(r)
             
     def deleteLine(self, idx):
-        lineObject = self.__lineObjects[idx]
+        lineObject = self.lineObjects[idx]
         lineObject.remove()
-        del self.__lineObjects[idx]
+        del self.lineObjects[idx]
 
     def remove_unsel_lines(self):
         sel = self.__slist.list.curselection()
@@ -544,65 +581,98 @@ class DataFigure(object):
                     self.update()
                 else:
                     k += 1
+
         
+class FigureHub(ModelNode, list):
+    def __init__(self, nodeName=''):
+        list.__init__(self)
+        ModelNode.__init__(self, nodeName=nodeName)
+        
+    def append(self, val):        
+        if not isinstance(val, DataFigure):
+            nodePath    = self.nodePath
+            raise TypeError, autoSubs('$nodePath only accepts instance of DataFigure or of its subclasses.')
+        list.append(self, val)
+        val.index   = len(self) - 1
+        val.lockAttribute('index')
 
 
-class FigureBook(PanedWindow, ModelNode): 
+class FigureBook(FigureHub): 
     def __init__(self, *args, **kwargs):
-        ModelNode.__init__(self)
+        '''
+nodeName:   The name of this node. Usually set by ModelNode.__setattr__ automatically.
+figureMeta: Meta information of figure.
+The rest parameters are passed to PanedWindow.__init__.
+'''
+        nodeName    = kwargs.pop('nodeName', '')
+        topwin      = kwargs.pop('topwin')        
+        self.__topwin = topwin
+        # lock
+        
+        FigureHub.__init__(self, nodeName=nodeName)
+
         figureMeta = kwargs.pop('figureMeta')
         kwargs['orient'] = HORIZONTAL
-        PanedWindow.__init__(self, *args, **kwargs)
+        
+        panedWindow = PanedWindow(*args, **kwargs)
 
-        self['sashwidth'] = 4
-        self['sashrelief'] = GROOVE
-        self['bg'] = 'forestgreen'
+        panedWindow.config(sashwidth=4, sashrelief=GROOVE, bg='forestgreen')        
         
-        self.figures = []
-        self.lockAttribute('figures')
-        
-        tabpages = Notebook(self)
+        tabpages    = Notebook(panedWindow)
         self.tabpages   = tabpages
+        tabpages.bind('<<NotebookTabChanged>>', self.onTabChange)
         self.lockAttribute('tabpages')
         
         for meta in figureMeta:
             frm = Frame(tabpages)
-            fig = DataFigure(frm, isPolar=meta['polar'])
+            fig = DataFigure(frm, topwin, isPolar=meta['polar'])
             tabpages.add(frm, text=meta['name'])
-            self.figures.append(fig)
+            self.append(fig)
             
-        self.add(tabpages, stretch='always')
         
-        self.__list = ScrolledList(self, relief=GROOVE)
+        panedWindow.add(tabpages, stretch='always')
+        
+        self.__list = ScrolledList(panedWindow, relief=GROOVE)
         self.__list.listConfig(width=20)
         self.__list.listClick = self.onListClick
-        self.add(self.__list, stretch='never')
+        panedWindow.add(self.__list, stretch='never')
+        
+        self.panedWindow    = panedWindow
+        self.lockAttribute('panedWindow')
 
     @property        
     def currentFigure(self):
-        return self.figures[self.tabpages.index(CURRENT)]
+        return self[self.tabpages.index(CURRENT)]
+        
+    @property
+    def currentFigureIndex(self):
+        return self.tabpages.index(CURRENT)
                 
     def plot(self, *args, **kwargs):
         try:
             curveName = kwargs.pop('curveName')
         except KeyError:
             curveName = 'curve'
-        for fig in self.figures:
+
+        for fig in self:
             fig.plotFunction(*args, **kwargs)
         self.__list.insert(END, curveName)
         if 'color' in kwargs:
             self.__list.itemConfig(END, fg=colorMap[kwargs['color']])
+        self.currentFigure.updateViewTab()
             
     def clear(self):
-        for fig in self.figures:
+        for fig in self:
             fig.clear()
         self.__list.clear()
         
         
+    def onTabChange(self, event):
+        self.currentFigure.updateViewTab()            
+        
     def onListClick(self, index, label):
         index = int(index)
-
-        for figure in self.figures:
+        for figure in self:
             for line in figure.lineObjects:
                 pyplot.setp(line, linewidth=1)
             pyplot.setp(figure.lineObjects[index], linewidth=2)
@@ -610,8 +680,7 @@ class FigureBook(PanedWindow, ModelNode):
             
     def exportMatlabScript(self, filename):
         with open(filename, 'w') as file:
-            pass
-            for figure in self.figures:
+            for figure in self:
                 print('%Generated by WaveSyn.',
                       'figure;', sep = '\n',
                       file=file)
@@ -624,6 +693,7 @@ class FigureBook(PanedWindow, ModelNode):
                     params['ydata'] = ','.join((str(i) for i in params['ydata']))
                     print("{func}([{xdata}], [{ydata}], '{color}');hold on".format(**params), file=file)
                     
+                    
 
     def deleteSelLines(self, idx=None):
         if idx is None:
@@ -633,7 +703,7 @@ class FigureBook(PanedWindow, ModelNode):
             if len(idx) > 1:
                 raise ValueError, 'Multi-selection is not supported.'
             idx = int(idx[0])
-        for fig in self.figures:
+        for fig in self:
             fig.lineObjects[idx][0].remove()
             del fig.lineObjects[idx]
             fig.update()
@@ -729,7 +799,8 @@ class ConsoleText(ScrolledText):
         #print (evt.keycode)        
         if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
             r, c    = self.getCursorPos()
-            prompt  = self.text.get('{r}.0'.format(r=r), '{r}.4'.format(r=r))
+            #prompt  = self.text.get('{r}.0'.format(r=r), '{r}.4'.format(r=r))
+            prompt  = self.text.get(autoSubs('$r.0'), autoSubs('$r.4'))
             if prompt != '>>> ' and prompt != '... ':
                 return 'break'
             if evt.keycode==8 and c <= 4:
@@ -741,7 +812,8 @@ class ConsoleText(ScrolledText):
                 return 'break'                
             if evt.keycode == 13:
                 app = Application.instance
-                code    = self.text.get('{r}.4'.format(r=r), '{r}.end'.format(r=r))
+                #code    = self.text.get('{r}.4'.format(r=r), '{r}.end'.format(r=r))
+                code    = self.text.get(autoSubs('$r.4'), autoSubs('$r.end'))
                 try:
                     strippedCode     = code.strip()
                     if strippedCode == '':
@@ -835,6 +907,10 @@ Have a nice day.
     def write(self, *args, **kwargs):
         with self.lock:
             self.__txtStdOutErr.write(*args, **kwargs)
+            
+    def showPrompt(self):
+        'Only used by "clear" method.'
+        self.__txtStdOutErr.write('')
 
         
     def save(self, filename): # for scripting system
@@ -849,7 +925,7 @@ Have a nice day.
         
     def clear(self):
         self.__txtStdOutErr.clear()
-        self.__txtStdOutErr.write('') # By calling write('') the prompt symbol will be printed.
+        self.showPrompt()
         
     def onClear(self):
         self.callMethod('clear')
@@ -865,7 +941,8 @@ Have a nice day.
             
         fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
         with os.fdopen(fd):
-            pass # Close the temp file, and the external editor can edit it freely.
+            pass 
+            # Close the temp file, consequently the external editor can edit it without limitations.
         try:
             editorThread    = EditorThread(filename)
             editorThread.start()
@@ -884,6 +961,27 @@ Have a nice day.
         self.callMethod('editScript')
         
 
+class WindowHub(ModelNode, dict):
+    def __init__(self, nodeName=''):
+        dict.__init__(self)
+        ModelNode.__init__(self, nodeName=nodeName)
+                
+    def __setitem__(self, key, val):
+        if not isinstance(val, ModelNode):
+            nodePath    = self.nodePath            
+            raise TypeError, autoSubs('$nodePath only accepts instance of ToolWindow or of its subclasses.')
+        if key != id(val):
+            raise ValueError, 'The key should be identical to the ID of the window.'
+        object.__setattr__(val, 'parentNode', self)
+        val.lockAttribute('parentNode')
+        dict.__setitem__(self, key, val)
+        
+    def add(self, node):
+        self[id(node)] = node
+        return id(node)
+
+
+
 class ToolWindow(ModelNode):
     '''Window is build around matplotlib Figure.
 '''
@@ -897,6 +995,13 @@ class ToolWindow(ModelNode):
     def close(self):
         Application.instance.notifyWinQuit(self)
         self._toplevel.destroy() # For Toplevel objects, use destroy rather than quit.
+        
+    @property
+    def nodePath(self):
+        if isinstance(self.parentNode, WindowHub):
+            return '{parentPath}[{id}]'.format(parentPath=self.parentNode.nodePath, id=id(self))
+        else:
+            return ModelNode.nodePath
     
 
         
@@ -914,8 +1019,8 @@ class GridGroup(Group):
                         
         def setgrid():
             currentFigure = self.__topwin.figureBook.currentFigure
-            currentFigure.axes.grid(major.get(), 'major')
-            currentFigure.axes.grid(minor.get(), 'minor')
+            currentFigure.majorGrid = major.get()
+            currentFigure.minorGrid = minor.get()
             currentFigure.update()
 
 
@@ -979,11 +1084,40 @@ class GridGroup(Group):
             minor.set(1)
             self.__topwin.figureBook.currentFigure.update()
                                     
-        Checkbutton(self, text='Grid Major', variable=major, command=setgrid).pack(fill=X)
-        Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid).pack(fill=X)
-        Button(self, text='Property', command=onPropertyClick).pack()
+        chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=setgrid)
+        chkGridMajor.pack(fill=X)
+        self.chkGridMajor   = chkGridMajor
+        
+        chkGridMinor    = Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid)
+        chkGridMinor.pack(fill=X)
+        self.chkGridMinor   = chkGridMinor        
+        
+        btnProperty     = Button(self, text='Property', command=onPropertyClick)
+        btnProperty.pack()
+        self.btnProperty    = btnProperty
+        
         self.name = 'Grid'
 
+        
+    class __EnableDelegator(object):
+        def __init__(self, widgetName):
+            self.widgetName = widgetName
+            
+        def __get__(self, obj, type=None):
+            def enable(state):                
+                en  = NORMAL if state else DISABLED
+                getattr(obj, self.widgetName).config(state=en)
+            return enable
+            
+    enableWidgets   = dict(
+        enableGridMajor =  'chkGridMajor',
+        enableGridMinor =  'chkGridMinor',
+        enableProperty  =  'btnProperty'
+    )
+    
+    for methodName in enableWidgets:
+        locals()[methodName]    = __EnableDelegator(enableWidgets[methodName])
+        
 
 
     @property
@@ -1086,18 +1220,29 @@ class AxisGroup(Group):
         self.__params[7].set(str(value))
 
     def onConfirmClick(self):
-        aparams = map(lambda v: float(v.get()), self.__params)
-        self.__topwin.currentFigure.axis(aparams[:4])
-        self.__topwin.currentFigure.axes.xaxis.set_major_locator(MultipleLocator(int(aparams[4])))
-        self.__topwin.currentFigure.axes.yaxis.set_major_locator(MultipleLocator(int(aparams[5])))
-        self.__topwin.currentFigure.axes.xaxis.set_minor_locator(MultipleLocator(int(aparams[6])))
-        self.__topwin.currentFigure.axes.yaxis.set_minor_locator(MultipleLocator(int(aparams[7])))
-        self.__topwin.currentFigure.update()
+        #aparams = map(lambda v: float(v.get()), self.__params)
+        def toFloat(x):
+            try:
+                return float(x)
+            except:
+                return None
+        aparams = [toFloat(v.get()) for v in self.__params]
+        currentFigure   = self.__topwin.figureBook.currentFigure
+        currentFigure.axis(aparams[:4])
+        axes    = currentFigure.axes
+        axes.xaxis.set_major_locator(MultipleLocator(int(aparams[4])))
+        axes.yaxis.set_major_locator(MultipleLocator(int(aparams[5])))
+        if aparams[6] is not None:
+            axes.xaxis.set_minor_locator(MultipleLocator(int(aparams[6])))
+        if aparams[7] is not None:
+            axes.yaxis.set_minor_locator(MultipleLocator(int(aparams[7])))
+        currentFigure.update()
 
     def onAutoClick(self):
-        self.__topwin.currentFigure.axes.autoscale()
-        self.__topwin.currentFigure.update()
-        self.__topwin.currentFigure.update_axispanel()
+        currentFigure   = self.__topwin.figureBook.currentFigure
+        currentFigure.axes.autoscale()
+        currentFigure.update()
+        currentFigure.updateViewTab()
 
 
 class ClearGroup(Group):
@@ -1112,11 +1257,9 @@ class ClearGroup(Group):
         self.name = 'Clear Plot'
 
     def onClearAll(self):
-        # self.__topwin.figureBook.clear()
         self.__topwin.figureBook.callMethod('clear')
 
     def onDelSel(self):
-        # self.__topwin.figureBook.deleteSelLines()
         self.__topwin.figureBook.callMethod('deleteSelLines', idx=None)
 
     def onDelUnSel(self):
@@ -1255,15 +1398,28 @@ class GenGroup(Group):
         self.__stopflag = True
 
 
-def createViewTab(tabpages, application, topwin):
+def createViewTab(tabpages, topwin):
         # View Tab
     frmView = Frame(tabpages)
     grpGrid = GridGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
     grpGrid.pack(side=LEFT, fill=Y)
+  
+    
     grpAxis = AxisGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
     grpAxis.pack(side=LEFT, fill=Y)
+  
+    
     grpClear = ClearGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
     grpClear.pack(side=LEFT, fill=Y)
+    
+    with topwin.attributeLock:    
+        setMultiAttr(topwin,
+            grpGrid  = grpGrid,
+            grpAxis  = grpAxis,
+            grpClear = grpClear  
+        )
+
+    
     tabpages.add(frmView, text='View')
         # End View Tab
 
@@ -1571,7 +1727,7 @@ class PatternWindow(ToolWindow):
             # End Algorithm tab
             
             # View Tab
-        createViewTab(tabpages, application, self)
+        createViewTab(tabpages, self)
             # End View tab
         
             # Export tab
@@ -1587,28 +1743,27 @@ class PatternWindow(ToolWindow):
         self.idealPattern = None
         self.angles = None
 
-        figureBook = FigureBook(self._toplevel, \
+        figureBook = FigureBook(self._toplevel, 
             figureMeta=[
                 {'name':'Cartesian', 'polar':False},
                 {'name':'Polar', 'polar':True}
-            ]
+            ],
+            topwin   = self
         )
-        figureBook.pack(expand=YES, fill=BOTH)
-        figCart = figureBook.figures[0]
+        # figureBook.pack(expand=YES, fill=BOTH)
+        figureBook.panedWindow.pack(expand=YES, fill=BOTH)
+        #figCart = figureBook.figures[0]
+        figCart = figureBook[0]
         figCart.plotFunction = lambda *args, **kwargs: figCart.plot(*args, **kwargs)
-        figPolar = figureBook.figures[1]
+        #figPolar = figureBook.figures[1]
+        figPolar    = figureBook[1]
         figPolar.plotFunction = lambda angles, pattern, **kwargs: figPolar.plot(angles/180.*pi, pattern, **kwargs)
         
         self.figureBook = figureBook        
         self.__problem = pattern2corrmtx.Problem()
         self.R = None
         
-        #########################
-#        print(tabpages.select())
-#        print(tabpages.index(CURRENT))
-        #########################
-        
-        
+                
     @property
     def grpEdit(self):
         return self.__grpEdit

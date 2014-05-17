@@ -1,11 +1,7 @@
 #-*- coding:utf-8 -*
 
-from Tkinter import *
-import sys
-##import threading
-##import Queue
-
-##root    = None
+from Tkinter    import *
+from common     import MethodDelegator
 
 
 TBPF_NOPROGRESS     = 0
@@ -53,14 +49,6 @@ else:
         def __init__(self, root):
             pass
 
-
-class MethodDelegator(object):
-    def __init__(self, attrName, methodName)   :
-        self.attrName   = attrName
-        self.methodName = methodName
-    
-    def __get__(self, obj, type=None):
-        return getattr(getattr(obj, self.attrName), self.methodName)  
 
 
 class LabeledEntry(Frame, object):
