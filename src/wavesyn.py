@@ -55,10 +55,12 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
+from objectmodel import ModelNode
+
 from guicomponents import Group, StreamChain, TaskbarIcon, ParamItem, ScrolledList, ScrolledText
 import guicomponents
 
-from common import MethodLock, setMultiAttr, autoSubs, evalFmt
+from common import MethodLock, setMultiAttr, autoSubs, evalFmt, ObjectWithLock, Singleton
 
 
 
@@ -76,131 +78,7 @@ def checkPositiveFloat(d, i, P, s, S, v, V, W):
     except ValueError:
         return True if P=='' else False
 
-
-class ObjectWithLock(object):    
-    '''This is a mixin class.'''
-    @property
-    def lock(self):
-        if not hasattr(self, '_lock'):
-            self._lock  = threading.Lock()
-        return self._lock
-        
-      
-
-
-
-    
-    
-# Object Model Sub-System
-# It is a part of the scripting system.
-    
-# How to implement a context manager? See:
-# http://pypix.com/python/context-managers/
-        
-class AttributeLock(object):
-    def __init__(self, node):
-        if not isinstance(node, ModelNode):
-            raise TypeError, 'Only the instance of ModelNode is accepted.'
-        self.node   = node
-            
-    def __enter__(self):
-        self.node.autoLockAttribute = True
-        return self.node
-        
-    def __exit__(self, *dumb):
-        self.node.autoLockAttribute = False
-        
-        
-    
-class ModelNode(object):
-    '''This class defines the node of the model tree of this application.
-The model tree is illustrated as follows:
-wavesyn
--console
--clipboard
--windows[id]
-    -instance of PatternFitting
-        -figureBook
-    -instance of SingleSyn
-        -figureBook
-    -instance of MIMOSyn
-        -figureBook
-'''
-    def __init__(self, nodeName='', isRoot=False, **kwargs):
-        if '_attributeLock' not in self.__dict__:
-            object.__setattr__(self, '_attributeLock', set())
-        self.parentNode = None
-        self.__isRoot = isRoot
-        self.nodeName = nodeName
-        #self.autoLockAttribute   = False
-        
-    def lockAttribute(self, attrName):
-        '''Lock a specified attribute, i.e. the attribute cannot be re-assigned.
-For example:        
-node.a = 0
-node.lockAttribute("a")
-If you try to give node.a a new value
-node.a = 1
-then an AttributeError will be raised.
-'''
-        self._attributeLock.add(attrName)
-        
-    @property
-    def attributeLock(self):
-        '''This attribute is in fact a context manager.
-if the following statements are executed:
-with node.attributeLock:
-  node.a = 0
-then node will have a property named 'a', which cannot be re-assigned.
-'''
-        return AttributeLock(self)        
-        
-    @property
-    def isRoot(self):
-        return self.__isRoot
-        
-    def __setattr__(self, key, val):
-        if '_attributeLock' not in self.__dict__:
-            # This circumstance happens when __setattr__ called before __init__ being called.
-            object.__setattr__(self, '_attributeLock', set())
-        if 'autoLockAttribute' not in self.__dict__:
-            object.__setattr__(self, 'autoLockAttribute', False)
-        if key in self._attributeLock:
-            raise AttributeError, autoSubs('Attribute "$key" is unchangeable.')
-        if isinstance(val, ModelNode) and not val.isRoot and val.parentNode==None:
-            val.nodeName = val.nodeName if val.nodeName else key
-            object.__setattr__(val, 'parentNode', self)
-            
-            # The autolock mechanism will lock the node after you attach it to the model tree.
-            # A child node cannot change its parent
-            val.lockAttribute('parentNode')
-            # and the parent node's child node cannot be re-assinged. 
-            self.lockAttribute(key)
-                    
-        object.__setattr__(self, key, val)
-        if self.autoLockAttribute and key != 'autoLockAttribute': # autoLockAttribute cannot be locked
-            self.lockAttribute(key)        
-        
-    @property
-    def nodePath(self):
-        if self.isRoot:
-            return self.nodeName
-        else:
-            return '.'.join((self.parentNode.nodePath, self.nodeName))
-        
-    '''This class is a mixin class, which helps the system to evaluate and print command on the console.
-A mixin class does not have a __init__ method.'''
-    def callMethod(self, name, *args, **kwargs):
-        Application.instance.printAndEval(evalFmt('{self.nodePath}.{name}({Scripting.paramsToStr(*args, **kwargs)})'))
-        
-    def callMethodAndPrintDoc(self, name, *args, **kwargs):
-        self.callMethod(name, *args, **kwargs)
-        doc = Application.instance.eval(evalFmt('{self.nodePath}.{name}.__doc__'))
-        Application.instance.printTip(doc)
-                        
-# End Object Model
-        
-        
+       
 
         
 # Scripting Sub-System
@@ -239,6 +117,28 @@ class Scripting(ModelNode):
             
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
+        
+class WaveSynNode(ModelNode):
+    '''This class defines the node of the model tree of this application.
+The model tree is illustrated as follows:
+wavesyn
+-console
+-clipboard
+-windows[id]
+    -instance of PatternFitting
+        -figureBook
+    -instance of SingleSyn
+        -figureBook
+    -instance of MIMOSyn
+        -figureBook
+'''    
+    def callMethod(self, name, *args, **kwargs):
+        Application.instance.printAndEval(evalFmt('{self.nodePath}.{name}({Scripting.paramsToStr(*args, **kwargs)})'))
+        
+    def callMethodAndPrintDoc(self, name, *args, **kwargs):
+        self.callMethod(name, *args, **kwargs)
+        doc = Application.instance.eval(evalFmt('{self.nodePath}.{name}.__doc__'))
+        Application.instance.printTip(doc)        
         
 # End Scripting Sub-System
         
@@ -285,18 +185,9 @@ def callAndPrintDoc(func):
     return f
 
 
-class Singleton(type):
-    '''This class is a meta class, which helps to create singleton class.'''
-    def __call__(self, *args, **kwargs):
-        if hasattr(self, 'instance'):
-            return self.instance
-        else:
-            self.instance = object.__new__(self)
-            # In this circumstance, the __init__ should be called explicitly.
-            self.__init__(self.instance, *args, **kwargs)
-            return self.instance
 
-class Application(ModelNode):
+
+class Application(WaveSynNode):
     '''This class is the root of the model tree.
 In the scripting system, it is named as "wavesyn" (case sensitive).
 It also manages the whole application and provide services for other components.
@@ -438,7 +329,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         
         
 
-class Clipboard(ModelNode):
+class Clipboard(WaveSynNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
        
@@ -466,7 +357,7 @@ colorMap = {
 
 
   
-class DataFigure(ModelNode):
+class DataFigure(WaveSynNode):
     def __init__(self, master, topwin, nodeName='', figsize=(5,4), dpi=100, isPolar=False):
         ModelNode.__init__(self, nodeName=nodeName)
         
@@ -582,7 +473,7 @@ class DataFigure(ModelNode):
                     k += 1
 
         
-class FigureHub(ModelNode, list):
+class FigureHub(WaveSynNode, list):
     def __init__(self, nodeName=''):
         list.__init__(self)
         ModelNode.__init__(self, nodeName=nodeName)
@@ -871,7 +762,7 @@ class ConsoleText(ScrolledText):
         return int(r), int(c)        
         
         
-class ConsoleWindow(ObjectWithLock, ModelNode):
+class ConsoleWindow(ObjectWithLock, WaveSynNode):
     strWelcome = '''Good {0}, dear user(s). Welcome to WaveSyn!
 WaveSyn is a platform for testing and evaluating waveform synthesis algorithms.
 The following modules are imported and all the objects in them can be used directly in the scripting system:
@@ -978,7 +869,7 @@ Have a nice day.
         self.callMethod('editScript')
         
 
-class WindowHub(ModelNode, dict):
+class WindowHub(WaveSynNode, dict):
     def __init__(self, nodeName=''):
         dict.__init__(self)
         ModelNode.__init__(self, nodeName=nodeName)
@@ -998,7 +889,7 @@ class WindowHub(ModelNode, dict):
 
 
 
-class ToolWindow(ModelNode):
+class ToolWindow(WaveSynNode):
     '''Window is build around matplotlib Figure.
 '''
     windowName = ''

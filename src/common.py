@@ -7,6 +7,7 @@ Created on Sat May 17 20:05:23 2014
 
 import sys
 from string import Template, Formatter
+import threading
 
 class MethodDelegator(object):
     def __init__(self, attrName, methodName)   :
@@ -61,3 +62,24 @@ class EvalFormatter(Formatter):
             self.caller.pop()
                 
 evalFmt = EvalFormatter().format
+
+
+class ObjectWithLock(object):    
+    '''This is a mixin class.'''
+    @property
+    def lock(self):
+        if not hasattr(self, '_lock'):
+            self._lock  = threading.Lock()
+        return self._lock
+        
+        
+class Singleton(type):
+    '''This class is a meta class, which helps to create singleton class.'''
+    def __call__(self, *args, **kwargs):
+        if hasattr(self, 'instance'):
+            return self.instance
+        else:
+            self.instance = object.__new__(self)
+            # In this circumstance, the __init__ should be called explicitly.
+            self.__init__(self.instance, *args, **kwargs)
+            return self.instance        
