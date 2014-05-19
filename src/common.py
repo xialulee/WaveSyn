@@ -44,10 +44,7 @@ class EvalFormatter(Formatter):
     def __init__(self):
         Formatter.__init__(self)
         self.caller = [] # Will be set by method "format".
-                
-#    def check_unused_args(self, used_args, args, kwargs):
-#        return        
-        
+                             
     def get_value(self, expr, args=None, kwargs=None):
         caller   = self.caller        
         return eval(expr, caller[-1].f_globals, caller[-1].f_locals)

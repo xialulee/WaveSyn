@@ -379,6 +379,15 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         
     def execute(self, code):
         ret = None
+        strippedCode    = code.strip()
+        if strippedCode[0] == '!':
+            # To do: system(code)
+            PIPE    = subprocess.PIPE
+            p = subprocess.Popen(strippedCode[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
+            (stdout, stderr)    = p.communicate()
+            print(stdout)
+            print(stderr, file=sys.stderr)
+            return
         try:
             ret = self.eval(code)
         except SyntaxError:
@@ -389,23 +398,25 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
     def printTip(self, contents):
         if self.noTip:
             return
-        self.console.write('WaveSyn: ', 'TIP')
+        console = self.console
+        console.write('WaveSyn: ', 'TIP')
         if type(contents)==str:
-            self.console.write(contents+'\n', 'TIP')
+            console.write(contents+'\n', 'TIP')
             return
         for item in contents:
             if item['type'] == 'text':
-                self.console.write(''.join((item['content'],'\n')), 'TIP')
+                console.write(''.join((item['content'],'\n')), 'TIP')
             elif item['type'] == 'link':
                 command = item['command']
                 tagName = 'link' + str(id(command))
-                self.console.write(item['content'], tagName)
-                r, c = self.console.text.index(END).split('.')
-                self.console.text.tag_config(tagName, underline=1, foreground='blue')
-                self.console.text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
-                self.console.text.tag_bind(tagName, '<Enter>', lambda dumb: self.console.text.config(cursor='hand2'))
-                self.console.text.tag_bind(tagName, '<Leave>', lambda dumb: self.console.text.config(cursor=self.console.defaultCursor))
-                self.console.write('\n')
+                console.write(item['content'], tagName)
+                text    = console.text
+                r, c = text.index(END).split('.')
+                text.tag_config(tagName, underline=1, foreground='blue')
+                text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
+                text.tag_bind(tagName, '<Enter>', lambda dumb: text.config(cursor='hand2'))
+                text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.defaultCursor))
+                console.write('\n')
                 
                                             
                 
@@ -414,8 +425,6 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         
             
     def notifyWinQuit(self, win):
-        #nodePath    = win.nodePath
-        #self.printTip(autoSubs('$nodePath is closed, and its ID becomes defunct for scripting system hereafter'))
         self.printTip(evalFmt('{win.nodePath} is closed, and its ID becomes defunct for scripting system hereafter'))
         self.windows.pop(id(win))
         
@@ -690,10 +699,11 @@ The rest parameters are passed to PanedWindow.__init__.
                     params = {}
                     for name in ('xdata', 'ydata', 'color'):
                         params[name] = pyplot.getp(line[0], name)
-                    params['func'] = 'polar' if figure.polar else 'plot'
+                    params['func'] = 'polar' if figure.isPolar else 'plot'
                     params['xdata'] = ','.join((str(i) for i in params['xdata']))
                     params['ydata'] = ','.join((str(i) for i in params['ydata']))
                     print("{func}([{xdata}], [{ydata}], '{color}');hold on".format(**params), file=file)
+                    # To do: Grid
                     
                     
 
@@ -814,10 +824,15 @@ class ConsoleText(ScrolledText):
                 return 'break'                
             if evt.keycode == 13:
                 app = Application.instance
-                #code    = self.text.get('{r}.4'.format(r=r), '{r}.end'.format(r=r))
                 code    = self.text.get(autoSubs('$r.4'), autoSubs('$r.end'))
                 try:
                     strippedCode     = code.strip()
+                    if strippedCode and strippedCode[0] == '!':
+                        # Execute a system command
+                        app.execute(code)
+                        self.promptSymbol   = '>>> '
+                        self.write('\n')
+                        return 'break'
                     if strippedCode == '':
                         code    = '\n'.join(codeList)
                         del codeList[:]
