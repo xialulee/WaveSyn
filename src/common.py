@@ -17,6 +17,20 @@ class MethodDelegator(object):
         return getattr(getattr(obj, self.attrName), self.methodName)  
         
         
+class MethodLock(object):
+    def __init__(self, method, lockName):
+        self.__descriptor   = method
+        self.__lockName     = lockName
+        
+    def __get__(self, obj, type=None):
+        lock    = getattr(obj, self.__lockName)
+        descriptor  = self.__descriptor
+        if lock:
+            raise AttributeError, evalFmt('Method {descriptor.__name__} has been locked and cannot be called.')
+        else:
+            return self.__descriptor.__get__(obj, type)        
+        
+        
 def setMultiAttr(obj, **kwargs):
     '''This function mimics the VisualBasic "with" statement.'''    
     for attrName in kwargs:
@@ -26,22 +40,27 @@ def autoSubs(template):
     return Template(template).substitute(sys._getframe(1).f_locals)
     
     
-class AdvancedFormatter(Formatter):
-    def __init__(self, *args, **kwargs):
-        Formatter.__init__(self, *args, **kwargs)
-        self.caller = None # Will be set by method "format".
+class EvalFormatter(Formatter):
+    def __init__(self):
+        Formatter.__init__(self)
+        self.caller = [] # Will be set by method "format".
                 
 #    def check_unused_args(self, used_args, args, kwargs):
 #        return        
         
     def get_value(self, expr, args=None, kwargs=None):
         caller   = self.caller        
-        return eval(expr, caller.f_globals, caller.f_locals)
+        return eval(expr, caller[-1].f_globals, caller[-1].f_locals)
         
     def get_field(self, field_name, args, kwargs):
         obj = self.get_value(field_name, args, kwargs)
         return obj, field_name        
         
     def format(self, format_string, *args, **kwargs):
-        self.caller = sys._getframe(1)
-        return Formatter.format(self, format_string, *args, **kwargs)
+        self.caller.append(sys._getframe(1))
+        try:                    
+            return Formatter.format(self, format_string, *args, **kwargs)
+        finally:            
+            self.caller.pop()
+                
+evalFmt = EvalFormatter().format

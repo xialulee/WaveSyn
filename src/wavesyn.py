@@ -58,7 +58,7 @@ from idlelib.ColorDelegator import ColorDelegator
 from guicomponents import Group, StreamChain, TaskbarIcon, ParamItem, ScrolledList, ScrolledText
 import guicomponents
 
-from common import setMultiAttr, autoSubs
+from common import MethodLock, setMultiAttr, autoSubs, evalFmt
 
 
 
@@ -191,16 +191,11 @@ then node will have a property named 'a', which cannot be re-assigned.
     '''This class is a mixin class, which helps the system to evaluate and print command on the console.
 A mixin class does not have a __init__ method.'''
     def callMethod(self, name, *args, **kwargs):
-        strParams = Scripting.paramsToStr(*args, **kwargs)
-        nodePath    = self.nodePath
-        #Application.instance.printAndEval(self.nodePath+'.{0}({1})'.format(name, strParams))
-        Application.instance.printAndEval(autoSubs('$nodePath.$name($strParams)'))
+        Application.instance.printAndEval(evalFmt('{self.nodePath}.{name}({Scripting.paramsToStr(*args, **kwargs)})'))
         
     def callMethodAndPrintDoc(self, name, *args, **kwargs):
         self.callMethod(name, *args, **kwargs)
-        nodePath    = self.nodePath
-        #doc = Application.instance.eval(self.nodePath+'.{0}.__doc__'.format(name))
-        doc = Application.instance.eval(autoSubs('$nodePath.{$name}.__doc__'))
+        doc = Application.instance.eval(evalFmt('{self.nodePath}.{name}.__doc__'))
         Application.instance.printTip(doc)
                         
 # End Object Model
@@ -220,8 +215,7 @@ class Scripting(ModelNode):
     @staticmethod
     def paramsToStr(*args, **kwargs):
         def paramToStr(param):
-            if isinstance(param, str) or isinstance(param, unicode):
-                #return '"{0}"'.format(param)
+            if isinstance(param, str) or isinstance(param, unicode):                
                 return autoSubs('"$param"')
             elif isinstance(param, ScriptCode):
                 return param.code
@@ -229,8 +223,8 @@ class Scripting(ModelNode):
                 return str(param)
                 
         strArgs = ', '.join([paramToStr(arg) for arg in args]) if args else ''
-        strKwargs = ', '.join(['{0}={1}'.format(key, paramToStr(kwargs[key])) for key in kwargs]) \
-            if kwargs else ''
+        strKwargs = ', '.join([evalFmt('{key}={paramToStr(kwargs[key])}') for key in kwargs]) \
+            if kwargs else ''        
        
             
         if strArgs and strKwargs:
@@ -344,13 +338,8 @@ since the instance of Application is the first node created on the model tree.''
                        '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
             )
         # End Validation Functions
-          
-        # lock attributes which should be unchangeable. Tired of using @property.  
-#        for attrName in ('root', 'balloon', 'tbicon', 'checkInt', 'checkFloat', 
-#                         'checkPositiveFloat', 'editorInfo'):
-#            self.lockAttribute(attrName)                   
-               
-        self.windows = WindowHub()
+                                          
+        self.windows = WindowHub() # Instance of ModelNode can be locked automatically.
         
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)
@@ -413,7 +402,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
                 self.console.write(item['content'], tagName)
                 r, c = self.console.text.index(END).split('.')
                 self.console.text.tag_config(tagName, underline=1, foreground='blue')
-                self.console.text.tag_bind(tagName, '<Button-1>', command) # href implementation
+                self.console.text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
                 self.console.text.tag_bind(tagName, '<Enter>', lambda dumb: self.console.text.config(cursor='hand2'))
                 self.console.text.tag_bind(tagName, '<Leave>', lambda dumb: self.console.text.config(cursor=self.console.defaultCursor))
                 self.console.write('\n')
@@ -425,8 +414,9 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         
             
     def notifyWinQuit(self, win):
-        nodePath    = win.nodePath
-        self.printTip(autoSubs('$nodePath is closed, and its ID becomes defunct for scripting system hereafter'))
+        #nodePath    = win.nodePath
+        #self.printTip(autoSubs('$nodePath is closed, and its ID becomes defunct for scripting system hereafter'))
+        self.printTip(evalFmt('{win.nodePath} is closed, and its ID becomes defunct for scripting system hereafter'))
         self.windows.pop(id(win))
         
         
@@ -587,14 +577,24 @@ class FigureHub(ModelNode, list):
     def __init__(self, nodeName=''):
         list.__init__(self)
         ModelNode.__init__(self, nodeName=nodeName)
+        self.__elemLock   = False
+        
+    def lockElements(self, lock=True):
+        self.__elemLock  = lock
+        
+    @property        
+    def elemLock(self):
+        return self.__elemLock
         
     def append(self, val):        
         if not isinstance(val, DataFigure):
-            nodePath    = self.nodePath
-            raise TypeError, autoSubs('$nodePath only accepts instance of DataFigure or of its subclasses.')
+            raise TypeError, evalFmt('{self.nodePath} only accepts instance of DataFigure or of its subclasses.')
         list.append(self, val)
         val.index   = len(self) - 1
         val.lockAttribute('index')
+        
+    for methodName in ('__delitem__', '__delslice__', '__setitem__', 'pop', 'remove', 'reverse', 'sort', 'insert'):
+        locals()[methodName]    = MethodLock(method=getattr(list, methodName), lockName='elemLock')
 
 
 class FigureBook(FigureHub): 
@@ -629,6 +629,8 @@ The rest parameters are passed to PanedWindow.__init__.
             tabpages.add(frm, text=meta['name'])
             self.append(fig)
             
+        self.lockElements()    
+        #self.lockElements(lock=False) # For testing MethodLock only
         
         panedWindow.add(tabpages, stretch='always')
         
@@ -968,8 +970,7 @@ class WindowHub(ModelNode, dict):
                 
     def __setitem__(self, key, val):
         if not isinstance(val, ModelNode):
-            nodePath    = self.nodePath            
-            raise TypeError, autoSubs('$nodePath only accepts instance of ToolWindow or of its subclasses.')
+            raise TypeError, evalFmt('{self.nodePath} only accepts instance of ToolWindow or of its subclasses.')
         if key != id(val):
             raise ValueError, 'The key should be identical to the ID of the window.'
         object.__setattr__(val, 'parentNode', self)
@@ -989,7 +990,7 @@ class ToolWindow(ModelNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         self._toplevel = Toplevel()
-        self._toplevel.title('{0} id={1}'.format(self.windowName, id(self)))
+        self._toplevel.title(evalFmt('{self.windowName} id={id(self)}'))
         self._toplevel.protocol('WM_DELETE_WINDOW', lambda: self.callMethod('close'))
         
     def close(self):
@@ -999,7 +1000,8 @@ class ToolWindow(ModelNode):
     @property
     def nodePath(self):
         if isinstance(self.parentNode, WindowHub):
-            return '{parentPath}[{id}]'.format(parentPath=self.parentNode.nodePath, id=id(self))
+            #return '{parentPath}[{id}]'.format(parentPath=self.parentNode.nodePath, id=id(self))
+            return evalFmt('{self.parentNode.nodePath}[{id(self)}]')
         else:
             return ModelNode.nodePath
     
@@ -1158,7 +1160,6 @@ class AxisGroup(Group):
                     entryWidth  = 5,
                     entryVar    = self.__params[c*2+r]
                 )
-                #temp.entry.config(textvariable=self.__params[c*2+r])
                 temp.grid(row=r, column=c)
 
         btnfrm = Frame(self)
@@ -1220,7 +1221,6 @@ class AxisGroup(Group):
         self.__params[7].set(str(value))
 
     def onConfirmClick(self):
-        #aparams = map(lambda v: float(v.get()), self.__params)
         def toFloat(x):
             try:
                 return float(x)
