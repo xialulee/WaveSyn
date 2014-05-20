@@ -95,12 +95,10 @@ class Scripting(ModelNode):
     @staticmethod
     def paramsToStr(*args, **kwargs):
         def paramToStr(param):
-            if isinstance(param, str) or isinstance(param, unicode):                
-                return autoSubs('"$param"')
-            elif isinstance(param, ScriptCode):
+            if isinstance(param, ScriptCode):
                 return param.code
             else:
-                return str(param)
+                return repr(param)
                 
         strArgs = ', '.join([paramToStr(arg) for arg in args]) if args else ''
         strKwargs = ', '.join([evalFmt('{key}={paramToStr(kwargs[key])}') for key in kwargs]) \
@@ -120,13 +118,29 @@ class Scripting(ModelNode):
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
         
+#    class PrintableAttr(object):
+#        def __init__(self):
+#            pass
+#        
+#        def __getattr__(self, attr):
+#            if attr == '__set__':
+#                def func(self, obj, val):
+#                    nodePath    = obj.nodePath
+#                    
+#            else:
+#                return getattr(self, attr)
+        
     @staticmethod    
     def printable(method):
         def func(self, *args, **kwargs):
             callerLocals    = sys._getframe(1).f_locals
-            methodName      = method.__name__
+            #methodName      = method.__name__
             if 'printCode' in callerLocals and callerLocals['printCode']:
-                ret = Application.instance.printAndEval(evalFmt('{self.nodePath}.{methodName}({Scripting.paramsToStr(*args, **kwargs)})'))
+                ret = Application.instance.printAndEval(
+                    evalFmt(
+                        '{self.nodePath}.{method.__name__}({Scripting.paramsToStr(*args, **kwargs)})'
+                    )
+                )
             else:                          
                 ret = method(self, *args, **kwargs)
             return ret

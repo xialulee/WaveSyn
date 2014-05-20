@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*
 
 from Tkinter    import *
+import ttk
 from common     import MethodDelegator
 
 
@@ -165,6 +166,25 @@ class TextWinHotkey(Text):
         return 'break'
 
 
+class ScrolledTree(Frame):
+    def __init__(self, *args, **kwargs):
+        Frame.__init__(self, *args, **kwargs)
+        self.pack(expand=YES, fill=BOTH)
+        self.makeWidgets()
+        
+    def makeWidgets(self):
+        sbar    = Scrollbar(self)
+        tree    = ttk.Treeview(self)
+        sbar.config(command=tree.yview)
+        tree.config(yscrollcommand=sbar.set)
+        sbar.pack(side=RIGHT, fill=Y)
+        tree.pack(side=LEFT, expand=YES, fill=BOTH)
+        self.tree   = tree
+        
+    for new, origin in (('insert', 'insert'), ('delete', 'delete')):
+        locals()[new]    = MethodDelegator('tree', origin)        
+
+
 class ScrolledText(Frame):
     '''This class is based on Programming Python 3rd Edition P517'''
     def __init__(self, parent=None, text='', file=None):
@@ -327,3 +347,10 @@ class Group(Frame, object):
         
         
         
+if __name__ == '__main__':
+    window  = Tk()
+    tree    = ScrolledTree(window)
+    root    = tree.insert('', END, text='root')
+    node    = tree.insert(root, END, text='node')
+    window.mainloop()
+    
