@@ -55,7 +55,7 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from objectmodel import ModelNode
+from objectmodel import ModelNode, NodeDict, NodeList
 
 from guicomponents import Group, StreamChain, TaskbarIcon, ParamItem, ScrolledList, ScrolledText
 import guicomponents
@@ -118,24 +118,13 @@ class Scripting(ModelNode):
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
         
-class WaveSynNode(ModelNode):
-    '''This class defines the node of the model tree of this application.
-The model tree is illustrated as follows:
-wavesyn
--console
--clipboard
--windows[id]
-    -instance of PatternFitting
-        -figureBook
-    -instance of SingleSyn
-        -figureBook
-    -instance of MIMOSyn
-        -figureBook
-'''    
+class CodePrinter(object):
     def callMethod(self, name, *args, **kwargs):
+        '''Call a specified method of the model node, and print the corresponding scripting code in the console.'''
         Application.instance.printAndEval(evalFmt('{self.nodePath}.{name}({Scripting.paramsToStr(*args, **kwargs)})'))
         
     def callMethodAndPrintDoc(self, name, *args, **kwargs):
+        '''Like callMethod, it prints the corresponding scripting code, and it also prints the document of the method.'''
         self.callMethod(name, *args, **kwargs)
         doc = Application.instance.eval(evalFmt('{self.nodePath}.{name}.__doc__'))
         Application.instance.printTip(doc)        
@@ -187,12 +176,24 @@ def callAndPrintDoc(func):
 
 
 
-class Application(WaveSynNode):
+class Application(ModelNode, CodePrinter):
     '''This class is the root of the model tree.
 In the scripting system, it is named as "wavesyn" (case sensitive).
 It also manages the whole application and provide services for other components.
 For other nodes on the model tree, the instance of Application can be accessed by Application.instance,
-since the instance of Application is the first node created on the model tree.'''
+since the instance of Application is the first node created on the model tree.
+The model tree of the application is illustrated as follows:
+wavesyn
+-console
+-clipboard
+-windows[id]
+    -instance of PatternFitting
+        -figureBook
+    -instance of SingleSyn
+        -figureBook
+    -instance of MIMOSyn
+        -figureBook
+'''    
     __metaclass__ = Singleton
     ''' '''
     def __init__(self):
@@ -230,7 +231,7 @@ since the instance of Application is the first node created on the model tree.''
             )
         # End Validation Functions
                                           
-        self.windows = WindowHub() # Instance of ModelNode can be locked automatically.
+        self.windows = WindowDict() # Instance of ModelNode can be locked automatically.
         
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)
@@ -329,7 +330,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         
         
 
-class Clipboard(WaveSynNode):
+class Clipboard(ModelNode, CodePrinter):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
        
@@ -357,7 +358,7 @@ colorMap = {
 
 
   
-class DataFigure(WaveSynNode):
+class DataFigure(ModelNode, CodePrinter):
     def __init__(self, master, topwin, nodeName='', figsize=(5,4), dpi=100, isPolar=False):
         ModelNode.__init__(self, nodeName=nodeName)
         
@@ -385,7 +386,7 @@ class DataFigure(WaveSynNode):
         
         self.plotFunction = None
         
-        self.index  = None # Used by FigureHub
+        self.index  = None # Used by FigureList
         
         self.__majorGrid    = isPolar
         self.__minorGrid    = False
@@ -426,6 +427,7 @@ class DataFigure(WaveSynNode):
         grpAxis.xlim    = axes.get_xlim()
         grpAxis.ylim    = axes.get_ylim()
         
+        #To do: using a list with tuples instead
         attr_func   = {
             'major_xtick':  axes.xaxis.get_major_locator,
             'major_ytick':  axes.yaxis.get_major_locator,
@@ -473,31 +475,17 @@ class DataFigure(WaveSynNode):
                     k += 1
 
         
-class FigureHub(WaveSynNode, list):
+class FigureList(NodeList, CodePrinter):
     def __init__(self, nodeName=''):
-        list.__init__(self)
-        ModelNode.__init__(self, nodeName=nodeName)
-        self.__elemLock   = False
-        
-    def lockElements(self, lock=True):
-        self.__elemLock  = lock
-        
-    @property        
-    def elemLock(self):
-        return self.__elemLock
+        NodeList.__init__(self, nodeName=nodeName)
         
     def append(self, val):        
         if not isinstance(val, DataFigure):
             raise TypeError, evalFmt('{self.nodePath} only accepts instance of DataFigure or of its subclasses.')
-        list.append(self, val)
-        val.index   = len(self) - 1
-        val.lockAttribute('index')
+        NodeList.append(self, val)
         
-    for methodName in ('__delitem__', '__delslice__', '__setitem__', 'pop', 'remove', 'reverse', 'sort', 'insert'):
-        locals()[methodName]    = MethodLock(method=getattr(list, methodName), lockName='elemLock')
 
-
-class FigureBook(FigureHub): 
+class FigureBook(FigureList): 
     def __init__(self, *args, **kwargs):
         '''
 nodeName:   The name of this node. Usually set by ModelNode.__setattr__ automatically.
@@ -509,7 +497,7 @@ The rest parameters are passed to PanedWindow.__init__.
         self.__topwin = topwin
         # lock
         
-        FigureHub.__init__(self, nodeName=nodeName)
+        FigureList.__init__(self, nodeName=nodeName)
 
         figureMeta = kwargs.pop('figureMeta')
         kwargs['orient'] = HORIZONTAL
@@ -762,7 +750,7 @@ class ConsoleText(ScrolledText):
         return int(r), int(c)        
         
         
-class ConsoleWindow(ObjectWithLock, WaveSynNode):
+class ConsoleWindow(ObjectWithLock, ModelNode, CodePrinter):
     strWelcome = '''Good {0}, dear user(s). Welcome to WaveSyn!
 WaveSyn is a platform for testing and evaluating waveform synthesis algorithms.
 The following modules are imported and all the objects in them can be used directly in the scripting system:
@@ -869,19 +857,17 @@ Have a nice day.
         self.callMethod('editScript')
         
 
-class WindowHub(WaveSynNode, dict):
+
+class WindowDict(NodeDict, CodePrinter):
     def __init__(self, nodeName=''):
-        dict.__init__(self)
-        ModelNode.__init__(self, nodeName=nodeName)
+        NodeDict.__init__(self, nodeName=nodeName)
                 
     def __setitem__(self, key, val):
         if not isinstance(val, ModelNode):
             raise TypeError, evalFmt('{self.nodePath} only accepts instance of ToolWindow or of its subclasses.')
         if key != id(val):
             raise ValueError, 'The key should be identical to the ID of the window.'
-        object.__setattr__(val, 'parentNode', self)
-        val.lockAttribute('parentNode')
-        dict.__setitem__(self, key, val)
+        NodeDict.__setitem__(self, key, val)
         
     def add(self, node):
         self[id(node)] = node
@@ -889,7 +875,7 @@ class WindowHub(WaveSynNode, dict):
 
 
 
-class ToolWindow(WaveSynNode):
+class ToolWindow(ModelNode, CodePrinter):
     '''Window is build around matplotlib Figure.
 '''
     windowName = ''
@@ -905,8 +891,7 @@ class ToolWindow(WaveSynNode):
         
     @property
     def nodePath(self):
-        if isinstance(self.parentNode, WindowHub):
-            #return '{parentPath}[{id}]'.format(parentPath=self.parentNode.nodePath, id=id(self))
+        if isinstance(self.parentNode, WindowDict):
             return evalFmt('{self.parentNode.nodePath}[{id(self)}]')
         else:
             return ModelNode.nodePath
@@ -1093,38 +1078,12 @@ class AxisGroup(Group):
     def ylim(self, value):
         self.__params[2].set(str(value[0]))
         self.__params[3].set(str(value[1]))
+               
+    for propName, propIdx   in (('major_xtick', 4), ('major_ytick', 5), ('minor_xtick', 6), ('minor_ytick', 7)):
+        prop  = property(lambda self, idx=propIdx: float(self.__params[idx].get()))
+        locals()[propName]  = prop.setter(lambda self, val, idx=propIdx: self.__params[idx].set(str(val)))
 
-    @property
-    def major_xtick(self):
-        return float(self.__params[4].get())
 
-    @major_xtick.setter
-    def major_xtick(self, value):
-        self.__params[4].set(str(value))
-
-    @property
-    def major_ytick(self):
-        return float(self.__params[5].get())
-
-    @major_ytick.setter
-    def major_ytick(self, value):
-        self.__params[5].set(str(value))
-
-    @property
-    def minor_xtick(self):
-        return float(self.__params[6].get())
-
-    @minor_xtick.setter
-    def minor_xtick(self, value):
-        self.__params[6].set(str(value))
-
-    @property
-    def minor_ytick(self):
-        return float(self.__params[7].get())
-
-    @minor_ytick.setter
-    def minor_ytick(self, value):
-        self.__params[7].set(str(value))
 
     def onConfirmClick(self):
         def toFloat(x):
@@ -1656,12 +1615,10 @@ class PatternWindow(ToolWindow):
             ],
             topwin   = self
         )
-        # figureBook.pack(expand=YES, fill=BOTH)
+
         figureBook.panedWindow.pack(expand=YES, fill=BOTH)
-        #figCart = figureBook.figures[0]
         figCart = figureBook[0]
         figCart.plotFunction = lambda *args, **kwargs: figCart.plot(*args, **kwargs)
-        #figPolar = figureBook.figures[1]
         figPolar    = figureBook[1]
         figPolar.plotFunction = lambda angles, pattern, **kwargs: figPolar.plot(angles/180.*pi, pattern, **kwargs)
         

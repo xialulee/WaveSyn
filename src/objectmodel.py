@@ -6,7 +6,7 @@ Created on Mon May 19 22:21:38 2014
 """
     
 
-from common import autoSubs 
+from common import autoSubs, MethodLock 
 
 # Object Model Sub-System
 # It is a part of the scripting system.
@@ -38,7 +38,7 @@ class ModelNode(object):
         self.nodeName = nodeName
         #self.autoLockAttribute   = False
         
-    def lockAttribute(self, attrName):
+    def lockAttribute(self, attrName, lock=True):
         '''Lock a specified attribute, i.e. the attribute cannot be re-assigned.
 For example:        
 node.a = 0
@@ -47,7 +47,11 @@ If you try to give node.a a new value
 node.a = 1
 then an AttributeError will be raised.
 '''
-        self._attributeLock.add(attrName)
+        if lock:
+            self._attributeLock.add(attrName)
+        else:
+            if attrName in self._attributeLock:
+                self._attributeLock.remove(attrName)
         
     @property
     def attributeLock(self):
@@ -94,5 +98,50 @@ then node will have a property named 'a', which cannot be re-assigned.
         
 
 # NodeDict
-# NodeList                        
+class NodeDict(ModelNode, dict):
+    def __init__(self, nodeName=''):
+        dict.__init__(self)
+        ModelNode.__init__(self, nodeName=nodeName)
+        
+    def __setitem__(self, key, val):
+        object.__setattr__(val, 'parentNode', self)
+        val.lockAttribute('parentNode')
+        dict.__setitem__(self, key, val)
+
+# NodeList       
+class NodeList(ModelNode, list):
+    def __init__(self, nodeName=''):
+        list.__init__(self)
+        ModelNode.__init__(self, nodeName='')
+        self.__elemLock = True
+
+    
+    def lockElements(self, lock=True):
+        self.__elemLock = lock
+        
+    def append(self, val):
+        list.append(self, val)
+        val.index   = len(self) - 1
+        val.lockAttribute('index')
+
+    @property
+    def elemLock(self):
+        return self.__elemLock
+        
+    def __refreshIndex(method):
+        def func(self, *args, **kwargs):            
+            try:
+                ret = method(self, *args, **kwargs)
+            finally:
+                for idx, val in enumerate(self):
+                    val.lockAttribute('index', lock=False)
+                    val.index   = idx
+                    val.lockAttribute('index', lock=True)
+            return ret
+        func.__name__   = method.__name__
+        func.__doc__    = method.__doc__
+        return func
+
+    for methodName in ('__delitem__', '__delslice__', '__setitem__', 'pop', 'remove', 'reverse', 'sort', 'insert'):
+        locals()[methodName]    = MethodLock(method=__refreshIndex(getattr(list, methodName)), lockName='elemLock')                 
 # End Object Model
