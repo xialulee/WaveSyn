@@ -16,6 +16,7 @@ def dependenciesForMyprogram():
 import threading
 
 import os
+import os.path
 import sys
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
@@ -40,8 +41,9 @@ import matplotlib.pyplot as pyplot
 from numpy import *
 from scipy.io import savemat
 
-from functools import partial
-from datetime import datetime
+from functools  import partial
+from datetime   import datetime
+from inspect    import getsourcefile
 import webbrowser
 import subprocess
 import tempfile
@@ -60,7 +62,7 @@ from objectmodel import ModelNode, NodeDict, NodeList
 from guicomponents import Group, StreamChain, TaskbarIcon, ParamItem, ScrolledList, ScrolledText
 import guicomponents
 
-from common import MethodLock, setMultiAttr, autoSubs, evalFmt, ObjectWithLock, Singleton
+from common import setMultiAttr, autoSubs, evalFmt, ObjectWithLock, Singleton, MethodDelegator
 
 
 
@@ -118,17 +120,21 @@ class Scripting(ModelNode):
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
         
-class CodePrinter(object):
-    def callMethod(self, name, *args, **kwargs):
-        '''Call a specified method of the model node, and print the corresponding scripting code in the console.'''
-        Application.instance.printAndEval(evalFmt('{self.nodePath}.{name}({Scripting.paramsToStr(*args, **kwargs)})'))
-        
-    def callMethodAndPrintDoc(self, name, *args, **kwargs):
-        '''Like callMethod, it prints the corresponding scripting code, and it also prints the document of the method.'''
-        self.callMethod(name, *args, **kwargs)
-        doc = Application.instance.eval(evalFmt('{self.nodePath}.{name}.__doc__'))
-        Application.instance.printTip(doc)        
-        
+    @staticmethod    
+    def printable(method):
+        def func(self, *args, **kwargs):
+            callerLocals    = sys._getframe(1).f_locals
+            methodName      = method.__name__
+            if 'printCode' in callerLocals and callerLocals['printCode']:
+                ret = Application.instance.printAndEval(evalFmt('{self.nodePath}.{methodName}({Scripting.paramsToStr(*args, **kwargs)})'))
+            else:                          
+                ret = method(self, *args, **kwargs)
+            return ret
+        func.__doc__    = method.__doc__
+        func.__name__   = method.__name__
+        return func
+
+                                   
 # End Scripting Sub-System
         
         
@@ -176,7 +182,7 @@ def callAndPrintDoc(func):
 
 
 
-class Application(ModelNode, CodePrinter):
+class Application(ModelNode):
     '''This class is the root of the model tree.
 In the scripting system, it is named as "wavesyn" (case sensitive).
 It also manages the whole application and provide services for other components.
@@ -203,8 +209,10 @@ wavesyn
         Scripting.nameSpace['globals'] = globals()
         self.homePage = 'https://github.com/xialulee/WaveSyn'
         
+        filePath    = getsourcefile(type(self))
+        dirPath     = os.path.split(filePath)[0]
         # load config file
-        with open('config.json') as f:
+        with open(os.path.join(dirPath, 'config.json')) as f:
             config  = json.load(f)
         consoleMenu = config['ConsoleMenu']
         self.editorInfo   = config['EditorInfo']
@@ -217,9 +225,11 @@ wavesyn
         
         with self.attributeLock:
             setMultiAttr(self,
+                # UI elements
                 root = root,        
                 balloon = Tix.Balloon(root),
                 tbicon = TaskbarIcon(root),
+                # End UI elements
             
                 # Validation Functions
                 checkInt = (root.register(partial(checkValue, func=int)),
@@ -227,9 +237,13 @@ wavesyn
                 checkFloat = (root.register(partial(checkValue, func=float)),
                     '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'),
                 checkPositiveFloat = (root.register(checkPositiveFloat),
-                       '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+                       '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'),
+                # End Validation Functions
+                
+                filePath    = filePath,
+                dirPath     = dirPath
             )
-        # End Validation Functions
+        
                                           
         self.windows = WindowDict() # Instance of ModelNode can be locked automatically.
         
@@ -242,6 +256,8 @@ wavesyn
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
         self.noTip = False
+        
+        
 
     def newSingleWin(self, printDoc=False):
         print('Not Implemented.', file=sys.stderr)
@@ -263,6 +279,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
         if ret != None:
             self.console.write(str(ret)+'\n', 'RETVAL')
+        return ret
                               
     def eval(self, expr):
         ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
@@ -329,14 +346,20 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
         return self.root.mainloop()
         
         
+def uiImagePath(filename):
+    return os.path.join(Application.instance.dirPath, 'images', filename)        
+        
+        
 
-class Clipboard(ModelNode, CodePrinter):
+class Clipboard(ModelNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
        
+    @Scripting.printable
     def clear(self):
         Application.instance.root.clipboard_clear()
     
+    @Scripting.printable
     def append(self, content):
         Application.instance.root.clipboard_append(content)
         
@@ -358,7 +381,7 @@ colorMap = {
 
 
   
-class DataFigure(ModelNode, CodePrinter):
+class DataFigure(ModelNode):
     def __init__(self, master, topwin, nodeName='', figsize=(5,4), dpi=100, isPolar=False):
         ModelNode.__init__(self, nodeName=nodeName)
         
@@ -415,6 +438,10 @@ class DataFigure(ModelNode, CodePrinter):
         self.__minorGrid    = val
         self.axes.grid(val, 'minor')
         
+
+    Scripting.printable
+    def grid(self, *args, **kwargs):
+        self.axes.grid(*args, **kwargs)
 
         
     def update(self):
@@ -475,7 +502,7 @@ class DataFigure(ModelNode, CodePrinter):
                     k += 1
 
         
-class FigureList(NodeList, CodePrinter):
+class FigureList(NodeList):
     def __init__(self, nodeName=''):
         NodeList.__init__(self, nodeName=nodeName)
         
@@ -518,7 +545,6 @@ The rest parameters are passed to PanedWindow.__init__.
             self.append(fig)
             
         self.lockElements()    
-        #self.lockElements(lock=False) # For testing MethodLock only
         
         panedWindow.add(tabpages, stretch='always')
         
@@ -550,7 +576,8 @@ The rest parameters are passed to PanedWindow.__init__.
         if 'color' in kwargs:
             self.__list.itemConfig(END, fg=colorMap[kwargs['color']])
         self.currentFigure.updateViewTab()
-            
+    
+    @Scripting.printable
     def clear(self):
         for fig in self:
             fig.clear()
@@ -568,6 +595,7 @@ The rest parameters are passed to PanedWindow.__init__.
             pyplot.setp(figure.lineObjects[index], linewidth=2)
             figure.update()
             
+    @Scripting.printable            
     def exportMatlabScript(self, filename):
         with open(filename, 'w') as file:
             for figure in self:
@@ -585,7 +613,7 @@ The rest parameters are passed to PanedWindow.__init__.
                     # To do: Grid
                     
                     
-
+    @Scripting.printable                    
     def deleteSelLines(self, idx=None):
         if idx is None:
             idx = self.__list.curSelection # idx is a tuple of strings.
@@ -750,7 +778,7 @@ class ConsoleText(ScrolledText):
         return int(r), int(c)        
         
         
-class ConsoleWindow(ObjectWithLock, ModelNode, CodePrinter):
+class ConsoleWindow(ObjectWithLock, ModelNode):
     strWelcome = '''Good {0}, dear user(s). Welcome to WaveSyn!
 WaveSyn is a platform for testing and evaluating waveform synthesis algorithms.
 The following modules are imported and all the objects in them can be used directly in the scripting system:
@@ -808,24 +836,30 @@ Have a nice day.
         'Only used by "clear" method.'
         self.__txtStdOutErr.write('')
 
-        
+    @Scripting.printable    
     def save(self, filename): # for scripting system
         with open(filename, 'w') as f:
             f.write(self.__txtStdOutErr.getText())
             
     def onSaveAs(self):
-        filename    = asksaveasfilename(filetypes=[('All types of files', '*.*')])
-        if not filename:
+        printCode   = True
+        fileName    = asksaveasfilename(filetypes=[('All types of files', '*.*')])
+        if not fileName:
             return
-        self.callMethod('save', filename)
-        
+        #self.callMethod('save', filename)
+        self.save(fileName)
+    
+    @Scripting.printable    
     def clear(self):
         self.__txtStdOutErr.clear()
         self.showPrompt()
         
     def onClear(self):
-        self.callMethod('clear')
-        
+        printCode   = True
+        #self.callMethod('clear')
+        self.clear()
+
+    @Scripting.printable        
     def editScript(self):
         app = Application.instance
         class EditorThread(threading.Thread):
@@ -854,11 +888,13 @@ Have a nice day.
             os.remove(filename)
             
     def onEditScript(self):
-        self.callMethod('editScript')
+        printCode   = True
+        self.editScript()
+        #self.callMethod('editScript')
         
 
 
-class WindowDict(NodeDict, CodePrinter):
+class WindowDict(NodeDict):
     def __init__(self, nodeName=''):
         NodeDict.__init__(self, nodeName=nodeName)
                 
@@ -875,19 +911,24 @@ class WindowDict(NodeDict, CodePrinter):
 
 
 
-class ToolWindow(ModelNode, CodePrinter):
+class ToolWindow(ModelNode):
     '''Window is build around matplotlib Figure.
 '''
     windowName = ''
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         self._toplevel = Toplevel()
-        self._toplevel.title(evalFmt('{self.windowName} id={id(self)}'))
-        self._toplevel.protocol('WM_DELETE_WINDOW', lambda: self.callMethod('close'))
+        self._toplevel.title(evalFmt('{self.windowName} id={id(self)}'))        
+        self._toplevel.protocol('WM_DELETE_WINDOW', self.onClose)
         
+    @Scripting.printable
     def close(self):
         Application.instance.notifyWinQuit(self)
         self._toplevel.destroy() # For Toplevel objects, use destroy rather than quit.
+        
+    def onClose(self):
+        printCode   = True
+        self.close()
         
     @property
     def nodePath(self):
@@ -990,6 +1031,10 @@ class GridGroup(Group):
         self.btnProperty    = btnProperty
         
         self.name = 'Grid'
+        
+    def onChkGridMajor(self):
+        printCode    = True
+        self.__topwin.figureBook.currentFigure.grid(self.__major.get(), which='major')
 
         
     class __EnableDelegator(object):
@@ -1122,13 +1167,18 @@ class ClearGroup(Group):
         self.name = 'Clear Plot'
 
     def onClearAll(self):
-        self.__topwin.figureBook.callMethod('clear')
+        #self.__topwin.figureBook.callMethod('clear')
+        printCode   = True
+        self.__topwin.figureBook.clear()
 
     def onDelSel(self):
-        self.__topwin.figureBook.callMethod('deleteSelLines', idx=None)
+        #self.__topwin.figureBook.callMethod('deleteSelLines', idx=None)
+        printCode   = True
+        self.__topwin.figureBook.deleteSelLines(idx=None)
 
     def onDelUnSel(self):
-        self.__topwin.figureBook.remove_unsel_lines()
+        printCode   = True
+        #self.__topwin.figureBook.remove_unsel_lines()
 
 
 class AlgoSelGroup(Group):
@@ -1342,7 +1392,9 @@ class PatternSolveGroup(Group):
         frm = Frame(self)
         frm.pack(side=TOP)
         
-        imageMLbl = ImageTk.PhotoImage(file='Pattern_M_Label.png', master=frm)
+        imageMLbl = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_M_Label.png')
+        )
         self.__uiImages.append(imageMLbl)
         Label(frm, image=imageMLbl).pack(side=LEFT)
         
@@ -1356,7 +1408,9 @@ class PatternSolveGroup(Group):
         
         self._app.balloon.bind_widget(frm, balloonmsg='The number of the array elements.')
 
-        imageSolveBtn = ImageTk.PhotoImage(file='Pattern_Solve_Button.png', master=self)
+        imageSolveBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_Solve_Button.png')
+        )
         self.__uiImages.append(imageSolveBtn)
 
         self.__btnSolve = Button(self, image=imageSolveBtn, command=self.onSolve)
@@ -1365,7 +1419,9 @@ class PatternSolveGroup(Group):
         
         frm = Frame(self)
         frm.pack(side=TOP)
-        imageDisplayBtn = ImageTk.PhotoImage(file='Pattern_Display_Button.png')
+        imageDisplayBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_Display_Button.png')
+        )
         self.__uiImages.append(imageDisplayBtn)
         Label(frm, image=imageDisplayBtn).pack(side=LEFT)
         self.__bDisplay = IntVar(0)
@@ -1376,15 +1432,21 @@ class PatternSolveGroup(Group):
         self.name = 'Optimize'
                 
     def onSolve(self):
+        printCode   = True
         topwin = self.__topwin
         center, width = topwin.grpEdit.beamData
-        topwin.figureBook.callMethod('clear')
+        #topwin.figureBook.callMethod('clear')
+        topwin.figureBook.clear()
         
-        call    = topwin.callMethod
-        call('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        call('setIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        call('solve', M=self.__M.getInt(), display=self.__bDisplay.get())
-        call('plotCorrMatrixPattern')
+        #call    = topwin.callMethod
+        #call('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        #call('setIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        topwin.setIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        #call('solve', M=self.__M.getInt(), display=self.__bDisplay.get())
+        topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
+        #call('plotCorrMatrixPattern')
+        topwin.plotCorrMatrixPattern()
         
         
         
@@ -1421,25 +1483,33 @@ class PatternEditGroup(Group):
         self.__uiImages = []
                 
                 
-        imageAddBtn = ImageTk.PhotoImage(file='Pattern_Add_Button.png', master=frm)
+        imageAddBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_Add_Button.png')
+        )
         self.__uiImages.append(imageAddBtn)
         btn = Button(frm, image=imageAddBtn, command=self.onAdd)
         btn.pack(side=LEFT)
         self._app.balloon.bind_widget(btn, balloonmsg='Add new beam to the ideal pattern.')
         
-        imageDelBtn = ImageTk.PhotoImage(file='Pattern_Del_Button.png', master=frm)
+        imageDelBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_Del_Button.png')
+        )
         self.__uiImages.append(imageDelBtn)
         btn = Button(frm, image=imageDelBtn, command=self.onDel)
         btn.pack(side=LEFT)
         self._app.balloon.bind_widget(btn, balloonmsg='Remove the selected beam in the listbox.')
         
-        imageClrBtn = ImageTk.PhotoImage(file='Pattern_Clear_Button.png', master=frm)
+        imageClrBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_Clear_Button.png')
+        )
         self.__uiImages.append(imageClrBtn)
         btn = Button(frm, image=imageClrBtn, command=self.onClear)
         btn.pack(side=LEFT)
         self._app.balloon.bind_widget(btn, balloonmsg='Clear the listbox of the beam parameters.')
         
-        imagePlotBtn = ImageTk.PhotoImage(file='Pattern_Plot_Button.png', master=frm)
+        imagePlotBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_Plot_Button.png')
+        )
         self.__uiImages.append(imagePlotBtn)
         btn = Button(frm, image=imagePlotBtn, command=self.onPlotIdealPattern)
         btn.pack(side=LEFT)
@@ -1464,8 +1534,10 @@ class PatternEditGroup(Group):
         self.__paramlist.clear()
         
     def onPlotIdealPattern(self):
+        printCode   = True
         center, width = self.beamData
-        self.__topwin.callMethod('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        #self.__topwin.callMethod('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        self.__topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
         
     @property
     def beamData(self):
@@ -1504,14 +1576,18 @@ class PatternFileExportGroup(Group):
         
         frm = Frame(self)
         self.__uiImages = []
-        imageMatFileBtn = ImageTk.PhotoImage(file='Pattern_SaveMat_Button.png', master=frm)
+        imageMatFileBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_SaveMat_Button.png')
+        )
         self.__uiImages.append(imageMatFileBtn)
         Button(frm, image=imageMatFileBtn, command=self.onSaveMat).pack(side=TOP)
         Button(frm, text='mat', width=6).pack(side=TOP)
         frm.pack(side=LEFT)
         
         frm = Frame(self)
-        imageExcelFileBtn = ImageTk.PhotoImage(file='Pattern_SaveExcel_Button.png', master=frm)
+        imageExcelFileBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_SaveExcel_Button.png')
+        )
         self.__uiImages.append(imageExcelFileBtn)
         Button(frm, image=imageExcelFileBtn).pack(side=TOP)
         Button(frm, text='xlsx', width=6).pack(side=TOP)
@@ -1520,22 +1596,33 @@ class PatternFileExportGroup(Group):
         self.name = 'Corr Matrix'
         
     def onSaveMat(self):
+        printCode   = True
         filename = asksaveasfilename(filetypes=[('Matlab mat files', '*.mat')])
         if not filename:
             return
+            
+        def linkFunc(filename):
+            printCode   = True
+            clipboard   = Application.instance.clipboard
+            clipboard.clear()
+            clipboard.append(autoSubs('load $filename'))
 
-        self.__topwin.callMethod('saveMat', filename)
+        #self.__topwin.callMethod('saveMat', filename)
+        self.__topwin.saveMat(filename)
         tip = [
             {'type':'text', 'content':'''The correlation matrix has been saved in the mat file "{filename}" successully.
 You can extract the data in Matlab using the following command:'''.format(filename=filename)},
             {'type':'link', 'content':'>> load {filename}'.format(filename=filename),
-                 'command':lambda dumb: (
-                     Application.instance.clipboard.callMethod('clear'),
-                     Application.instance.clipboard.callMethod(
-                         'append',
-                         'load {filename}'.format(filename=filename)
-                     )
-                  )
+#                 'command':lambda dumb: (
+#                     #Application.instance.clipboard.callMethod('clear'),
+#                     #Application.instance.clipboard.callMethod(
+#                     #    'append',
+#                     #    'load {filename}'.format(filename=filename)
+#                     locals()['printCode']  = True
+#                     Application.instance.clipboard.clear()
+#                     )
+#                  )
+                 'command':lambda dumb: linkFunc(filename=filename)
             },
             {'type':'text', 'content':'''and variable named "R" will appear in your Matlab workspace.
 (Click the underlined Matlab command and copy it to the clipboard)'''}
@@ -1551,7 +1638,9 @@ class PatternFigureExportGroup(Group):
         self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
         self.__uiImages = []
-        imageFigureExportBtn = ImageTk.PhotoImage(file='Pattern_ExportFigure_Button.png')
+        imageFigureExportBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_ExportFigure_Button.png')
+        )
         self.__uiImages.append(imageFigureExportBtn)
         frm = Frame(self); frm.pack(side=LEFT)
         Button(frm, image=imageFigureExportBtn, command=self.onExportMatlabScript).pack(side=TOP)
@@ -1561,10 +1650,12 @@ class PatternFigureExportGroup(Group):
         
 
     def onExportMatlabScript(self):
+        printCode   = True
         filename = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
         if not filename:
             return
-        self.__topwin.figureBook.callMethod('exportMatlabScript', filename)
+        #self.__topwin.figureBook.callMethod('exportMatlabScript', filename)
+        self.__topwin.figureBook.exportMatlabScript(filename)
         self._app.printTip(
 '''A Matlab script file has been saved as {filename}.
 By running this script, Matlab will literally "re-plot" the curves shown here.'''.format(filename=filename)
@@ -1630,16 +1721,18 @@ class PatternWindow(ToolWindow):
     @property
     def grpEdit(self):
         return self.__grpEdit
-        
+    
+    @Scripting.printable    
     def setIdealPattern(self, angles, center, width):
         self.angles = angles = r_[-90:90.1:0.1]
         self.idealPattern = pattern2corrmtx.ideal_pattern(angles, center, width)
 
-        
+    @Scripting.printable    
     def plotIdealPattern(self, angles, center, width):
         self.figureBook.plot(angles, pattern2corrmtx.ideal_pattern(angles, center, width),
             curveName='Ideal Pattern', color='b')
-            
+    
+    @Scripting.printable        
     def plotCorrMatrixPattern(self, R=None):
         if R == None:
             R = self.R
@@ -1648,14 +1741,14 @@ class PatternWindow(ToolWindow):
         self.figureBook.plot(self.angles, pattern2corrmtx.corrmtx2pattern(R, self.angles),
             curveName='Synthesized Pattern', color='g')
             
-        
+    @Scripting.printable    
     def solve(self, M, display=False):
         self.__problem.M = M
         self.__problem.angles = self.angles
         self.__problem.idealpattern = self.idealPattern
         self.R = self.__problem.solve(verbose=display)
         
-        
+    @Scripting.printable    
     def saveMat(self, filename, varname='R', format='5'):
         savemat(filename, {varname:self.R}, format=format)
                 

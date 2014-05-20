@@ -42,26 +42,26 @@ def autoSubs(template):
     
     
 class EvalFormatter(Formatter):
-    def __init__(self):
+    def __init__(self, level=1):
         Formatter.__init__(self)
-        self.caller = [] # Will be set by method "format".
+        self.caller = None # Will be set by method "format".
+        self.level  = level
                              
     def get_value(self, expr, args=None, kwargs=None):
         caller   = self.caller        
-        return eval(expr, caller[-1].f_globals, caller[-1].f_locals)
+        return eval(expr, caller.f_globals, caller.f_locals)
         
     def get_field(self, field_name, args, kwargs):
         obj = self.get_value(field_name, args, kwargs)
         return obj, field_name        
         
     def format(self, format_string, *args, **kwargs):
-        self.caller.append(sys._getframe(1))
-        try:                    
-            return Formatter.format(self, format_string, *args, **kwargs)
-        finally:            
-            self.caller.pop()
+        self.caller = sys._getframe(self.level)
+        return Formatter.format(self, format_string, *args, **kwargs)
                 
-evalFmt = EvalFormatter().format
+#evalFmt = EvalFormatter().format
+def evalFmt(formatString):
+    return EvalFormatter(level=2).format(formatString)                
 
 
 class ObjectWithLock(object):    
