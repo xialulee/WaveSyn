@@ -120,9 +120,11 @@ class NodeList(ModelNode, list):
         self.__elemLock = lock
         
     def append(self, val):
+        object.__setattr__(val, 'parentNode', self)        
         list.append(self, val)
         val.index   = len(self) - 1
         val.lockAttribute('index')
+
 
     @property
     def elemLock(self):

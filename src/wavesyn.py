@@ -117,24 +117,14 @@ class Scripting(ModelNode):
             
     def executeFile(self, filename):
         execfile(filename, **self.nameSpace) #?
-        
-#    class PrintableAttr(object):
-#        def __init__(self):
-#            pass
-#        
-#        def __getattr__(self, attr):
-#            if attr == '__set__':
-#                def func(self, obj, val):
-#                    nodePath    = obj.nodePath
-#                    
-#            else:
-#                return getattr(self, attr)
-        
+                
     @staticmethod    
     def printable(method):
         def func(self, *args, **kwargs):
             callerLocals    = sys._getframe(1).f_locals
-            #methodName      = method.__name__
+            #####################################
+            #print(method.__name__, True if 'printCode' in callerLocals else False)
+            #####################################            
             if 'printCode' in callerLocals and callerLocals['printCode']:
                 ret = Application.instance.printAndEval(
                     evalFmt(
@@ -193,6 +183,26 @@ def callAndPrintDoc(func):
     f.__doc__   = func.__doc__
     return f
 
+
+
+class WaveSynThread(object):
+    class Thread(threading.Thread):
+        def __init__(self, func):
+            self.func   = func
+            threading.Thread.__init__(self)
+            
+        def run(self):
+            self.func()
+            
+    @staticmethod
+    def start(func):
+        app = Application.instance
+        thread  = WaveSynThread.Thread(func)
+        thread.start()
+        while thread.isAlive():
+            app.root.update()
+            for winId in app.windows:
+                app.windows[winId].update()
 
 
 
@@ -427,7 +437,13 @@ class DataFigure(ModelNode):
         
         self.__majorGrid    = isPolar
         self.__minorGrid    = False
-        
+
+    @property
+    def nodePath(self):
+        if isinstance(self.parentNode, FigureList):
+            return evalFmt('{self.parentNode.nodePath}[{self.index}]')
+        else:
+            return ModelNode.nodePath               
         
     def plot(self, *args, **kwargs):
         lineObject = self.axes.plot(*args, **kwargs)
@@ -453,11 +469,11 @@ class DataFigure(ModelNode):
         self.axes.grid(val, 'minor')
         
 
-    Scripting.printable
+    @Scripting.printable
     def grid(self, *args, **kwargs):
         self.axes.grid(*args, **kwargs)
 
-        
+    @Scripting.printable    
     def update(self):
         self.__canvas.show()
 
@@ -569,7 +585,7 @@ The rest parameters are passed to PanedWindow.__init__.
         
         self.panedWindow    = panedWindow
         self.lockAttribute('panedWindow')
-
+        
     @property        
     def currentFigure(self):
         return self[self.tabpages.index(CURRENT)]
@@ -647,7 +663,7 @@ The rest parameters are passed to PanedWindow.__init__.
                 
 
 
-class ConsoleText(ScrolledText):
+class ConsoleText(ScrolledText, ObjectWithLock):
     '''see http://effbot.org/zone/tkinter-threads.htm'''
     def __init__(self, *args, **kwargs):
         ScrolledText.__init__(self, *args, **kwargs)
@@ -700,32 +716,33 @@ class ConsoleText(ScrolledText):
         
 
     def write(self, content, tag=None):
-        r, c    = self.getCursorPos(END)
-        start   = 'end-5c'
-        stop    = 'end-1c'
-        if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
-            self.text.delete(start, stop)
-
-        # Record the position of the END before inserting anything.
-        start    = self.text.index(END)
-
-        self.text.insert(END, content, tag)
-
-        # Remove unnecessary highlighting
-        for tag in self.colorDelegator.tagdefs:
-            self.text.tag_remove(tag, start, "end")
+        with self.lock:
+            r, c    = self.getCursorPos(END)
+            start   = 'end-5c'
+            stop    = 'end-1c'
+            if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
+                self.text.delete(start, stop)
+    
+            # Record the position of the END before inserting anything.
+            start    = self.text.index(END)
+    
+            self.text.insert(END, content, tag)
+    
+            # Remove unnecessary highlighting
+            for tag in self.colorDelegator.tagdefs:
+                self.text.tag_remove(tag, start, "end")
+                
+    
+            self.text.insert(END, self.promptSymbol)
             
-
-        self.text.insert(END, self.promptSymbol)
-        
-        
-        # Remove unnecessary highlighting
-        self.text.tag_remove("TODO", "1.0", END)
-        self.text.tag_add("SYNC", "1.0", END)
-        
-        
-        self.text.see(END)
-        self.text.update()
+            
+            # Remove unnecessary highlighting
+            self.text.tag_remove("TODO", "1.0", END)
+            self.text.tag_add("SYNC", "1.0", END)
+            
+            
+            self.text.see(END)
+            self.text.update()
         
 
     def onKeyPress(self, evt, codeList=[]):   
@@ -788,11 +805,17 @@ class ConsoleText(ScrolledText):
     
     def getCursorPos(self, mark=INSERT):
         pos = self.text.index(mark)
-        r, c    = pos.split('.')
+        ######################################
+        try:        
+            r, c    = pos.split('.')
+        except ValueError as e:
+            print (pos)
+            raise e
+        ######################################
         return int(r), int(c)        
         
         
-class ConsoleWindow(ObjectWithLock, ModelNode):
+class ConsoleWindow(ModelNode):
     strWelcome = '''Good {0}, dear user(s). Welcome to WaveSyn!
 WaveSyn is a platform for testing and evaluating waveform synthesis algorithms.
 The following modules are imported and all the objects in them can be used directly in the scripting system:
@@ -843,8 +866,7 @@ Have a nice day.
         return self.__txtStdOutErr.text
                                                         
     def write(self, *args, **kwargs):
-        with self.lock:
-            self.__txtStdOutErr.write(*args, **kwargs)
+        self.__txtStdOutErr.write(*args, **kwargs)
             
     def showPrompt(self):
         'Only used by "clear" method.'
@@ -870,28 +892,49 @@ Have a nice day.
         
     def onClear(self):
         printCode   = True
-        #self.callMethod('clear')
         self.clear()
 
+#    @Scripting.printable        
+#    def editScript(self):
+#        app = Application.instance
+#        class EditorThread(threading.Thread):
+#            def __init__(self, filename):
+#                self.__filename = filename
+#                threading.Thread.__init__(self)
+#            def run(self):
+#                subprocess.call([app.editorInfo['Path'], self.__filename]) 
+#            
+#        fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
+#        with os.fdopen(fd):
+#            pass 
+#            # Close the temp file, consequently the external editor can edit it without limitations.
+#        try:
+#            editorThread    = EditorThread(filename)
+#            editorThread.start()
+#            while editorThread.isAlive():
+#                app.root.update()
+#                ######################################
+#                for winId in app.windows:
+#                    app.windows[winId].update()
+#                ######################################
+#            with open(filename, 'r') as f:
+#                code    = f.read()
+#                self.write(code, 'HISTORY')
+#                self.write('\n')
+#                if code:
+#                    app.execute(code)
+#        finally:            
+#            os.remove(filename)
     @Scripting.printable        
     def editScript(self):
         app = Application.instance
-        class EditorThread(threading.Thread):
-            def __init__(self, filename):
-                self.__filename = filename
-                threading.Thread.__init__(self)
-            def run(self):
-                subprocess.call([app.editorInfo['Path'], self.__filename]) 
             
         fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
         with os.fdopen(fd):
             pass 
             # Close the temp file, consequently the external editor can edit it without limitations.
         try:
-            editorThread    = EditorThread(filename)
-            editorThread.start()
-            while editorThread.isAlive():
-                app.root.update()
+            WaveSynThread.start(func=lambda: subprocess.call([app.editorInfo['Path'], filename]))
             with open(filename, 'r') as f:
                 code    = f.read()
                 self.write(code, 'HISTORY')
@@ -904,7 +947,6 @@ Have a nice day.
     def onEditScript(self):
         printCode   = True
         self.editScript()
-        #self.callMethod('editScript')
         
 
 
@@ -934,6 +976,9 @@ class ToolWindow(ModelNode):
         self._toplevel = Toplevel()
         self._toplevel.title(evalFmt('{self.windowName} id={id(self)}'))        
         self._toplevel.protocol('WM_DELETE_WINDOW', self.onClose)
+        
+    def update(self):
+        self._toplevel.update()
         
     @Scripting.printable
     def close(self):
@@ -1032,7 +1077,7 @@ class GridGroup(Group):
             minor.set(1)
             self.__topwin.figureBook.currentFigure.update()
                                     
-        chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=setgrid)
+        chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=self.onChkGridMajor)
         chkGridMajor.pack(fill=X)
         self.chkGridMajor   = chkGridMajor
         
@@ -1046,9 +1091,12 @@ class GridGroup(Group):
         
         self.name = 'Grid'
         
-    def onChkGridMajor(self):
+    def onChkGridMajor(self):        
         printCode    = True
-        self.__topwin.figureBook.currentFigure.grid(self.__major.get(), which='major')
+        currentFigure   = self.__topwin.figureBook.currentFigure
+        currentFigure.grid(self.__major.get(), which='major')
+        currentFigure.update()
+        
 
         
     class __EnableDelegator(object):
@@ -1181,12 +1229,10 @@ class ClearGroup(Group):
         self.name = 'Clear Plot'
 
     def onClearAll(self):
-        #self.__topwin.figureBook.callMethod('clear')
         printCode   = True
         self.__topwin.figureBook.clear()
 
     def onDelSel(self):
-        #self.__topwin.figureBook.callMethod('deleteSelLines', idx=None)
         printCode   = True
         self.__topwin.figureBook.deleteSelLines(idx=None)
 
@@ -1449,17 +1495,17 @@ class PatternSolveGroup(Group):
         printCode   = True
         topwin = self.__topwin
         center, width = topwin.grpEdit.beamData
-        #topwin.figureBook.callMethod('clear')
         topwin.figureBook.clear()
         
-        #call    = topwin.callMethod
-        #call('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
         topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        #call('setIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
         topwin.setIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        #call('solve', M=self.__M.getInt(), display=self.__bDisplay.get())
-        topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
-        #call('plotCorrMatrixPattern')
+        ######################################################################
+#        WaveSynThread.start(
+#            func=lambda: \
+#                topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
+#        )             
+        ######################################################################
+        topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())                
         topwin.plotCorrMatrixPattern()
         
         
@@ -1621,25 +1667,23 @@ class PatternFileExportGroup(Group):
             clipboard.clear()
             clipboard.append(autoSubs('load $filename'))
 
-        #self.__topwin.callMethod('saveMat', filename)
         self.__topwin.saveMat(filename)
         tip = [
-            {'type':'text', 'content':'''The correlation matrix has been saved in the mat file "{filename}" successully.
-You can extract the data in Matlab using the following command:'''.format(filename=filename)},
-            {'type':'link', 'content':'>> load {filename}'.format(filename=filename),
-#                 'command':lambda dumb: (
-#                     #Application.instance.clipboard.callMethod('clear'),
-#                     #Application.instance.clipboard.callMethod(
-#                     #    'append',
-#                     #    'load {filename}'.format(filename=filename)
-#                     locals()['printCode']  = True
-#                     Application.instance.clipboard.clear()
-#                     )
-#                  )
-                 'command':lambda dumb: linkFunc(filename=filename)
+            {
+                'type':'text', 
+                'content':autoSubs('''The correlation matrix has been saved in the mat file "$filename" successully.
+You can extract the data in Matlab using the following command:''')
             },
-            {'type':'text', 'content':'''and variable named "R" will appear in your Matlab workspace.
-(Click the underlined Matlab command and copy it to the clipboard)'''}
+            {
+                'type':'link', 
+                'content':autoSubs('>> load $filename'),
+                'command':lambda dumb: linkFunc(filename=filename)
+            },
+            {
+                'type':'text', 
+                'content':'''and variable named "R" will appear in your Matlab workspace.
+(Click the underlined Matlab command and copy it to the clipboard)'''
+            }
         ]
         self._app.printTip(tip)
 
