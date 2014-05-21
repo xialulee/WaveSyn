@@ -14,6 +14,7 @@ def dependenciesForMyprogram():
     from scipy.special import _ufuncs_cxx
 
 import threading
+import Queue
 
 import os
 import os.path
@@ -662,11 +663,12 @@ The rest parameters are passed to PanedWindow.__init__.
         
                 
 
-
-class ConsoleText(ScrolledText, ObjectWithLock):
-    '''see http://effbot.org/zone/tkinter-threads.htm'''
+# How to implement a thread safe console?
+# see: http://effbot.org/zone/tkinter-threads.htm
+class ConsoleText(ScrolledText):
     def __init__(self, *args, **kwargs):
         ScrolledText.__init__(self, *args, **kwargs)
+        self.__queue    = Queue.Queue()
         self.text.tag_configure('STDOUT',   foreground='black')
         self.text.tag_configure('STDERR',   foreground='red')
         self.text.tag_configure('TIP', foreground='forestgreen')
@@ -683,16 +685,14 @@ class ConsoleText(ScrolledText, ObjectWithLock):
         self.context_use_ps1    = '>>> '
         self.__autoComplete = AutoComplete(self)        
         #############################################################
-        
-
-        
+                
         # Syntax highlight is implemented by idlelib
+        #############################################################                
         self.percolator = Percolator(self.text)
         self.colorDelegator = ColorDelegator()
         self.percolator.insertfilter(self.colorDelegator)   
-        
-
-        
+        #############################################################
+                
         class StdOut:
             def write(obj, content):
                 self.write(content, 'STDOUT')
@@ -714,42 +714,53 @@ class ConsoleText(ScrolledText, ObjectWithLock):
         
         self.promptSymbol = '>>> '
         
+        self.updateContent()
+        
+    def write(self, content, tag=''):
+        # The write method does not insert text into the console window.
+        # The actural "write" operation is carried out by "updateContent".
+        self.__queue.put((tag, content))
 
-    def write(self, content, tag=None):
-        with self.lock:
-            r, c    = self.getCursorPos(END)
-            start   = 'end-5c'
-            stop    = 'end-1c'
-            if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
-                self.text.delete(start, stop)
-    
-            # Record the position of the END before inserting anything.
-            start    = self.text.index(END)
-    
-            self.text.insert(END, content, tag)
-    
-            # Remove unnecessary highlighting
-            for tag in self.colorDelegator.tagdefs:
-                self.text.tag_remove(tag, start, "end")
+    def updateContent(self):
+
+        try:
+            while True:
+                tag, content    = self.__queue.get_nowait()
+                r, c    = self.getCursorPos(END)
+                start   = 'end-5c'
+                stop    = 'end-1c'
+                if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
+                    self.text.delete(start, stop)
+        
+                # Record the position of the END before inserting anything.
+                start    = self.text.index(END)
+        
+                self.text.insert(END, content, tag)
+        
+                # Remove unnecessary highlighting
+                for tag in self.colorDelegator.tagdefs:
+                    self.text.tag_remove(tag, start, "end")
+                    
+        
+                self.text.insert(END, self.promptSymbol)
                 
-    
-            self.text.insert(END, self.promptSymbol)
-            
-            
-            # Remove unnecessary highlighting
-            self.text.tag_remove("TODO", "1.0", END)
-            self.text.tag_add("SYNC", "1.0", END)
-            
-            
-            self.text.see(END)
-            self.text.update()
+                
+                # Remove unnecessary highlighting
+                self.text.tag_remove("TODO", "1.0", END)
+                self.text.tag_add("SYNC", "1.0", END)                                
+                self.text.see(END)
+                
+
+        except Queue.Empty:
+            pass
+        finally:
+            self.after(100, self.updateContent)
         
 
     def onKeyPress(self, evt, codeList=[]):   
         #print (evt.keycode)        
         if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
             r, c    = self.getCursorPos()
-            #prompt  = self.text.get('{r}.0'.format(r=r), '{r}.4'.format(r=r))
             prompt  = self.text.get(autoSubs('$r.0'), autoSubs('$r.4'))
             if prompt != '>>> ' and prompt != '... ':
                 return 'break'
@@ -894,37 +905,6 @@ Have a nice day.
         printCode   = True
         self.clear()
 
-#    @Scripting.printable        
-#    def editScript(self):
-#        app = Application.instance
-#        class EditorThread(threading.Thread):
-#            def __init__(self, filename):
-#                self.__filename = filename
-#                threading.Thread.__init__(self)
-#            def run(self):
-#                subprocess.call([app.editorInfo['Path'], self.__filename]) 
-#            
-#        fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
-#        with os.fdopen(fd):
-#            pass 
-#            # Close the temp file, consequently the external editor can edit it without limitations.
-#        try:
-#            editorThread    = EditorThread(filename)
-#            editorThread.start()
-#            while editorThread.isAlive():
-#                app.root.update()
-#                ######################################
-#                for winId in app.windows:
-#                    app.windows[winId].update()
-#                ######################################
-#            with open(filename, 'r') as f:
-#                code    = f.read()
-#                self.write(code, 'HISTORY')
-#                self.write('\n')
-#                if code:
-#                    app.execute(code)
-#        finally:            
-#            os.remove(filename)
     @Scripting.printable        
     def editScript(self):
         app = Application.instance
@@ -1202,12 +1182,12 @@ class AxisGroup(Group):
         currentFigure   = self.__topwin.figureBook.currentFigure
         currentFigure.axis(aparams[:4])
         axes    = currentFigure.axes
-        axes.xaxis.set_major_locator(MultipleLocator(int(aparams[4])))
-        axes.yaxis.set_major_locator(MultipleLocator(int(aparams[5])))
+        axes.xaxis.set_major_locator(MultipleLocator(float(aparams[4])))
+        axes.yaxis.set_major_locator(MultipleLocator(float(aparams[5])))
         if aparams[6] is not None:
-            axes.xaxis.set_minor_locator(MultipleLocator(int(aparams[6])))
+            axes.xaxis.set_minor_locator(MultipleLocator(float(aparams[6])))
         if aparams[7] is not None:
-            axes.yaxis.set_minor_locator(MultipleLocator(int(aparams[7])))
+            axes.yaxis.set_minor_locator(MultipleLocator(float(aparams[7])))
         currentFigure.update()
 
     def onAutoClick(self):
@@ -1476,6 +1456,9 @@ class PatternSolveGroup(Group):
         self.__btnSolve = Button(self, image=imageSolveBtn, command=self.onSolve)
         self.__btnSolve.pack(side=TOP)
         self._app.balloon.bind_widget(self.__btnSolve, balloonmsg='Launch the solver to synthesize the correlation matrix.')
+        ##########################################################
+        #Label(self.__btnSolve, text='solve').pack(side=RIGHT)
+        ##########################################################
         
         frm = Frame(self)
         frm.pack(side=TOP)
@@ -1499,13 +1482,14 @@ class PatternSolveGroup(Group):
         
         topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
         topwin.setIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        ######################################################################
-#        WaveSynThread.start(
-#            func=lambda: \
-#                topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
-#        )             
-        ######################################################################
-        topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())                
+        # Create a new thread for solving the correlation matrix.
+        WaveSynThread.start(
+            func=lambda: \
+                topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
+        ) 
+        # Though method "start" will not return until the solve returns, the GUI will still 
+        # responding to user input because Tk.update is called by start repeatedly.
+        # While the thread is not alive, the optimization procedure is finished.                        
         topwin.plotCorrMatrixPattern()
         
         
@@ -1596,7 +1580,6 @@ class PatternEditGroup(Group):
     def onPlotIdealPattern(self):
         printCode   = True
         center, width = self.beamData
-        #self.__topwin.callMethod('plotIdealPattern', ScriptCode('r_[-90:90.1:0.1]'), center, width)
         self.__topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
         
     @property
@@ -1712,7 +1695,6 @@ class PatternFigureExportGroup(Group):
         filename = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
         if not filename:
             return
-        #self.__topwin.figureBook.callMethod('exportMatlabScript', filename)
         self.__topwin.figureBook.exportMatlabScript(filename)
         self._app.printTip(
 '''A Matlab script file has been saved as {filename}.
