@@ -720,6 +720,7 @@ class ConsoleText(ScrolledText):
         # The write method does not insert text into the console window.
         # The actural "write" operation is carried out by "updateContent".
         self.__queue.put((tag, content))
+        self.update()
 
     def updateContent(self):
 
@@ -1456,9 +1457,6 @@ class PatternSolveGroup(Group):
         self.__btnSolve = Button(self, image=imageSolveBtn, command=self.onSolve)
         self.__btnSolve.pack(side=TOP)
         self._app.balloon.bind_widget(self.__btnSolve, balloonmsg='Launch the solver to synthesize the correlation matrix.')
-        ##########################################################
-        #Label(self.__btnSolve, text='solve').pack(side=RIGHT)
-        ##########################################################
         
         frm = Frame(self)
         frm.pack(side=TOP)
@@ -1483,10 +1481,10 @@ class PatternSolveGroup(Group):
         topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
         topwin.setIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
         # Create a new thread for solving the correlation matrix.
-        WaveSynThread.start(
-            func=lambda: \
-                topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
-        ) 
+        def solveFunc():
+            printCode   = True
+            topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
+        WaveSynThread.start(func=solveFunc)
         # Though method "start" will not return until the solve returns, the GUI will still 
         # responding to user input because Tk.update is called by start repeatedly.
         # While the thread is not alive, the optimization procedure is finished.                        
