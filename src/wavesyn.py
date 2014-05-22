@@ -25,6 +25,7 @@ REALSTDERR = sys.stderr
 
 from Tkinter import *
 from ttk import *
+
 import Tix
 from Tkinter import Frame, PanedWindow
 from tkColorChooser import askcolor
@@ -679,11 +680,12 @@ class DataFigure(ModelNode):
         
         canvas = FigureCanvasTkAgg(figure, master=master)
         canvas.show()
-        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=YES)
+        
         self.__canvas = canvas
         toolbar = NavigationToolbar2TkAgg(canvas, master)
         toolbar.update()
-        toolbar.pack()
+        toolbar.pack(side=TOP)
+        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=YES)
         
         with self.attributeLock:
             # All the properties being set in this block will be locked automatically,
@@ -807,7 +809,7 @@ class FigureList(NodeList):
         NodeList.append(self, val)
         
 
-class FigureBook(FigureList): 
+class FigureBook(FigureList):         
     def __init__(self, *args, **kwargs):
         '''
 nodeName:   The name of this node. Usually set by ModelNode.__setattr__ automatically.
@@ -828,8 +830,11 @@ The rest parameters are passed to PanedWindow.__init__.
         panedWindow = PanedWindow(*args, **kwargs)
 
         panedWindow.config(sashwidth=4, sashrelief=GROOVE, bg='forestgreen')        
+       
+        figureTabsStyle = Style()
+        figureTabsStyle.configure('Figure.TNotebook', tabposition='sw')       
+        figureTabs    = Notebook(panedWindow, style='Figure.TNotebook')
         
-        figureTabs    = Notebook(panedWindow)
         self.figureTabs   = figureTabs
         figureTabs.bind('<<NotebookTabChanged>>', self.onTabChange)
         self.lockAttribute('figureTabs')
@@ -1309,7 +1314,6 @@ class SingleWindow(FigureWindow):
             self.name = 'Generate'
             self.algo = isaa.diac
             self.getparams = None
-            #self.figfrm = None # figfrm: the container of the matplotlib canvas
             self.__stopflag = False
     
         def onSolveClick(self):
@@ -1413,6 +1417,8 @@ class SingleWindow(FigureWindow):
         if 'isaa' not in globals():
             import isaa
             globals()['isaa']   = isaa
+        else:
+            isaa    = globals()['isaa']
         FigureWindow.__init__(self, *args, **kwargs)
         # The toolbar
         toolTabs    = self.toolTabs
@@ -1744,6 +1750,8 @@ By running this script, Matlab will literally "re-plot" the curves shown here.''
         if 'pattern2corrmtx' not in globals():
             import pattern2corrmtx
             globals()['pattern2corrmtx']    = pattern2corrmtx
+        else:
+            pattern2corrmtx = globals()['pattern2corrmtx']
         FigureWindow.__init__(self, *args, **kwargs)
         # The toolbar
         toolTabs    = self.toolTabs
