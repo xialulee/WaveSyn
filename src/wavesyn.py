@@ -13,6 +13,7 @@ def dependenciesForMyprogram():
     from scipy.sparse.csgraph import _validation
     from scipy.special import _ufuncs_cxx
 
+import thread
 import threading
 import Queue
 
@@ -247,6 +248,7 @@ wavesyn
         # End load config file
 
         root = Tix.Tk()
+        mainThreadId    = thread.get_ident()
         
         with self.attributeLock:
             setMultiAttr(self,
@@ -255,6 +257,8 @@ wavesyn
                 balloon = Tix.Balloon(root),
                 tbicon = TaskbarIcon(root),
                 # End UI elements
+                
+                mainThreadId    = mainThreadId,
             
                 # Validation Functions
                 checkInt = (root.register(partial(checkValue, func=int)),
@@ -273,11 +277,10 @@ wavesyn
         self.windows = WindowDict() # Instance of ModelNode can be locked automatically.
         
         frm = Frame(root)
-        frm.pack(side=TOP, fill=X)
-                  
+        frm.pack(side=TOP, fill=X)                
+
         self.console = ConsoleWindow(menu=consoleMenu, tagDefs=tagDefs)
-     
-        
+             
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
         self.noTip = False
@@ -285,7 +288,8 @@ wavesyn
         
 
     def newSingleWin(self, printDoc=False):
-        print('Not Implemented.', file=sys.stderr)
+        #print('Not Implemented.', file=sys.stderr)
+        return self.windows.add(node=SingleWindow())
         
     def newMIMOWin(self, printDoc=False):
         print('Not Implemented.', file=sys.stderr)
@@ -334,7 +338,7 @@ A PatternWindow can synthesize a correlation matrix of which the beam pattern fi
             return
         console = self.console
         console.write('WaveSyn: ', 'TIP')
-        if type(contents)==str:
+        if type(contents) in (str, unicode):
             console.write(contents+'\n', 'TIP')
             return
         for item in contents:
@@ -668,6 +672,7 @@ The rest parameters are passed to PanedWindow.__init__.
 class ConsoleText(ScrolledText):
     def __init__(self, *args, **kwargs):
         ScrolledText.__init__(self, *args, **kwargs)
+        # The shared queue of the PRODUCER-CONSUMER model.
         self.__queue    = Queue.Queue()
         self.text.tag_configure('STDOUT',   foreground='black')
         self.text.tag_configure('STDERR',   foreground='red')
@@ -719,11 +724,15 @@ class ConsoleText(ScrolledText):
     def write(self, content, tag=''):
         # The write method does not insert text into the console window.
         # The actural "write" operation is carried out by "updateContent".
+        # "write" is called by PRODUCER.
         self.__queue.put((tag, content))
-        self.update()
+        if thread.get_ident() == Application.instance.mainThreadId:
+            # If the current thread is not the main thread, the Tk update() should not be called,
+            # or the vital objects of the application may be modified by more than one threads simultaneously.
+            self.update()
 
     def updateContent(self):
-
+        # updateContent is called by CONSUMER.
         try:
             while True:
                 tag, content    = self.__queue.get_nowait()
@@ -812,19 +821,9 @@ class ConsoleText(ScrolledText):
             if evt.keycode == 9:
                 return self.__autoComplete.autocomplete_event(evt)
             #######################################################
-
-            
-    
-    def getCursorPos(self, mark=INSERT):
-        pos = self.text.index(mark)
-        ######################################
-        try:        
-            r, c    = pos.split('.')
-        except ValueError as e:
-            print (pos)
-            raise e
-        ######################################
-        return int(r), int(c)        
+                
+    def getCursorPos(self, mark=INSERT): 
+        return (int(i) for i in self.text.index(mark).split('.'))        
         
         
 class ConsoleWindow(ModelNode):
@@ -978,260 +977,6 @@ class ToolWindow(ModelNode):
             return ModelNode.nodePath
     
 
-        
-        
-class GridGroup(Group):
-    def __init__(self, *args, **kwargs):
-        self.__topwin   = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs)
-        app = Application.instance
-        major = IntVar(0)
-        minor = IntVar(0)
-        self.__major = major
-        self.__minor = minor
-                        
-                        
-        def setgrid():
-            currentFigure = self.__topwin.figureBook.currentFigure
-            currentFigure.majorGrid = major.get()
-            currentFigure.minorGrid = minor.get()
-            currentFigure.update()
-
-
-        def askgridprop():
-            win = Toplevel()
-            color = ['#000000', '#000000']
-
-            propvars = [StringVar() for i in range(4)]
-            guidata = (
-                {
-                    'linestyle': ('Major Line Style', propvars[0], None),
-########################################################################################################
-                    'linewidth': ('Major Line Width', propvars[1], app.checkPositiveFloat)
-                },
-                {
-                    'linestyle': ('Minor Line Style', propvars[2], None),
-                    'linewidth': ('Minor Line Width', propvars[3], app.checkPositiveFloat)
-#########################################################################################################
-                }
-            )
-
-            for d in guidata:
-                for key in d:
-                    pitem = ParamItem(win)
-                    pitem.pack()
-                    pitem.labelText = d[key][0]
-                    pitem.entry['textvariable'] = d[key][1]
-                    if d[key][2]:
-                        pitem.checkFunc = d[key][2]
-
-            def setmajorcolor():
-                c = askcolor()
-                color[0] = c[1]
-
-            def setminorcolor():
-                c = askcolor()
-                color[1] = c[1]
-            Button(win, text='Major Line Color', command=setmajorcolor).pack()
-            Button(win, text='Minor Line Color', command=setminorcolor).pack()
-
-            win.protocol('WM_DELETE_WINDOW', win.quit)
-            win.focus_set()
-            win.grab_set()
-            win.mainloop()
-            win.destroy()
-            c_major = StringVar(); c_major.set(color[0])
-            c_minor = StringVar(); c_minor.set(color[1])
-            guidata[0]['color'] = ('Major Line Color', c_major, None)
-            guidata[1]['color'] = ('Minor Line Color', c_minor, None)
-            return guidata
-
-        def onPropertyClick():
-            ret = askgridprop()
-
-            for idx, name in enumerate(('major', 'minor')):
-                for key in ret[idx]:
-                    value = ret[idx][key][1].get()
-                    if value:
-                        self.__topwin.figureBook.currentFigure.axes.grid(None, name, **{key: value})
-            major.set(1)
-            minor.set(1)
-            self.__topwin.figureBook.currentFigure.update()
-                                    
-        chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=self.onChkGridMajor)
-        chkGridMajor.pack(fill=X)
-        self.chkGridMajor   = chkGridMajor
-        
-        chkGridMinor    = Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid)
-        chkGridMinor.pack(fill=X)
-        self.chkGridMinor   = chkGridMinor        
-        
-        btnProperty     = Button(self, text='Property', command=onPropertyClick)
-        btnProperty.pack()
-        self.btnProperty    = btnProperty
-        
-        self.name = 'Grid'
-        
-    def onChkGridMajor(self):        
-        printCode    = True
-        currentFigure   = self.__topwin.figureBook.currentFigure
-        currentFigure.grid(self.__major.get(), which='major')
-        currentFigure.update()
-        
-
-        
-    class __EnableDelegator(object):
-        def __init__(self, widgetName):
-            self.widgetName = widgetName
-            
-        def __get__(self, obj, type=None):
-            def enable(state):                
-                en  = NORMAL if state else DISABLED
-                getattr(obj, self.widgetName).config(state=en)
-            return enable
-            
-    enableWidgets   = dict(
-        enableGridMajor =  'chkGridMajor',
-        enableGridMinor =  'chkGridMinor',
-        enableProperty  =  'btnProperty'
-    )
-    
-    for methodName in enableWidgets:
-        locals()[methodName]    = __EnableDelegator(enableWidgets[methodName])
-        
-
-
-    @property
-    def major(self):
-        return self.__major.get()
-
-    @major.setter
-    def major(self, value):
-        self.__major.set(value)
-
-    @property
-    def minor(self):
-        return self.__minor.get()
-
-    @minor.setter
-    def minor(self, value):
-        self.__minor.set(value)
-        
-
-class AxisGroup(Group):
-    def __init__(self, *args, **kwargs):
-        self.__topwin = kwargs['topwin']
-        del kwargs['topwin']
-        app = Application.instance
-       
-        Group.__init__(self, *args, **kwargs)
-        self.__params = [StringVar() for i in range(8)]
-        paramfrm =Frame(self)
-        paramfrm.pack()
-        names = ['xmin', 'xmax', 'ymin', 'ymax', 'major xtick', 'major ytick', 'minor xtick', 'minor ytick']
-        for c in range(4):
-            for r in range(2):
-                temp = ParamItem(paramfrm)
-                setMultiAttr(temp,
-                    checkFunc   = app.checkFloat,
-                    labelText   = names[c*2+r],
-                    labelWidth  = 5 if c*2+r < 4 else 10,
-                    entryWidth  = 5,
-                    entryVar    = self.__params[c*2+r]
-                )
-                temp.grid(row=r, column=c)
-
-        btnfrm = Frame(self)
-        btnfrm.pack()
-        Button(btnfrm, text='Confirm', command=self.onConfirmClick).pack(side=LEFT)
-        Button(btnfrm, text='Auto', command=self.onAutoClick).pack(side=RIGHT)
-        self.name = 'Axis'
-
-
-
-    @property
-    def xlim(self):
-        return tuple(map(lambda svar: float(svar.get()), self.__params[0:2]))
-
-    @xlim.setter
-    def xlim(self, value):
-        self.__params[0].set(str(value[0]))
-        self.__params[1].set(str(value[1]))
-
-    @property
-    def ylim(self):
-        return tuple(map(lambda svar: float(svar.get()), self.__params[2:4]))
-
-    @ylim.setter
-    def ylim(self, value):
-        self.__params[2].set(str(value[0]))
-        self.__params[3].set(str(value[1]))
-               
-    for propName, propIdx   in (('major_xtick', 4), ('major_ytick', 5), ('minor_xtick', 6), ('minor_ytick', 7)):
-        prop  = property(lambda self, idx=propIdx: float(self.__params[idx].get()))
-        locals()[propName]  = prop.setter(lambda self, val, idx=propIdx: self.__params[idx].set(str(val)))
-
-
-
-    def onConfirmClick(self):
-        def toFloat(x):
-            try:
-                return float(x)
-            except:
-                return None
-        aparams = [toFloat(v.get()) for v in self.__params]
-        currentFigure   = self.__topwin.figureBook.currentFigure
-        currentFigure.axis(aparams[:4])
-        axes    = currentFigure.axes
-        axes.xaxis.set_major_locator(MultipleLocator(float(aparams[4])))
-        axes.yaxis.set_major_locator(MultipleLocator(float(aparams[5])))
-        if aparams[6] is not None:
-            axes.xaxis.set_minor_locator(MultipleLocator(float(aparams[6])))
-        if aparams[7] is not None:
-            axes.yaxis.set_minor_locator(MultipleLocator(float(aparams[7])))
-        currentFigure.update()
-
-    def onAutoClick(self):
-        currentFigure   = self.__topwin.figureBook.currentFigure
-        currentFigure.axes.autoscale()
-        currentFigure.update()
-        currentFigure.updateViewTab()
-
-
-class ClearGroup(Group):
-    def __init__(self, *args, **kwargs):
-        self.__topwin = kwargs['topwin']
-        del kwargs['topwin']
-        Group.__init__(self, *args, **kwargs)
-        self.__currentFigure = None
-        Button(self, text='Clear All', command=self.onClearAll).pack()
-        Button(self, text='Del Sel', command=self.onDelSel).pack()
-        Button(self, text='Del UnSel', command=self.onDelUnSel).pack()
-        self.name = 'Clear Plot'
-
-    def onClearAll(self):
-        printCode   = True
-        self.__topwin.figureBook.clear()
-
-    def onDelSel(self):
-        printCode   = True
-        self.__topwin.figureBook.deleteSelLines(idx=None)
-
-    def onDelUnSel(self):
-        printCode   = True
-        #self.__topwin.figureBook.remove_unsel_lines()
-
-
-class AlgoSelGroup(Group):
-    def __init__(self, *args, **kwargs):
-        Group.__init__(self, *args, **kwargs)
-        self.__algolist = Combobox(self, value=['ISAA-DIAC'], takefocus=1, stat='readonly', width=12)
-        self.__algolist.current(0)
-        self.__algolist.pack()
-        self.name = 'Algorithms'
-
-
-
 class AlgoParamsGroup(Group):
     def __init__(self, *args, **kwargs):
         self._app = Application.instance
@@ -1281,429 +1026,669 @@ class InitGroup(Group):
         Radiobutton(self, text='Random', value=0, variable=self.__initsel).pack(expand=True, fill=X)
         self.name = 'Initialization'
 
-class GenGroup(Group):
-    def __init__(self, *args, **kwargs):
-        self._app = Application.instance
-
-        self.__topwin = kwargs['topwin']
-        del kwargs['topwin']
-        Group.__init__(self, *args, **kwargs)
-        self.__num = ParamItem(self)
-        self.__num.label.config(text='num')
-        self.__num.entryText = '1'
-        self.__num.entry.bind('<Return>', lambda event: self.onGenBtnClick())
-        self.__num.checkFunc = self._app.checkInt
-        self.__num.pack()
-        self.__progress = IntVar()
-        self.__finishedwav = IntVar()
-        progfrm = Frame(self)
-        progfrm.pack()
-        self.__progbar = Progressbar(progfrm, orient='horizontal', variable=self.__progress, maximum=100)
-        self.__progbar.pack(side=LEFT)
-        self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav, length=70)
-        self.__finishedwavbar.pack(side=RIGHT)
-        self.__genbtn = Button(self, text='Generate', command=self.onGenBtnClick)
-        self.__genbtn.pack(side=LEFT)
-        Button(self, text='Stop', command=self.onStopBtnClick).pack(side=RIGHT)
-        self.name = 'Generate'
-        self.algo = None
-        self.getparams = None
-        #self.figfrm = None # figfrm: the container of the matplotlib canvas
-        self.__stopflag = False
-
-    def onGenBtnClick(self):
-        tbicon = self._app.taskbaricon
-        self.__stopflag = False
-        wavnum = self.__num.getInt()
-        progress = [0]
-        waveform = [0]
-        def exitcheck(k, K, y, y_last):
-            progress[0] = int(k / K * 100)
-        self.algo.exitcond['func'] = exitcheck
-        self.algo.exitcond['interval'] = 1
-        params = self.getparams()
-
-        class AlgoThread(threading.Thread):
-            def __init__(self, algo, params, waveform, progress):
-                self.algo = algo
-                self.progress = progress
-                threading.Thread.__init__(self)
-            def run(self):
-                waveform[0] = self.algo(**params)
-
-        self.__finishedwavbar['maximum'] = wavnum
-        for cnt in range(wavnum):
-            algothread = AlgoThread(self.algo, params, waveform, progress)
-            algothread.start()
-            while algothread.isAlive():
-                self.__progress.set(progress[0])
-                tbicon.progress = int((cnt*100+progress[0])/(wavnum*100)*100)
-                self.__topwin.update()
-                if self.__stopflag:
-                    break
-## time.sleep(0.1)
-            self.__progress.set(0)
-            if self.__stopflag:
-                break
-            self.__topwin.currentFigure.plot_acorr(waveform[0])
-            self.__finishedwav.set(cnt+1)
-        self.__finishedwav.set(0)
-        tbicon.state = guicomponents.TBPF_NOPROGRESS
-
-    def onStopBtnClick(self):
-        self.__stopflag = True
-
-
-def createViewTab(tabpages, topwin):
-        # View Tab
-    frmView = Frame(tabpages)
-    grpGrid = GridGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
-    grpGrid.pack(side=LEFT, fill=Y)
-  
+        
+class ViewTab(object):
+##########################################################  
+    class GridGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self.__topwin   = kwargs.pop('topwin')
+            Group.__init__(self, *args, **kwargs)
+            app = Application.instance
+            major = IntVar(0)
+            minor = IntVar(0)
+            self.__major = major
+            self.__minor = minor
+                            
+                            
+            def setgrid():
+                currentFigure = self.__topwin.figureBook.currentFigure
+                currentFigure.majorGrid = major.get()
+                currentFigure.minorGrid = minor.get()
+                currentFigure.update()
     
-    grpAxis = AxisGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
-    grpAxis.pack(side=LEFT, fill=Y)
-  
     
-    grpClear = ClearGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
-    grpClear.pack(side=LEFT, fill=Y)
+            def askgridprop():
+                win = Toplevel()
+                color = ['#000000', '#000000']
     
-    with topwin.attributeLock:    
-        setMultiAttr(topwin,
-            grpGrid  = grpGrid,
-            grpAxis  = grpAxis,
-            grpClear = grpClear  
+                propvars = [StringVar() for i in range(4)]
+                guidata = (
+                    {
+                        'linestyle': ('Major Line Style', propvars[0], None),
+    ########################################################################################################
+                        'linewidth': ('Major Line Width', propvars[1], app.checkPositiveFloat)
+                    },
+                    {
+                        'linestyle': ('Minor Line Style', propvars[2], None),
+                        'linewidth': ('Minor Line Width', propvars[3], app.checkPositiveFloat)
+    #########################################################################################################
+                    }
+                )
+    
+                for d in guidata:
+                    for key in d:
+                        pitem = ParamItem(win)
+                        pitem.pack()
+                        pitem.labelText = d[key][0]
+                        pitem.entry['textvariable'] = d[key][1]
+                        if d[key][2]:
+                            pitem.checkFunc = d[key][2]
+    
+                def setmajorcolor():
+                    c = askcolor()
+                    color[0] = c[1]
+    
+                def setminorcolor():
+                    c = askcolor()
+                    color[1] = c[1]
+                Button(win, text='Major Line Color', command=setmajorcolor).pack()
+                Button(win, text='Minor Line Color', command=setminorcolor).pack()
+    
+                win.protocol('WM_DELETE_WINDOW', win.quit)
+                win.focus_set()
+                win.grab_set()
+                win.mainloop()
+                win.destroy()
+                c_major = StringVar(); c_major.set(color[0])
+                c_minor = StringVar(); c_minor.set(color[1])
+                guidata[0]['color'] = ('Major Line Color', c_major, None)
+                guidata[1]['color'] = ('Minor Line Color', c_minor, None)
+                return guidata
+    
+            def onPropertyClick():
+                ret = askgridprop()
+    
+                for idx, name in enumerate(('major', 'minor')):
+                    for key in ret[idx]:
+                        value = ret[idx][key][1].get()
+                        if value:
+                            self.__topwin.figureBook.currentFigure.axes.grid(None, name, **{key: value})
+                major.set(1)
+                minor.set(1)
+                self.__topwin.figureBook.currentFigure.update()
+                                        
+            chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=self.onChkGridMajor)
+            chkGridMajor.pack(fill=X)
+            self.chkGridMajor   = chkGridMajor
+            
+            chkGridMinor    = Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid)
+            chkGridMinor.pack(fill=X)
+            self.chkGridMinor   = chkGridMinor        
+            
+            btnProperty     = Button(self, text='Property', command=onPropertyClick)
+            btnProperty.pack()
+            self.btnProperty    = btnProperty
+            
+            self.name = 'Grid'
+            
+        def onChkGridMajor(self):        
+            printCode    = True
+            currentFigure   = self.__topwin.figureBook.currentFigure
+            currentFigure.grid(self.__major.get(), which='major')
+            currentFigure.update()
+            
+    
+            
+        class __EnableDelegator(object):
+            def __init__(self, widgetName):
+                self.widgetName = widgetName
+                
+            def __get__(self, obj, type=None):
+                def enable(state):                
+                    en  = NORMAL if state else DISABLED
+                    getattr(obj, self.widgetName).config(state=en)
+                return enable
+                
+        enableWidgets   = dict(
+            enableGridMajor =  'chkGridMajor',
+            enableGridMinor =  'chkGridMinor',
+            enableProperty  =  'btnProperty'
         )
-
+        
+        for methodName in enableWidgets:
+            locals()[methodName]    = __EnableDelegator(enableWidgets[methodName])
+            
     
-    tabpages.add(frmView, text='View')
-        # End View Tab
+    
+        @property
+        def major(self):
+            return self.__major.get()
+    
+        @major.setter
+        def major(self, value):
+            self.__major.set(value)
+    
+        @property
+        def minor(self):
+            return self.__minor.get()
+    
+        @minor.setter
+        def minor(self, value):
+            self.__minor.set(value)  
+##########################################################
+    class AxisGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self.__topwin = kwargs['topwin']
+            del kwargs['topwin']
+            app = Application.instance
+           
+            Group.__init__(self, *args, **kwargs)
+            self.__params = [StringVar() for i in range(8)]
+            paramfrm =Frame(self)
+            paramfrm.pack()
+            names = ['xmin', 'xmax', 'ymin', 'ymax', 'major xtick', 'major ytick', 'minor xtick', 'minor ytick']
+            for c in range(4):
+                for r in range(2):
+                    temp = ParamItem(paramfrm)
+                    setMultiAttr(temp,
+                        checkFunc   = app.checkFloat,
+                        labelText   = names[c*2+r],
+                        labelWidth  = 5 if c*2+r < 4 else 10,
+                        entryWidth  = 5,
+                        entryVar    = self.__params[c*2+r]
+                    )
+                    temp.grid(row=r, column=c)
+    
+            btnfrm = Frame(self)
+            btnfrm.pack()
+            Button(btnfrm, text='Confirm', command=self.onConfirmClick).pack(side=LEFT)
+            Button(btnfrm, text='Auto', command=self.onAutoClick).pack(side=RIGHT)
+            self.name = 'Axis'
+    
+    
+    
+        @property
+        def xlim(self):
+            return tuple(map(lambda svar: float(svar.get()), self.__params[0:2]))
+    
+        @xlim.setter
+        def xlim(self, value):
+            self.__params[0].set(str(value[0]))
+            self.__params[1].set(str(value[1]))
+    
+        @property
+        def ylim(self):
+            return tuple(map(lambda svar: float(svar.get()), self.__params[2:4]))
+    
+        @ylim.setter
+        def ylim(self, value):
+            self.__params[2].set(str(value[0]))
+            self.__params[3].set(str(value[1]))
+                   
+        for propName, propIdx   in (('major_xtick', 4), ('major_ytick', 5), ('minor_xtick', 6), ('minor_ytick', 7)):
+            prop  = property(lambda self, idx=propIdx: float(self.__params[idx].get()))
+            locals()[propName]  = prop.setter(lambda self, val, idx=propIdx: self.__params[idx].set(str(val)))
+    
+    
+    
+        def onConfirmClick(self):
+            def toFloat(x):
+                try:
+                    return float(x)
+                except:
+                    return None
+            aparams = [toFloat(v.get()) for v in self.__params]
+            currentFigure   = self.__topwin.figureBook.currentFigure
+            currentFigure.axis(aparams[:4])
+            axes    = currentFigure.axes
+            axes.xaxis.set_major_locator(MultipleLocator(float(aparams[4])))
+            axes.yaxis.set_major_locator(MultipleLocator(float(aparams[5])))
+            if aparams[6] is not None:
+                axes.xaxis.set_minor_locator(MultipleLocator(float(aparams[6])))
+            if aparams[7] is not None:
+                axes.yaxis.set_minor_locator(MultipleLocator(float(aparams[7])))
+            currentFigure.update()
+    
+        def onAutoClick(self):
+            currentFigure   = self.__topwin.figureBook.currentFigure
+            currentFigure.axes.autoscale()
+            currentFigure.update()
+            currentFigure.updateViewTab()
+##########################################################
+    class ClearGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self.__topwin = kwargs['topwin']
+            del kwargs['topwin']
+            Group.__init__(self, *args, **kwargs)
+            self.__currentFigure = None
+            Button(self, text='Clear All', command=self.onClearAll).pack()
+            Button(self, text='Del Sel', command=self.onDelSel).pack()
+            Button(self, text='Del UnSel', command=self.onDelUnSel).pack()
+            self.name = 'Clear Plot'
+    
+        def onClearAll(self):
+            printCode   = True
+            self.__topwin.figureBook.clear()
+    
+        def onDelSel(self):
+            printCode   = True
+            self.__topwin.figureBook.deleteSelLines(idx=None)
+    
+        def onDelUnSel(self):
+            printCode   = True
+            #self.__topwin.figureBook.remove_unsel_lines()            
+##########################################################   
+    @classmethod
+    def create(cls, tabpages, topwin):
+            # View Tab
+        frmView = Frame(tabpages)
+        grpGrid = cls.GridGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
+        grpGrid.pack(side=LEFT, fill=Y)
+      
+        
+        grpAxis = cls.AxisGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
+        grpAxis.pack(side=LEFT, fill=Y)
+      
+        
+        grpClear = cls.ClearGroup(frmView, bd=2, relief=GROOVE, topwin=topwin)
+        grpClear.pack(side=LEFT, fill=Y)
+        
+        with topwin.attributeLock:    
+            setMultiAttr(topwin,
+                grpGrid  = grpGrid,
+                grpAxis  = grpAxis,
+                grpClear = grpClear  
+            )
+            
+        tabpages.add(frmView, text='View')
+            # End View Tab
 
-#import isaa
 
 #class SingleWindow(object):
-# def __init__(self, application):
-# self.__toplevel = Toplevel()
-# self.__toplevel.title(' '.join(('Single-Syn', str(id(self)))))
-# self._app = application
-# self.__currentFigure = None
-# # The toolbar
-# tabpages = Notebook(self.__toplevel)
-# tabpages.pack(fill=X)
 # # Algorithm Tab
-# frmAlgo = Frame(tabpages)
-# grpAlgoSel = AlgoSelGroup(frmAlgo, bd=2, relief=GROOVE)
-# grpAlgoSel.pack(side=LEFT, fill=Y)
 # grpParams = AlgoParamsGroup(frmAlgo, bd=2, relief=GROOVE, application=application)
 # grpParams.balloon = application.balloon
 # grpParams.algo = isaa.diac
 # grpParams.pack(side=LEFT, fill=Y)
 # grpInit = InitGroup(frmAlgo, bd=2, relief=GROOVE)
-# grpInit.pack(side=LEFT, fill=Y)
-# grpGen = GenGroup(frmAlgo, bd=2, relief=GROOVE, application=application, topwin=self)
-# grpGen.pack(side=LEFT, fill=Y)
 # grpGen.getparams = grpParams.getparams
 # grpGen.algo = isaa.diac
-# tabpages.add(frmAlgo, text='Algorithm')
-# # End Algorithm Tab
-# create_viewtab(tabpages, application, self)
-# # End toolbar
-#
-# # The Figure
-# self.__currentFigure = guitools.FigureFrame(self.__toplevel)
-# self.__currentFigure.pack(expand=YES, fill=BOTH)
-# # End Figure
-#
-# @property
-# def currentFigure(self):
-# return self.__currentFigure
-#
-# def update(self):
-# self.__toplevel.update()
-            
-            
-import pattern2corrmtx
 
-class PatternSolveGroup(Group):
+class SingleWindow(ToolWindow):
+#########################Optimize Group############################
+    class OptimizeGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self._app = Application.instance    
+            self.__topwin = kwargs['topwin']
+            del kwargs['topwin']
+            Group.__init__(self, *args, **kwargs)
+            self.__num = ParamItem(self)
+            self.__num.label.config(text='num')
+            self.__num.entryText = '1'
+            self.__num.entry.bind('<Return>', lambda event: self.onGenBtnClick())
+            self.__num.checkFunc = self._app.checkInt
+            self.__num.pack()
+            self.__progress = IntVar()
+            self.__finishedwav = IntVar()
+            progfrm = Frame(self)
+            progfrm.pack()
+            self.__progbar = Progressbar(progfrm, orient='horizontal', variable=self.__progress, maximum=100)
+            self.__progbar.pack(side=LEFT)
+            self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav, length=70)
+            self.__finishedwavbar.pack(side=RIGHT)
+            self.__genbtn = Button(self, text='Generate', command=self.onSolveClick)
+            self.__genbtn.pack(side=LEFT)
+            Button(self, text='Stop', command=self.onStopBtnClick).pack(side=RIGHT)
+            self.name = 'Generate'
+            self.algo = None
+            self.getparams = None
+            #self.figfrm = None # figfrm: the container of the matplotlib canvas
+            self.__stopflag = False
+    
+        def onSolveClick(self):
+            tbicon = self._app.taskbaricon
+            self.__stopflag = False
+            wavnum = self.__num.getInt()
+            progress = [0]
+            waveform = [0]
+            def exitcheck(k, K, y, y_last):
+                progress[0] = int(k / K * 100)
+            self.algo.exitcond['func'] = exitcheck
+            self.algo.exitcond['interval'] = 1
+            params = self.getparams()
+    
+            class AlgoThread(threading.Thread):
+                def __init__(self, algo, params, waveform, progress):
+                    self.algo = algo
+                    self.progress = progress
+                    threading.Thread.__init__(self)
+                def run(self):
+                    waveform[0] = self.algo(**params)
+    
+            self.__finishedwavbar['maximum'] = wavnum
+            for cnt in range(wavnum):
+                algothread = AlgoThread(self.algo, params, waveform, progress)
+                algothread.start()
+                while algothread.isAlive():
+                    self.__progress.set(progress[0])
+                    tbicon.progress = int((cnt*100+progress[0])/(wavnum*100)*100)
+                    self.__topwin.update()
+                    if self.__stopflag:
+                        break
+    ## time.sleep(0.1)
+                self.__progress.set(0)
+                if self.__stopflag:
+                    break
+                self.__topwin.currentFigure.plot_acorr(waveform[0])
+                self.__finishedwav.set(cnt+1)
+            self.__finishedwav.set(0)
+            tbicon.state = guicomponents.TBPF_NOPROGRESS
+    
+        def onStopBtnClick(self):
+            self.__stopflag = True
+################################################################    
+    
+#########################Algorithm Selection Group########################    
+    class AlgoSelGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self._topwin  = kwargs.pop('topwin')
+            Group.__init__(self, *args, **kwargs)
+            self.__algolist = Combobox(self, value=['ISAA-DIAC'], takefocus=1, stat='readonly', width=12)
+            self.__algolist.current(0)
+            self.__algolist.pack()
+            self.name = 'Algorithms'    
+#################################################################
+    
+    windowName  = 'WaveSyn-SingleSyn'        
     def __init__(self, *args, **kwargs):
-        self._app = Application.instance
-        self.__uiImages = []
-        self.__topwin = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs)
-        frm = Frame(self)
-        frm.pack(side=TOP)
+        ToolWindow.__init__(self, *args, **kwargs)
+        # The toolbar
+        tabpages    = Notebook(self._toplevel)
+        tabpages.pack(fill=X)
         
-        imageMLbl = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_M_Label.png')
+        frmAlgo = Frame(tabpages)
+        grpAlgoSel  = self.AlgoSelGroup(frmAlgo, topwin=self)
+        grpAlgoSel.pack(side=LEFT, fill=Y)
+        tabpages.add(frmAlgo, text='Algorithm')
+        
+        ViewTab.create(tabpages, self)
+        # End toolbar
+        figureBook  = FigureBook(self._toplevel,
+            figureMeta  = [
+                dict(name='Envelope',   polar=False),
+                dict(name='Phase',      polar=False),
+                dict(name='AutoCorrelation',    polar=False),
+                dict(name='PSD',        polar=False)
+            ],
+            topwin=self
         )
-        self.__uiImages.append(imageMLbl)
-        Label(frm, image=imageMLbl).pack(side=LEFT)
-        
-        self.__M = ParamItem(frm)
-        self.__M.label.config(text='M')
-        self.__M.entryWidth = 6
-        self.__M.entryText = 10
-        self.__M.entry.bind('<Return>', lambda dumb: self.onSolve())
-        self.__M.checkFunc = self._app.checkInt
-        self.__M.pack(side=RIGHT)
-        
-        self._app.balloon.bind_widget(frm, balloonmsg='The number of the array elements.')
-
-        imageSolveBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_Solve_Button.png')
-        )
-        self.__uiImages.append(imageSolveBtn)
-
-        self.__btnSolve = Button(self, image=imageSolveBtn, command=self.onSolve)
-        self.__btnSolve.pack(side=TOP)
-        self._app.balloon.bind_widget(self.__btnSolve, balloonmsg='Launch the solver to synthesize the correlation matrix.')
-        
-        frm = Frame(self)
-        frm.pack(side=TOP)
-        imageDisplayBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_Display_Button.png')
-        )
-        self.__uiImages.append(imageDisplayBtn)
-        Label(frm, image=imageDisplayBtn).pack(side=LEFT)
-        self.__bDisplay = IntVar(0)
-        chkDisplay = Checkbutton(frm, text="Display", variable=self.__bDisplay)
-        chkDisplay.pack(side=TOP)
-        self._app.balloon.bind_widget(frm, balloonmsg='Display solver output.')
-        
-        self.name = 'Optimize'
-                
-    def onSolve(self):
-        printCode   = True
-        topwin = self.__topwin
-        center, width = topwin.grpEdit.beamData
-        topwin.figureBook.clear()
-        
-        topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        topwin.setIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        # Create a new thread for solving the correlation matrix.
-        def solveFunc():
-            printCode   = True
-            topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
-        WaveSynThread.start(func=solveFunc)
-        # Though method "start" will not return until the solve returns, the GUI will still 
-        # responding to user input because Tk.update is called by start repeatedly.
-        # While the thread is not alive, the optimization procedure is finished.                        
-        topwin.plotCorrMatrixPattern()
-        
-        
-        
-        
-class PatternEditGroup(Group):
-    def __init__(self, *args, **kwargs):
-        self._app = Application.instance
-        self.__topwin = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs)
-        frm = Frame(self)
-        
-        self.__center = ParamItem(frm)
-        setMultiAttr(self.__center,        
-            labelText   = 'center(deg)',        
-            entryText   = 0,    
-            checkFunc   = self._app.checkInt,
-            entryWidth  = 5,    
-            labelWidth  = 10
-        )                       
-        self.__center.pack(side=TOP)        
-        self._app.balloon.bind_widget(self.__center, balloonmsg='Specify the beam center here.')
-        
-        self.__width = ParamItem(frm)
-        setMultiAttr(self.__width,
-            labelText   = 'width(deg)',
-            entryText   = 20,
-            checkFunc   = self._app.checkInt,
-            entryWidth  = 5,
-            labelWidth  = 10
-        )
-        self.__width.pack(side=TOP)
-        self._app.balloon.bind_widget(self.__width, balloonmsg='Specify the beam width here.')
-        
-        self.__uiImages = []
-                
-                
-        imageAddBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_Add_Button.png')
-        )
-        self.__uiImages.append(imageAddBtn)
-        btn = Button(frm, image=imageAddBtn, command=self.onAdd)
-        btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Add new beam to the ideal pattern.')
-        
-        imageDelBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_Del_Button.png')
-        )
-        self.__uiImages.append(imageDelBtn)
-        btn = Button(frm, image=imageDelBtn, command=self.onDel)
-        btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Remove the selected beam in the listbox.')
-        
-        imageClrBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_Clear_Button.png')
-        )
-        self.__uiImages.append(imageClrBtn)
-        btn = Button(frm, image=imageClrBtn, command=self.onClear)
-        btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Clear the listbox of the beam parameters.')
-        
-        imagePlotBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_Plot_Button.png')
-        )
-        self.__uiImages.append(imagePlotBtn)
-        btn = Button(frm, image=imagePlotBtn, command=self.onPlotIdealPattern)
-        btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Plot the ideal pattern.')
-        
-        frm.pack(side=LEFT, fill=Y)
-        
-        self.__paramlist = ScrolledList(self)
-        self.__paramlist.list.config(height=4, width=10)
-        self.__paramlist.pack(side=LEFT)
-        self.name = 'Edit Ideal Pattern'
-        
-        self.optgrp = None
-        
-    def onAdd(self):
-        self.__paramlist.list.insert(END, '{0}, {1}'.format(self.__center.getInt(), self.__width.getInt()))
-        
-    def onDel(self):
-        self.__paramlist.list.delete(ANCHOR)
-        
-    def onClear(self):
-        self.__paramlist.clear()
-        
-    def onPlotIdealPattern(self):
-        printCode   = True
-        center, width = self.beamData
-        self.__topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        
-    @property
-    def beamData(self):
-        beamParams = self.__paramlist.list.get(0, END)
-        if not beamParams:
-            # stderr print 'no beam is specified'
-            self._app.printError('An error occurred!')
-        # msgbox An error has encounted. Please check the Console window for more details.
-            self._app.printTip(
-                [
-                    {
-                        'type':'text',
-                        'content':'''This exception happens when the listbox of the beam parameters are empty.
-To make a valid ideal pattern, at least one beam should be specified.
-'''
-                    }
-                ]
-            )
-            return
-        center, width = zip(*[map(float, param.split(',')) for param in beamParams])
-        return center, width
+        figureBook.panedWindow.pack(expand=YES, fill=BOTH)
 
 
         
-class LoadGroup(Group):
-    def __init__(self, *args, **kwargs):
-        Group.__init__(self, *args, **kwargs)
-        self.name = 'Load Pattern'
+#class LoadGroup(Group):
+#    def __init__(self, *args, **kwargs):
+#        Group.__init__(self, *args, **kwargs)
+#        self.name = 'Load Pattern'
         
-        
-class PatternFileExportGroup(Group):
-    def __init__(self, *args, **kwargs):
-        self._app = Application.instance
-        self.__topwin = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs)
-        
-        frm = Frame(self)
-        self.__uiImages = []
-        imageMatFileBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_SaveMat_Button.png')
-        )
-        self.__uiImages.append(imageMatFileBtn)
-        Button(frm, image=imageMatFileBtn, command=self.onSaveMat).pack(side=TOP)
-        Button(frm, text='mat', width=6).pack(side=TOP)
-        frm.pack(side=LEFT)
-        
-        frm = Frame(self)
-        imageExcelFileBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_SaveExcel_Button.png')
-        )
-        self.__uiImages.append(imageExcelFileBtn)
-        Button(frm, image=imageExcelFileBtn).pack(side=TOP)
-        Button(frm, text='xlsx', width=6).pack(side=TOP)
-        frm.pack(side=LEFT)
-        
-        self.name = 'Corr Matrix'
-        
-    def onSaveMat(self):
-        printCode   = True
-        filename = asksaveasfilename(filetypes=[('Matlab mat files', '*.mat')])
-        if not filename:
-            return
-            
-        def linkFunc(filename):
-            printCode   = True
-            clipboard   = Application.instance.clipboard
-            clipboard.clear()
-            clipboard.append(autoSubs('load $filename'))
-
-        self.__topwin.saveMat(filename)
-        tip = [
-            {
-                'type':'text', 
-                'content':autoSubs('''The correlation matrix has been saved in the mat file "$filename" successully.
-You can extract the data in Matlab using the following command:''')
-            },
-            {
-                'type':'link', 
-                'content':autoSubs('>> load $filename'),
-                'command':lambda dumb: linkFunc(filename=filename)
-            },
-            {
-                'type':'text', 
-                'content':'''and variable named "R" will appear in your Matlab workspace.
-(Click the underlined Matlab command and copy it to the clipboard)'''
-            }
-        ]
-        self._app.printTip(tip)
-
-        
-        
-        
-class PatternFigureExportGroup(Group):
-    def __init__(self, *args, **kwargs):
-        self._app = Application.instance
-        self.__topwin = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs)
-        self.__uiImages = []
-        imageFigureExportBtn = ImageTk.PhotoImage(
-            file=uiImagePath('Pattern_ExportFigure_Button.png')
-        )
-        self.__uiImages.append(imageFigureExportBtn)
-        frm = Frame(self); frm.pack(side=LEFT)
-        Button(frm, image=imageFigureExportBtn, command=self.onExportMatlabScript).pack(side=TOP)
-        Button(frm, text='Script', command=self.onExportMatlabScript, width=6).pack(side=TOP)
-        
-        self.name = 'Figure'
-        
-
-    def onExportMatlabScript(self):
-        printCode   = True
-        filename = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
-        if not filename:
-            return
-        self.__topwin.figureBook.exportMatlabScript(filename)
-        self._app.printTip(
-'''A Matlab script file has been saved as {filename}.
-By running this script, Matlab will literally "re-plot" the curves shown here.'''.format(filename=filename)
-        )
-
-
-        
+import pattern2corrmtx        
 
 class PatternWindow(ToolWindow):
-    windowName = 'WaveSyn-PatternFitting'
+#####################################Optimize Group####################################    
+    class OptimizeGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self._app = Application.instance
+            self.__uiImages = []
+            self.__topwin = kwargs.pop('topwin')
+            Group.__init__(self, *args, **kwargs)
+            frm = Frame(self)
+            frm.pack(side=TOP)
+            
+            imageMLbl = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_M_Label.png')
+            )
+            self.__uiImages.append(imageMLbl)
+            Label(frm, image=imageMLbl).pack(side=LEFT)
+            
+            self.__M = ParamItem(frm)
+            self.__M.label.config(text='M')
+            self.__M.entryWidth = 6
+            self.__M.entryText = 10
+            self.__M.entry.bind('<Return>', lambda dumb: self.onSolve())
+            self.__M.checkFunc = self._app.checkInt
+            self.__M.pack(side=RIGHT)
+            
+            self._app.balloon.bind_widget(frm, balloonmsg='The number of the array elements.')
+    
+            imageSolveBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_Solve_Button.png')
+            )
+            self.__uiImages.append(imageSolveBtn)
+    
+            self.__btnSolve = Button(self, image=imageSolveBtn, command=self.onSolve)
+            self.__btnSolve.pack(side=TOP)
+            self._app.balloon.bind_widget(self.__btnSolve, balloonmsg='Launch the solver to synthesize the correlation matrix.')
+            
+            frm = Frame(self)
+            frm.pack(side=TOP)
+            imageDisplayBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_Display_Button.png')
+            )
+            self.__uiImages.append(imageDisplayBtn)
+            Label(frm, image=imageDisplayBtn).pack(side=LEFT)
+            self.__bDisplay = IntVar(0)
+            chkDisplay = Checkbutton(frm, text="Display", variable=self.__bDisplay)
+            chkDisplay.pack(side=TOP)
+            self._app.balloon.bind_widget(frm, balloonmsg='Display solver output.')
+            
+            self.name = 'Optimize'
+                    
+        def onSolve(self):
+            printCode   = True
+            topwin = self.__topwin
+            center, width = topwin.grpEdit.beamData
+            topwin.figureBook.clear()
+            
+            topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
+            topwin.setIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
+            # Create a new thread for solving the correlation matrix.
+            def solveFunc():
+                printCode   = True
+                topwin.solve(M=self.__M.getInt(), display=self.__bDisplay.get())
+            WaveSynThread.start(func=solveFunc)
+            # Though method "start" will not return until the solve returns, the GUI will still 
+            # responding to user input because Tk.update is called by start repeatedly.
+            # While the thread is not alive, the optimization procedure is finished.                        
+            topwin.plotCorrMatrixPattern()    
+                
+#################################Edit Ideal Pattern Group#################################
+    class EditGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self._app = Application.instance
+            self.__topwin = kwargs.pop('topwin')
+            Group.__init__(self, *args, **kwargs)
+            frm = Frame(self)
+            
+            self.__center = ParamItem(frm)
+            setMultiAttr(self.__center,        
+                labelText   = 'center(deg)',        
+                entryText   = 0,    
+                checkFunc   = self._app.checkInt,
+                entryWidth  = 5,    
+                labelWidth  = 10
+            )                       
+            self.__center.pack(side=TOP)        
+            self._app.balloon.bind_widget(self.__center, balloonmsg='Specify the beam center here.')
+            
+            self.__width = ParamItem(frm)
+            setMultiAttr(self.__width,
+                labelText   = 'width(deg)',
+                entryText   = 20,
+                checkFunc   = self._app.checkInt,
+                entryWidth  = 5,
+                labelWidth  = 10
+            )
+            self.__width.pack(side=TOP)
+            self._app.balloon.bind_widget(self.__width, balloonmsg='Specify the beam width here.')
+            
+            self.__uiImages = []
+                    
+                    
+            imageAddBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_Add_Button.png')
+            )
+            self.__uiImages.append(imageAddBtn)
+            btn = Button(frm, image=imageAddBtn, command=self.onAdd)
+            btn.pack(side=LEFT)
+            self._app.balloon.bind_widget(btn, balloonmsg='Add new beam to the ideal pattern.')
+            
+            imageDelBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_Del_Button.png')
+            )
+            self.__uiImages.append(imageDelBtn)
+            btn = Button(frm, image=imageDelBtn, command=self.onDel)
+            btn.pack(side=LEFT)
+            self._app.balloon.bind_widget(btn, balloonmsg='Remove the selected beam in the listbox.')
+            
+            imageClrBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_Clear_Button.png')
+            )
+            self.__uiImages.append(imageClrBtn)
+            btn = Button(frm, image=imageClrBtn, command=self.onClear)
+            btn.pack(side=LEFT)
+            self._app.balloon.bind_widget(btn, balloonmsg='Clear the listbox of the beam parameters.')
+            
+            imagePlotBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_Plot_Button.png')
+            )
+            self.__uiImages.append(imagePlotBtn)
+            btn = Button(frm, image=imagePlotBtn, command=self.onPlotIdealPattern)
+            btn.pack(side=LEFT)
+            self._app.balloon.bind_widget(btn, balloonmsg='Plot the ideal pattern.')
+            
+            frm.pack(side=LEFT, fill=Y)
+            
+            self.__paramlist = ScrolledList(self)
+            self.__paramlist.list.config(height=4, width=10)
+            self.__paramlist.pack(side=LEFT)
+            self.name = 'Edit Ideal Pattern'
+            
+            self.optgrp = None
+            
+        def onAdd(self):
+            self.__paramlist.list.insert(END, '{0}, {1}'.format(self.__center.getInt(), self.__width.getInt()))
+            
+        def onDel(self):
+            self.__paramlist.list.delete(ANCHOR)
+            
+        def onClear(self):
+            self.__paramlist.clear()
+            
+        def onPlotIdealPattern(self):
+            printCode   = True
+            center, width = self.beamData
+            self.__topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
+            
+        @property
+        def beamData(self):
+            beamParams = self.__paramlist.list.get(0, END)
+            if not beamParams:
+                # stderr print 'no beam is specified'
+                self._app.printError('An error occurred!')
+            # msgbox An error has encounted. Please check the Console window for more details.
+                self._app.printTip(
+                    [
+                        {
+                            'type':'text',
+                            'content':'''This exception happens when the listbox of the beam parameters are empty.
+To make a valid ideal pattern, at least one beam should be specified.
+'''
+                        }
+                    ]
+                )
+                return
+            center, width = zip(*[map(float, param.split(',')) for param in beamParams])
+            return center, width        
+
+
+##########################################################################################
+    class FileExportGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self._app = Application.instance
+            self.__topwin = kwargs.pop('topwin')
+            Group.__init__(self, *args, **kwargs)
+            
+            frm = Frame(self)
+            self.__uiImages = []
+            imageMatFileBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_SaveMat_Button.png')
+            )
+            self.__uiImages.append(imageMatFileBtn)
+            Button(frm, image=imageMatFileBtn, command=self.onSaveMat).pack(side=TOP)
+            Button(frm, text='mat', width=6).pack(side=TOP)
+            frm.pack(side=LEFT)
+            
+            frm = Frame(self)
+            imageExcelFileBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_SaveExcel_Button.png')
+            )
+            self.__uiImages.append(imageExcelFileBtn)
+            Button(frm, image=imageExcelFileBtn).pack(side=TOP)
+            Button(frm, text='xlsx', width=6).pack(side=TOP)
+            frm.pack(side=LEFT)
+            
+            self.name = 'Corr Matrix'
+            
+        def onSaveMat(self):
+            printCode   = True
+            filename = asksaveasfilename(filetypes=[('Matlab mat files', '*.mat')])
+            if not filename:
+                return
+                
+            def linkFunc(filename):
+                printCode   = True
+                clipboard   = Application.instance.clipboard
+                clipboard.clear()
+                clipboard.append(autoSubs('load $filename'))
+    
+            self.__topwin.saveMat(filename)
+            tip = [
+                {
+                    'type':'text', 
+                    'content':autoSubs('''The correlation matrix has been saved in the mat file "$filename" successully.
+You can extract the data in Matlab using the following command:''')
+                },
+                {
+                    'type':'link', 
+                    'content':autoSubs('>> load $filename'),
+                    'command':lambda dumb: linkFunc(filename=filename)
+                },
+                {
+                    'type':'text', 
+                    'content':'''and variable named "R" will appear in your Matlab workspace.
+(Click the underlined Matlab command and copy it to the clipboard)'''
+                }
+            ]
+            self._app.printTip(tip)            
+########################################################################################## 
+    class FigureExportGroup(Group):
+        def __init__(self, *args, **kwargs):
+            self._app = Application.instance
+            self.__topwin = kwargs.pop('topwin')
+            Group.__init__(self, *args, **kwargs)
+            self.__uiImages = []
+            imageFigureExportBtn = ImageTk.PhotoImage(
+                file=uiImagePath('Pattern_ExportFigure_Button.png')
+            )
+            self.__uiImages.append(imageFigureExportBtn)
+            frm = Frame(self); frm.pack(side=LEFT)
+            Button(frm, image=imageFigureExportBtn, command=self.onExportMatlabScript).pack(side=TOP)
+            Button(frm, text='Script', command=self.onExportMatlabScript, width=6).pack(side=TOP)
+            
+            self.name = 'Figure'
+            
+    
+        def onExportMatlabScript(self):
+            printCode   = True
+            filename = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
+            if not filename:
+                return
+            self.__topwin.figureBook.exportMatlabScript(filename)
+            self._app.printTip(autoSubs('''A Matlab script file has been saved as $filename.
+By running this script, Matlab will literally "re-plot" the curves shown here.''')
+            )            
+##########################################################################################            
+    windowName = 'WaveSyn-PatternFitting'        
     def __init__(self, *args, **kwargs):
         ToolWindow.__init__(self, *args, **kwargs)
         # The toolbar
@@ -1711,9 +1696,9 @@ class PatternWindow(ToolWindow):
         tabpages.pack(fill=X)
             # Algorithm tab
         frmAlgo = Frame(tabpages)
-        grpSolve = PatternSolveGroup(frmAlgo, topwin=self)
+        grpSolve = self.OptimizeGroup(frmAlgo, topwin=self)
         grpSolve.pack(side=LEFT, fill=Y)
-        grpEdit = PatternEditGroup(frmAlgo, topwin=self)
+        grpEdit = self.EditGroup(frmAlgo, topwin=self)
         grpEdit.pack(side=LEFT, fill=Y)
         self.__grpEdit = grpEdit
         
@@ -1721,14 +1706,14 @@ class PatternWindow(ToolWindow):
             # End Algorithm tab
             
             # View Tab
-        createViewTab(tabpages, self)
+        ViewTab.create(tabpages, self)
             # End View tab
         
             # Export tab
         frmExport = Frame(tabpages)
-        grpExport = PatternFileExportGroup(frmExport, topwin=self)
+        grpExport = self.FileExportGroup(frmExport, topwin=self)
         grpExport.pack(side=LEFT, fill=Y)
-        grpFigureExport = PatternFigureExportGroup(frmExport, topwin=self)
+        grpFigureExport = self.FigureExportGroup(frmExport, topwin=self)
         grpFigureExport.pack(side=LEFT, fill=Y)
         tabpages.add(frmExport, text='Export')
             # End Export tab
