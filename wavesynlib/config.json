@@ -2,9 +2,9 @@
 	"ConsoleMenu":[
 	    {
 		"Name":"Window", "TearOff":0, "UnderLine":0, "SubMenu":[
-		    {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.newSingleWin()"},
-		    {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"wavesyn.newMIMOWin()"},
-		    {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.newPatternWin(printDoc=True)"}
+		    {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.createWindow(moduleName='singlesyn', className='SingleWindow')"},
+		    {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"print('Not Implemented', file=sys.stderr)"},
+		    {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.createWindow(moduleName='patternsyn', className='PatternWindow')"}
 		]
 	    },
 	    {
