@@ -38,8 +38,6 @@ colorMap = {
 
 
 class WindowNode(ModelNode):
-    '''Window is build around matplotlib Figure.
-'''
     windowName = ''
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
@@ -72,7 +70,7 @@ class WindowDict(NodeDict):
         NodeDict.__init__(self, nodeName=nodeName)
                 
     def __setitem__(self, key, val):
-        if not isinstance(val, ModelNode):
+        if not isinstance(val, WindowNode):
             raise TypeError, evalFmt('{self.nodePath} only accepts instance of WindowNode or of its subclasses.')
         if key != id(val):
             raise ValueError, 'The key should be identical to the ID of the window.'
@@ -96,8 +94,8 @@ class DataFigure(ModelNode):
         self.__canvas = canvas
         toolbar = NavigationToolbar2TkAgg(canvas, master)
         toolbar.update()
-        toolbar.pack(side=TOP)
         canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=YES)
+        toolbar.pack()        
         
         with self.attributeLock:
             # All the properties being set in this block will be locked automatically,
@@ -149,8 +147,17 @@ class DataFigure(ModelNode):
         
 
     @Scripting.printable
-    def grid(self, *args, **kwargs):
-        self.axes.grid(*args, **kwargs)
+    def grid(self, b, which='major', axis='both', **kwargs):
+        if b=='on': 
+            b   = True
+        elif b=='off':
+            b   = False        
+        self.axes.grid(b, which, axis, **kwargs)
+        if which == 'major':
+            self.__majorGrid    = b
+        elif which == 'minor':
+            self.__minorGrid    = b
+
 
     @Scripting.printable    
     def update(self):
@@ -243,9 +250,10 @@ The rest parameters are passed to PanedWindow.__init__.
 
         panedWindow.config(sashwidth=4, sashrelief=GROOVE, bg='forestgreen')        
        
-        figureTabsStyle = Style()
-        figureTabsStyle.configure('Figure.TNotebook', tabposition='sw')       
-        figureTabs    = Notebook(panedWindow, style='Figure.TNotebook')
+#        figureTabsStyle = Style()
+#        figureTabsStyle.configure('Figure.TNotebook', tabposition='sw')       
+#        figureTabs    = Notebook(panedWindow, style='Figure.TNotebook')
+        figureTabs  = Notebook(panedWindow)
         
         self.figureTabs   = figureTabs
         figureTabs.bind('<<NotebookTabChanged>>', self.onTabChange)
@@ -293,8 +301,13 @@ The rest parameters are passed to PanedWindow.__init__.
         for fig in self:
             fig.plotFunction(*args, **kwargs)
         self.__list.insert(END, curveName)
+        
         if 'color' in kwargs:
-            self.__list.itemConfig(END, fg=colorMap[kwargs['color']])
+            color   = colorMap[kwargs['color']]
+        else:
+            color   = colorMap[self[0].lineObjects[-1][0].get_color()]
+        self.__list.itemConfig(END, fg=color)
+        
         self.currentFigure.updateViewTab()
     
     @Scripting.printable

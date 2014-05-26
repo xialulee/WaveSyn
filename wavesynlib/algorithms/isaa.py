@@ -1,7 +1,5 @@
 from numpy import *
 from mathtools import Operator, Algorithm
-import matplotlib.pyplot as plt
-import sys
 
 @Operator
 def Proj_M1(s): # This function is corresponding to eq.22.
@@ -34,8 +32,8 @@ class CProj_A_DIAC(Operator):
             self.__Qr   = array(value)
 
 
-class _DIAC(Algorithm):
-    __algoname__    = 'ISAA-DIAC'
+class DIAC(Algorithm):
+    __algorithmName__    = 'ISAA-DIAC'
     def __init__(self):
         self.exitcond   = {}
         Algorithm.__init__(self)
@@ -43,7 +41,7 @@ class _DIAC(Algorithm):
     def initpoint(self, N):
         return exp(1j * 2 * pi * random.rand(N))
         
-    __params__  = (
+    __parameters__  = (
         ['N', 'int', 'Sequence Length.'],
         ['Qr', 'expression', 'The interval in which correlation sidelobes are suppressed.'],
         ['K', 'int', 'Maximum iteration number.']
@@ -55,12 +53,9 @@ class _DIAC(Algorithm):
         Proj_A_DIAC = CProj_A_DIAC(Qr)
         Tisaa   = (Proj_M1*Proj_A_DIAC) # see eq.26
         Tisaa.exitcond  = self.exitcond
-        ###########################################
-##        sys.stderr.write('Finished\n')
-        ###########################################
         return (Tisaa**K)(s_init)
 
-diac    = _DIAC()
+diac    = DIAC()
 
 
 
@@ -71,13 +66,7 @@ def plot_acdb(fig, s, *args, **kwargs):
     ac      = convolve(s, conj(s[::-1]))
     acdb    = 20*log10(abs(ac))
     acdb    = acdb - max(acdb)
-    ########################
-    #print len(acdb)
-    ########################
-    #plt.figure()    
     fig.plot(r_[(-N+1):N], acdb, *args, **kwargs)
-    #plt.axis([-N, N, -350, 0])
-    #plt.show()
 
 
 '''

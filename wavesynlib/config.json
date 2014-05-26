@@ -39,5 +39,9 @@
 		"BUILTIN": {"foreground":"#e58600"},
 		"STRING":  {"foreground":"#a020f0"},
 		"DEFINITION":{"foreground":"#0000ff"}
-	}
+	},
+	
+	"SingleWaveformAlgorithms":[
+		{"ModuleName":	"isaa", "ClassName":	"DIAC"}
+	]
 }

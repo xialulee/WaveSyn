@@ -30,7 +30,6 @@ import Tix
 from Tkinter import Frame
 from tkFileDialog import asksaveasfilename
 
-#from PIL import ImageTk
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -56,7 +55,6 @@ from idlelib.ColorDelegator import ColorDelegator
 from objectmodel import ModelNode
 
 from guicomponents import StreamChain, TaskbarIcon, ScrolledText
-import guicomponents
 
 from common import setMultiAttr, autoSubs, evalFmt, Singleton
 
@@ -71,9 +69,9 @@ def checkValue(d, i, P, s, S, v, V, W, func):
         
 def checkPositiveFloat(d, i, P, s, S, v, V, W):
     try:
-        float(P)
+        assert float(P) > 0
         return True
-    except ValueError:
+    except (ValueError, AssertionError):
         return True if P=='' else False
 
        
@@ -236,12 +234,14 @@ wavesyn
         #sys.path.append(os.path.join(dirPath, '..'))        
         
         # load config file
-        with open(os.path.join(dirPath, 'config.json')) as f:
+        configFileName  = os.path.join(dirPath, 'config.json')
+        with open(configFileName) as f:
             config  = json.load(f)
         consoleMenu = config['ConsoleMenu']
         self.editorInfo   = config['EditorInfo']
         self.lockAttribute('editorInfo')
         self.promptSymbols  = config['PromptSymbols']
+
         tagDefs = config['TagDefs']
         # End load config file
 
@@ -268,7 +268,9 @@ wavesyn
                 # End Validation Functions
                 
                 filePath    = filePath,
-                dirPath     = dirPath
+                dirPath     = dirPath,
+                
+                configFileName  = configFileName
             )
         
         
@@ -286,15 +288,7 @@ wavesyn
         
     def createWindow(self, moduleName, className):
         mod = __import__(autoSubs('toolwindows.$moduleName'), globals(), locals(), [className], -1)
-        return self.windows.add(node=getattr(mod, className)())
-        
-
-#    def newSingleWin(self, printDoc=False):
-#        #print('Not Implemented.', file=sys.stderr)
-#        return self.windows.add(node=SingleWindow())
-#        
-#    def newMIMOWin(self, printDoc=False):
-#        print('Not Implemented.', file=sys.stderr)
+        return self.windows.add(node=getattr(mod, className)())        
 #
 #    @callAndPrintDoc        
 #    def newPatternWin(self, printDoc=False):

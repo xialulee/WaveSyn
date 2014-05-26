@@ -1,7 +1,8 @@
 #-*- coding:utf-8 -*
 
 from Tkinter    import *
-import ttk
+from ttk        import *
+from Tkinter    import Frame
 from common     import MethodDelegator
 
 
