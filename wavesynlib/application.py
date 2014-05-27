@@ -10,8 +10,8 @@ from __future__ import print_function
 
 def dependenciesForMyprogram():
     '''This function is used to solve the bugs of py2exe'''
-    from scipy.sparse.csgraph import _validation
-    from scipy.special import _ufuncs_cxx
+    from scipy.sparse.csgraph   import _validation
+    from scipy.special          import _ufuncs_cxx
 
 import thread
 import threading
@@ -230,7 +230,6 @@ wavesyn
         filePath    = getsourcefile(type(self))
         dirPath     = os.path.split(filePath)[0]
         sys.path.append(dirPath)
-        #sys.path.append(os.path.join(dirPath, 'algorithms'))
         #sys.path.append(os.path.join(dirPath, '..'))        
         
         # load config file
@@ -662,5 +661,5 @@ def mainloop():
     Application().mainloop()
         
         
-if __name__ == '__main__':
-    mainloop()
+#if __name__ == '__main__':
+#    mainloop()

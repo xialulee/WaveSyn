@@ -33,7 +33,7 @@ class CProj_A_DIAC(Operator):
 
 
 class DIAC(Algorithm):
-    __algorithmName__    = 'ISAA-DIAC'
+    __name__    = 'ISAA-DIAC'
     def __init__(self):
         self.exitcond   = {}
         Algorithm.__init__(self)
@@ -59,14 +59,7 @@ diac    = DIAC()
 
 
 
-def plot_acdb(fig, s, *args, **kwargs):
-    if not isinstance(s, ndarray):
-        s   = array(s)
-    N       = len(s)
-    ac      = convolve(s, conj(s[::-1]))
-    acdb    = 20*log10(abs(ac))
-    acdb    = acdb - max(acdb)
-    fig.plot(r_[(-N+1):N], acdb, *args, **kwargs)
+
 
 
 '''

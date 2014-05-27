@@ -68,18 +68,20 @@ class Parameter(object):
         self.longdesc   = longdesc
 
 
-class Algorithm(object):
+class Algorithm(ModelNode):
     class Meta(object):
         def __init__(self):
-            self.algorithmName   = ''
+            self.name   = ''
             self.parameters      = OrderedDict()
 
-    __parameters__        = None
-    __algorithmName__     = None
+    __parameters__      = None
+    __name__            = None
 
     def __init__(self):
+        super(Algorithm, self).__init__()
         self.__meta = self.Meta()
-        self.__meta.algorithmName    = self.__algorithmName__
+        self.__meta.name    = self.__name__
+        self.__topWindow    = None
         
         if self.__parameters__:
             for item in self.__parameters__:
@@ -89,30 +91,12 @@ class Algorithm(object):
             for param in self.__call__.func_code.co_varnames[1:paramsnum]:  
                 self.__meta.parameters[param]   = Parameter(param, type='expression')
 
+    def __call__(self, *args, **kwargs):
+        pass
+
     @property
     def meta(self):
         return self.__meta
-
-    def __call__(self):
-        pass
-
-
-
-class AlgorithmNode(ModelNode):
-    def __init__(self, *args, **kwargs):
-        self.__algorithm    = kwargs.pop('algorithm')
-        if not isinstance(self.__algorithm, Algorithm):
-            raise TypeError, 'Algorithm node only accepts instance of Algorithm or of its subclasses.'
-        ModelNode.__init__(self, *args, **kwargs)
-        self.__topWindow    = None
-
-    @property
-    def algorithm(self):
-        return self.__algorithm
-        
-    @property
-    def name(self):
-        return self.__algorithm.meta.algorithmName
 
     @property        
     def topWindow(self):
@@ -125,18 +109,20 @@ class AlgorithmNode(ModelNode):
                 if isinstance(node, WindowNode):
                     self.__topWindow    = node
                     return node
-                
+                    
     @Scripting.printable
     def run(self, *args, **kwargs):
-        result  = self.__algorithm(*args, **kwargs)
-        self.topWindow.currentData  = result
-                
+        result  = self(*args, **kwargs)
+        self.topWindow.currentData  = result    
+        
+        
     @property
     def nodePath(self):
         if isinstance(self.parentNode, AlgorithmDict):
-            return evalFmt('{self.parentNode.nodePath}[{id(self)}]')
+            return evalFmt('{self.parentNode.nodePath}["{self.meta.name}"]')
         else:
-            return ModelNode.nodePath
+            return ModelNode.nodePath        
+
 
 
 class AlgorithmDict(NodeDict):
@@ -144,11 +130,11 @@ class AlgorithmDict(NodeDict):
         NodeDict.__init__(self, nodeName=nodeName)
                 
     def __setitem__(self, key, val):
-        if not isinstance(val, AlgorithmNode):
+        if not isinstance(val, Algorithm):
             raise TypeError, evalFmt('{self.nodePath} only accepts instance of Algorithm or of its subclasses.')
-        if key != val.algorithm.meta.algorithmName:
+        if key != val.meta.name:
             raise ValueError, 'The key should be identical to the name of the algorithm.'
         NodeDict.__setitem__(self, key, val)
         
     def add(self, node):
-        self[node.algorithm.meta.algorithmName] = node
+        self[node.meta.name] = node
