@@ -1,7 +1,7 @@
 from numpy import abs, isscalar, linalg, ndarray
 from collections import OrderedDict
 
-from common         import evalFmt
+from common         import evalFmt, autoSubs
 from objectmodel    import ModelNode, NodeDict
 from application    import Scripting
 from basewindow     import WindowNode
@@ -68,7 +68,18 @@ class Parameter(object):
         self.longdesc   = longdesc
 
 
-class Algorithm(ModelNode):
+class Algorithm(object):
+    __parameters__  = None
+    __name__        = None
+    
+    def __init__(self):
+        pass
+    
+    def __call__(self, *args, **kwargs):
+        pass
+
+
+class AlgorithmNode(ModelNode):
     class Meta(object):
         def __init__(self):
             self.name   = ''
@@ -77,26 +88,35 @@ class Algorithm(ModelNode):
     __parameters__      = None
     __name__            = None
 
-    def __init__(self):
-        super(Algorithm, self).__init__()
+    def __init__(self, moduleName, className):
+        super(AlgorithmNode, self).__init__()
+        mod         = __import__(autoSubs('algorithms.$moduleName'), globals(), locals(), [className], -1)
+        algorithm   = getattr(mod, className)()
         self.__meta = self.Meta()
-        self.__meta.name    = self.__name__
+        self.__meta.moduleName  = moduleName
+        self.__meta.className   = className
+        self.__meta.name    = algorithm.__name__
+        self.__algorithm    = algorithm
         self.__topWindow    = None
         
-        if self.__parameters__:
-            for item in self.__parameters__:
+        if algorithm.__parameters__:
+            for item in algorithm.__parameters__:
                 self.__meta.parameters[item[0]]    = Parameter(*item)
         else:
-            paramsnum   = self.__call__.func_code.co_argcount
-            for param in self.__call__.func_code.co_varnames[1:paramsnum]:  
+            paramsnum   = algorithm.__call__.func_code.co_argcount
+            for param in algorithm.__call__.func_code.co_varnames[1:paramsnum]:  
                 self.__meta.parameters[param]   = Parameter(param, type='expression')
 
-    def __call__(self, *args, **kwargs):
-        pass
+    def __getitem__(self, key):
+        return getattr(self.__meta, key)
 
     @property
     def meta(self):
         return self.__meta
+        
+    @property
+    def exitcond(self):
+        return self.__algorithm.exitcond
 
     @property        
     def topWindow(self):
@@ -112,7 +132,7 @@ class Algorithm(ModelNode):
                     
     @Scripting.printable
     def run(self, *args, **kwargs):
-        result  = self(*args, **kwargs)
+        result  = self.__algorithm(*args, **kwargs)
         self.topWindow.currentData  = result    
         
         
@@ -130,11 +150,11 @@ class AlgorithmDict(NodeDict):
         NodeDict.__init__(self, nodeName=nodeName)
                 
     def __setitem__(self, key, val):
-        if not isinstance(val, Algorithm):
+        if not isinstance(val, AlgorithmNode):
             raise TypeError, evalFmt('{self.nodePath} only accepts instance of Algorithm or of its subclasses.')
         if key != val.meta.name:
             raise ValueError, 'The key should be identical to the name of the algorithm.'
         NodeDict.__setitem__(self, key, val)
         
     def add(self, node):
-        self[node.meta.name] = node
+        self[node['name']] = node

@@ -37,6 +37,33 @@ colorMap = {
 }
 
 
+def askClassName():
+    win = Toplevel()
+    
+    moduleName  = StringVar()
+    className   = StringVar()
+    
+    moduleItem  = ParamItem(win)
+    moduleItem.labelText    = 'Module Name'
+    moduleItem.pack()
+    moduleItem.entryVar     = moduleName
+    
+    classItem   = ParamItem(win)
+    classItem.labelText     = 'Class Name'
+    classItem.pack()
+    classItem.entryVar      = className
+    
+    Button(win, text='OK', command=win.quit).pack()
+
+    win.protocol('WM_DELETE_WINDOW', win.quit)
+    win.focus_set()
+    win.grab_set()
+    win.mainloop()
+    win.destroy()
+    return moduleName.get(), className.get()
+
+
+
 class WindowNode(ModelNode):
     windowName = ''
     def __init__(self, *args, **kwargs):

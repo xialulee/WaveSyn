@@ -13,14 +13,14 @@ from ttk import *
 import guicomponents
 from guicomponents  import Group, ParamItem
 from application    import Application, ScriptCode, Scripting
-from basewindow     import FigureWindow
+from basewindow     import FigureWindow, askClassName
 from common         import setMultiAttr, autoSubs
 
 import threading
 import json
 
-from mathtools  import AlgorithmDict
-from algorithms import isaa
+from mathtools  import AlgorithmDict, AlgorithmNode
+#from algorithms import isaa
 
 
 
@@ -133,7 +133,7 @@ class ParamsGroup(Group):
         frm = Frame(self)
         frm.pack()
         paramInfo   = {}
-        params = algorithm.meta.parameters
+        params = algorithm['parameters']
         for idx, name in enumerate(params):
             param = params[name]
             paramitem = ParamItem(frm)
@@ -151,7 +151,7 @@ class ParamsGroup(Group):
             paramInfo[param.name] = {'gui':paramitem, 'meta':param}
         self.__algo = algorithm
         #self.__frameDict[algorithm.meta.name]   = frm
-        self.__frameDict[algorithm.meta.name]   = dict(frame=frm, paramInfo=paramInfo)
+        self.__frameDict[algorithm['name']]   = dict(frame=frm, paramInfo=paramInfo)
         self.__params   = paramInfo
 
     def getParams(self):
@@ -174,11 +174,10 @@ class AlgoSelGroup(Group):
         #self.__algoList = Combobox(self, value=['ISAA-DIAC'], takefocus=1, stat='readonly', width=12)
         self.__algoList = Combobox(self, value=[], takefocus=1, stat='readonly', width=12)
         self.__algoList['values']   = []
-        #self.__algoList.current(0)
         self.__algoList.pack()
         self.__algoList.bind('<<ComboboxSelected>>', self.onAlgorithmChange)
         
-        #self.__algoList
+        Button(self, text='Load Algorithm', command=self.onLoadAlgorithm).pack()
         
         self.name = 'Algorithms'          
         
@@ -188,11 +187,16 @@ class AlgoSelGroup(Group):
         
     def onAlgorithmChange(self, event):
         self._topwin.grpParams.changeAlgorithm(event.widget.get())
+        
+    def onLoadAlgorithm(self):
+        printCode   = True
+        moduleName, className   = askClassName()
+        self._topwin.loadAlgorithm(moduleName=moduleName, className=className)
 
 
 class SingleWindow(FigureWindow):      
     windowName  = 'WaveSyn-SingleSyn'        
-    def __init__(self, *args, **kwargs):        
+    def __init__(self, *args, **kwargs):     
         FigureWindow.__init__(self, *args, **kwargs)
         self.currentData    = None
         
@@ -211,7 +215,6 @@ class SingleWindow(FigureWindow):
         
         grpParams   = ParamsGroup(frmAlgo, topwin=self)
         grpParams.pack(side=LEFT, fill=Y)
-        #grpParams.algo  = isaa.diac
         
         grpSolve    = OptimizeGroup(frmAlgo, topwin=self)
         grpSolve.pack(side=LEFT, fill=Y)
@@ -242,8 +245,8 @@ class SingleWindow(FigureWindow):
         algorithms  = config['SingleWaveformAlgorithms']
 
         for algo in algorithms:
-            algoNode    = self.loadAlgorithm(moduleName=algo['ModuleName'], className=algo['ClassName'])
-            grpParams.appendAlgorithm(algoNode)
+            self.loadAlgorithm(moduleName=algo['ModuleName'], className=algo['ClassName'])
+#            grpParams.appendAlgorithm(algoNode)
         self.grpAlgoSel.algoList.current(len(algorithms)-1)
         
         figEnvelope = figureBook[0]
@@ -269,19 +272,22 @@ class SingleWindow(FigureWindow):
         figPSD      = figureBook[3]
         figPSD.plotFunction     = lambda samples, *args, **kwargs:\
             figPSD.plot(abs(fft.fft(samples)), *args, **kwargs)
-            
+    
+    @Scripting.printable        
     def loadAlgorithm(self, moduleName, className):
-        mod     = __import__(autoSubs('algorithms.$moduleName'), globals(), locals(), [className], -1)
-        node    = getattr(mod, className)()
+#        mod     = __import__(autoSubs('algorithms.$moduleName'), globals(), locals(), [className], -1)
+#        node    = AlgorithmNode(getattr(mod, className)())
+        node    = AlgorithmNode(moduleName, className)
         self.algorithms.add(node)
         values  = self.grpAlgoSel.algoList['values']
         if values == '':
             values  = []
         if isinstance(values, tuple):
             values  = list(values)
-        #print(repr(values))
-        values.append(node.meta.name)
+        values.append(node['name'])
         self.grpAlgoSel.algoList['values']  = values
+        self.grpAlgoSel.algoList.current(len(values)-1)
+        self.grpParams.appendAlgorithm(node)
         return node
         
     @property
