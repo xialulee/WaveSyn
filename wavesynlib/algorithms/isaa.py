@@ -35,8 +35,7 @@ class CProj_A_DIAC(Operator):
 class DIAC(Algorithm):
     __name__    = 'ISAA-DIAC'
     def __init__(self):
-        self.exitcond   = {}
-        Algorithm.__init__(self)
+        super(DIAC, self).__init__()
 
     def initpoint(self, N):
         return exp(1j * 2 * pi * random.rand(N))
@@ -51,12 +50,9 @@ class DIAC(Algorithm):
         if not isinstance(Qr, ndarray):
             Qr      = array(Qr)        
         Proj_A_DIAC = CProj_A_DIAC(Qr)
-        Tisaa   = (Proj_M1*Proj_A_DIAC) # see eq.26
-        Tisaa.exitcond  = self.exitcond
-        return (Tisaa**K)(s_init)
-
-diac    = DIAC()
-
+        Tisaa   = (Proj_M1 * Proj_A_DIAC) ** K
+        Tisaa.progressChecker   = self.progressChecker
+        return Tisaa(s_init)
 
 
 

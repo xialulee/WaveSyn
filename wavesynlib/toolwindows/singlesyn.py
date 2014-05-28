@@ -28,7 +28,8 @@ class OptimizeGroup(Group):
     def __init__(self, *args, **kwargs):
         self._app = Application.instance    
         self.__topwin = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs)
+
+        super(OptimizeGroup, self).__init__(*args, **kwargs)
         self.__num = ParamItem(self)
         self.__num.label.config(text='num')
         self.__num.entryText = '1'
@@ -47,8 +48,7 @@ class OptimizeGroup(Group):
         self.__genbtn.pack(side=LEFT)
         Button(self, text='Stop', command=self.onStopBtnClick).pack(side=RIGHT)
         self.name = 'Generate'
-        #self.algo = isaa.diac
-        #self.algo   = self.__topwin.currentAlgorithm
+
         self.getparams = None
         self.__stopflag = False
 
@@ -58,11 +58,9 @@ class OptimizeGroup(Group):
         wavnum = self.__num.getInt()
         progress = [0]
         waveform = [0]
-        def exitcheck(k, K, y, y_last):                
-            progress[0] = int(k / K * 100)
-        self.algo   = self.__topwin.currentAlgorithm            
-        self.algo.exitcond['func'] = exitcheck
-        self.algo.exitcond['interval'] = 1
+
+        algorithm   = self.__topwin.currentAlgorithm          
+
         params = self.__topwin.grpParams.getParams()
 
         class AlgoThread(threading.Thread):
@@ -72,32 +70,35 @@ class OptimizeGroup(Group):
                 threading.Thread.__init__(self)
             def run(self):
                 printCode   = True
-                #waveform[0] = self.algo.run(**params)
                 self.algo.run(**params)
         
-#        def waveformSynthesis(**params):
-#            printCode   = True
-#            self.__topwin.currentData    = self.algo.run(**params)
-
         self.__finishedwavbar['maximum'] = wavnum
-        for cnt in range(wavnum):
-            algothread = AlgoThread(self.algo, params, waveform, progress)
-            algothread.start()
 
-            while algothread.isAlive():
-                self.__progress.set(progress[0])
-                tbicon.progress = int((cnt*100+progress[0])/(wavnum*100)*100)
-                self.__topwin.update()
+        def progressChecker(k, K, y, *args, **kwargs):                
+            progress[0] = int(k / K * 100)                  
+            
+        algorithm.progressChecker.append(progressChecker)
+        algorithm.progressChecker.interval  = 100
+        try:
+            for cnt in range(wavnum):
+                algothread = AlgoThread(algorithm, params, waveform, progress)
+                algothread.start()
+    
+                while algothread.isAlive():
+                    self.__progress.set(progress[0])
+                    tbicon.progress = int((cnt*100+progress[0])/(wavnum*100)*100)
+                    self.__topwin.update()
+                    if self.__stopflag:
+                        break
+    ## time.sleep(0.1)
+                self.__progress.set(0)
                 if self.__stopflag:
                     break
-## time.sleep(0.1)
-            self.__progress.set(0)
-            if self.__stopflag:
-                break
-            #self.__topwin.figureBook.plot(waveform[0])
-            printCode   = True
-            self.__topwin.plotCurrentData()
-            self.__finishedwav.set(cnt+1)
+                printCode   = True
+                self.__topwin.plotCurrentData()
+                self.__finishedwav.set(cnt+1)
+        finally:
+            algorithm.progressChecker.remove(progressChecker)
         self.__finishedwav.set(0)
         tbicon.state = guicomponents.TBPF_NOPROGRESS
 
@@ -112,7 +113,8 @@ class ParamsGroup(Group):
         self.__topwin   = kwargs.pop('topwin')
         self.balloon    = self._app.balloon
 
-        Group.__init__(self, *args, **kwargs)
+        #Group.__init__(self, *args, **kwargs)
+        super(ParamsGroup, self).__init__(*args, **kwargs)
         self.__algo = None
         self.__MAXROW = 3
         self.__params = {}  
@@ -169,7 +171,8 @@ class ParamsGroup(Group):
 class AlgoSelGroup(Group):
     def __init__(self, *args, **kwargs):
         self._topwin  = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs)
+        #Group.__init__(self, *args, **kwargs)
+        super(AlgoSelGroup, self).__init__(*args, **kwargs)
         
         #self.__algoList = Combobox(self, value=['ISAA-DIAC'], takefocus=1, stat='readonly', width=12)
         self.__algoList = Combobox(self, value=[], takefocus=1, stat='readonly', width=12)
@@ -186,7 +189,7 @@ class AlgoSelGroup(Group):
         return self.__algoList
         
     def onAlgorithmChange(self, event):
-        self._topwin.grpParams.changeAlgorithm(event.widget.get())
+        self._topwin.changeAlgorithm(event.widget.get())
         
     def onLoadAlgorithm(self):
         printCode   = True
@@ -275,8 +278,6 @@ class SingleWindow(FigureWindow):
     
     @Scripting.printable        
     def loadAlgorithm(self, moduleName, className):
-#        mod     = __import__(autoSubs('algorithms.$moduleName'), globals(), locals(), [className], -1)
-#        node    = AlgorithmNode(getattr(mod, className)())
         node    = AlgorithmNode(moduleName, className)
         self.algorithms.add(node)
         values  = self.grpAlgoSel.algoList['values']
@@ -288,7 +289,10 @@ class SingleWindow(FigureWindow):
         self.grpAlgoSel.algoList['values']  = values
         self.grpAlgoSel.algoList.current(len(values)-1)
         self.grpParams.appendAlgorithm(node)
-        return node
+        #return node
+        
+    def changeAlgorithm(self, algorithmName):
+        self.grpParams.changeAlgorithm(algorithmName)        
         
     @property
     def currentAlgorithm(self):

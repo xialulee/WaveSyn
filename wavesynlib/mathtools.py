@@ -8,7 +8,7 @@ from basewindow     import WindowNode
 
 
 class Operator(object):
-    def __init__(self, func):
+    def __init__(self, func=None):
         '''init'''
         self.__f    = func
         self.exitcond   = {}
@@ -16,6 +16,12 @@ class Operator(object):
     @property
     def func(self):
         return self.__f
+        
+    @func.setter
+    def func(self, f):
+        if not callable(f):
+            raise TypeError, 'f must be a callable object.'
+        self.__f    = f
         
     def __call__(self, *args):
         '''Evaluate'''
@@ -46,18 +52,53 @@ the code can be simplified a lot.
                     pass # throw an exception
             
         f   = self.__f
+        newOp   = Operator()
         def fn(x):
             y_last  = f(x)
             for k in range(1, n):
                 y   = f(y_last)
-                if self.exitcond and k % self.exitcond['interval']==0 \
-                   and self.exitcond['func'](k, n, y, y_last):
+#                if self.exitcond and k % self.exitcond['interval']==0 \
+#                   and self.exitcond['func'](k, n, y, y_last):
+                if newOp.progressChecker(k, n, y, y_last):
                     break
                 y_last  = y
             return y
-        return Operator(fn)
+        newOp.func  = fn
+        return newOp
                 
 
+
+class ProgressChecker(object):
+    def __init__(self, interval=1):
+        self.__checkerChain = []
+        
+    def append(self, checker):
+        if not callable(checker):
+            raise TypeError, 'Checker must be callable.'
+        self.__checkerChain.append(checker)
+        
+    def remove(self, checker):
+        self.__checkerChain.remove(checker)
+        
+    def __call__(self, k, K, x, *args, **kwargs):
+        '''k:   the number of the current iteration;
+K:  the maximum iteration number;
+x:  the current optimization variable;
+args:   the extra position paramters;
+kwargs  the extra key paramters.        
+'''
+        exitIter    = False
+        if k == K:
+            exitIter    = True
+            return exitIter
+        if k % self.interval != 0:
+            exitIter    = False
+            return exitIter
+        for checker in self.__checkerChain:
+            ret = checker(k, K, x, *args, **kwargs)
+            if ret:
+                exitIter    = ret
+        return exitIter
 
 
 class Parameter(object):
@@ -73,10 +114,14 @@ class Algorithm(object):
     __name__        = None
     
     def __init__(self):
-        pass
+        self.__progressChecker    = ProgressChecker()
     
     def __call__(self, *args, **kwargs):
         pass
+    
+    @property
+    def progressChecker(self):
+        return self.__progressChecker
 
 
 class AlgorithmNode(ModelNode):
@@ -115,8 +160,8 @@ class AlgorithmNode(ModelNode):
         return self.__meta
         
     @property
-    def exitcond(self):
-        return self.__algorithm.exitcond
+    def progressChecker(self):
+        return self.__algorithm.progressChecker
 
     @property        
     def topWindow(self):
