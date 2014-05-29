@@ -11,6 +11,8 @@ from tkColorChooser import askcolor
 from Tkinter import *
 from ttk import *
 from Tkinter import Frame, PanedWindow
+from tkFileDialog import asksaveasfilename
+from PIL import ImageTk
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -20,7 +22,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 import matplotlib.pyplot as pyplot
 
 
-from application import Application, Scripting
+from application import Application, Scripting, uiImagePath
 from objectmodel import ModelNode, NodeList, NodeDict
 from common import autoSubs, evalFmt, setMultiAttr
 from guicomponents import Group, ParamItem, ScrolledList
@@ -106,6 +108,22 @@ class WindowDict(NodeDict):
     def add(self, node):
         self[id(node)] = node
         return id(node)
+        
+        
+        
+class WindowComponent(object):
+    @property        
+    def topWindow(self):
+        if hasattr(self, '_topWindow'):
+            return self._topWindow
+        else:
+            node    = self
+            while True:
+                node    = node.parentNode
+                if isinstance(node, WindowNode):
+                    self._topWindow    = node
+                    return node      
+        
 
   
 class DataFigure(ModelNode):
@@ -229,20 +247,20 @@ class DataFigure(ModelNode):
         lineObject.remove()
         del self.lineObjects[idx]
 
-    def remove_unsel_lines(self):
-        sel = self.__slist.list.curselection()
-        if len(sel) > 0:
-            sel = int(sel[0])
-            linemeta = self.__meta_of_lines[sel]
-            k = 0
-            for idx in range(len(self.__meta_of_lines)):
-                if self.__meta_of_lines[k] != linemeta:
-                    self.__meta_of_lines[k].lineobj.remove()
-                    self.__slist.list.delete(0)
-                    del self.__meta_of_lines[0]
-                    self.update()
-                else:
-                    k += 1
+#    def remove_unsel_lines(self):
+#        sel = self.__slist.list.curselection()
+#        if len(sel) > 0:
+#            sel = int(sel[0])
+#            linemeta = self.__meta_of_lines[sel]
+#            k = 0
+#            for idx in range(len(self.__meta_of_lines)):
+#                if self.__meta_of_lines[k] != linemeta:
+#                    self.__meta_of_lines[k].lineobj.remove()
+#                    self.__slist.list.delete(0)
+#                    del self.__meta_of_lines[0]
+#                    self.update()
+#                else:
+#                    k += 1
 
         
 class FigureList(NodeList):
@@ -298,8 +316,13 @@ The rest parameters are passed to PanedWindow.__init__.
         self.__list.listClick = self.onListClick
         panedWindow.add(self.__list, stretch='never')
         
-        self.panedWindow    = panedWindow
-        self.lockAttribute('panedWindow')
+        #self.panedWindow    = panedWindow
+        #self.lockAttribute('panedWindow')
+        with self.attributeLock:
+            setMultiAttr(self,
+                panedWindow = panedWindow,
+                dataPool    = []
+            )
         
     def pack(self, *args, **kwargs):
         self.panedWindow.pack(*args, **kwargs)        
@@ -324,7 +347,7 @@ The rest parameters are passed to PanedWindow.__init__.
             curveName = kwargs.pop('curveName')
         except KeyError:
             curveName = 'curve'
-
+            
         for fig in self:
             fig.plotFunction(*args, **kwargs)
         self.__list.insert(END, curveName)
@@ -342,6 +365,7 @@ The rest parameters are passed to PanedWindow.__init__.
         for fig in self:
             fig.clear()
         self.__list.clear()
+        del self.dataPool[:]
         
         
     def onTabChange(self, event):
@@ -387,6 +411,7 @@ The rest parameters are passed to PanedWindow.__init__.
             del fig.lineObjects[idx]
             fig.update()
         self.__list.delete(idx)
+        del self.dataPool[idx]
 
 
 
@@ -538,17 +563,23 @@ class AxisGroup(Group):
         paramfrm =Frame(self)
         paramfrm.pack()
         names = ['xmin', 'xmax', 'ymin', 'ymax', 'major xtick', 'major ytick', 'minor xtick', 'minor ytick']
+        images= ['ViewTab_XMin.png', 'ViewTab_XMax.png', 'ViewTab_YMin.png', 'ViewTab_YMax.png', 'ViewTab_MajorXTick.png', 'ViewTab_MajorYTick.png', 'ViewTab_MinorXTick.png', 'ViewTab_MinorYTick.png']
         for c in range(4):
             for r in range(2):
                 temp = ParamItem(paramfrm)
+                image   = ImageTk.PhotoImage(file=uiImagePath(images[c*2+r]))
                 setMultiAttr(temp,
                     checkFunc   = app.checkFloat,
-                    labelText   = names[c*2+r],
+                    #labelText   = names[c*2+r],
+                    labelImage  = image,
                     labelWidth  = 5 if c*2+r < 4 else 10,
                     entryWidth  = 5,
                     entryVar    = self.__params[c*2+r]
                 )
+                temp.entry.bind('<Return>', self.onConfirmClick)
                 temp.grid(row=r, column=c)
+                app.balloon.bind_widget(temp, balloonmsg=names[c*2+r])
+              
 
         btnfrm = Frame(self)
         btnfrm.pack()
@@ -582,7 +613,7 @@ class AxisGroup(Group):
 
 
 
-    def onConfirmClick(self):
+    def onConfirmClick(self, event=None):
         def toFloat(x):
             try:
                 return float(x)
@@ -630,6 +661,36 @@ class ClearGroup(Group):
         printCode   = True
         #self.__topwin.figureBook.remove_unsel_lines()            
 
+
+class FigureExportGroup(Group):
+    def __init__(self, *args, **kwargs):
+        self._app = Application.instance
+        self.__topwin = kwargs.pop('topwin')
+        Group.__init__(self, *args, **kwargs)
+        self.__uiImages = []
+        imageFigureExportBtn = ImageTk.PhotoImage(
+            file=uiImagePath('Pattern_ExportFigure_Button.png')
+        )
+        self.__uiImages.append(imageFigureExportBtn)
+        frm = Frame(self); frm.pack(side=LEFT)
+        Button(frm, image=imageFigureExportBtn, command=self.onExportMatlabScript).pack(side=TOP)
+        Button(frm, text='Script', command=self.onExportMatlabScript, width=6).pack(side=TOP)
+        
+        self.name = 'Figure'
+        
+
+    def onExportMatlabScript(self):
+        printCode   = True
+        filename = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
+        if not filename:
+            return
+        self.__topwin.figureBook.exportMatlabScript(filename)
+        self._app.printTip(
+            autoSubs(
+                '''A Matlab script file has been saved as $filename.
+By running this script, Matlab will literally "re-plot" the curves shown here.'''
+            )
+        ) 
                 
                 
 class FigureWindow(WindowNode):
@@ -643,10 +704,24 @@ class FigureWindow(WindowNode):
         figureBook  = FigureBook(self._toplevel, topwin=self)
         figureBook.pack(expand=YES, fill=BOTH)                
         self.figureBook = figureBook
+        
+        
+    @property
+    def currentData(self):
+        if self.figureBook.dataPool:
+            return self.figureBook.dataPool[-1]
+            
+    @currentData.setter
+    def currentData(self, data):
+        if data is not None:
+            self.figureBook.dataPool.append(data)
+            
+    @property
+    def dataPool(self):
+        return self.figureBook.dataPool
          
   
     def makeViewTab(self):
-            # View Tab
         toolTabs    = self.toolTabs
         frmView = Frame(toolTabs)
         grpGrid = GridGroup(frmView, bd=2, relief=GROOVE, topwin=self)
@@ -664,9 +739,29 @@ class FigureWindow(WindowNode):
             setMultiAttr(self,
                 grpGrid  = grpGrid,
                 grpAxis  = grpAxis,
-                grpClear = grpClear  
+                grpClear = grpClear,
+                viewFrame  = frmView
             )
             
         toolTabs.add(frmView, text='View')
-            # End View Tab        
-####################################################   
+            
+            
+    def makeExportTab(self):
+        toolTabs    = self.toolTabs
+        frmExport   = Frame(toolTabs)
+        grpFigureExport   = FigureExportGroup(frmExport, bd=2, relief=GROOVE, topwin=self)
+        grpFigureExport.pack(side=LEFT, fill=Y)
+        
+        with self.attributeLock:
+            setMultiAttr(self,
+                 grpFigureExport  = grpFigureExport,
+                 exportFrame      = frmExport
+            )
+            
+        toolTabs.add(frmExport, text='Export')
+            
+
+    @Scripting.printable    
+    def plotCurrentData(self):        
+        self.figureBook.plot(self.currentData)                    
+ 

@@ -86,6 +86,7 @@ class ParamItem(Frame, object):
         self.__entry    = Entry(self)
         self.__entry.pack(fill=X, expand=YES)
         self.__checkFunc    = None
+        self.__image        = None
 
     @property
     def label(self):
@@ -102,6 +103,15 @@ class ParamItem(Frame, object):
     @labelText.setter
     def labelText(self, text):
         self.__label['text']    = text
+        
+    @property
+    def labelImage(self):
+        return self.__label['image']
+        
+    @labelImage.setter
+    def labelImage(self, image):
+        self.__image    = image
+        self.__label['image']   = image
 
     @property
     def entryText(self):

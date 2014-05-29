@@ -123,11 +123,6 @@ class ParamsGroup(Group):
           
         self.name = 'Parameters'
 
-#    @property
-#    def algo(self):
-#        return self.__algo
-
-#    @algo.setter
     def appendAlgorithm(self, algorithm):
         #To do: when algo is reset, the frm should be removed
         for algoName in self.__frameDict:
@@ -147,7 +142,7 @@ class ParamsGroup(Group):
             if param.type == 'int':
                 paramitem.checkFunc = self._app.checkInt
             elif param.type == 'float':
-                paramitem.checkFunc = checkFloat
+                paramitem.checkFunc = self._app.checkFloat
             paramitem.grid(row=idx%self.__MAXROW, column=idx//self.__MAXROW)
             #self.__params[param.name] = {'gui':paramitem, 'meta':param}
             paramInfo[param.name] = {'gui':paramitem, 'meta':param}
@@ -233,6 +228,7 @@ class SingleWindow(FigureWindow):
 
         
         self.makeViewTab()
+        self.makeExportTab()
         # End toolbar
         figureBook.makeFigures(
             figureMeta  = [
@@ -249,18 +245,19 @@ class SingleWindow(FigureWindow):
 
         for algo in algorithms:
             self.loadAlgorithm(moduleName=algo['ModuleName'], className=algo['ClassName'])
-#            grpParams.appendAlgorithm(algoNode)
+
         self.grpAlgoSel.algoList.current(len(algorithms)-1)
         
         figEnvelope = figureBook[0]
-        figEnvelope.plotFunction  = lambda samples, *args, **kwargs:\
-            figEnvelope.plot(abs(samples), *args, **kwargs)
+        figEnvelope.plotFunction  = lambda currentData, *args, **kwargs:\
+            figEnvelope.plot(abs(currentData), *args, **kwargs)
         
         figPhase    = figureBook[1]
-        figPhase.plotFunction   = lambda samples, *args, **kwargs:\
-            figPhase.plot(angle(samples), *args, **kwargs)
+        figPhase.plotFunction   = lambda currentData, *args, **kwargs:\
+            figPhase.plot(angle(currentData), *args, **kwargs)
             
-        def plot_acdb(s, *args, **kwargs):
+        def plot_acdb(currentData, *args, **kwargs):
+            s   = currentData
             if not isinstance(s, ndarray):
                 s   = array(s)
             N       = len(s)
@@ -273,8 +270,8 @@ class SingleWindow(FigureWindow):
         figAuto.plotFunction    = plot_acdb
             
         figPSD      = figureBook[3]
-        figPSD.plotFunction     = lambda samples, *args, **kwargs:\
-            figPSD.plot(abs(fft.fft(samples)), *args, **kwargs)
+        figPSD.plotFunction     = lambda currentData, *args, **kwargs:\
+            figPSD.plot(abs(fft.fft(currentData)), *args, **kwargs)
     
     @Scripting.printable        
     def loadAlgorithm(self, moduleName, className):
@@ -289,7 +286,7 @@ class SingleWindow(FigureWindow):
         self.grpAlgoSel.algoList['values']  = values
         self.grpAlgoSel.algoList.current(len(values)-1)
         self.grpParams.appendAlgorithm(node)
-        #return node
+
         
     def changeAlgorithm(self, algorithmName):
         self.grpParams.changeAlgorithm(algorithmName)        
@@ -298,6 +295,3 @@ class SingleWindow(FigureWindow):
     def currentAlgorithm(self):
         return self.algorithms[self.grpAlgoSel.algoList.get()]
             
-    @Scripting.printable    
-    def plotCurrentData(self):        
-        self.figureBook.plot(self.currentData)

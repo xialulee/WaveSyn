@@ -4,14 +4,14 @@ from collections import OrderedDict
 from common         import evalFmt, autoSubs
 from objectmodel    import ModelNode, NodeDict
 from application    import Scripting
-from basewindow     import WindowNode
+from basewindow     import WindowComponent
 
 
 class Operator(object):
     def __init__(self, func=None):
         '''init'''
         self.__f    = func
-        self.exitcond   = {}
+        self.iterThreshold  = 0
 
     @property
     def func(self):
@@ -38,7 +38,7 @@ the code can be simplified a lot.
 '''
         return self.comp(g)
 
-    def __pow__(self, n, dist=None, thres=0):
+    def __pow__(self, n, dist=None):
         '''The power of the operator.
 (f.pow(3))(x) == f(f(f(x))).        
 '''
@@ -57,9 +57,9 @@ the code can be simplified a lot.
             y_last  = f(x)
             for k in range(1, n):
                 y   = f(y_last)
-#                if self.exitcond and k % self.exitcond['interval']==0 \
-#                   and self.exitcond['func'](k, n, y, y_last):
                 if newOp.progressChecker(k, n, y, y_last):
+                    break
+                if newOp.iterThreshold > 0 and dist(y, y_last) <= newOp.iterThreshold:
                     break
                 y_last  = y
             return y
@@ -124,7 +124,7 @@ class Algorithm(object):
         return self.__progressChecker
 
 
-class AlgorithmNode(ModelNode):
+class AlgorithmNode(ModelNode, WindowComponent):
     class Meta(object):
         def __init__(self):
             self.name   = ''
@@ -163,17 +163,6 @@ class AlgorithmNode(ModelNode):
     def progressChecker(self):
         return self.__algorithm.progressChecker
 
-    @property        
-    def topWindow(self):
-        if self.__topWindow:
-            return self.__topWindow
-        else:
-            node    = self
-            while True:
-                node    = node.parentNode
-                if isinstance(node, WindowNode):
-                    self.__topWindow    = node
-                    return node
                     
     @Scripting.printable
     def run(self, *args, **kwargs):
@@ -190,7 +179,7 @@ class AlgorithmNode(ModelNode):
 
 
 
-class AlgorithmDict(NodeDict):
+class AlgorithmDict(NodeDict, WindowComponent):
     def __init__(self, nodeName=''):
         NodeDict.__init__(self, nodeName=nodeName)
                 
