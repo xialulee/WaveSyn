@@ -59,6 +59,10 @@ from guicomponents import StreamChain, TaskbarIcon, ScrolledText
 from common import setMultiAttr, autoSubs, evalFmt, Singleton
 
 
+##########################Experimenting with multiprocessing###############################
+#import multiprocessing as mp
+###########################################################################################
+
 
 def checkValue(d, i, P, s, S, v, V, W, func):
     try:

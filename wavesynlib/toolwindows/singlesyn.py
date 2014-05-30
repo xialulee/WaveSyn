@@ -7,6 +7,7 @@ Created on Fri May 23 10:45:33 2014
 from __future__ import print_function, division
 
 from numpy import *
+import time
 from Tkinter import *
 from ttk import *
 
@@ -20,7 +21,7 @@ import threading
 import json
 
 from mathtools  import AlgorithmDict, AlgorithmNode
-#from algorithms import isaa
+
 
 
 
@@ -90,7 +91,7 @@ class OptimizeGroup(Group):
                     self.__topwin.update()
                     if self.__stopflag:
                         break
-    ## time.sleep(0.1)
+                    time.sleep(0.05)
                 self.__progress.set(0)
                 if self.__stopflag:
                     break
@@ -166,10 +167,8 @@ class ParamsGroup(Group):
 class AlgoSelGroup(Group):
     def __init__(self, *args, **kwargs):
         self._topwin  = kwargs.pop('topwin')
-        #Group.__init__(self, *args, **kwargs)
         super(AlgoSelGroup, self).__init__(*args, **kwargs)
         
-        #self.__algoList = Combobox(self, value=['ISAA-DIAC'], takefocus=1, stat='readonly', width=12)
         self.__algoList = Combobox(self, value=[], takefocus=1, stat='readonly', width=12)
         self.__algoList['values']   = []
         self.__algoList.pack()

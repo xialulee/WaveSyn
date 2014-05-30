@@ -6,6 +6,11 @@ from objectmodel    import ModelNode, NodeDict
 from application    import Scripting
 from basewindow     import WindowComponent
 
+##########################Experimenting with multiprocessing###############################
+import multiprocessing as mp
+import Queue
+###########################################################################################
+
 
 class Operator(object):
     def __init__(self, func=None):
@@ -151,6 +156,8 @@ class AlgorithmNode(ModelNode, WindowComponent):
             paramsnum   = algorithm.__call__.func_code.co_argcount
             for param in algorithm.__call__.func_code.co_varnames[1:paramsnum]:  
                 self.__meta.parameters[param]   = Parameter(param, type='expression')
+                
+        self.processQueue   = Queue.Queue()                
 
     def __getitem__(self, key):
         return getattr(self.__meta, key)
@@ -168,6 +175,19 @@ class AlgorithmNode(ModelNode, WindowComponent):
     def run(self, *args, **kwargs):
         result  = self.__algorithm(*args, **kwargs)
         self.topWindow.currentData  = result    
+        
+        
+    ##############################Experimenting with multiprocessing###################################
+    def parallelFunc(self, args, kwargs):
+        result  = type(self.__algorithm)()(*args, **kwargs)
+        self.processQueue.put(result)        
+    #@Scripting.printable
+    def parallelRun(self, allArguments):        
+        for args, kwargs in allArguments:
+            mp.Process(target=self.parallelFunc, args=(args, kwargs)).start()
+        for k in range(len(allArguments)):
+            yield self.processQueue.get()
+    ###################################################################################################
         
         
     @property
