@@ -15,7 +15,7 @@ import guicomponents
 from guicomponents  import Group, ParamItem
 from application    import Application, ScriptCode, Scripting
 from basewindow     import FigureWindow, askClassName
-from common         import setMultiAttr, autoSubs
+from common         import setMultiAttr, autoSubs, evalFmt
 
 import threading
 import json
@@ -52,8 +52,15 @@ class OptimizeGroup(Group):
 
         self.getparams = None
         self.__stopflag = False
-
+        
     def onSolveClick(self):
+        t1  = time.clock()
+        self.serialRun()
+#        self.parallelRun()
+        deltaT  = time.clock() - t1
+        print(autoSubs('Total time consumption: $deltaT (s)'))
+
+    def serialRun(self):
         tbicon = self._app.tbicon
         self.__stopflag = False
         wavnum = self.__num.getInt()
@@ -102,6 +109,27 @@ class OptimizeGroup(Group):
             algorithm.progressChecker.remove(progressChecker)
         self.__finishedwav.set(0)
         tbicon.state = guicomponents.TBPF_NOPROGRESS
+        
+    def parallelRun(self):
+        class AlgoThread(threading.Thread):
+            def __init__(self, algorithm, parameters, num):
+                self.algorithm  = algorithm
+                self.parameters = parameters
+                self.num        = num
+                super(AlgoThread, self).__init__()
+            def run(self):
+                printCode   = True
+                #parameters  = Scripting.paramsToStr(**self.parameters)
+                paramStr    = evalFmt('[([], dict({Scripting.paramsToStr(**self.parameters)}))]*{self.num}')
+                self.algorithm.parallelRunAndPlot(ScriptCode(paramStr))
+        algorithm   = self.__topwin.currentAlgorithm
+        parameters  = self.__topwin.grpParams.getParams()
+        theThread   = AlgoThread(algorithm, parameters, self.__num.getInt())
+        theThread.start()
+        while theThread.isAlive():
+            self.__topwin.update()            
+            time.sleep(0.05)
+            
 
     def onStopBtnClick(self):
         self.__stopflag = True

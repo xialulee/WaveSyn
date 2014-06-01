@@ -8,7 +8,6 @@ from basewindow     import WindowComponent
 
 ##########################Experimenting with multiprocessing###############################
 import multiprocessing as mp
-import Queue
 ###########################################################################################
 
 
@@ -76,6 +75,7 @@ the code can be simplified a lot.
 class ProgressChecker(object):
     def __init__(self, interval=1):
         self.__checkerChain = []
+        self.interval=interval
         
     def append(self, checker):
         if not callable(checker):
@@ -156,8 +156,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
             paramsnum   = algorithm.__call__.func_code.co_argcount
             for param in algorithm.__call__.func_code.co_varnames[1:paramsnum]:  
                 self.__meta.parameters[param]   = Parameter(param, type='expression')
-                
-        self.processQueue   = Queue.Queue()                
+                           
 
     def __getitem__(self, key):
         return getattr(self.__meta, key)
@@ -176,20 +175,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
         result  = self.__algorithm(*args, **kwargs)
         self.topWindow.currentData  = result    
         
-        
-    ##############################Experimenting with multiprocessing###################################
-    def parallelFunc(self, args, kwargs):
-        result  = type(self.__algorithm)()(*args, **kwargs)
-        self.processQueue.put(result)        
-    #@Scripting.printable
-    def parallelRun(self, allArguments):        
-        for args, kwargs in allArguments:
-            mp.Process(target=self.parallelFunc, args=(args, kwargs)).start()
-        for k in range(len(allArguments)):
-            yield self.processQueue.get()
-    ###################################################################################################
-        
-        
+                        
     @property
     def nodePath(self):
         if isinstance(self.parentNode, AlgorithmDict):
@@ -197,6 +183,24 @@ class AlgorithmNode(ModelNode, WindowComponent):
         else:
             return ModelNode.nodePath        
 
+##############################Experimenting with multiprocessing###################################
+    @Scripting.printable
+    def parallelRunAndPlot(self, allArguments):     
+        #from algorithms.isaa import DIAC
+        queue   = mp.Queue()
+        for args, kwargs in allArguments:
+            mp.Process(target=parallelFunc, args=(type(self.__algorithm), queue, args, kwargs)).start()
+        for k in range(len(allArguments)):
+            self.topWindow.currentData  = queue.get()
+            self.topWindow.plotCurrentData()
+        #mp.Process(target=parallelFunc, args=(None, queue, None, None)).start()
+        #return queue.get()
+    
+    
+def parallelFunc(algorithmClass, queue, args, kwargs):
+    result  = algorithmClass()(*args, **kwargs)
+    queue.put(result)        
+###################################################################################################
 
 
 class AlgorithmDict(NodeDict, WindowComponent):
