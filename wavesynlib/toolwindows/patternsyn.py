@@ -19,7 +19,7 @@ from basewindow import FigureWindow
 from guicomponents import Group, ParamItem, ScrolledList
 from common import setMultiAttr, autoSubs, evalFmt
 
-import pattern2corrmtx
+from algorithms import pattern2corrmtx
 
 
 
