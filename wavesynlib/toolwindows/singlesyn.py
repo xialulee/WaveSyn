@@ -31,23 +31,40 @@ class OptimizeGroup(Group):
         self.__topwin = kwargs.pop('topwin')
 
         super(OptimizeGroup, self).__init__(*args, **kwargs)
-        self.__num = ParamItem(self)
+        paramFrm    = Frame(self)
+        paramFrm.pack(side=LEFT, expand=YES, fill=Y)
+        self.__num = ParamItem(paramFrm)
         self.__num.label.config(text='num')
         self.__num.entryText = '1'
+        self.__num.labelWidth   = 5
+        self.__num.entryWidth   = 8
         self.__num.entry.bind('<Return>', lambda event: self.onSolveClick())
         self.__num.checkFunc = self._app.checkInt
-        self.__num.pack()
+        self.__num.pack(side=TOP)
+
+        self.__pci  = ParamItem(paramFrm)
+        setMultiAttr(self.__pci,
+            labelText   = 'PCI',
+            entryText   = '100',
+            labelWidth  = 5,
+            entryWidth  = 8,
+            checkFunc   = self._app.checkInt
+        )
+        self.__pci.pack(side=TOP)
+        
+        
+        
         self.__progress = IntVar()
         self.__finishedwav = IntVar()
         progfrm = Frame(self)
-        progfrm.pack()
+        progfrm.pack(side=LEFT, expand=YES, fill=Y)
         self.__progbar = Progressbar(progfrm, orient='horizontal', variable=self.__progress, maximum=100)
-        self.__progbar.pack(side=LEFT)
-        self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav, length=70)
-        self.__finishedwavbar.pack(side=RIGHT)
-        self.__genbtn = Button(self, text='Generate', command=self.onSolveClick)
+        self.__progbar.pack(expand=YES, fill=X)
+        self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav)
+        self.__finishedwavbar.pack(expand=YES, fill=X)
+        self.__genbtn = Button(progfrm, text='Generate', command=self.onSolveClick)
         self.__genbtn.pack(side=LEFT)
-        Button(self, text='Stop', command=self.onStopBtnClick).pack(side=RIGHT)
+        Button(progfrm, text='Stop', command=self.onStopBtnClick).pack(side=RIGHT)
         self.name = 'Generate'
 
         self.getparams = None
@@ -86,7 +103,7 @@ class OptimizeGroup(Group):
             progress[0] = int(k / K * 100)                  
             
         algorithm.progressChecker.append(progressChecker)
-        algorithm.progressChecker.interval  = 100
+        algorithm.progressChecker.interval  = int(self.__pci.entryText)
         try:
             for cnt in range(wavnum):
                 algothread = AlgoThread(algorithm, params, waveform, progress)
@@ -164,8 +181,8 @@ class ParamsGroup(Group):
             param = params[name]
             paramitem = ParamItem(frm)
             paramitem.labelText = name
-            paramitem.label['width'] = 5
-            paramitem.entry['width'] = 8
+            paramitem.labelWidth = 5
+            paramitem.entryWidth = 8
             if self.balloon:
                 self.balloon.bind_widget(paramitem.label, balloonmsg=param.shortdesc)
             if param.type == 'int':
