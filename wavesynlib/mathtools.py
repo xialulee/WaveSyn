@@ -193,8 +193,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
         for k in range(len(allArguments)):
             self.topWindow.currentData  = queue.get()
             self.topWindow.plotCurrentData()
-        #mp.Process(target=parallelFunc, args=(None, queue, None, None)).start()
-        #return queue.get()
+
     
     
 def parallelFunc(algorithmClass, queue, args, kwargs):

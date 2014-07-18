@@ -31,16 +31,23 @@ class OptimizeGroup(Group):
         self.__topwin = kwargs.pop('topwin')
 
         super(OptimizeGroup, self).__init__(*args, **kwargs)
+        
+      
+        
         paramFrm    = Frame(self)
         paramFrm.pack(side=LEFT, expand=YES, fill=Y)
         self.__num = ParamItem(paramFrm)
-        self.__num.label.config(text='num')
-        self.__num.entryText = '1'
-        self.__num.labelWidth   = 5
-        self.__num.entryWidth   = 8
+        setMultiAttr(self.__num,
+            labelText   = 'num',
+            entryText   = '1',
+            labelWidth  = 5,
+            entryWidth  = 8,
+            checkFunc   = self._app.checkInt
+        )
         self.__num.entry.bind('<Return>', lambda event: self.onSolveClick())
-        self.__num.checkFunc = self._app.checkInt
         self.__num.pack(side=TOP)
+
+     
 
         self.__pci  = ParamItem(paramFrm)
         setMultiAttr(self.__pci,
@@ -52,19 +59,27 @@ class OptimizeGroup(Group):
         )
         self.__pci.pack(side=TOP)
         
+        self.__bParallel    = IntVar()
+        self.__chkParallel  = Checkbutton(paramFrm, text="Parallel", variable=self.__bParallel)
+        self.__chkParallel.pack()
         
-        
-        self.__progress = IntVar()
-        self.__finishedwav = IntVar()
         progfrm = Frame(self)
         progfrm.pack(side=LEFT, expand=YES, fill=Y)
-        self.__progbar = Progressbar(progfrm, orient='horizontal', variable=self.__progress, maximum=100)
-        self.__progbar.pack(expand=YES, fill=X)
-        self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav)
-        self.__finishedwavbar.pack(expand=YES, fill=X)
+
         self.__genbtn = Button(progfrm, text='Generate', command=self.onSolveClick)
-        self.__genbtn.pack(side=LEFT)
-        Button(progfrm, text='Stop', command=self.onStopBtnClick).pack(side=RIGHT)
+        self.__genbtn.pack(side=TOP)  
+        Button(progfrm, text='Stop', command=self.onStopBtnClick).pack(side=TOP)         
+        
+        self.__progress = IntVar()
+        self.__finishedwav = IntVar()        
+        self.__progbar = Progressbar(progfrm, orient='horizontal', variable=self.__progress, maximum=100)
+        self.__progbar.pack(side=LEFT)
+        self.__progbar.config(length=55)   
+        self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav)
+        self.__finishedwavbar.pack(side=LEFT)
+        self.__finishedwavbar.config(length=30)  
+
+
         self.name = 'Generate'
 
         self.getparams = None
@@ -72,8 +87,10 @@ class OptimizeGroup(Group):
         
     def onSolveClick(self):
         t1  = time.clock()
-        self.serialRun()
-#        self.parallelRun()
+        if self.__bParallel.get():
+            self.parallelRun()
+        else:
+            self.serialRun()        
         deltaT  = time.clock() - t1
         print(autoSubs('Total time consumption: $deltaT (s)'))
 
