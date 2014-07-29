@@ -6,6 +6,9 @@ from Tkinter    import Frame
 from common     import MethodDelegator
 
 
+__DEBUG__ = False
+
+
 TBPF_NOPROGRESS     = 0
 TBPF_INDETERMINATE  = 1
 TBPF_NORMAL         = 2
