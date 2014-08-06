@@ -251,6 +251,8 @@ wavesyn
         root = Tix.Tk()
         mainThreadId    = thread.get_ident()
         
+        
+        
         with self.attributeLock:
             setMultiAttr(self,
                 # UI elements
@@ -260,6 +262,7 @@ wavesyn
                 # End UI elements
                 
                 mainThreadId    = mainThreadId,
+                execThreadLock  = threading.RLock(),
             
                 # Validation Functions
                 checkInt = (root.register(partial(checkValue, func=int)),
@@ -303,33 +306,36 @@ wavesyn
                      
         
     def printAndEval(self, expr):
-        self.console.write(expr+'\n', 'HISTORY')
-        ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
-        if ret != None:
-            self.console.write(str(ret)+'\n', 'RETVAL')
-        return ret
+        with self.execThreadLock:
+            self.console.write(expr+'\n', 'HISTORY')
+            ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
+            if ret != None:
+                self.console.write(str(ret)+'\n', 'RETVAL')
+            return ret
                               
     def eval(self, expr):
-        ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
-        Scripting.nameSpace['locals']['_']  = ret
-        return ret
+        with self.execThreadLock:
+            ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
+            Scripting.nameSpace['locals']['_']  = ret
+            return ret
         
     def execute(self, code):
-        ret = None
-        strippedCode    = code.strip()
-        if strippedCode[0] == '!':
-            # To do: system(code)
-            PIPE    = subprocess.PIPE
-            p = subprocess.Popen(strippedCode[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
-            (stdout, stderr)    = p.communicate()
-            print(stdout)
-            print(stderr, file=sys.stderr)
-            return
-        try:
-            ret = self.eval(code)
-        except SyntaxError:
-            exec code in Scripting.nameSpace['globals'], Scripting.nameSpace['locals']
-        return ret
+        with self.execThreadLock:
+            ret = None
+            strippedCode    = code.strip()
+            if strippedCode[0] == '!':
+                # To do: system(code)
+                PIPE    = subprocess.PIPE
+                p = subprocess.Popen(strippedCode[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
+                (stdout, stderr)    = p.communicate()
+                print(stdout)
+                print(stderr, file=sys.stderr)
+                return
+            try:
+                ret = self.eval(code)
+            except SyntaxError:
+                exec code in Scripting.nameSpace['globals'], Scripting.nameSpace['locals']
+            return ret
         
             
     def printTip(self, contents):
