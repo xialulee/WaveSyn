@@ -95,6 +95,11 @@ then node will have a property named 'a', which cannot be re-assigned.
             return self.nodeName
         else:
             return '.'.join((self.parentNode.nodePath, self.nodeName))
+            
+    @property
+    def childNodes(self):
+        return {attrName:self.__dict__[attrName].nodePath for attrName in self.__dict__ 
+            if isinstance(self.__dict__[attrName], ModelNode)}
         
 
 # NodeDict

@@ -52,11 +52,9 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from objectmodel import ModelNode
-
-from guicomponents import StreamChain, TaskbarIcon, ScrolledText
-
-from common import setMultiAttr, autoSubs, evalFmt, Singleton
+from objectmodel    import ModelNode
+from guicomponents  import StreamChain, TaskbarIcon, ScrolledText
+from common         import setMultiAttr, autoSubs, evalFmt, Singleton
 
 
 ##########################Experimenting with multiprocessing###############################
@@ -378,6 +376,10 @@ wavesyn
                     
     def mainloop(self):
         return self.root.mainloop()
+        
+    def startXMLRPCServer(self, addr='localhost', port=8000):
+        from proxyobject    import startXMLRPCServer
+        startXMLRPCServer(addr, port)
 
         
         
