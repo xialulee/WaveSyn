@@ -30,6 +30,8 @@ class AttributeLock(object):
         
     
 class ModelNode(object):
+    _xmlrpcexport_  = []    
+    
     def __init__(self, nodeName='', isRoot=False, **kwargs):
         if '_attributeLock' not in self.__dict__:
             object.__setattr__(self, '_attributeLock', set())
@@ -99,11 +101,13 @@ then node will have a property named 'a', which cannot be re-assigned.
     @property
     def childNodes(self):
         return {attrName:self.__dict__[attrName].nodePath for attrName in self.__dict__ 
-            if isinstance(self.__dict__[attrName], ModelNode)}
+            if isinstance(self.__dict__[attrName], ModelNode)}            
         
 
 # NodeDict
 class NodeDict(ModelNode, dict):
+    _xmlrpcexport_  = []    
+    
     def __init__(self, nodeName=''):
         dict.__init__(self)
         ModelNode.__init__(self, nodeName=nodeName)
@@ -115,6 +119,8 @@ class NodeDict(ModelNode, dict):
 
 # NodeList       
 class NodeList(ModelNode, list):
+    _xmlrpcexport_  = []
+    
     def __init__(self, nodeName=''):
         list.__init__(self)
         ModelNode.__init__(self, nodeName='')

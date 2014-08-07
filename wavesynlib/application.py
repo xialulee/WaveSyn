@@ -52,9 +52,11 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from objectmodel    import ModelNode
-from guicomponents  import StreamChain, TaskbarIcon, ScrolledText
-from common         import setMultiAttr, autoSubs, evalFmt, Singleton
+from objectmodel import ModelNode
+
+from guicomponents import StreamChain, TaskbarIcon, ScrolledText
+
+from common import setMultiAttr, autoSubs, evalFmt, Singleton
 
 
 ##########################Experimenting with multiprocessing###############################
@@ -85,6 +87,8 @@ class ScriptCode(object):
         self.code = code
         
 class Scripting(ModelNode):
+    _xmlrpcexport_  = []    
+    
     rootName = 'wavesyn' # The name of the object model tree's root
     nameSpace = {'locals':{}, 'globals':{}}
     
@@ -221,6 +225,11 @@ wavesyn
         -figureBook
 '''    
     __metaclass__ = Singleton
+    
+    _xmlrpcexport_  = [
+        'createWindow',
+        'openHomePage'
+    ]
     ''' '''
     def __init__(self):
         # The instance of this class is the root of the model tree. Thus isRoot is set to True
@@ -379,7 +388,7 @@ wavesyn
         
     def startXMLRPCServer(self, addr='localhost', port=8000):
         from proxyobject    import startXMLRPCServer
-        startXMLRPCServer(addr, port)
+        startXMLRPCServer(addr, port)        
 
         
         
