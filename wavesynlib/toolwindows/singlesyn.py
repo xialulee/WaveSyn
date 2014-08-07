@@ -254,11 +254,14 @@ class AlgoSelGroup(Group):
 
 
 class SingleWindow(FigureWindow):      
-    windowName  = 'WaveSyn-SingleSyn'        
+    windowName  = 'WaveSyn-SingleSyn' 
+
+    _xmlrpcexport_  = ['loadAlgorithm']
+       
     def __init__(self, *args, **kwargs):     
         FigureWindow.__init__(self, *args, **kwargs)
         self.currentData    = None
-        
+                
         # algorithm dict and current data
         self.algorithms = AlgorithmDict()
         self.lockAttribute('algorithms')
@@ -333,6 +336,7 @@ class SingleWindow(FigureWindow):
         figPSD      = figureBook[3]
         figPSD.plotFunction     = lambda currentData, *args, **kwargs:\
             figPSD.plot(abs(fft.fft(currentData)), *args, **kwargs)
+            
     
     @Scripting.printable        
     def loadAlgorithm(self, moduleName, className):

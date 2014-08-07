@@ -27,17 +27,25 @@ class ProxyNode(object):
         global proxy
         if proxy is None: 
             initProxy()
-        self.__nodePath     = nodePath
+        self.nodePath     = nodePath
         self.__reprStr      = proxy.getRepr(nodePath)
-        childNodes   = proxy.getChildNodes(nodePath)
+        childNodes  = proxy.getChildNodes(nodePath)
+        methods     = set(proxy.getMethods(nodePath))
         self.childNodes = childNodes
+        self.methods    = methods
         for nodeName in childNodes:
             self.__dict__[nodeName] = None
+        for method in methods:
+            self.__dict__[method]   = None
             
     def __getattribute__(self, attrName):
         childNodes  = object.__getattribute__(self, 'childNodes')
+        methods     = object.__getattribute__(self, 'methods')
+        nodePath    = object.__getattribute__(self, 'nodePath')
         if attrName in childNodes:
             return ProxyNode(childNodes[attrName])
+        elif attrName in methods:
+            return ProxyMethod(nodePath, attrName)
         else:
             return object.__getattribute__(self, attrName)
             
@@ -45,9 +53,15 @@ class ProxyNode(object):
         return self.__reprStr
         
     def __getitem__(self, index):
-        return ProxyNode(proxy.getitem(self.__nodePath, index))
+        return ProxyNode(proxy.getitem(self.nodePath, index))
             
+class ProxyMethod(object):
+    def __init__(self, nodePath, methodName):
+        self.__nodePath = nodePath
+        self.__methodName   = methodName        
         
+    def __call__(self, *args, **kwargs):
+        proxy.callMethod(self.__nodePath, self.__methodName, args, kwargs)
 
 # Server End
 #def isNodeList(nodePath=Scripting.rootName):
@@ -81,6 +95,11 @@ def getMethods(nodePath=Scripting.rootName):
         
 def getRepr(nodePath=Scripting.rootName):
     return Application.instance.execute(evalFmt('{nodePath}.__repr__()'))
+    
+def callMethod(nodePath, methodName, args, kwargs):
+    app = Application.instance
+    ret = app.callMethod(nodePath, methodName, *args, **kwargs)
+    return 0 if ret is None else ret
         
 
 def startXMLRPCServer(addr='localhost', port=8000):        
@@ -91,7 +110,8 @@ def startXMLRPCServer(addr='localhost', port=8000):
         getitem,
         getChildNodes,
         getMethods,
-        getRepr
+        getRepr,
+        callMethod
     ]
     for function in functions:
         server.register_function(function, function.__name__)

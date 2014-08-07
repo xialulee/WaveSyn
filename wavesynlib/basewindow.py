@@ -695,9 +695,9 @@ By running this script, Matlab will literally "re-plot" the curves shown here.''
                 
 class FigureWindow(WindowNode):
     def __init__(self, *args, **kwargs):
-        super(FigureWindow, self).__init__(*args, **kwargs)
+        super(FigureWindow, self).__init__(*args, **kwargs)               
         toolTabs    = Notebook(self._toplevel)
-        toolTabs.pack(fill=X)
+        toolTabs.pack(fill=X)       
         with self.attributeLock:
             self.toolTabs   = toolTabs
         

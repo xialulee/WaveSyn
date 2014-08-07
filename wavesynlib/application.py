@@ -343,6 +343,12 @@ wavesyn
             except SyntaxError:
                 exec code in Scripting.nameSpace['globals'], Scripting.nameSpace['locals']
             return ret
+            
+            
+    def callMethod(self, nodePath, methodName, *args, **kwargs):
+        """Call a node's method."""
+        methodObj   = self.execute(evalFmt('{nodePath}.{methodName}'))
+        return methodObj(*args, **kwargs)
         
             
     def printTip(self, contents):
