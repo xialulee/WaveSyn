@@ -2,7 +2,7 @@
 """
 Created on Wed Aug 06 15:57:18 2014
 
-@author: whhit
+@author: Feng-cong Li
 """
 import thread
 import operator
@@ -46,7 +46,6 @@ class ProxyNode(object):
             return ProxyNode(childNodes[attrName])
         elif attrName in methods:
             method  = ProxyMethod(nodePath, attrName)
-            method.__doc__  = proxy.getMethodDoc(nodePath, attrName)
             return method
         else:
             return object.__getattribute__(self, attrName)
@@ -61,12 +60,15 @@ class ProxyMethod(object):
     def __init__(self, nodePath, methodName):
         self.__nodePath = nodePath
         self.__methodName   = methodName
-        #self.__doc__        = proxy.getMethodDoc(nodePath, methodName)        
+        self.__doc__        = proxy.getMethodDoc(nodePath, methodName)        
         
     def __call__(self, *args, **kwargs):
-        proxy.callMethod(self.__nodePath, self.__methodName, args, kwargs)
+        return proxy.callMethod(self.__nodePath, self.__methodName, args, kwargs)
 
 # Server End
+def getRootNodePath():
+    return Scripting.rootName
+
 
 def getitem(nodePath, index):
     return Application.instance.execute(evalFmt('{nodePath}[{index}].nodePath'))
@@ -75,7 +77,8 @@ def getChildNodes(nodePath=Scripting.rootName):
     return Application.instance.execute(evalFmt('{nodePath}.childNodes'))
     
 def getMethodDoc(nodePath, methodName):
-    return Application.instance.execute(evalFmt('{nodePath}.{methodName}.__doc__'))    
+    doc = Application.instance.execute(evalFmt('{nodePath}.{methodName}.__doc__'))    
+    return '' if doc is None else doc
     
 def getMethods(nodePath=Scripting.rootName):
     execute = Application.instance.execute
@@ -132,17 +135,24 @@ class CommandSlot(object):
   
 def callMethod(nodePath, methodName, args, kwargs):
     app = Application.instance
-#    ret = app.callMethod(nodePath, methodName, *args, **kwargs)
+    codeFeature = 'wavesyn_xmlrpcclient_scripting_code'
+    args    = [app.execute(arg[codeFeature]) if isinstance(arg, dict) and arg.has_key(codeFeature) else arg for arg in args]
+    for key in kwargs:
+        val = kwargs[key]
+        if isinstance(val, dict) and val.has_key(codeFeature):
+            kwargs[key] = app.execute(val[codeFeature])
     app.xmlrpcCommandSlot.command   = (nodePath, methodName, args, kwargs)
-    ret = app.xmlrpcCommandSlot.returnVal
+    ret, err = app.xmlrpcCommandSlot.returnVal
+    if err is not None:
+        raise err
     return 0 if ret is None else ret
+    
         
 
 def startXMLRPCServer(addr='localhost', port=8000):        
     server = SimpleXMLRPCServer((addr, port))
     functions   = [
-        #isNodeList,
-        #isNodeDict,
+        getRootNodePath,
         getitem,
         getChildNodes,
         getMethods,

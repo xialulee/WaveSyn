@@ -130,6 +130,8 @@ class Algorithm(object):
 
 
 class AlgorithmNode(ModelNode, WindowComponent):
+    _xmlrpcexport_  = ['run']    
+    
     class Meta(object):
         def __init__(self):
             self.name   = ''

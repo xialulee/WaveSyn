@@ -256,7 +256,7 @@ wavesyn
         root = Tix.Tk()
         mainThreadId    = thread.get_ident()
         
-        import proxyobject
+        from interfaces.xmlrpcserver import CommandSlot
         
         with self.attributeLock:
             setMultiAttr(self,
@@ -268,7 +268,7 @@ wavesyn
                 
                 mainThreadId    = mainThreadId,
                 execThreadLock  = threading.RLock(),
-                xmlrpcCommandSlot   = proxyobject.CommandSlot(),
+                xmlrpcCommandSlot   = CommandSlot(),
             
                 # Validation Functions
                 checkInt = (root.register(partial(checkValue, func=int)),
@@ -347,8 +347,10 @@ wavesyn
             
     def callMethod(self, nodePath, methodName, *args, **kwargs):
         """Call a node's method."""
-        methodObj   = self.execute(evalFmt('{nodePath}.{methodName}'))
-        return methodObj(*args, **kwargs)
+        #methodObj   = self.execute(evalFmt('{nodePath}.{methodName}'))
+        ret = self.execute(evalFmt('{nodePath}.{methodName}({Scripting.paramsToStr(*args, **kwargs)})'))
+        return ret
+        #return methodObj(*args, **kwargs)
         
             
     def printTip(self, contents):
@@ -394,17 +396,22 @@ wavesyn
         return self.root.mainloop()
         
     def startXMLRPCServer(self, addr='localhost', port=8000):
-        from proxyobject    import startXMLRPCServer
+        from interfaces.xmlrpcserver    import startXMLRPCServer
         startXMLRPCServer(addr, port)        
         def checkCommand():
             command = self.xmlrpcCommandSlot.command
             try:
                 if command is not None:
                     nodePath, methodName, args, kwargs  = command
-                    ret = self.callMethod(nodePath, methodName, *args, **kwargs)
+                    ret, err    = None, None
+                    try:
+                        ret = self.callMethod(nodePath, methodName, *args, **kwargs)
+                    except Exception, error:
+                        err = error
                     ret = 0 if ret is None else ret
-                    self.xmlrpcCommandSlot.returnVal    = ret
+                    self.xmlrpcCommandSlot.returnVal    = (ret, err)
             finally:
+                # Make sure that at any circumstance the checkCommand will be called repeatedly.
                 self.root.after(100, self.xmlrpcCheckCommand)
         self.xmlrpcCheckCommand = checkCommand
         self.root.after(100, checkCommand)

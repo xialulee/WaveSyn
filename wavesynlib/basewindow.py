@@ -68,6 +68,9 @@ def askClassName():
 
 class WindowNode(ModelNode):
     windowName = ''
+
+    _xmlrpcexport_  = ['close']    
+    
     def __init__(self, *args, **kwargs):
         super(WindowNode, self).__init__(*args, **kwargs)
         self._toplevel = Toplevel()
@@ -694,6 +697,8 @@ By running this script, Matlab will literally "re-plot" the curves shown here.''
                 
                 
 class FigureWindow(WindowNode):
+    _xmlrpcexport_  = ['plotCurrentData']    
+    
     def __init__(self, *args, **kwargs):
         super(FigureWindow, self).__init__(*args, **kwargs)               
         toolTabs    = Notebook(self._toplevel)
