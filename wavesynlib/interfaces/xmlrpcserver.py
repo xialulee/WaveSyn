@@ -9,61 +9,10 @@ import operator
 import xmlrpclib
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-from application    import Application, Scripting
-from objectmodel    import ModelNode, NodeList, NodeDict
+from application    import Application, Scripting, ScriptCode
 from common         import evalFmt
 
-# Client
 
-proxy   = None
-
-def initProxy():
-    global proxy
-    proxy = xmlrpclib.ServerProxy("http://localhost:8000/")
-
-
-class ProxyNode(object):    
-    def __init__(self, nodePath=Scripting.rootName):
-        global proxy
-        if proxy is None: 
-            initProxy()
-        self.nodePath     = nodePath
-        self.__reprStr      = proxy.getRepr(nodePath)
-        childNodes  = proxy.getChildNodes(nodePath)
-        methods     = set(proxy.getMethods(nodePath))
-        self.childNodes = childNodes
-        self.methods    = methods
-        for nodeName in childNodes:
-            self.__dict__[nodeName] = None
-        for method in methods:
-            self.__dict__[method]   = None
-            
-    def __getattribute__(self, attrName):
-        childNodes  = object.__getattribute__(self, 'childNodes')
-        methods     = object.__getattribute__(self, 'methods')
-        nodePath    = object.__getattribute__(self, 'nodePath')
-        if attrName in childNodes:
-            return ProxyNode(childNodes[attrName])
-        elif attrName in methods:
-            method  = ProxyMethod(nodePath, attrName)
-            return method
-        else:
-            return object.__getattribute__(self, attrName)
-            
-    def __repr__(self):
-        return self.__reprStr
-        
-    def __getitem__(self, index):
-        return ProxyNode(proxy.getitem(self.nodePath, index))
-            
-class ProxyMethod(object):
-    def __init__(self, nodePath, methodName):
-        self.__nodePath = nodePath
-        self.__methodName   = methodName
-        self.__doc__        = proxy.getMethodDoc(nodePath, methodName)        
-        
-    def __call__(self, *args, **kwargs):
-        return proxy.callMethod(self.__nodePath, self.__methodName, args, kwargs)
 
 # Server End
 def getRootNodePath():
@@ -71,7 +20,8 @@ def getRootNodePath():
 
 
 def getitem(nodePath, index):
-    return Application.instance.execute(evalFmt('{nodePath}[{index}].nodePath'))
+    return Application.instance.execute(evalFmt('{nodePath}[{repr(index)}].nodePath'))
+    # if repr is not used, the index of str type cannot be handled correctly.
 
 def getChildNodes(nodePath=Scripting.rootName):
     return Application.instance.execute(evalFmt('{nodePath}.childNodes'))
@@ -136,11 +86,11 @@ class CommandSlot(object):
 def callMethod(nodePath, methodName, args, kwargs):
     app = Application.instance
     codeFeature = 'wavesyn_xmlrpcclient_scripting_code'
-    args    = [app.execute(arg[codeFeature]) if isinstance(arg, dict) and arg.has_key(codeFeature) else arg for arg in args]
+    args    = [ScriptCode(arg[codeFeature]) if isinstance(arg, dict) and arg.has_key(codeFeature) else arg for arg in args]
     for key in kwargs:
         val = kwargs[key]
         if isinstance(val, dict) and val.has_key(codeFeature):
-            kwargs[key] = app.execute(val[codeFeature])
+            kwargs[key] = ScriptCode(val[codeFeature])
     app.xmlrpcCommandSlot.command   = (nodePath, methodName, args, kwargs)
     ret, err = app.xmlrpcCommandSlot.returnVal
     if err is not None:

@@ -344,14 +344,7 @@ wavesyn
                 exec code in Scripting.nameSpace['globals'], Scripting.nameSpace['locals']
             return ret
             
-            
-    def callMethod(self, nodePath, methodName, *args, **kwargs):
-        """Call a node's method."""
-        #methodObj   = self.execute(evalFmt('{nodePath}.{methodName}'))
-        ret = self.execute(evalFmt('{nodePath}.{methodName}({Scripting.paramsToStr(*args, **kwargs)})'))
-        return ret
-        #return methodObj(*args, **kwargs)
-        
+                    
             
     def printTip(self, contents):
         if self.noTip:
@@ -400,12 +393,13 @@ wavesyn
         startXMLRPCServer(addr, port)        
         def checkCommand():
             command = self.xmlrpcCommandSlot.command
+            paramsToStr  = Scripting.paramsToStr
             try:
                 if command is not None:
                     nodePath, methodName, args, kwargs  = command
                     ret, err    = None, None
                     try:
-                        ret = self.callMethod(nodePath, methodName, *args, **kwargs)
+                        ret = self.printAndEval(evalFmt('{nodePath}.{methodName}({paramsToStr(*args, **kwargs)})'))
                     except Exception, error:
                         err = error
                     ret = 0 if ret is None else ret
