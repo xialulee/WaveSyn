@@ -53,9 +53,7 @@ from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from objectmodel import ModelNode
-
 from guicomponents import StreamChain, TaskbarIcon, ScrolledText
-
 from common import setMultiAttr, autoSubs, evalFmt, Singleton
 
 
@@ -258,7 +256,7 @@ wavesyn
         root = Tix.Tk()
         mainThreadId    = thread.get_ident()
         
-        
+        import proxyobject
         
         with self.attributeLock:
             setMultiAttr(self,
@@ -270,6 +268,7 @@ wavesyn
                 
                 mainThreadId    = mainThreadId,
                 execThreadLock  = threading.RLock(),
+                xmlrpcCommandSlot   = proxyobject.CommandSlot(),
             
                 # Validation Functions
                 checkInt = (root.register(partial(checkValue, func=int)),
@@ -300,6 +299,7 @@ wavesyn
         self.noTip = False
         
     def createWindow(self, moduleName, className):
+        '''Create a tool window.'''
         mod = __import__(autoSubs('toolwindows.$moduleName'), globals(), locals(), [className], -1)
         return self.windows.add(node=getattr(mod, className)())        
 #
@@ -386,6 +386,7 @@ wavesyn
         
         
     def openHomePage(self):
+        '''Open the home page of wavesyn.'''
         webbrowser.open(self.homePage, new=1, autoraise=True)
              
                     
@@ -395,6 +396,18 @@ wavesyn
     def startXMLRPCServer(self, addr='localhost', port=8000):
         from proxyobject    import startXMLRPCServer
         startXMLRPCServer(addr, port)        
+        def checkCommand():
+            command = self.xmlrpcCommandSlot.command
+            try:
+                if command is not None:
+                    nodePath, methodName, args, kwargs  = command
+                    ret = self.callMethod(nodePath, methodName, *args, **kwargs)
+                    ret = 0 if ret is None else ret
+                    self.xmlrpcCommandSlot.returnVal    = ret
+            finally:
+                self.root.after(100, self.xmlrpcCheckCommand)
+        self.xmlrpcCheckCommand = checkCommand
+        self.root.after(100, checkCommand)
 
         
         
