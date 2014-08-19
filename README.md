@@ -19,7 +19,7 @@ Features of WaveSyn
 -------
 WaveSyn have some features to make your work easier. These features includes a multimedia console, a help system which is very helpful, and a scripting system which can prevent you from clicking the mouse and stroking the keyboard thousands of times.
 ###The multimedia console of WaveSyn
-The console window is the first window appears on the screen after WaveSyn is launched. This console displays all of the meaningful messages including stdout, stderr, command history, error messages, and embedded multimedia help & information.
+The console window is the first window appears on the screen after WaveSyn is launched. This console displays all of the meaningful messages including stdout, stderr, command history, error messages, and embedded multimedia help & information.<br/>
 ![](https://github.com/xialulee/WaveSyn/raw/master/doc/images/Features-Console-Snapshot1.PNG "Console window of WaveSyn")<br/>
 ![](https://github.com/xialulee/WaveSyn/raw/master/doc/images/Features-Console-Snapshot2.PNG "Console window of WaveSyn")<br/>
 
@@ -29,3 +29,9 @@ Users can enter a piece of code directly in the console window, shown as follows
 ![](https://github.com/xialulee/WaveSyn/raw/master/doc/images/Features-Scripting-Snapshot1.png "Console window of WaveSyn")<br/>
 The scripting system also supports single tab text editor such as notepad.exe (default on Windows) and Vim (GVim).<br/>
 [Learn more about the scripting system.](https://github.com/xialulee/WaveSyn/blob/master/doc/ScriptingIntroduction.md)
+
+###Proxy system
+We implemented a proxy system for the model tree of WaveSyn based on XMLRPC. By utilizing the proxy system, one can access the model tree remotely; and thanks to the meta-programming technique, one can manipulate a remote model tree the same way as he manipulate a local model tree. 
+
+###Parallel computing
+Sometimes we test an algorithm by running its corresponding procedure many times. For computers with multicore CUPs, this process can be accelerated using parallel programming techniques such as multithreading. However, the GIL of Python prevents the threads from running in "truely parallel"; consequently, we use multiprocessing instead. Users can activate parallel computing by simply click the "parallel" checkbox on SingleSyn window. 
