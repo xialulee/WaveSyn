@@ -1,5 +1,8 @@
-from numpy import abs, isscalar, linalg, ndarray
+from numpy import abs, isscalar, linalg, ndarray, mat, matrix, hstack
+from numpy.linalg   import matrix_rank, svd
 from collections import OrderedDict
+
+import abc
 
 from common         import evalFmt, autoSubs
 from objectmodel    import ModelNode, NodeDict
@@ -70,6 +73,58 @@ the code can be simplified a lot.
         newOp.func  = fn
         return newOp
                 
+
+
+class SetWithProjector(object):
+    __metaclass__   = abc.ABCMeta
+    
+    @abc.abstractproperty
+    def projector(self):
+        return NotImplemented
+        
+    @abc.abstractmethod
+    def __contains__(self, x):
+        return NotImplemented
+        
+    @classmethod
+    def __subclasshook__(cls, C):
+        if cls is SetWithProjector:
+            if hasattr(C, 'projector') and hasattr(C, '__contains__'):
+                return True
+        return NotImplemented    
+        
+        
+class Col(SetWithProjector):    
+    '''A data structure represents the column space (range space) defined by a matrix.'''
+    def __init__(self, A):
+        if not isinstance(A, matrix):
+            A   = mat(A)
+        self.__A    = A
+        self.__proj = None
+        U, S, VH    = svd(A)
+        rank        = matrix_rank(A)
+        self.__rank = rank
+        B           = U[:, 0:rank]
+        self.__basis    = B
+        self.__proj = Operator(func=lambda x: B * B.H*x)
+            
+    @property    
+    def projector(self):
+        '''return the projector of the column space.'''
+        return self.__proj
+        
+    @property
+    def orth(self):
+        '''return the an orthonormal basis for this column space.
+For a matrix A, "Col(A).orth" is equivalent to the matlab expression "orth(A)."
+'''
+        return self.__basis
+        
+    def __contains__(self, x):
+        '''If column vector x lies in Col(A), then __contains__ return True.'''
+        C   = hstack((self.__A, x))
+        return matrix_rank(C) == self.__rank
+
 
 
 class ProgressChecker(object):
