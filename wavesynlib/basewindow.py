@@ -27,6 +27,8 @@ from objectmodel import ModelNode, NodeList, NodeDict
 from common import autoSubs, evalFmt, setMultiAttr
 from guicomponents import Group, ParamItem, ScrolledList
 
+from common     import MethodDelegator
+
 
 colorMap = {
     'c': 'cyan',
@@ -77,8 +79,20 @@ class WindowNode(ModelNode):
         self._toplevel.title(evalFmt('{self.windowName} id={id(self)}'))        
         self._toplevel.protocol('WM_DELETE_WINDOW', self.onClose)
         
-    def update(self):
-        self._toplevel.update()
+#    def update(self):
+#        self._toplevel.update()
+#        
+#    def wm_attributes(self, *args, **kwargs):
+#        self._toplevel.wm_attributes(*args, **kwargs)  
+        
+    methodNameMap   = {
+        'update':'update', 
+        'windowAttributes':'wm_attributes'
+    }
+    
+    for methodName in methodNameMap:
+        locals()[methodName]    = MethodDelegator('_toplevel', methodNameMap[methodName])        
+        
         
     @Scripting.printable
     def close(self):
@@ -95,6 +109,8 @@ class WindowNode(ModelNode):
             return evalFmt('{self.parentNode.nodePath}[{id(self)}]')
         else:
             return ModelNode.nodePath
+            
+
 
 
 class WindowDict(NodeDict):

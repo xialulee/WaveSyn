@@ -693,6 +693,9 @@ Have a nice day.
         printCode   = True
         self.editScript()
         
+    def windowAttributes(self, *args, **kwargs):
+        return Application.instance.root.wm_attributes(*args, **kwargs)        
+        
         
         
      
