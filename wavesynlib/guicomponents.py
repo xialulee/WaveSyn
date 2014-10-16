@@ -343,7 +343,7 @@ class ScrolledList(Frame, object):
 
 class Group(Frame, object):
     def __init__(self, *args, **kwargs):
-        Frame.__init__(self, *args, **kwargs)
+        super(Group, self).__init__(*args, **kwargs)
         if 'relief' not in kwargs:
             self['relief']  = GROOVE
         if 'bd' not in kwargs:

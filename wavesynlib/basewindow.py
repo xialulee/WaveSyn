@@ -220,7 +220,8 @@ class DataFigure(ModelNode):
         if which == 'major':
             self.__majorGrid    = b
         elif which == 'minor':
-            self.__minorGrid    = b
+            self.__minorGrid    = b            
+        self.update()
 
 
     @Scripting.printable    
@@ -293,6 +294,20 @@ class FigureList(NodeList):
         
 
 class FigureBook(FigureList):         
+    class GridGroupObserver:
+        def __init__(self, figureBook):
+            self.__figureBook   = figureBook
+            
+        def update(self, majorGrid, minorGrid, props=None):
+            printCode   = True
+            if not props:
+                props   = {'major':{}, 'minor':{}}
+            currentFigure   = self.__figureBook.currentFigure
+
+            currentFigure.grid(majorGrid, which='major', **props['major'])
+            currentFigure.grid(minorGrid, which='minor', **props['minor'])                   
+#            currentFigure.update()
+        
     def __init__(self, *args, **kwargs):
         '''
 nodeName:   The name of this node. Usually set by ModelNode.__setattr__ automatically.
@@ -340,8 +355,11 @@ The rest parameters are passed to PanedWindow.__init__.
         with self.attributeLock:
             setMultiAttr(self,
                 panedWindow = panedWindow,
+                gridGroupObserver    = self.GridGroupObserver(self),
                 dataPool    = []
             )
+            
+            
         
     def pack(self, *args, **kwargs):
         self.panedWindow.pack(*args, **kwargs)        
@@ -431,27 +449,161 @@ The rest parameters are passed to PanedWindow.__init__.
             fig.update()
         self.__list.delete(idx)
         del self.dataPool[idx]
+        
 
 
 
-class GridGroup(Group):
+
+#class GridGroup(Group):
+#    def __init__(self, *args, **kwargs):
+#        self.__topwin   = kwargs.pop('topwin')
+#        super(GridGroup, self).__init__(*args, **kwargs)
+#        app = Application.instance
+#        major = IntVar(0)
+#        minor = IntVar(0)
+#        self.__major = major
+#        self.__minor = minor
+#                        
+#                        
+#        def setgrid():
+#            currentFigure = self.__topwin.figureBook.currentFigure
+#            currentFigure.majorGrid = major.get()
+#            currentFigure.minorGrid = minor.get()
+#            currentFigure.update()
+#
+#
+#        def askgridprop():
+#            win = Toplevel()
+#            color = ['#000000', '#000000']
+#
+#            propvars = [StringVar() for i in range(4)]
+#            guidata = (
+#                {
+#                    'linestyle': ('Major Line Style', propvars[0], None),
+#########################################################################################################
+#                    'linewidth': ('Major Line Width', propvars[1], app.checkPositiveFloat)
+#                },
+#                {
+#                    'linestyle': ('Minor Line Style', propvars[2], None),
+#                    'linewidth': ('Minor Line Width', propvars[3], app.checkPositiveFloat)
+##########################################################################################################
+#                }
+#            )
+#
+#            for d in guidata:
+#                for key in d:
+#                    pitem = ParamItem(win)
+#                    pitem.pack()
+#                    pitem.labelText = d[key][0]
+#                    pitem.entry['textvariable'] = d[key][1]
+#                    if d[key][2]:
+#                        pitem.checkFunc = d[key][2]
+#
+#            def setmajorcolor():
+#                c = askcolor()
+#                color[0] = c[1]
+#
+#            def setminorcolor():
+#                c = askcolor()
+#                color[1] = c[1]
+#            Button(win, text='Major Line Color', command=setmajorcolor).pack()
+#            Button(win, text='Minor Line Color', command=setminorcolor).pack()
+#
+#            win.protocol('WM_DELETE_WINDOW', win.quit)
+#            win.focus_set()
+#            win.grab_set()
+#            win.mainloop()
+#            win.destroy()
+#            c_major = StringVar(); c_major.set(color[0])
+#            c_minor = StringVar(); c_minor.set(color[1])
+#            guidata[0]['color'] = ('Major Line Color', c_major, None)
+#            guidata[1]['color'] = ('Minor Line Color', c_minor, None)
+#            return guidata
+#
+#        def onPropertyClick():
+#            ret = askgridprop()
+#
+#            for idx, name in enumerate(('major', 'minor')):
+#                for key in ret[idx]:
+#                    value = ret[idx][key][1].get()
+#                    if value:
+#                        self.__topwin.figureBook.currentFigure.axes.grid(None, name, **{key: value})
+#            major.set(1)
+#            minor.set(1)
+#            self.__topwin.figureBook.currentFigure.update()
+#                                    
+#        chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=self.onChkGridMajor)
+#        chkGridMajor.pack(fill=X)
+#        self.chkGridMajor   = chkGridMajor
+#        
+#        chkGridMinor    = Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid)
+#        chkGridMinor.pack(fill=X)
+#        self.chkGridMinor   = chkGridMinor        
+#        
+#        btnProperty     = Button(self, text='Property', command=onPropertyClick)
+#        btnProperty.pack()
+#        self.btnProperty    = btnProperty
+#        
+#        self.name = 'Grid'
+#        
+#    def onChkGridMajor(self):        
+#        printCode    = True
+#        currentFigure   = self.__topwin.figureBook.currentFigure
+#        currentFigure.grid(self.__major.get(), which='major')
+#        currentFigure.update()
+#        
+#
+#        
+#    class __EnableDelegator(object):
+#        def __init__(self, widgetName):
+#            self.widgetName = widgetName
+#            
+#        def __get__(self, obj, type=None):
+#            def enable(state):                
+#                en  = NORMAL if state else DISABLED
+#                getattr(obj, self.widgetName).config(state=en)
+#            return enable
+#            
+#    enableWidgets   = dict(
+#        enableGridMajor =  'chkGridMajor',
+#        enableGridMinor =  'chkGridMinor',
+#        enableProperty  =  'btnProperty'
+#    )
+#    
+#    for methodName in enableWidgets:
+#        locals()[methodName]    = __EnableDelegator(enableWidgets[methodName])
+#        
+#
+#
+#    @property
+#    def major(self):
+#        return self.__major.get()
+#
+#    @major.setter
+#    def major(self, value):
+#        self.__major.set(value)
+#
+#    @property
+#    def minor(self):
+#        return self.__minor.get()
+#
+#    @minor.setter
+#    def minor(self, value):
+#        self.__minor.set(value)  
+
+from common import Observable
+
+class GridGroup(Observable, Group):
     def __init__(self, *args, **kwargs):
         self.__topwin   = kwargs.pop('topwin')
         super(GridGroup, self).__init__(*args, **kwargs)
+        
         app = Application.instance
         major = IntVar(0)
         minor = IntVar(0)
         self.__major = major
         self.__minor = minor
-                        
-                        
-        def setgrid():
-            currentFigure = self.__topwin.figureBook.currentFigure
-            currentFigure.majorGrid = major.get()
-            currentFigure.minorGrid = minor.get()
-            currentFigure.update()
-
-
+                                
         def askgridprop():
             win = Toplevel()
             color = ['#000000', '#000000']
@@ -503,20 +655,21 @@ class GridGroup(Group):
         def onPropertyClick():
             ret = askgridprop()
 
+            props  = {'major':{}, 'minor':{}}
             for idx, name in enumerate(('major', 'minor')):
                 for key in ret[idx]:
                     value = ret[idx][key][1].get()
                     if value:
-                        self.__topwin.figureBook.currentFigure.axes.grid(None, name, **{key: value})
+                        props[name][key] = value
             major.set(1)
             minor.set(1)
-            self.__topwin.figureBook.currentFigure.update()
+            self.notifyObservers(majorGrid=major.get(), minorGrid=minor.get(), props=props)
                                     
-        chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=self.onChkGridMajor)
+        chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=self.onChkClick)
         chkGridMajor.pack(fill=X)
         self.chkGridMajor   = chkGridMajor
         
-        chkGridMinor    = Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid)
+        chkGridMinor    = Checkbutton(self, text='Grid Minor', variable=minor, command=self.onChkClick)
         chkGridMinor.pack(fill=X)
         self.chkGridMinor   = chkGridMinor        
         
@@ -526,11 +679,9 @@ class GridGroup(Group):
         
         self.name = 'Grid'
         
-    def onChkGridMajor(self):        
-        printCode    = True
-        currentFigure   = self.__topwin.figureBook.currentFigure
-        currentFigure.grid(self.__major.get(), which='major')
-        currentFigure.update()
+
+    def onChkClick(self):
+        self.notifyObservers(majorGrid=self.__major.get(), minorGrid=self.__minor.get())
         
 
         
@@ -747,6 +898,7 @@ class FigureWindow(WindowNode):
         frmView = Frame(toolTabs)
         grpGrid = GridGroup(frmView, bd=2, relief=GROOVE, topwin=self)
         grpGrid.pack(side=LEFT, fill=Y)
+        grpGrid.addObserver(self.figureBook.gridGroupObserver)
       
         
         grpAxis = AxisGroup(frmView, bd=2, relief=GROOVE, topwin=self)
