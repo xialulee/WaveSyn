@@ -29,6 +29,8 @@ from common         import MethodDelegator, Observable
 
 from guicomponents import Group, ParamItem, ScrolledList
 
+from common     import MethodDelegator
+
 
 colorMap = {
     'c': 'cyan',
@@ -330,6 +332,7 @@ class FigureList(NodeList):
         NodeList.append(self, val)
         
 
+<<<<<<< HEAD
 class FigureBook(Observable, FigureList):         
     '''FigureBook is a widget including multiple DataFigure objects and a Tkinter list widget. 
 It is used to show the different aspects of a mathematical object.
@@ -354,6 +357,10 @@ minorYTick: the y axis' ...'''
 Meanwhile, FigureBook can also observe other objects. This class, GridGroupObserver, can be used to observe
 an instance of the GridGroup class.     
     '''
+=======
+class FigureBook(FigureList):         
+    class GridGroupObserver:
+>>>>>>> origin/master
         def __init__(self, figureBook):
             self.__figureBook   = figureBook
             
@@ -365,6 +372,7 @@ an instance of the GridGroup class.
 
             currentFigure.grid(majorGrid, which='major', **props['major'])
             currentFigure.grid(minorGrid, which='minor', **props['minor'])                   
+<<<<<<< HEAD
             
     class AxisGroupObserver(object):
         def __init__(self, figureBook):
@@ -380,6 +388,9 @@ an instance of the GridGroup class.
                 for mm in ('major', 'minor'):
                     currentFigure.setTick(mm+XY+'Tick', locals()[mm+XY+'Tick'])
 #            currentFigure.setTick(name=)
+=======
+#            currentFigure.update()
+>>>>>>> origin/master
         
     def __init__(self, *args, **kwargs):
         '''
@@ -427,8 +438,12 @@ The rest parameters are passed to PanedWindow.__init__.
         with self.attributeLock:
             setMultiAttr(self,
                 panedWindow = panedWindow,
+<<<<<<< HEAD
                 gridGroupObserver   = self.GridGroupObserver(self), 
                 axisGroupObserver   = self.AxisGroupObserver(self),
+=======
+                gridGroupObserver    = self.GridGroupObserver(self),
+>>>>>>> origin/master
                 dataPool    = []
             )
             
@@ -530,10 +545,17 @@ The rest parameters are passed to PanedWindow.__init__.
         self.__list.delete(idx)
         del self.dataPool[idx]
         
+<<<<<<< HEAD
 
 
 
 
+=======
+
+
+
+
+>>>>>>> origin/master
 #class GridGroup(Group):
 #    def __init__(self, *args, **kwargs):
 #        self.__topwin   = kwargs.pop('topwin')
@@ -671,6 +693,7 @@ The rest parameters are passed to PanedWindow.__init__.
 #    def minor(self, value):
 #        self.__minor.set(value)  
 
+<<<<<<< HEAD
 
 
 class GridGroup(Observable, Group):
@@ -683,6 +706,11 @@ class GridGroup(Observable, Group):
             if 'minorGrid'  in kwargs:
                 self.__gridGroup.minor  = kwargs['minorGrid']    
     
+=======
+from common import Observable
+
+class GridGroup(Observable, Group):
+>>>>>>> origin/master
     def __init__(self, *args, **kwargs):
         super(GridGroup, self).__init__(*args, **kwargs)
         
@@ -691,7 +719,10 @@ class GridGroup(Observable, Group):
         minor = IntVar(0)
         self.__major = major
         self.__minor = minor
+<<<<<<< HEAD
         self.__figureObserver   = self.FigureObserver(self)
+=======
+>>>>>>> origin/master
                                 
         def askgridprop():
             win = Toplevel()
@@ -768,10 +799,13 @@ class GridGroup(Observable, Group):
         
         self.name = 'Grid'
         
+<<<<<<< HEAD
     @property
     def figureObserver(self):
         return self.__figureObserver
 
+=======
+>>>>>>> origin/master
 
     def onChkClick(self):
         self.notifyObservers(majorGrid=self.__major.get(), minorGrid=self.__minor.get())
@@ -995,7 +1029,10 @@ class FigureWindow(WindowNode):
         grpGrid = GridGroup(frmView, bd=2, relief=GROOVE)
         grpGrid.pack(side=LEFT, fill=Y)
         grpGrid.addObserver(self.figureBook.gridGroupObserver)
+<<<<<<< HEAD
         self.figureBook.addObserver(grpGrid.figureObserver)
+=======
+>>>>>>> origin/master
       
         
         grpAxis = AxisGroup(frmView, bd=2, relief=GROOVE, topwin=self)
