@@ -36,7 +36,7 @@ matplotlib.use('TkAgg')
 
 from numpy import *
 
-from functools  import partial
+
 from datetime   import datetime
 from inspect    import getsourcefile
 import webbrowser
@@ -53,30 +53,13 @@ from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from objectmodel import ModelNode
-from guicomponents import StreamChain, TaskbarIcon, ScrolledText
+from guicomponents import StreamChain, TaskbarIcon, ScrolledText, ValueChecker
 from common import setMultiAttr, autoSubs, evalFmt, Singleton
 
 
 ##########################Experimenting with multiprocessing###############################
 #import multiprocessing as mp
 ###########################################################################################
-
-
-def checkValue(d, i, P, s, S, v, V, W, func):
-    try:
-        func(P)
-        return True
-    except ValueError:
-        return True if P=='' or P=='-' else False
-        
-def checkPositiveFloat(d, i, P, s, S, v, V, W):
-    try:
-        assert float(P) > 0
-        return True
-    except (ValueError, AssertionError):
-        return True if P=='' else False
-
-       
 
         
 # Scripting Sub-System
@@ -258,6 +241,9 @@ wavesyn
         
         from interfaces.xmlrpcserver import CommandSlot
         
+
+        valueChecker    = ValueChecker(root)        
+        
         with self.attributeLock:
             setMultiAttr(self,
                 # UI elements
@@ -266,24 +252,22 @@ wavesyn
                 tbicon = TaskbarIcon(root),
                 # End UI elements
                 
-                mainThreadId    = mainThreadId,
-                execThreadLock  = threading.RLock(),
+                mainThreadId        = mainThreadId,
+                execThreadLock      = threading.RLock(),
                 xmlrpcCommandSlot   = CommandSlot(),
             
                 # Validation Functions
-                checkInt = (root.register(partial(checkValue, func=int)),
-                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'),
-                checkFloat = (root.register(partial(checkValue, func=float)),
-                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'),
-                checkPositiveFloat = (root.register(checkPositiveFloat),
-                       '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'),
+                valueChecker        = valueChecker,
+                checkInt            = valueChecker.checkInt,
+                checkFloat          = valueChecker.checkFloat,
+                checkPositiveFloat  = valueChecker.checkPositiveFloat,
                 # End Validation Functions
                 
                 filePath    = filePath,
                 dirPath     = dirPath,
                 
                 configFileName  = configFileName
-            )
+            )        
         
         
         from basewindow import WindowDict                                  
