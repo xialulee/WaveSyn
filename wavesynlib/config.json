@@ -10,7 +10,8 @@
 	    {
 		"Name":"Console", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Save As...",   "TearOff":0,    "UnderLine":0,  "Command":"wavesyn.console.onSaveAs()",	"Print":false},
-		    {"Name":"Clear", "UnderLine":0, "Command":"wavesyn.console.clear()"}
+		    {"Name":"Clear", "UnderLine":0, "Command":"wavesyn.console.clear()"},
+		    {"Name":"Topmost Toggle",		"UnderLine":0,	"Command":"wavesyn.console.windowAttributes('-topmost', False) if wavesyn.console.windowAttributes('-topmost') else wavesyn.console.windowAttributes('-topmost', True)", "Print":false}
 		]
 	    },
 	    {

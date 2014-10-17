@@ -9,6 +9,29 @@ import sys
 from string import Template, Formatter
 import threading
 
+
+class Observable(object):        
+    def __init__(self, *args, **kwargs):
+        super(Observable, self).__init__(*args, **kwargs)
+        self.__observers    = []
+
+    def addObserver(self, observer):
+        self.__observers.append(observer)
+        
+    def deleteObserver(self, observer):
+        self.__observers.remove(observer)
+        
+    def deleteObservers(self):
+        self.__observers    = []
+        
+    def countObservers(self):
+        return len(self.__observers)
+        
+    def notifyObservers(self, *args, **kwargs):
+        for observer in self.__observers:
+            observer.update(*args, **kwargs)
+
+
 class MethodDelegator(object):
     def __init__(self, attrName, methodName)   :
         self.attrName   = attrName
