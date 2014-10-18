@@ -22,12 +22,12 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 import matplotlib.pyplot as pyplot
 
 
-from application import Application, Scripting, uiImagePath
-from objectmodel import ModelNode, NodeList, NodeDict
-from common import autoSubs, evalFmt, setMultiAttr
-from guicomponents import Group, ParamItem, ScrolledList
+from application    import Application, Scripting, uiImagePath
+from objectmodel    import ModelNode, NodeList, NodeDict
+from common         import autoSubs, evalFmt, setMultiAttr
+from common         import MethodDelegator, Observable
 
-from common     import MethodDelegator
+from guicomponents import Group, ParamItem, ScrolledList
 
 
 colorMap = {
@@ -209,6 +209,43 @@ class DataFigure(ModelNode):
         self.__minorGrid    = val
         self.axes.grid(val, 'minor')
         
+    @property
+    def xLim(self):
+        return self.axes.get_xlim()
+        
+    @property
+    def yLim(self):
+        return self.axes.get_ylim()
+        
+    def getTick(self, name):
+        ax          = self.axes
+        meth    = self.tickParams[name]
+        tick    = getattr(getattr(ax, meth[0]), 'get_'+meth[1])()()
+        if len(tick) >= 2:
+            tick    = tick[1] - tick[0]
+            return tick
+        else:
+            return None
+    
+    @Scripting.printable        
+    def setTick(self, name, val):
+        ax          = self.axes
+        meth        = self.tickParams[name]
+        if val is not None:
+            getattr(getattr(ax, meth[0]), 'set_'+meth[1])(MultipleLocator(float(val)))
+        self.update()
+            
+    tickParams  = {
+        'majorXTick':   ('xaxis', 'major_locator'), 
+        'majorYTick':   ('yaxis', 'major_locator'), 
+        'minorXTick':   ('xaxis', 'minor_locator'), 
+        'minorYTick':   ('yaxis', 'minor_locator')
+    }
+    for param in tickParams:
+        prop   = property(lambda self, name=param: self.getTick(name))
+        locals()[param]   = prop.setter(lambda self, val, name=param: self.setTick(name, val))
+
+        
 
     @Scripting.printable
     def grid(self, b, which='major', axis='both', **kwargs):
@@ -249,8 +286,7 @@ class DataFigure(ModelNode):
                 tick    = tick[1] - tick[0]
                 setattr(grpAxis, attr, tick)
                 
-        self.__topwin.grpGrid.major = self.majorGrid
-        self.__topwin.grpGrid.minor = self.minorGrid                
+               
 
     def clear(self):
         self.axes.clear()
@@ -258,7 +294,8 @@ class DataFigure(ModelNode):
         self.update()
         self.__topwin.grpGrid.major = 0
         self.__topwin.grpGrid.minor = 0
-        
+    
+    @Scripting.printable    
     def axis(self, r):
         return self.axes.axis(r)
             
@@ -293,8 +330,30 @@ class FigureList(NodeList):
         NodeList.append(self, val)
         
 
-class FigureBook(FigureList):         
-    class GridGroupObserver:
+class FigureBook(Observable, FigureList):         
+    '''FigureBook is a widget including multiple DataFigure objects and a Tkinter list widget. 
+It is used to show the different aspects of a mathematical object.
+For example, FigureBook is used to show the envelope, phase, autocorrelation, and FTM of a vector.
+
+FigureBook supports Observable protocal. When some of its properties change, it will notify its observers, 
+and its notifyObservers method will pass the following paramters to its observers:
+----Grid Properties----
+majorGrid:  Bool, indicates that whether the major grid is on or off.
+minorGrid:  Bool, indicates the minor grid.
+----Axis Limits----
+xLim:       the lower and upper limits of the x axis.
+yLim:       the lower and upper limits of the y axis.
+----Tick----
+majorXTick: the x axis' tick of the major grid.
+majorYTick: the y axis' ...
+minorXTick: the x axis' tick of the minor grid.
+minorYTick: the y axis' ...'''    
+
+    class GridGroupObserver(object):
+        '''This class is used by FigureBook. FigureBook is a class supports observable protocal.
+Meanwhile, FigureBook can also observe other objects. This class, GridGroupObserver, can be used to observe
+an instance of the GridGroup class.     
+    '''
         def __init__(self, figureBook):
             self.__figureBook   = figureBook
             
@@ -306,7 +365,21 @@ class FigureBook(FigureList):
 
             currentFigure.grid(majorGrid, which='major', **props['major'])
             currentFigure.grid(minorGrid, which='minor', **props['minor'])                   
-#            currentFigure.update()
+            
+    class AxisGroupObserver(object):
+        def __init__(self, figureBook):
+            self.__figureBook   = figureBook
+            
+        def update(self, xLim, yLim, majorXTick, majorYTick, minorXTick, minorYTick):
+            printCode   = True            
+            currentFigure   = self.__figureBook.currentFigure
+            lim = xLim
+            lim.extend(yLim)
+            currentFigure.axis(lim)
+            for XY in ('X', 'Y'):
+                for mm in ('major', 'minor'):
+                    currentFigure.setTick(mm+XY+'Tick', locals()[mm+XY+'Tick'])
+#            currentFigure.setTick(name=)
         
     def __init__(self, *args, **kwargs):
         '''
@@ -350,12 +423,12 @@ The rest parameters are passed to PanedWindow.__init__.
         self.__list.listClick = self.onListClick
         panedWindow.add(self.__list, stretch='never')
         
-        #self.panedWindow    = panedWindow
-        #self.lockAttribute('panedWindow')
+
         with self.attributeLock:
             setMultiAttr(self,
                 panedWindow = panedWindow,
-                gridGroupObserver    = self.GridGroupObserver(self),
+                gridGroupObserver   = self.GridGroupObserver(self), 
+                axisGroupObserver   = self.AxisGroupObserver(self),
                 dataPool    = []
             )
             
@@ -406,6 +479,13 @@ The rest parameters are passed to PanedWindow.__init__.
         
         
     def onTabChange(self, event):
+        kwargs  ={}
+        cf      = self.currentFigure
+        props   = ['majorGrid', 'minorGrid', 'xLim', 'yLim', 
+                   'majorXTick', 'majorYTick', 'minorXTick', 'minorYTick']
+        for p in props:
+            kwargs[p]   = getattr(cf, p)
+        self.notifyObservers(**kwargs)
         self.currentFigure.updateViewTab()            
         
     def onListClick(self, index, label):
@@ -591,11 +671,19 @@ The rest parameters are passed to PanedWindow.__init__.
 #    def minor(self, value):
 #        self.__minor.set(value)  
 
-from common import Observable
+
 
 class GridGroup(Observable, Group):
+    class FigureObserver(object):
+        def __init__(self, gridGroup):
+            self.__gridGroup    = gridGroup            
+        def update(self, **kwargs):
+            if 'majorGrid' in kwargs:
+                self.__gridGroup.major  = kwargs['majorGrid']
+            if 'minorGrid'  in kwargs:
+                self.__gridGroup.minor  = kwargs['minorGrid']    
+    
     def __init__(self, *args, **kwargs):
-        self.__topwin   = kwargs.pop('topwin')
         super(GridGroup, self).__init__(*args, **kwargs)
         
         app = Application.instance
@@ -603,6 +691,7 @@ class GridGroup(Observable, Group):
         minor = IntVar(0)
         self.__major = major
         self.__minor = minor
+        self.__figureObserver   = self.FigureObserver(self)
                                 
         def askgridprop():
             win = Toplevel()
@@ -679,6 +768,10 @@ class GridGroup(Observable, Group):
         
         self.name = 'Grid'
         
+    @property
+    def figureObserver(self):
+        return self.__figureObserver
+
 
     def onChkClick(self):
         self.notifyObservers(majorGrid=self.__major.get(), minorGrid=self.__minor.get())
@@ -723,7 +816,8 @@ class GridGroup(Observable, Group):
         self.__minor.set(value)  
 
 
-class AxisGroup(Group):
+
+class AxisGroup(Observable, Group):
     def __init__(self, *args, **kwargs):
         self.__topwin = kwargs.pop('topwin')
         app = Application.instance
@@ -789,17 +883,18 @@ class AxisGroup(Group):
                 return float(x)
             except:
                 return None
-        aparams = [toFloat(v.get()) for v in self.__params]
-        currentFigure   = self.__topwin.figureBook.currentFigure
-        currentFigure.axis(aparams[:4])
-        axes    = currentFigure.axes
-        axes.xaxis.set_major_locator(MultipleLocator(float(aparams[4])))
-        axes.yaxis.set_major_locator(MultipleLocator(float(aparams[5])))
-        if aparams[6] is not None:
-            axes.xaxis.set_minor_locator(MultipleLocator(float(aparams[6])))
-        if aparams[7] is not None:
-            axes.yaxis.set_minor_locator(MultipleLocator(float(aparams[7])))
-        currentFigure.update()
+        p = [toFloat(v.get()) for v in self.__params]
+#        currentFigure   = self.__topwin.figureBook.currentFigure
+#        currentFigure.axis(aparams[:4])
+#        axes    = currentFigure.axes
+#        axes.xaxis.set_major_locator(MultipleLocator(float(aparams[4])))
+#        axes.yaxis.set_major_locator(MultipleLocator(float(aparams[5])))
+#        if aparams[6] is not None:
+#            axes.xaxis.set_minor_locator(MultipleLocator(float(aparams[6])))
+#        if aparams[7] is not None:
+#            axes.yaxis.set_minor_locator(MultipleLocator(float(aparams[7])))
+#        currentFigure.update()
+        self.notifyObservers(xLim=p[0:2], yLim=p[2:4], majorXTick=p[4], majorYTick=p[5], minorXTick=p[6], minorYTick=p[7])
 
     def onAutoClick(self):
         currentFigure   = self.__topwin.figureBook.currentFigure
@@ -896,13 +991,16 @@ class FigureWindow(WindowNode):
     def makeViewTab(self):
         toolTabs    = self.toolTabs
         frmView = Frame(toolTabs)
-        grpGrid = GridGroup(frmView, bd=2, relief=GROOVE, topwin=self)
+        
+        grpGrid = GridGroup(frmView, bd=2, relief=GROOVE)
         grpGrid.pack(side=LEFT, fill=Y)
         grpGrid.addObserver(self.figureBook.gridGroupObserver)
+        self.figureBook.addObserver(grpGrid.figureObserver)
       
         
         grpAxis = AxisGroup(frmView, bd=2, relief=GROOVE, topwin=self)
         grpAxis.pack(side=LEFT, fill=Y)
+        grpAxis.addObserver(self.figureBook.axisGroupObserver)
       
         
         grpClear = ClearGroup(frmView, bd=2, relief=GROOVE, topwin=self)
