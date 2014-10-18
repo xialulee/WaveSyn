@@ -3,7 +3,11 @@
 from Tkinter    import *
 from ttk        import *
 from Tkinter    import Frame
+
+from functools  import partial
+
 from common     import MethodDelegator
+
 
 
 __DEBUG__ = False
@@ -53,6 +57,31 @@ else:
     class TaskbarIcon(object):
         def __init__(self, root):
             pass
+
+
+def checkValue(d, i, P, s, S, v, V, W, func):
+    try:
+        func(P)
+        return True
+    except ValueError:
+        return True if P=='' or P=='-' else False
+        
+def checkPositiveFloat(d, i, P, s, S, v, V, W):
+    try:
+        assert float(P) > 0
+        return True
+    except (ValueError, AssertionError):
+        return True if P=='' else False
+
+class ValueChecker(object):
+    def __init__(self, root):
+        self.__root = root
+        self.checkInt   = (root.register(partial(checkValue, func=int)),
+                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        self.checkFloat = (root.register(partial(checkValue, func=float)),
+                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        self.checkPositiveFloat = (root.register(checkPositiveFloat),
+                       '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
 
 
 
