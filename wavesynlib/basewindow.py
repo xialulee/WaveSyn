@@ -21,6 +21,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import matplotlib.pyplot as pyplot
 
+from numpy          import deg2rad, rad2deg
+
 
 from application    import Application, Scripting, uiImagePath
 from objectmodel    import ModelNode, NodeList, NodeDict
@@ -140,11 +142,10 @@ class WindowComponent(object):
 
   
 class DataFigure(ModelNode):
-    def __init__(self, master, topwin, nodeName='', figsize=(5,4), dpi=100, isPolar=False):
+    def __init__(self, master, nodeName='', figsize=(5,4), dpi=100, isPolar=False):
         super(DataFigure, self).__init__(nodeName=nodeName)
         
         figure = Figure(figsize, dpi)
-        self.__topwin   = topwin
         
         canvas = FigureCanvasTkAgg(figure, master=master)
         canvas.show()
@@ -258,40 +259,12 @@ class DataFigure(ModelNode):
     @Scripting.printable    
     def update(self):
         self.__canvas.show()
-<<<<<<< HEAD
-
-    def updateViewTab(self):    
-        grpAxis = self.__topwin.grpAxis
-        axes    = self.axes
-        
-        grpAxis.xlim    = axes.get_xlim()
-        grpAxis.ylim    = axes.get_ylim()
-        
-        #To do: using a list with tuples instead
-        attr_func   = {
-            'major_xtick':  axes.xaxis.get_major_locator,
-            'major_ytick':  axes.yaxis.get_major_locator,
-            'minor_xtick':  axes.xaxis.get_minor_locator,
-            'minor_ytick':  axes.yaxis.get_minor_locator
-        }
-        
-        for attr in attr_func:
-            tick    = attr_func[attr]()()
-            if len(tick) >= 2:
-                tick    = tick[1] - tick[0]
-                setattr(grpAxis, attr, tick)
-                
-               
-
-=======
                                
->>>>>>> origin/master
     def clear(self):
         self.axes.clear()
         del self.lineObjects[:]
         self.update()
-        self.__topwin.grpGrid.major = 0
-        self.__topwin.grpGrid.minor = 0
+
     
     @Scripting.printable    
     def axis(self, r):
@@ -373,27 +346,23 @@ an instance of the GridGroup class.
         def __init__(self, figureBook):
             self.__figureBook   = figureBook
             
-<<<<<<< HEAD
-        def update(self, xLim, yLim, majorXTick, majorYTick, minorXTick, minorYTick):
-            printCode   = True            
-            currentFigure   = self.__figureBook.currentFigure
-=======
         def update(self, xLim, yLim, majorXTick, majorYTick, minorXTick, minorYTick, autoScale=False):
             printCode   = True
             currentFigure   = self.__figureBook.currentFigure
             if autoScale:
                 currentFigure.autoScale()
                 return
->>>>>>> origin/master
-            lim = xLim
+            lim = list(xLim)
+            if currentFigure.isPolar:
+                lim = list(deg2rad(lim))
+                majorXTick  = deg2rad(majorXTick)
+                if minorXTick is not None:
+                    minorXTick  = deg2rad(minorXTick)
             lim.extend(yLim)
             currentFigure.axis(lim)
             for XY in ('X', 'Y'):
                 for mm in ('major', 'minor'):
                     currentFigure.setTick(mm+XY+'Tick', locals()[mm+XY+'Tick'])
-<<<<<<< HEAD
-#            currentFigure.setTick(name=)
-=======
 
     class ClearGroupObserver(object):
         def __init__(self, figureBook):
@@ -409,7 +378,6 @@ an instance of the GridGroup class.
             else:
                 return
 
->>>>>>> origin/master
         
     def __init__(self, *args, **kwargs):
         '''
@@ -418,8 +386,6 @@ figureMeta: Meta information of figure.
 The rest parameters are passed to PanedWindow.__init__.
 '''
         nodeName    = kwargs.pop('nodeName', '')
-        topwin      = kwargs.pop('topwin')        
-        self.__topwin = topwin
         # lock
         
         super(FigureBook, self).__init__(nodeName=nodeName)
@@ -459,10 +425,7 @@ The rest parameters are passed to PanedWindow.__init__.
                 panedWindow = panedWindow,
                 gridGroupObserver   = self.GridGroupObserver(self), 
                 axisGroupObserver   = self.AxisGroupObserver(self),
-<<<<<<< HEAD
-=======
                 clearGroupObserver  = self.ClearGroupObserver(self),
->>>>>>> origin/master
                 dataPool    = []
             )
             
@@ -473,6 +436,11 @@ The rest parameters are passed to PanedWindow.__init__.
         for p in props:
             if p not in kwargs:
                 kwargs[p]   = getattr(cf, p)
+        if cf.isPolar:
+            kwargs['xLim']  = rad2deg(kwargs['xLim'])
+            kwargs['majorXTick']    = rad2deg(kwargs['majorXTick'])
+            if kwargs['minorXTick'] is not None:
+                kwargs['minorXTick']    = rad2deg(kwargs['minorXTick'])
         super(FigureBook, self).notifyObservers(**kwargs)            
         
     def pack(self, *args, **kwargs):
@@ -481,7 +449,7 @@ The rest parameters are passed to PanedWindow.__init__.
     def makeFigures(self, figureMeta):
         for meta in figureMeta:
             frm = Frame(self.figureTabs)
-            fig = DataFigure(frm, self.__topwin, isPolar=meta['polar'])
+            fig = DataFigure(frm, isPolar=meta['polar'])
             self.figureTabs.add(frm, text=meta['name'])
             self.append(fig)        
         
@@ -518,20 +486,8 @@ The rest parameters are passed to PanedWindow.__init__.
         del self.dataPool[:]
         
         
-<<<<<<< HEAD
-    def onTabChange(self, event):
-        kwargs  ={}
-        cf      = self.currentFigure
-        props   = ['majorGrid', 'minorGrid', 'xLim', 'yLim', 
-                   'majorXTick', 'majorYTick', 'minorXTick', 'minorYTick']
-        for p in props:
-            kwargs[p]   = getattr(cf, p)
-        self.notifyObservers(**kwargs)
-        self.currentFigure.updateViewTab()            
-=======
     def onTabChange(self, event): 
         self.notifyObservers()          
->>>>>>> origin/master
         
     def onListClick(self, index, label):
         index = int(index)
@@ -578,149 +534,6 @@ The rest parameters are passed to PanedWindow.__init__.
 
 
 
-<<<<<<< HEAD
-
-#class GridGroup(Group):
-#    def __init__(self, *args, **kwargs):
-#        self.__topwin   = kwargs.pop('topwin')
-#        super(GridGroup, self).__init__(*args, **kwargs)
-#        app = Application.instance
-#        major = IntVar(0)
-#        minor = IntVar(0)
-#        self.__major = major
-#        self.__minor = minor
-#                        
-#                        
-#        def setgrid():
-#            currentFigure = self.__topwin.figureBook.currentFigure
-#            currentFigure.majorGrid = major.get()
-#            currentFigure.minorGrid = minor.get()
-#            currentFigure.update()
-#
-#
-#        def askgridprop():
-#            win = Toplevel()
-#            color = ['#000000', '#000000']
-#
-#            propvars = [StringVar() for i in range(4)]
-#            guidata = (
-#                {
-#                    'linestyle': ('Major Line Style', propvars[0], None),
-#########################################################################################################
-#                    'linewidth': ('Major Line Width', propvars[1], app.checkPositiveFloat)
-#                },
-#                {
-#                    'linestyle': ('Minor Line Style', propvars[2], None),
-#                    'linewidth': ('Minor Line Width', propvars[3], app.checkPositiveFloat)
-##########################################################################################################
-#                }
-#            )
-#
-#            for d in guidata:
-#                for key in d:
-#                    pitem = ParamItem(win)
-#                    pitem.pack()
-#                    pitem.labelText = d[key][0]
-#                    pitem.entry['textvariable'] = d[key][1]
-#                    if d[key][2]:
-#                        pitem.checkFunc = d[key][2]
-#
-#            def setmajorcolor():
-#                c = askcolor()
-#                color[0] = c[1]
-#
-#            def setminorcolor():
-#                c = askcolor()
-#                color[1] = c[1]
-#            Button(win, text='Major Line Color', command=setmajorcolor).pack()
-#            Button(win, text='Minor Line Color', command=setminorcolor).pack()
-#
-#            win.protocol('WM_DELETE_WINDOW', win.quit)
-#            win.focus_set()
-#            win.grab_set()
-#            win.mainloop()
-#            win.destroy()
-#            c_major = StringVar(); c_major.set(color[0])
-#            c_minor = StringVar(); c_minor.set(color[1])
-#            guidata[0]['color'] = ('Major Line Color', c_major, None)
-#            guidata[1]['color'] = ('Minor Line Color', c_minor, None)
-#            return guidata
-#
-#        def onPropertyClick():
-#            ret = askgridprop()
-#
-#            for idx, name in enumerate(('major', 'minor')):
-#                for key in ret[idx]:
-#                    value = ret[idx][key][1].get()
-#                    if value:
-#                        self.__topwin.figureBook.currentFigure.axes.grid(None, name, **{key: value})
-#            major.set(1)
-#            minor.set(1)
-#            self.__topwin.figureBook.currentFigure.update()
-#                                    
-#        chkGridMajor    = Checkbutton(self, text='Grid Major', variable=major, command=self.onChkGridMajor)
-#        chkGridMajor.pack(fill=X)
-#        self.chkGridMajor   = chkGridMajor
-#        
-#        chkGridMinor    = Checkbutton(self, text='Grid Minor', variable=minor, command=setgrid)
-#        chkGridMinor.pack(fill=X)
-#        self.chkGridMinor   = chkGridMinor        
-#        
-#        btnProperty     = Button(self, text='Property', command=onPropertyClick)
-#        btnProperty.pack()
-#        self.btnProperty    = btnProperty
-#        
-#        self.name = 'Grid'
-#        
-#    def onChkGridMajor(self):        
-#        printCode    = True
-#        currentFigure   = self.__topwin.figureBook.currentFigure
-#        currentFigure.grid(self.__major.get(), which='major')
-#        currentFigure.update()
-#        
-#
-#        
-#    class __EnableDelegator(object):
-#        def __init__(self, widgetName):
-#            self.widgetName = widgetName
-#            
-#        def __get__(self, obj, type=None):
-#            def enable(state):                
-#                en  = NORMAL if state else DISABLED
-#                getattr(obj, self.widgetName).config(state=en)
-#            return enable
-#            
-#    enableWidgets   = dict(
-#        enableGridMajor =  'chkGridMajor',
-#        enableGridMinor =  'chkGridMinor',
-#        enableProperty  =  'btnProperty'
-#    )
-#    
-#    for methodName in enableWidgets:
-#        locals()[methodName]    = __EnableDelegator(enableWidgets[methodName])
-#        
-#
-#
-#    @property
-#    def major(self):
-#        return self.__major.get()
-#
-#    @major.setter
-#    def major(self, value):
-#        self.__major.set(value)
-#
-#    @property
-#    def minor(self):
-#        return self.__minor.get()
-#
-#    @minor.setter
-#    def minor(self, value):
-#        self.__minor.set(value)  
-
-
-
-=======
->>>>>>> origin/master
 class GridGroup(Observable, Group):
     class FigureObserver(object):
         def __init__(self, gridGroup):
@@ -732,8 +545,6 @@ class GridGroup(Observable, Group):
                 self.__gridGroup.minor  = kwargs['minorGrid']    
     
     def __init__(self, *args, **kwargs):
-<<<<<<< HEAD
-=======
         if 'valueChecker' in kwargs:
             valueChecker    = kwargs.pop('valueChecker')
             checkPositiveFloat  = valueChecker.checkPositiveFloat
@@ -743,7 +554,6 @@ class GridGroup(Observable, Group):
         if 'balloon' in kwargs:
             kwargs.pop('balloon')
         
->>>>>>> origin/master
         super(GridGroup, self).__init__(*args, **kwargs)
         
 #        app = Application.instance
@@ -878,8 +688,6 @@ class GridGroup(Observable, Group):
 
 
 class AxisGroup(Observable, Group):
-<<<<<<< HEAD
-=======
     class FigureObserver(object):
         def __init__(self, axisGroup):
             self.__axisGroup    = axisGroup            
@@ -895,7 +703,6 @@ class AxisGroup(Observable, Group):
             if 'yLim' in kwargs:
                 self.__axisGroup.yLim   = kwargs['yLim']
     
->>>>>>> origin/master
     def __init__(self, *args, **kwargs):
 #        app = Application.instance
         if 'valueChecker' in kwargs:
@@ -976,19 +783,6 @@ class AxisGroup(Observable, Group):
             except:
                 return None
         p = [toFloat(v.get()) for v in self.__params]
-<<<<<<< HEAD
-#        currentFigure   = self.__topwin.figureBook.currentFigure
-#        currentFigure.axis(aparams[:4])
-#        axes    = currentFigure.axes
-#        axes.xaxis.set_major_locator(MultipleLocator(float(aparams[4])))
-#        axes.yaxis.set_major_locator(MultipleLocator(float(aparams[5])))
-#        if aparams[6] is not None:
-#            axes.xaxis.set_minor_locator(MultipleLocator(float(aparams[6])))
-#        if aparams[7] is not None:
-#            axes.yaxis.set_minor_locator(MultipleLocator(float(aparams[7])))
-#        currentFigure.update()
-=======
->>>>>>> origin/master
         self.notifyObservers(xLim=p[0:2], yLim=p[2:4], majorXTick=p[4], majorYTick=p[5], minorXTick=p[6], minorYTick=p[7])
 
     def onAutoClick(self):
@@ -1058,7 +852,7 @@ class FigureWindow(WindowNode):
         with self.attributeLock:
             self.toolTabs   = toolTabs
         
-        figureBook  = FigureBook(self._toplevel, topwin=self)
+        figureBook  = FigureBook(self._toplevel)
         figureBook.pack(expand=YES, fill=BOTH)                
         self.figureBook = figureBook
         
@@ -1086,11 +880,7 @@ class FigureWindow(WindowNode):
         toolTabs    = self.toolTabs
         frmView = Frame(toolTabs)
         
-<<<<<<< HEAD
-        grpGrid = GridGroup(frmView, bd=2, relief=GROOVE)
-=======
         grpGrid = GridGroup(frmView, bd=2, relief=GROOVE, balloon=self.balloon, valueChecker=self.valueChecker)
->>>>>>> origin/master
         grpGrid.pack(side=LEFT, fill=Y)
         grpGrid.addObserver(self.figureBook.gridGroupObserver)
         self.figureBook.addObserver(grpGrid.figureObserver)
@@ -1099,10 +889,7 @@ class FigureWindow(WindowNode):
         grpAxis = AxisGroup(frmView, bd=2, relief=GROOVE, balloon=self.balloon, valueChecker=self.valueChecker)
         grpAxis.pack(side=LEFT, fill=Y)
         grpAxis.addObserver(self.figureBook.axisGroupObserver)
-<<<<<<< HEAD
-=======
         self.figureBook.addObserver(grpAxis.figureObserver)
->>>>>>> origin/master
       
         
         grpClear = ClearGroup(frmView, bd=2, relief=GROOVE)
