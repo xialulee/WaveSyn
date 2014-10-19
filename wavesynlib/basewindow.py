@@ -10,7 +10,7 @@ from tkColorChooser import askcolor
 
 from Tkinter import *
 from ttk import *
-from Tkinter import Frame, PanedWindow
+from Tkinter import Frame, PanedWindow, Label
 from tkFileDialog import asksaveasfilename
 from PIL import ImageTk
 
@@ -29,7 +29,7 @@ from objectmodel    import ModelNode, NodeList, NodeDict
 from common         import autoSubs, evalFmt, setMultiAttr
 from common         import MethodDelegator, Observable
 
-from guicomponents import Group, ParamItem, ScrolledList
+from guicomponents import Group, ParamItem, ScrolledList, LabeledScale
 
 
 colorMap = {
@@ -142,6 +142,52 @@ class WindowComponent(object):
 
   
 class DataFigure(ModelNode):
+    class Indicators(ModelNode):
+        def __init__(self, nodeName='', dataFig=None, callback=None):
+            super(DataFigure.Indicators, self).__init__(nodeName=nodeName)
+            self.__dataFig  = dataFig
+            if dataFig is not None:
+                self.__ax   = dataFig.axes
+            self.__meta = []
+            if callback is None:
+                callback    = lambda *args, **kwargs: None
+            self.__callback = callback
+        @Scripting.printable
+        def axvspan(self, xmin, xmax, ymin=0, ymax=1, **kwargs):
+            obj = self.__ax.axvspan(xmin, xmax, ymin, ymax, **kwargs)
+            self.__meta.append(
+                {
+                    'type':  'axvspan',
+                    'xmin':  xmin,
+                    'xmax':  xmax,
+                    'ymin':  ymin,
+                    'ymax':  ymax,
+                    'props': kwargs,
+                    'object':obj
+                }
+            )
+            self.__dataFig.update()
+        @Scripting.printable
+        def axhspan(self, ymin, ymax, xmin=0, xmax=1, **kwargs):
+            obj = self.__ax.axhspan(ymin, ymax, xmin, xmax, **kwargs)
+            self.__meta.append(
+                {
+                    'type':  'axhspan',
+                    'xmin':  xmin,
+                    'xmax':  xmax,
+                    'ymin':  ymin,
+                    'ymax':  ymax,
+                    'props': kwargs,
+                    'object':obj
+                }
+            )
+            self.__dataFig.update()            
+        def clear(self):
+            self.__meta = []
+        @property
+        def meta(self):
+            return self.__meta
+    
     def __init__(self, master, nodeName='', figsize=(5,4), dpi=100, isPolar=False):
         super(DataFigure, self).__init__(nodeName=nodeName)
         
@@ -165,6 +211,7 @@ class DataFigure(ModelNode):
                 axes        = figure.add_subplot(111, polar=isPolar),
                 isPolar     = isPolar
             )
+        self.indicators = self.Indicators(dataFig=self)
 
         
         self.plotFunction = None
@@ -173,6 +220,8 @@ class DataFigure(ModelNode):
         
         self.__majorGrid    = isPolar
         self.__minorGrid    = False
+        
+        self.__indicatorsMeta   = []
 
     @property
     def nodePath(self):
@@ -185,7 +234,7 @@ class DataFigure(ModelNode):
         lineObject = self.axes.plot(*args, **kwargs)
         self.lineObjects.append(lineObject)
         self.update()
-                       
+                               
     @property
     def majorGrid(self):
         return self.__majorGrid
@@ -377,6 +426,24 @@ an instance of the GridGroup class.
                 self.__figureBook.deleteSelLines(idx=None)
             else:
                 return
+                
+    class IndicatorGroupObserver(object):
+        def __init__(self, figureBook):
+            self.__figureBook   = figureBook
+            
+        def update(self, meta):
+            printCode   = True
+            if meta['type'] in ('axvspan', 'axhspan'):
+                if meta['type'] == 'axvspan':
+                    theMin  = meta['xmin']
+                    theMax  = meta['xmax']
+                else:
+                    theMin  = meta['ymin']
+                    theMax  = meta['ymax']
+                props   = meta['props']
+#                self.__figureBook.currentFigure.indicators.axvspan(xmin, xmax, **props)
+                getattr(self.__figureBook.currentFigure.indicators, meta['type'])(theMin, theMax, **props)
+                self.__figureBook.updateIndicatorList()
 
         
     def __init__(self, *args, **kwargs):
@@ -414,10 +481,28 @@ The rest parameters are passed to PanedWindow.__init__.
         
         panedWindow.add(figureTabs, stretch='always')
         
-        self.__list = ScrolledList(panedWindow, relief=GROOVE)
+
+        listPan     = PanedWindow(panedWindow, orient=VERTICAL)
+        listPan.config(sashwidth=4, sashrelief=GROOVE, bg='forestgreen')        
+        panedWindow.add(listPan, stretch='never')
+
+        
+        listFrm     = Frame(listPan)
+        listPan.add(listFrm, stretch='always')        
+        Label(listFrm, text='Curves', bg='#b5d6b0').pack(side=TOP, fill=X)                
+        self.__list = ScrolledList(listFrm, relief=GROOVE)
         self.__list.listConfig(width=20)
         self.__list.listClick = self.onListClick
-        panedWindow.add(self.__list, stretch='never')
+        self.__list.pack(fill=BOTH, expand=YES)  
+
+        listFrm     = Frame(listPan)        
+        listPan.add(listFrm, stretch='never')
+        Label(listFrm, text='Indicators', bg='#b5d6b0').pack(side=TOP, fill=X)
+        self.__indicatorListbox = ScrolledList(listFrm, relief=GROOVE)
+        self.__indicatorListbox.listConfig(width=20)
+        self.__indicatorListbox.pack(fill=BOTH, expand=YES)
+        
+      
         
 
         with self.attributeLock:
@@ -426,6 +511,7 @@ The rest parameters are passed to PanedWindow.__init__.
                 gridGroupObserver   = self.GridGroupObserver(self), 
                 axisGroupObserver   = self.AxisGroupObserver(self),
                 clearGroupObserver  = self.ClearGroupObserver(self),
+                indicatorGroupObserver  = self.IndicatorGroupObserver(self),
                 dataPool    = []
             )
             
@@ -484,10 +570,13 @@ The rest parameters are passed to PanedWindow.__init__.
             fig.clear()
         self.__list.clear()
         del self.dataPool[:]
+        self.currentFigure.indicators.clear()
+        self.updateIndicatorList()
         
         
     def onTabChange(self, event): 
-        self.notifyObservers()          
+        self.notifyObservers()
+        self.updateIndicatorList()          
         
     def onListClick(self, index, label):
         index = int(index)
@@ -530,6 +619,20 @@ The rest parameters are passed to PanedWindow.__init__.
             fig.update()
         self.__list.delete(idx)
         del self.dataPool[idx]
+        
+    def updateIndicatorList(self):
+        iList   = self.__indicatorListbox
+        iList.delete(0, END)
+        meta    = self.currentFigure.indicators.meta
+        for m in meta:
+            if m['type'] == 'axvspan':
+                xmin    = m['xmin']
+                xmax    = m['xmax']
+                iList.insert(END, '{0}|{1}/{2}'.format('axvspan',xmin,xmax))
+            elif m['type'] == 'axhspan':
+                ymin    = m['ymin']
+                ymax    = m['ymax']
+                iList.insert(END, '{0}|{1}/{2}'.format('axhspan',ymin,ymax))
         
 
 
@@ -793,7 +896,6 @@ class AxisGroup(Observable, Group):
 class ClearGroup(Observable, Group):
     def __init__(self, *args, **kwargs):
         super(ClearGroup, self).__init__(*args, **kwargs)
-        self.__currentFigure = None
         Button(self, text='Clear All', command=self.onClearAll).pack()
         Button(self, text='Del Sel', command=self.onDelSel).pack()
         Button(self, text='Del UnSel', command=self.onDelUnSel).pack()
@@ -809,6 +911,68 @@ class ClearGroup(Observable, Group):
 #        printCode   = True
         #self.__topwin.figureBook.remove_unsel_lines()            
         pass
+
+
+
+class IndicatorGroup(Observable, Group):
+    def __init__(self, *args, **kwargs):
+        super(IndicatorGroup, self).__init__(*args, **kwargs)
+        indicatorList    = Combobox(self, value=[], takefocus=1, stat='readonly', width=9)
+        indicatorList['value']  = ['axvspan', 'axhspan']
+        indicatorList.current(0)
+        self.__indicatorList    = indicatorList
+        self.__indicatorList.pack()
+        Button(self, text='Add', command=self.onAdd).pack()
+        self.name   = 'Indicators'
+        
+    def onAdd(self):
+        indicatorType   = self.__indicatorList.get()
+        def askSpan(orient='v'):
+            win = Toplevel()
+            pxmin   = ParamItem(win)
+            pxmin.pack()
+            pxmin.labelText = 'xmin' if orient=='v' else 'ymin'
+            pxmax   = ParamItem(win)
+            pxmax.pack()
+            pxmax.labelText = 'xmax' if orient=='v' else 'ymax'
+            def formatter(val):
+                val = float(val)
+                val /= 100.
+                return '{0:0.2f}'.format(val)
+            alphaScale  = LabeledScale(win, from_=0, to=100, name='alpha', formatter=formatter)
+            alphaScale.set(50.0)
+            alphaScale.pack()
+            win.protocol('WM_DELETE_WINDOW', win.quit)
+            win.focus_set()
+            win.grab_set()
+            win.mainloop()
+            xmin    = pxmin.entry.get()
+            xmax    = pxmax.entry.get()
+            alpha   = alphaScale.get() / 100.
+            win.destroy()
+            return map(float, (xmin, xmax, alpha))
+
+        if indicatorType in ('axvspan', 'axhspan'):
+            try:
+                theMin, theMax, alpha  = askSpan(indicatorType[2])
+            except ValueError:
+                return
+            meta    = {
+                'type':     indicatorType,
+                'props':    {'alpha':alpha}
+            }
+            if indicatorType == 'axvspan':
+                meta['xmin']    = theMin 
+                meta['xmax']    = theMax
+                meta['ymin']    = 0.0
+                meta['ymax']    = 1.0
+            else:
+                meta['xmin']    = 0.0
+                meta['xmax']    = 1.0
+                meta['ymin']    = theMin
+                meta['ymax']    = theMax
+            self.notifyObservers(meta)            
+
 
 
 class FigureExportGroup(Group):
@@ -896,11 +1060,16 @@ class FigureWindow(WindowNode):
         grpClear.pack(side=LEFT, fill=Y)
         grpClear.addObserver(self.figureBook.clearGroupObserver)
         
+        grpIndicator    = IndicatorGroup(frmView, bd=2, relief=GROOVE)
+        grpIndicator.pack(side=LEFT, fill=Y)
+        grpIndicator.addObserver(self.figureBook.indicatorGroupObserver)
+        
         with self.attributeLock:    
             setMultiAttr(self,
                 grpGrid  = grpGrid,
                 grpAxis  = grpAxis,
                 grpClear = grpClear,
+                grpIndicator    = grpIndicator,
                 viewFrame  = frmView
             )
             

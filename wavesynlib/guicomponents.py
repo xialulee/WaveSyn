@@ -108,6 +108,31 @@ class LabeledEntry(Frame, object):
         return self.__label
         
         
+class LabeledScale(Frame, object):
+    def __init__(self, *args, **kwargs):
+        from_   = kwargs.pop('from_')
+        to      = kwargs.pop('to')
+        name    = kwargs.pop('name')
+        formatter   = kwargs.pop('formatter', str)
+        self.__formatter    = formatter
+        Frame.__init__(self, *args, **kwargs)
+        Label(self, text=name).pack(side=LEFT)
+        self.__scale    = Scale(self, from_=from_, to=to, command=self.onChange)
+        self.__scale.pack(side=LEFT, fill=X)
+        lblVal  = Label(self)
+        lblVal.pack(side=LEFT)
+        self.__labelValue   = lblVal
+        
+    def onChange(self, val):
+#        val = self.__scale.get()
+        self.__labelValue['text']  = self.__formatter(val)
+        
+    def get(self):
+        return self.__scale.get()
+        
+    def set(self, val):
+        return self.__scale.set(val)
+
         
         
 class ParamItem(Frame, object):
@@ -163,7 +188,8 @@ class ParamItem(Frame, object):
         self.__entry.config(textvariable=val)
 
     def getInt(self):
-        return int(self.__entry.get())
+        i   = self.__entry.get()
+        return 0 if not i else int(self.__entry.get())
 
     def getFloat(self):
         return float(self.__entry.get())
