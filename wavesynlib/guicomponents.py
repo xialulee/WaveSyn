@@ -6,8 +6,7 @@ from Tkinter    import Frame
 
 from functools  import partial
 
-from common     import MethodDelegator
-
+from common     import MethodDelegator, Observable
 
 
 __DEBUG__ = False
@@ -82,6 +81,30 @@ class ValueChecker(object):
                     '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
         self.checkPositiveFloat = (root.register(checkPositiveFloat),
                        '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+
+
+class TkTimer(Observable):
+    def __init__(self, widget, interval=1000, active=False):
+        super(TkTimer, self).__init__()
+        self.__widget   = widget
+        self.interval   = interval
+        self.__active   = active
+        
+    def __timerFunc(self):
+        if self.active:
+            self.notifyObservers()
+            self.__widget.after(self.interval, self.__timerFunc)
+        
+    
+    @property
+    def active(self):
+        return self.__active
+        
+    @active.setter
+    def active(self, val):
+        self.__active   = val
+        if val and not self.active:
+            self.__timerFunc()
 
 
 
@@ -315,7 +338,7 @@ class ScrolledText(Frame):
 
 
 
-
+# Will be moved to stdstream.py later
 class StreamChain(object):
     def __init__(self):
         self.__streamlist   = []

@@ -53,10 +53,10 @@ from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from objectmodel import ModelNode
-from guicomponents import StreamChain, TaskbarIcon, ScrolledText, ValueChecker
+from guicomponents import StreamChain, TaskbarIcon, ScrolledText, ValueChecker, TkTimer
 from common import setMultiAttr, autoSubs, evalFmt, Singleton
 
-
+from stdstream  import StreamManager
 ##########################Experimenting with multiprocessing###############################
 #import multiprocessing as mp
 ###########################################################################################
@@ -266,9 +266,13 @@ wavesyn
                 filePath    = filePath,
                 dirPath     = dirPath,
                 
+                monitorTimer    = TkTimer(widget=root, interval=100, active=False),
+                streamManager   =StreamManager(),                
+                
                 configFileName  = configFileName
             )        
         
+        self.monitorTimer.addObserver(self.streamManager)        
         
         from basewindow import WindowDict                                  
         self.windows = WindowDict() # Instance of ModelNode can be locked automatically.
@@ -277,6 +281,7 @@ wavesyn
         frm.pack(side=TOP, fill=X)                
 
         self.console = ConsoleWindow(menu=consoleMenu, tagDefs=tagDefs)
+        self.streamManager.addObserver(self.console.streamObserver)
              
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
@@ -294,6 +299,9 @@ wavesyn
 #You can access the created window using its ID in the scripting system.
 #A PatternWindow can synthesize a correlation matrix of which the beam pattern fits the given ideal pattern best.'''        
 #        return self.windows.add(node=PatternWindow())
+        
+    def createTimer(self, interval=100, active=False):
+        return TkTimer(interval, active)
                      
         
     def printAndEval(self, expr):
@@ -413,7 +421,174 @@ class Clipboard(ModelNode):
         
 # How to implement a thread safe console?
 # see: http://effbot.org/zone/tkinter-threads.htm
+#class ConsoleText(ScrolledText):
+#    def __init__(self, *args, **kwargs):
+#        ScrolledText.__init__(self, *args, **kwargs)
+#        # The shared queue of the PRODUCER-CONSUMER model.
+#        self.__queue    = Queue.Queue()
+#        self.text.tag_configure('STDOUT',   foreground='black')
+#        self.text.tag_configure('STDERR',   foreground='red')
+#        self.text.tag_configure('TIP', foreground='forestgreen')
+#        self.text.tag_configure('HISTORY',   foreground='purple')
+#        self.text.tag_configure('RETVAL',    foreground='orange')
+#        
+#        self.text.bind('<KeyPress>', self.onKeyPress)
+#
+#        
+#        # Experimenting with idlelib.AutoComplete
+#        #############################################################
+#        self.indentwidth    = 4
+#        self.tabwidth       = 4
+#        self.context_use_ps1    = '>>> '
+#        self.__autoComplete = AutoComplete(self)        
+#        #############################################################
+#                
+#        # Syntax highlight is implemented by idlelib
+#        #############################################################                
+#        self.percolator = Percolator(self.text)
+#        self.colorDelegator = ColorDelegator()
+#        self.percolator.insertfilter(self.colorDelegator)   
+#        #############################################################
+#                
+#        class StdOut:
+#            def write(obj, content):
+#                self.write(content, 'STDOUT')
+#
+#        class StdErr:
+#            def write(obj, content):
+#                self.write(content, 'STDERR')
+#                
+#        self.__stdout   = StreamChain()
+#        self.__stdout   += sys.stdout
+#        self.__stdout   += StdOut()
+#
+#        self.__stderr   = StreamChain()
+#        self.__stderr   += sys.stderr
+#        self.__stderr   += StdErr()
+#
+#        sys.stdout      = self.__stdout
+#        sys.stderr      = self.__stderr
+#        
+#        self.promptSymbol = '>>> '
+#        
+#        self.updateContent()
+#        
+#    def write(self, content, tag=''):
+#        # The write method does not insert text into the console window.
+#        # The actural "write" operation is carried out by "updateContent".
+#        # "write" is called by PRODUCER.
+#        self.__queue.put((tag, content))
+#        if thread.get_ident() == Application.instance.mainThreadId:
+#            # If the current thread is not the main thread, the Tk update() should not be called,
+#            # or the vital objects of the application may be modified by more than one threads simultaneously.
+#            try:            
+#                self.update()
+#            except TclError:
+#                pass
+#
+#    def updateContent(self):
+#        # updateContent is called by CONSUMER.
+#        try:
+#            while True:
+#                tag, content    = self.__queue.get_nowait()
+#                r, c    = self.getCursorPos(END)
+#                start   = 'end-5c'
+#                stop    = 'end-1c'
+#                if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
+#                    self.text.delete(start, stop)
+#        
+#                # Record the position of the END before inserting anything.
+#                start    = self.text.index(END)
+#        
+#                self.text.insert(END, content, tag)
+#        
+#                # Remove unnecessary highlighting
+#                for tag in self.colorDelegator.tagdefs:
+#                    self.text.tag_remove(tag, start, "end")
+#                    
+#        
+#                self.text.insert(END, self.promptSymbol)
+#                
+#                
+#                # Remove unnecessary highlighting
+#                self.text.tag_remove("TODO", "1.0", END)
+#                self.text.tag_add("SYNC", "1.0", END)                                
+#                self.text.see(END)
+#                
+#
+#        except Queue.Empty:
+#            pass
+#        finally:
+#            self.after(100, self.updateContent)
+#        
+#
+#    def onKeyPress(self, evt, codeList=[]):   
+#        #print (evt.keycode)        
+#        if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
+#            r, c    = self.getCursorPos()
+#            prompt  = self.text.get(autoSubs('$r.0'), autoSubs('$r.4'))
+#            if prompt != '>>> ' and prompt != '... ':
+#                return 'break'
+#            if evt.keycode==8 and c <= 4:
+#                return 'break'
+#            if c < 4:
+#                return 'break'
+#            rend, cend  = self.getCursorPos('end-1c')
+#            if r < rend:
+#                return 'break'                
+#            if evt.keycode == 13:
+#                app = Application.instance
+#                code    = self.text.get(autoSubs('$r.4'), autoSubs('$r.end'))
+#                try:
+#                    strippedCode     = code.strip()
+#                    if strippedCode and strippedCode[0] == '!':
+#                        # Execute a system command
+#                        app.execute(code)
+#                        self.promptSymbol   = '>>> '
+#                        self.write('\n')
+#                        return 'break'
+#                    if strippedCode == '':
+#                        code    = '\n'.join(codeList)
+#                        del codeList[:]
+#                    strippedCode    = code.strip()
+#                    if strippedCode == '':
+#                        self.promptSymbol   = '>>> '
+#                        self.write('\n') 
+#                    elif strippedCode[-1] in (':', '\\') or codeList:
+#                        codeList.append(code)
+#                        self.promptSymbol   = '... '
+#                        self.write('\n')
+#                    else:
+#                        self.promptSymbol   = '>>> '
+#                        self.write('\n')
+#                        try:
+#                            ret = app.execute(code)
+#                        except:
+#                            traceback.print_exc()
+#                        if ret != None:
+#                            self.write(repr(ret)+'\n', 'RETVAL')
+#    
+#                finally:
+#                    self.text.mark_set(INSERT, END)
+#                    self.text.see(END)
+#                    return 'break'
+#
+#            # Experimenting with idlelib's AutoComplete
+#            #######################################################
+#            if evt.keycode == 9:
+#                return self.__autoComplete.autocomplete_event(evt)
+#            #######################################################
+#                
+#    def getCursorPos(self, mark=INSERT): 
+#        return (int(i) for i in self.text.index(mark).split('.'))       
+        
 class ConsoleText(ScrolledText):
+    class StreamObserver(object):
+        def __init__(self, consoleText):
+            self.__consoleText  = consoleText
+        def update(self, streamType, content):
+            self.__consoleText.write(streamType, content)
+    
     def __init__(self, *args, **kwargs):
         ScrolledText.__init__(self, *args, **kwargs)
         # The shared queue of the PRODUCER-CONSUMER model.
@@ -463,7 +638,13 @@ class ConsoleText(ScrolledText):
         
         self.promptSymbol = '>>> '
         
+        ###########################################
+        #self.
+        ###########################################        
+        
         self.updateContent()
+        
+
         
     def write(self, content, tag=''):
         # The write method does not insert text into the console window.
@@ -572,7 +753,7 @@ class ConsoleText(ScrolledText):
             #######################################################
                 
     def getCursorPos(self, mark=INSERT): 
-        return (int(i) for i in self.text.index(mark).split('.'))        
+        return (int(i) for i in self.text.index(mark).split('.'))               
         
         
 class ConsoleWindow(ModelNode):
@@ -583,9 +764,20 @@ numpy.
 Be ware that "print" is a function rather than a statement in the scripting environment.
 Have a nice day.
 '''
+    class StreamObserver(object):
+        def __init__(self, console):
+            self.__console  = console
+            
+        def update(self, streamType, content):
+            self.__console.write(tag=streamType, content=content)
+
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         app = Application.instance
+        ####################################
+        timer   = app.createTimer(100, False)
+        self.__timer    = timer        
+        ####################################
         root = app.root
         root.title('WaveSyn-Console')
         txtStdOutErr = ConsoleText(root)
@@ -608,6 +800,7 @@ Have a nice day.
         menu    = kwargs['menu']
         makeMenu(root, menu, json=True)
         self.__defaultCursor = self.__txtStdOutErr.text['cursor']
+        self.streamObserver = self.StreamObserver(self)
         
     @property
     def promptSymbol(self):
