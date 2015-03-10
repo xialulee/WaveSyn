@@ -122,7 +122,7 @@ class Problem(object):
     def solve(self, *args, **kwargs):
         self.__setup()
         self.__problem.solve(*args, **kwargs)
-        R   = (self.__ReR.value + 1j * self.__ImR.value).todense()
+        R   = (self.__ReR.value + 1j * self.__ImR.value)
         return R        
         
 
