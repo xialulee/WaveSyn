@@ -27,6 +27,8 @@ import msvcrt
 #   add -N, --null option, indicate to discard the bytes behind the null character
 # --2011.01.19 AM 10:47 Modified by xialulee--
 #   add -e, --encode option, indicate to encode the unicode string comes from clipboard
+# --2015.03.12 PM 08:55 Modified by xialulee--
+#   add new function image2clipb
 #
 # --ActivePython2.6.6.15--
 # --xialulee--
@@ -74,6 +76,25 @@ def stdin2clipb(mode, code, tee, null):
     return exitcode
 
 
+def image2clipb(filename):
+    '''Read an image file and write the image data into clipboard.
+See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
+'''
+    from PIL        import Image
+    from cStringIO  import StringIO
+    image   = Image.open(filename)
+    sio     = StringIO()
+    image.convert('RGB').save(sio, 'BMP')
+    data    = sio.getvalue()[14:]
+    sio.close()
+    win32clipboard.OpenClipboard()
+    try:
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+    finally:
+        win32clipboard.CloseClipboard()
+
+
 def usage():
     perr    = sys.stderr.write
     perr('Usage: {0} [options]\n'.format(os.path.split(sys.argv[0])[-1]))
@@ -104,8 +125,8 @@ def usage():
 def main():
     try:
         opts, args  = getopt.getopt(sys.argv[1:], \
-            'htrwTNd:e:', \
-            ['help', 'text', 'read', 'write', 'tee', 'null', 'decode=', 'encode='] \
+            'htrwTNd:e:i:', \
+            ['help', 'text', 'read', 'write', 'tee', 'null', 'decode=', 'encode=', 'imagefile='] \
         )
     except getopt.GetoptError, err:
         sys.stderr.write(str(err)+'\n')
@@ -116,6 +137,7 @@ def main():
     msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
         
     rw      = ''
+    im      = False
     mode    = None
     code    = ''
     tee     = None
@@ -139,11 +161,17 @@ def main():
             tee     = True
         if o in ('-N', '--null'):
             null    = True
+        if o in ('-i', '--imagefile'):
+            im          = True
+            filename    = a
 
     if rw == 'r':
         exitcode    = clipb2stdout(mode, code, null)
     elif rw == 'w':
-        exitcode    = stdin2clipb(mode, code, tee, null)
+        if im:
+            image2clipb(filename)
+        else:
+            exitcode    = stdin2clipb(mode, code, tee, null)
     else:
         sys.stderr.write('Clipb-Error: Error parameter\n')
         sys.stderr.write('Please specify -r or -w\n\n')
