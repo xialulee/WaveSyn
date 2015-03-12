@@ -25,7 +25,7 @@ if platform.system() == 'Windows':
         win7plus    = True
 
 if win7plus:
-    from taskbarmanager import ITaskbarList4, GUID_CTaskbarList, TBPFLAG
+    from interfaces.windows.taskbarmanager import ITaskbarList4, GUID_CTaskbarList, TBPFLAG
     from comtypes import CoCreateInstance
     import ctypes as ct
     GetParent   = ct.windll.user32.GetParent
