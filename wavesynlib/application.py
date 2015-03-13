@@ -239,7 +239,7 @@ wavesyn
         root = Tix.Tk()
         mainThreadId    = thread.get_ident()
         
-        from interfaces.xmlrpcserver import CommandSlot
+        from interfaces.xmlrpc.server import CommandSlot
         
 
         valueChecker    = ValueChecker(root)        
@@ -381,7 +381,7 @@ wavesyn
         return self.root.mainloop()
         
     def startXMLRPCServer(self, addr='localhost', port=8000):
-        from interfaces.xmlrpcserver    import startXMLRPCServer
+        from interfaces.xmlrpc.server    import startXMLRPCServer
         startXMLRPCServer(addr, port)        
         def checkCommand():
             command = self.xmlrpcCommandSlot.command
