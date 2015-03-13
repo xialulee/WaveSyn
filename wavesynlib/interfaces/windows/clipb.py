@@ -29,12 +29,15 @@ import msvcrt
 #   add -e, --encode option, indicate to encode the unicode string comes from clipboard
 # --2015.03.12 PM 08:55 Modified by xialulee--
 #   add new function image2clipb
+# --2015.03.13 PM 04:05 Modified by xialulee--
+#   add --html option. Now support writing HTML string to clipboard.
 #
 # --ActivePython2.6.6.15--
 # --xialulee--
 
 ERROR_NOERROR, ERROR_PARAM, ERROR_CLIPB = range(3)
 NEWLINE = re.compile(r'(?<!\r)\n')
+CF_HTML = win32clipboard.RegisterClipboardFormat('HTML Format')
 
 def clipb2stdout(mode, code, null):
     exitcode = ERROR_NOERROR
@@ -66,12 +69,35 @@ def stdin2clipb(mode, code, tee, null):
         sys.stdout.write(s)
     if code:
         s = s.decode(code, 'ignore')
+    
     win32clipboard.OpenClipboard(0)
-    win32clipboard.EmptyClipboard()
-    if code:
-        win32clipboard.SetClipboardData(win32clipboard.CF_UNICODETEXT, s)
-    else:
-        win32clipboard.SetClipboardText(s)        
+    win32clipboard.EmptyClipboard()        
+    if mode == 'html':
+        templateHead    = '''Version:0.9
+StartHTML:{0: 13d}
+EndHTML:{1: 13d}
+StartFragment:{2: 13d}
+EndFragment:{3: 13d}
+<HTML>
+<BODY>'''
+        templateTail    = '</BODY></HTML>'
+        templateLen     = 125
+        s   = s.encode('utf-8')
+        if len(s) >  9999999999860:
+            raise Exception('content too long.')
+        templateHead    = templateHead.format(
+                templateLen-13,
+                templateLen+len(s)+14,
+                templateLen,
+                templateLen+len(s)
+        )
+        htmlStr         = ''.join((templateHead, s, templateHead))
+        win32clipboard.SetClipboardData(CF_HTML, htmlStr)
+    else: # not html
+        if code:
+            win32clipboard.SetClipboardData(win32clipboard.CF_UNICODETEXT, s)
+        else:
+            win32clipboard.SetClipboardText(s)        
     win32clipboard.CloseClipboard()
     return exitcode
 
@@ -103,9 +129,15 @@ def usage():
     perr(' -r, --read\t\tcopy clipboard to stdout\n')
     perr(' -w, --write\t\tcopy stdin to clipboard\n')
     perr(
+''' -i,
+ -imagefile=FILENAME'\tread an image file specified by FILENAME
+\t\t\tand put it into clipboard if "-w" is specified.\n'''
+)
+    perr(
 ''' -t, --text\t\ttranslate \\r\\n into \\n when copy clipboard to stdout
 \t\t\tand \\n to \\r\\n when copy stdin to clipboard\n'''
 )
+    perr(' --html\t\t\tput string to clipboard in HTML format \n\t\t\tif -w is specified\n')
     perr(' -T, --tee\t\twhen -w is specifed, copy stdin to clipboard and stdout\n')
     perr(' -N, --null\t\tdiscard the bytes behind the null character\n')
     perr(
@@ -126,7 +158,7 @@ def main():
     try:
         opts, args  = getopt.getopt(sys.argv[1:], \
             'htrwTNd:e:i:', \
-            ['help', 'text', 'read', 'write', 'tee', 'null', 'decode=', 'encode=', 'imagefile='] \
+            ['help', 'text', 'read', 'write', 'tee', 'null', 'decode=', 'encode=', 'imagefile=', 'html'] \
         )
     except getopt.GetoptError, err:
         sys.stderr.write(str(err)+'\n')
@@ -149,6 +181,8 @@ def main():
             exit(ERROR_NOERROR)
         if o in ('-t', '--text'):
             mode    = 't'
+        if o in ('--html'):
+            mode    = 'html'
         if o in ('-d', '--decode'):
             code    = a
         if o in ('-e', '--encode'):
