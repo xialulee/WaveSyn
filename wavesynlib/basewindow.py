@@ -308,6 +308,30 @@ class DataFigure(ModelNode):
     @Scripting.printable    
     def update(self):
         self.__canvas.show()
+
+
+    @Scripting.printable
+    def copyBitmap(self, dpi=300):
+        from interfaces.windows import clipb
+        from os import path, remove
+        filename    = ''
+        flag        = False
+        for i in range(10000):
+            for j in range(10000):
+                filename    = '{0}-{1}.png'.format(i,j)
+                if not path.exists(filename):
+                    flag    = True
+                    break
+            if flag:
+                break
+        if not filename:
+            raise Exception('Fail to find a valid filename.')
+        try:
+            self.figure.savefig(filename, dpi=dpi)
+            clipb.image2clipb(filename)
+        finally:
+            remove(filename)
+
                                
     def clear(self):
         self.axes.clear()
