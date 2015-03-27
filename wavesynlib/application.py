@@ -266,14 +266,13 @@ wavesyn
                 
                 filePath    = filePath,
                 dirPath     = dirPath,
-                
-                monitorTimer    = TkTimer(widget=root, interval=100, active=False),
+                                
                 streamManager   =StreamManager(),                
                 
                 configFileName  = configFileName
             )        
         
-        #self.monitorTimer.addObserver(self.streamManager)
+        
 
         
         from basewindow import WindowDict                                  
@@ -296,8 +295,11 @@ wavesyn
 
         self.editors.manager.addObserver(EditorObserver(self))
 
+        with self.attributeLock:
+            self.monitorTimer    = self.createTimer(interval=100, active=False)
         # Make wavesyn.editors.manager check wavesyn.editors every 100ms
         self.monitorTimer.addObserver(self.editors.manager) 
+        #self.monitorTimer.addObserver(self.streamManager)
         
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)                
@@ -334,7 +336,7 @@ wavesyn
 #        return self.windows.add(node=PatternWindow())
         
     def createTimer(self, interval=100, active=False):
-        return TkTimer(interval, active)
+        return TkTimer(self.root, interval, active)
                      
         
     def printAndEval(self, expr):
