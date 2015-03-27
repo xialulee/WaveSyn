@@ -102,8 +102,9 @@ class TkTimer(Observable):
         
     @active.setter
     def active(self, val):
+        lastVal         = self.__active
         self.__active   = val
-        if val and not self.active:
+        if val and not lastVal:
             self.__timerFunc()
 
 
@@ -446,3 +447,4 @@ if __name__ == '__main__':
     node    = tree.insert(root, END, text='node')
     window.mainloop()
     
+

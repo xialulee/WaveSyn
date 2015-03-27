@@ -55,6 +55,7 @@ from idlelib.ColorDelegator import ColorDelegator
 from objectmodel import ModelNode
 from guicomponents import StreamChain, TaskbarIcon, ScrolledText, ValueChecker, TkTimer
 from common import setMultiAttr, autoSubs, evalFmt, Singleton
+from interfaces.editor.externaleditor  import EditorDict, EditorNode
 
 from stdstream  import StreamManager
 ##########################Experimenting with multiprocessing###############################
@@ -272,10 +273,31 @@ wavesyn
                 configFileName  = configFileName
             )        
         
-        self.monitorTimer.addObserver(self.streamManager)        
+        #self.monitorTimer.addObserver(self.streamManager)
+
         
         from basewindow import WindowDict                                  
-        self.windows = WindowDict() # Instance of ModelNode can be locked automatically.
+        self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
+        self.editors    = EditorDict()
+
+        class EditorObserver(object):
+            def __init__(self, wavesyn):
+                self.wavesyn    = wavesyn
+
+            def update(self, editor):
+                wavesyn = self.wavesyn                
+                code    = editor.code
+                if not code:
+                    return
+                wavesyn.console.write('WaveSyn: executing code from editor {0} listed as follows:\n'.format(id(editor)), tag='TIP')
+                wavesyn.console.write(code, tag='HISTORY')
+                wavesyn.console.write('\n')
+                wavesyn.execute(code)
+
+        self.editors.manager.addObserver(EditorObserver(self))
+
+        # Make wavesyn.editors.manager check wavesyn.editors every 100ms
+        self.monitorTimer.addObserver(self.editors.manager) 
         
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)                
@@ -286,11 +308,22 @@ wavesyn
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
         self.noTip = False
+
+        self.monitorTimer.active    = True
         
     def createWindow(self, moduleName, className):
         '''Create a tool window.'''
         mod = __import__(autoSubs('toolwindows.$moduleName'), globals(), locals(), [className], -1)
-        return self.windows.add(node=getattr(mod, className)())        
+        return self.windows.add(node=getattr(mod, className)())
+
+    def launchEditor(self, editorPath=None):
+        if editorPath is None:
+            editorPath  = self.editorInfo['Path']
+        editorID    = self.editors.add(EditorNode(editorPath=editorPath))
+        self.editors[editorID].launch()
+        return editorID
+
+
 #
 #    @callAndPrintDoc        
 #    def newPatternWin(self, printDoc=False):
@@ -638,10 +671,6 @@ class ConsoleText(ScrolledText):
         
         self.promptSymbol = '>>> '
         
-        ###########################################
-        #self.
-        ###########################################        
-        
         self.updateContent()
         
 
@@ -847,29 +876,6 @@ Have a nice day.
         printCode   = True
         self.clear()
 
-    @Scripting.printable        
-    def editScript(self):
-        app = Application.instance
-            
-        fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
-        with os.fdopen(fd):
-            pass 
-            # Close the temp file, consequently the external editor can edit it without limitations.
-        try:
-            WaveSynThread.start(func=lambda: subprocess.call([app.editorInfo['Path'], filename]))
-            with open(filename, 'r') as f:
-                code    = f.read()
-                self.write(code, 'HISTORY')
-                self.write('\n')
-                if code:
-                    app.execute(code)
-        finally:            
-            os.remove(filename)
-            
-    def onEditScript(self):
-        printCode   = True
-        self.editScript()
-        
     def windowAttributes(self, *args, **kwargs):
         return Application.instance.root.wm_attributes(*args, **kwargs)        
         
@@ -884,3 +890,4 @@ def mainloop():
         
 #if __name__ == '__main__':
 #    mainloop()
+

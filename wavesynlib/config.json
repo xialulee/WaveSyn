@@ -17,7 +17,7 @@
 	    {
 		"Name":"Script", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Load and Run Script File", "UnderLine":0, "Command":"0"},
-		    {"Name":"Edit Script Using External Editor and Run",    "UnderLine":0,  "Command":"wavesyn.console.onEditScript()",	"Print":false}
+		    {"Name":"Edit Script Using External Editor and Run",    "UnderLine":0,  "Command":"wavesyn.launchEditor()",	"Print":true}
 		]
 	    },
 	    {
@@ -46,3 +46,4 @@
 		{"ModuleName":	"isaa", "ClassName":	"DIAC"}
 	]
 }
+
