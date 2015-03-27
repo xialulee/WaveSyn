@@ -683,7 +683,6 @@ class GridGroup(Observable, Group):
         
         super(GridGroup, self).__init__(*args, **kwargs)
         
-#        app = Application.instance
         major = IntVar(0)
         minor = IntVar(0)
         self.__major = major
