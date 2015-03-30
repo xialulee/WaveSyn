@@ -30,10 +30,18 @@ class Observable(object):
     def notifyObservers(self, *args, **kwargs):
         for observer in self.__observers:
             observer.update(*args, **kwargs)
+            
+            
+class SimpleObserver(object):
+    def __init__(self, func):
+        self.__func = func
+
+    def update(self, *args, **kwargs):
+        return self.__func(*args, **kwargs)              
 
 
 class MethodDelegator(object):
-    def __init__(self, attrName, methodName)   :
+    def __init__(self, attrName, methodName):
         self.attrName   = attrName
         self.methodName = methodName
     
