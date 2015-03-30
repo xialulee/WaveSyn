@@ -41,7 +41,6 @@ from datetime   import datetime
 from inspect    import getsourcefile
 import webbrowser
 import subprocess
-import tempfile
 import json
 import traceback
 
@@ -52,15 +51,15 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from objectmodel import ModelNode
-from guicomponents import StreamChain, TaskbarIcon, ScrolledText, ValueChecker, TkTimer
-from common import setMultiAttr, autoSubs, evalFmt, Singleton
-from interfaces.editor.externaleditor  import EditorDict, EditorNode
+from wavesynlib.objectmodel import ModelNode
+from wavesynlib.guicomponents import StreamChain, TaskbarIcon, ScrolledText, ValueChecker
 
-from stdstream  import StreamManager
-##########################Experimenting with multiprocessing###############################
-#import multiprocessing as mp
-###########################################################################################
+from wavesynlib.interfaces.timer.tk import TkTimer
+
+from wavesynlib.common import setMultiAttr, autoSubs, evalFmt, Singleton
+from wavesynlib.interfaces.editor.externaleditor  import EditorDict, EditorNode
+
+from wavesynlib.stdstream  import StreamManager
 
         
 # Scripting Sub-System
@@ -222,8 +221,6 @@ wavesyn
         
         filePath    = getsourcefile(type(self))
         dirPath     = os.path.split(filePath)[0]
-        sys.path.append(dirPath)
-        #sys.path.append(os.path.join(dirPath, '..'))        
         
         # load config file
         configFileName  = os.path.join(dirPath, 'config.json')
@@ -240,7 +237,7 @@ wavesyn
         root = Tix.Tk()
         mainThreadId    = thread.get_ident()
         
-        from interfaces.xmlrpc.server import CommandSlot
+        from wavesynlib.interfaces.xmlrpc.server import CommandSlot
         
 
         valueChecker    = ValueChecker(root)        
@@ -275,7 +272,7 @@ wavesyn
         
 
         
-        from basewindow import WindowDict                                  
+        from wavesynlib.basewindow import WindowDict                                  
         self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
         self.editors    = EditorDict()
 
@@ -315,7 +312,7 @@ wavesyn
         
     def createWindow(self, moduleName, className):
         '''Create a tool window.'''
-        mod = __import__(autoSubs('toolwindows.$moduleName'), globals(), locals(), [className], -1)
+        mod = __import__(autoSubs('wavesynlib.toolwindows.$moduleName'), globals(), locals(), [className], -1)
         return self.windows.add(node=getattr(mod, className)())
 
     def launchEditor(self, editorPath=None):
@@ -416,7 +413,7 @@ wavesyn
         return self.root.mainloop()
         
     def startXMLRPCServer(self, addr='localhost', port=8000):
-        from interfaces.xmlrpc.server    import startXMLRPCServer
+        from wavesynlib.interfaces.xmlrpc.server    import startXMLRPCServer
         startXMLRPCServer(addr, port)        
         def checkCommand():
             command = self.xmlrpcCommandSlot.command

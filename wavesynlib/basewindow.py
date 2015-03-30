@@ -24,12 +24,12 @@ import matplotlib.pyplot as pyplot
 from numpy          import deg2rad, rad2deg
 
 
-from application    import Application, Scripting, uiImagePath
-from objectmodel    import ModelNode, NodeList, NodeDict
-from common         import autoSubs, evalFmt, setMultiAttr
-from common         import MethodDelegator, Observable
+from wavesynlib.application    import Application, Scripting, uiImagePath
+from wavesynlib.objectmodel    import ModelNode, NodeList, NodeDict
+from wavesynlib.common         import autoSubs, evalFmt, setMultiAttr
+from wavesynlib.common         import MethodDelegator, Observable
 
-from guicomponents import Group, ParamItem, ScrolledList, LabeledScale
+from wavesynlib.guicomponents import Group, ParamItem, ScrolledList, LabeledScale
 
 
 colorMap = {
@@ -312,7 +312,7 @@ class DataFigure(ModelNode):
 
     @Scripting.printable
     def copyBitmap(self, dpi=300):
-        from interfaces.windows import clipb
+        from wavesynlib.interfaces.windows import clipb
         from os import path, remove
         filename    = ''
         flag        = False

@@ -4,10 +4,10 @@ from collections import OrderedDict
 
 import abc
 
-from common         import evalFmt, autoSubs
-from objectmodel    import ModelNode, NodeDict
-from application    import Scripting
-from basewindow     import WindowComponent
+from wavesynlib.common         import evalFmt, autoSubs
+from wavesynlib.objectmodel    import ModelNode, NodeDict
+from wavesynlib.application    import Scripting
+from wavesynlib.basewindow     import WindowComponent
 
 ##########################Experimenting with multiprocessing###############################
 import multiprocessing as mp
@@ -197,7 +197,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
 
     def __init__(self, moduleName, className):
         super(AlgorithmNode, self).__init__()
-        mod         = __import__(autoSubs('algorithms.$moduleName'), globals(), locals(), [className], -1)
+        mod         = __import__(autoSubs('wavesynlib.algorithms.$moduleName'), globals(), locals(), [className], -1)
         algorithm   = getattr(mod, className)()
         self.__meta = self.Meta()
         self.__meta.moduleName  = moduleName
@@ -243,7 +243,6 @@ class AlgorithmNode(ModelNode, WindowComponent):
 ##############################Experimenting with multiprocessing###################################
     @Scripting.printable
     def parallelRunAndPlot(self, allArguments):     
-        #from algorithms.isaa import DIAC
         queue   = mp.Queue()
         for args, kwargs in allArguments:
             mp.Process(target=parallelFunc, args=(type(self.__algorithm), queue, args, kwargs)).start()

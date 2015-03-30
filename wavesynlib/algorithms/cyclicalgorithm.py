@@ -4,7 +4,7 @@ Created on Thu May 29 09:28:31 2014
 
 @author: Feng-cong Li
 """
-from mathtools import Operator, Algorithm
+from wavesynlib.mathtools import Operator, Algorithm
 from numpy import *
 from numpy.fft.fftpack import fft, ifft
 

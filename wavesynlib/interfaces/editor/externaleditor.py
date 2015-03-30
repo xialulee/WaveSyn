@@ -1,5 +1,5 @@
-from objectmodel    import ModelNode, NodeDict
-from common         import Observable
+from wavesynlib.objectmodel    import ModelNode, NodeDict
+from wavesynlib.common         import Observable
 import threading
 import subprocess
 import tempfile

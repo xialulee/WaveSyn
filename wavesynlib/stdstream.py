@@ -5,7 +5,7 @@ Created on Sun Oct 26 21:06:35 2014
 @author: Feng-cong Li
 """
 
-from common     import  Observable
+from wavesynlib.common     import  Observable
 import Queue
 
 import sys

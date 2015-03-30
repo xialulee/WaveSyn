@@ -5,7 +5,6 @@ Created on Wed Apr 30 22:19:30 2014
 @author: Tao Zhang, Feng-cong Li (xialulee@sina.com)
 """
 
-#import numpy as np
 from numpy import exp, kron, mat, pi, r_, real, sin, vstack, zeros
 import cvxpy as cp
 

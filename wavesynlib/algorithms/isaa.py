@@ -1,5 +1,5 @@
 from numpy import *
-from mathtools import Operator, Algorithm
+from wavesynlib.mathtools import Operator, Algorithm
 
 @Operator
 def Proj_M1(s): # This function is corresponding to eq.22.

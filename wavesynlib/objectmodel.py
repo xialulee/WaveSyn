@@ -6,7 +6,7 @@ Created on Mon May 19 22:21:38 2014
 """
     
 
-from common import autoSubs, MethodLock 
+from wavesynlib.common import autoSubs, MethodLock 
 
 # Object Model Sub-System
 # It is a part of the scripting system.

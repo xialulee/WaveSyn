@@ -9,8 +9,8 @@ import operator
 import xmlrpclib
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-from application    import Application, Scripting, ScriptCode
-from common         import evalFmt
+from wavesynlib.application    import Application, Scripting, ScriptCode
+from wavesynlib.common         import evalFmt
 
 
 

@@ -5,7 +5,7 @@ Created on Tue May 27 16:01:11 2014
 @author: Feng-cong Li
 """
 from numpy import *
-from mathtools import Algorithm
+from wavesynlib.mathtools import Algorithm
 
 class ALGOTEST(Algorithm):
     __name__    = 'ALGOTEST'

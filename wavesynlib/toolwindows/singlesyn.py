@@ -11,16 +11,17 @@ import time
 from Tkinter import *
 from ttk import *
 
-import guicomponents
-from guicomponents  import Group, ParamItem
-from application    import Application, ScriptCode, Scripting
-from basewindow     import FigureWindow, askClassName
-from common         import setMultiAttr, autoSubs, evalFmt
+from wavesynlib import guicomponents
+from wavesynlib.guicomponents  import Group, ParamItem
+from wavesynlib.application    import Application, ScriptCode, Scripting
+from wavesynlib.basewindow     import FigureWindow, askClassName
+from wavesynlib.common         import setMultiAttr, autoSubs, evalFmt
+from wavesynlib.mathtools  import AlgorithmDict, AlgorithmNode
+
 
 import threading
 import json
 
-from mathtools  import AlgorithmDict, AlgorithmNode
 
 
 
