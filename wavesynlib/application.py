@@ -276,7 +276,7 @@ wavesyn
         self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
         self.editors    = EditorDict()
 
-        class EditorObserver(object):
+        class EditorObserver(object): # use SimpleObserver instead
             def __init__(self, wavesyn):
                 self.wavesyn    = wavesyn
 
@@ -285,9 +285,9 @@ wavesyn
                 code    = editor.code
                 if not code:
                     return
-                wavesyn.console.write('WaveSyn: executing code from editor {0} listed as follows:\n'.format(id(editor)), tag='TIP')
-                wavesyn.console.write(code, tag='HISTORY')
-                wavesyn.console.write('\n')
+                wavesyn.streamManager.write('WaveSyn: executing code from editor {0} listed as follows:\n'.format(id(editor)), 'TIP')
+                wavesyn.streamManager.write(code, 'HISTORY')
+                wavesyn.streamManager.write('\n')
                 wavesyn.execute(code)
 
         self.editors.manager.addObserver(EditorObserver(self))
@@ -296,13 +296,13 @@ wavesyn
             self.monitorTimer    = self.createTimer(interval=100, active=False)
         # Make wavesyn.editors.manager check wavesyn.editors every 100ms
         self.monitorTimer.addObserver(self.editors.manager) 
-        #self.monitorTimer.addObserver(self.streamManager)
+        self.monitorTimer.addObserver(self.streamManager)
         
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)                
 
         self.console = ConsoleWindow(menu=consoleMenu, tagDefs=tagDefs)
-        self.streamManager.addObserver(self.console.streamObserver)
+        self.streamManager.addObserver(self.console.streamObserver) #!
              
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
@@ -337,12 +337,18 @@ wavesyn
                      
         
     def printAndEval(self, expr):
+#        with self.execThreadLock:
+#            self.console.write(expr+'\n', 'HISTORY')
+#            ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
+#            if ret != None:
+#                self.console.write(str(ret)+'\n', 'RETVAL')
+#            return ret
         with self.execThreadLock:
-            self.console.write(expr+'\n', 'HISTORY')
+            self.streamManager.write(expr+'\n', 'HISTORY')
             ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
             if ret != None:
-                self.console.write(str(ret)+'\n', 'RETVAL')
-            return ret
+                self.streamManager.write(str(ret)+'\n', 'RETVAL')
+            return ret    
                               
     def eval(self, expr):
         with self.execThreadLock:
@@ -373,30 +379,31 @@ wavesyn
     def printTip(self, contents):
         if self.noTip:
             return
-        console = self.console
-        console.write('WaveSyn: ', 'TIP')
+        #console = self.console
+        streamManager = self.streamManager
+        streamManager.write('WaveSyn: ', 'TIP')
         if type(contents) in (str, unicode):
-            console.write(contents+'\n', 'TIP')
+            streamManager.write(contents+'\n', 'TIP')
             return
         for item in contents:
             if item['type'] == 'text':
-                console.write(''.join((item['content'],'\n')), 'TIP')
+                streamManager.write(''.join((item['content'],'\n')), 'TIP')
             elif item['type'] == 'link':
                 command = item['command']
                 tagName = 'link' + str(id(command))
-                console.write(item['content'], tagName)
-                text    = console.text
+                streamManager.write(item['content'], tagName)
+                text    = self.console.text
                 r, c = text.index(END).split('.')
                 text.tag_config(tagName, underline=1, foreground='blue')
                 text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
                 text.tag_bind(tagName, '<Enter>', lambda dumb: text.config(cursor='hand2'))
                 text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.defaultCursor))
-                console.write('\n')
+                streamManager.write('\n')
                 
                                             
                 
     def printError(self, text):
-        self.console.write(text+'\n', 'STDERR')
+        self.streamManager.write(text+'\n', 'STDERR')
         
             
     def notifyWinQuit(self, win):
@@ -649,28 +656,28 @@ class ConsoleText(ScrolledText):
         self.percolator.insertfilter(self.colorDelegator)   
         #############################################################
                 
-        class StdOut:
-            def write(obj, content):
-                self.write(content, 'STDOUT')
-
-        class StdErr:
-            def write(obj, content):
-                self.write(content, 'STDERR')
-                
-        self.__stdout   = StreamChain()
-        self.__stdout   += sys.stdout
-        self.__stdout   += StdOut()
-
-        self.__stderr   = StreamChain()
-        self.__stderr   += sys.stderr
-        self.__stderr   += StdErr()
-
-        sys.stdout      = self.__stdout
-        sys.stderr      = self.__stderr
+#        class StdOut:
+#            def write(obj, content):
+#                self.write(content, 'STDOUT')
+#
+#        class StdErr:
+#            def write(obj, content):
+#                self.write(content, 'STDERR')
+#                
+#        self.__stdout   = StreamChain()
+#        self.__stdout   += sys.stdout
+#        self.__stdout   += StdOut()
+#
+#        self.__stderr   = StreamChain()
+#        self.__stderr   += sys.stderr
+#        self.__stderr   += StdErr()
+#
+#        sys.stdout      = self.__stdout
+#        sys.stderr      = self.__stderr
         
         self.promptSymbol = '>>> '
         
-        self.updateContent()
+#        self.updateContent()
         
 
         
@@ -687,40 +694,41 @@ class ConsoleText(ScrolledText):
             except TclError:
                 pass
 
-    def updateContent(self):
+    def updateContent(self, tag, content):
+        #print ('updateContent')
         # updateContent is called by CONSUMER.
-        try:
-            while True:
-                tag, content    = self.__queue.get_nowait()
-                r, c    = self.getCursorPos(END)
-                start   = 'end-5c'
-                stop    = 'end-1c'
-                if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
-                    self.text.delete(start, stop)
+#        try:
+#            while True:
+        #tag, content    = self.__queue.get_nowait()
+        r, c    = self.getCursorPos(END)
+        start   = 'end-5c'
+        stop    = 'end-1c'
+        if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
+            self.text.delete(start, stop)
+
+        # Record the position of the END before inserting anything.
+        start    = self.text.index(END)
+
+        self.text.insert(END, content, tag)
+
+        # Remove unnecessary highlighting
+        for tag in self.colorDelegator.tagdefs:
+            self.text.tag_remove(tag, start, "end")
+            
+
+        self.text.insert(END, self.promptSymbol)
         
-                # Record the position of the END before inserting anything.
-                start    = self.text.index(END)
         
-                self.text.insert(END, content, tag)
-        
-                # Remove unnecessary highlighting
-                for tag in self.colorDelegator.tagdefs:
-                    self.text.tag_remove(tag, start, "end")
-                    
-        
-                self.text.insert(END, self.promptSymbol)
-                
-                
-                # Remove unnecessary highlighting
-                self.text.tag_remove("TODO", "1.0", END)
-                self.text.tag_add("SYNC", "1.0", END)                                
-                self.text.see(END)
+        # Remove unnecessary highlighting
+        self.text.tag_remove("TODO", "1.0", END)
+        self.text.tag_add("SYNC", "1.0", END)                                
+        self.text.see(END)
                 
 
-        except Queue.Empty:
-            pass
-        finally:
-            self.after(100, self.updateContent)
+#        except Queue.Empty:
+#            pass
+#        finally:
+#            self.after(100, self.updateContent)
         
 
     def onKeyPress(self, evt, codeList=[]):   
@@ -797,14 +805,14 @@ Have a nice day.
             self.__console  = console
             
         def update(self, streamType, content):
-            self.__console.write(tag=streamType, content=content)
+            self.__console.consoleText.updateContent(tag=streamType, content=content)
 
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         app = Application.instance
         ####################################
-        timer   = app.createTimer(100, False)
-        self.__timer    = timer        
+        #timer   = app.createTimer(100, False)
+        #self.__timer    = timer        
         ####################################
         root = app.root
         root.title('WaveSyn-Console')
@@ -823,12 +831,18 @@ Have a nice day.
             greetings = 'afternoon'
         else:
             greetings = 'morning'
-        txtStdOutErr.write(self.strWelcome.format(greetings), 'TIP')
+#        txtStdOutErr.write(self.strWelcome.format(greetings), 'TIP')
+        app.streamManager.write(self.strWelcome.format(greetings), 'TIP')
 
         menu    = kwargs['menu']
         makeMenu(root, menu, json=True)
         self.__defaultCursor = self.__txtStdOutErr.text['cursor']
         self.streamObserver = self.StreamObserver(self)
+        
+        
+    @property
+    def consoleText(self):
+        return self.__txtStdOutErr        
         
     @property
     def promptSymbol(self):
@@ -846,8 +860,8 @@ Have a nice day.
     def text(self):
         return self.__txtStdOutErr.text
                                                         
-    def write(self, *args, **kwargs):
-        self.__txtStdOutErr.write(*args, **kwargs)
+#    def write(self, *args, **kwargs):
+#        self.__txtStdOutErr.write(*args, **kwargs)
             
     def showPrompt(self):
         'Only used by "clear" method.'

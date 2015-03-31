@@ -412,6 +412,49 @@ class Group(Frame, object):
     def name(self, name):
         self.__lblName['text']  = name
         
+
+
+from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer            
+class GUIConsumer(object):                    
+    def __init__(self, producer, timer):
+        if not callable(producer):
+            raise TypeError('producer should be a callable object.')
+        self.__producer = producer           
+        
+        if not isinstance(timer, BaseObservableTimer):
+            raise TypeError('timer should be an instance of a derived class of BaseObservableTimer')
+        self.__active = False
+        self.__timer = timer
+        self.__timer.addObserver(SimpleObserver(self.__onTick))
+        self.__queue = Queue.Queue()
+        self.__producerThread = None        
+        
+    def __onTick(self):
+        try:
+            while True:
+                data = self.__queue.get_nowait()
+                if self.__active is True:
+                    self.consume(data)
+        except Queue.Empty:
+            pass
+        
+    def __runProducer(self):
+        producer = self.__producer
+        while True:
+            self.__queue.put(producer())
+        
+    def consume(self, data):
+        return NotImplemented
+        
+    @property
+    def active(self):
+        return self.__active
+        
+    @active.setter
+    def active(self, val):
+        self.__active = val
+        if self.__active is True and self.__producerThread is None:
+            self.__producerThread = thread.start_new_thread(self.__runProducer)
         
         
 if __name__ == '__main__':

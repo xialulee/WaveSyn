@@ -33,11 +33,11 @@ class StreamChain(object):
 
 class StreamManager(Observable):
     class Stream(object):
-        def __init__(self, monitor, streamType):
-            self.__monitor  = monitor
+        def __init__(self, manager, streamType):
+            self.__manager  = manager
             self.__streamType   = streamType
         def write(self, content):
-            self.__monitor.queue.put((self.streamType, content))
+            self.__manager.queue.put((self.__streamType, content))
             
     def __init__(self):
         super(StreamManager, self).__init__()
@@ -50,13 +50,18 @@ class StreamManager(Observable):
         self.__stderr   += REALSTDERR
         self.__stderr   += self.Stream(self, 'STDERR')
         
+        sys.stdout = self.__stdout
+        sys.stderr = self.__stderr
+        
     def write(self, content, streamType='STDOUT'):
         self.queue.put((streamType, content))
         
     def update(self):
+        #print ('StreamManager::update')
         try:
             while True:
                 streamType, content = self.queue.get_nowait()
+                #print content
                 self.notifyObservers(streamType, content)
         except Queue.Empty:
             pass
