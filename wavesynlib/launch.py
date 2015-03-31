@@ -19,7 +19,8 @@ class WaveSynPath(object):
         
 
 wavesynPath = WaveSynPath()
-sys.path.append(wavesynPath.getPath())
+sys.path.insert(0, wavesynPath.getPath())
+
 from wavesynlib import application
 
 if __name__ == '__main__':

@@ -3,12 +3,16 @@
 # memstatus.pyw
 # 2013.09.21 AM 11:38
 # win8 python27
-# xialulee
+# Feng-cong Li
 
 from taskbarmanager import ITaskbarList4, GUID_CTaskbarList, TBPFLAG
 from Tkinter import *
 from comtypes import *
 import ctypes as ct
+
+
+from wavesynlib.interfaces.timer.tk import TkTimer
+from wavesynlib.common import SimpleObserver
 
 class MEMORYSTATUS(ct.Structure):
     _fields_    = [
@@ -23,7 +27,10 @@ class MEMORYSTATUS(ct.Structure):
     ]
 
 
+APPID = 'wavesyn.interfaces.windows.memstatus'
+
 def main():
+    ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
     label   = Label()
     label.pack()
@@ -31,7 +38,8 @@ def main():
     memstat = MEMORYSTATUS()
     memstat.dwLength    = ct.sizeof(MEMORYSTATUS)
 
-    def show_memusage():
+    @SimpleObserver # TkTimer is Observable
+    def showMemUsage():
         ct.windll.kernel32.GlobalMemoryStatus(ct.byref(memstat))
         memusage    = memstat.dwMemoryLoad
         hwnd    = ct.windll.user32.GetParent(root.winfo_id())
@@ -57,9 +65,11 @@ def main():
                 hwnd, \
                 TBPFLAG.TBPF_ERROR \
             )
-        root.after(2000, show_memusage)
 
-    show_memusage()
+    timer = TkTimer(widget=root) # No Config Dialog
+    timer.addObserver(showMemUsage)
+    timer.interval = 2000 #ms
+    timer.active = True
     root.mainloop()
 
 
