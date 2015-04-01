@@ -57,11 +57,9 @@ class StreamManager(Observable):
         self.queue.put((streamType, content))
         
     def update(self):
-        #print ('StreamManager::update')
         try:
             while True:
                 streamType, content = self.queue.get_nowait()
-                #print content
                 self.notifyObservers(streamType, content)
         except Queue.Empty:
             pass
