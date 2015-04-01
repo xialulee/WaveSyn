@@ -478,7 +478,7 @@ class ConsoleText(ScrolledText):
         self.indentwidth    = 4
         self.tabwidth       = 4
         self.context_use_ps1    = '>>> '
-        self.__autoComplete = AutoComplete(self)        
+        self.__autoComplete = AutoComplete(self)  
         #############################################################
                 
         # Syntax highlight is implemented by idlelib
@@ -512,6 +512,15 @@ class ConsoleText(ScrolledText):
         self.text.see(END)                        
 
     def onKeyPress(self, evt, codeList=[]):       
+        # Experimenting with idlelib's AutoComplete
+        ##############################################################        
+        if self.__autoComplete.autocompletewindow and \
+                self.__autoComplete.autocompletewindow.is_active():
+            return self.__autoComplete.autocompletewindow.keypress_event(evt)
+            
+        if evt.keysym == 'Tab':
+            return self.__autoComplete.autocomplete_event(evt)
+        ##############################################################
         if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
             r, c    = self.getCursorPos()
             prompt  = self.text.get(autoSubs('$r.0'), autoSubs('$r.4'))
@@ -559,13 +568,7 @@ class ConsoleText(ScrolledText):
                 finally:
                     self.text.mark_set(INSERT, END)
                     self.text.see(END)
-                    return 'break'
-
-            # Experimenting with idlelib's AutoComplete
-            #######################################################
-            if evt.keycode == 9:
-                return self.__autoComplete.autocomplete_event(evt)
-            #######################################################
+                    return 'break'            
                 
     def getCursorPos(self, mark=INSERT): 
         return (int(i) for i in self.text.index(mark).split('.'))               

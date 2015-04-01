@@ -22,6 +22,7 @@ wavesynPath = WaveSynPath()
 sys.path.insert(0, wavesynPath.getPath())
 
 from wavesynlib import application
+wavesyn = application.Application()
 
 if __name__ == '__main__':
-    application.mainloop()
+    wavesyn.mainloop()
