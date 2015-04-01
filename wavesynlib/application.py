@@ -47,6 +47,8 @@ import traceback
 # Some console functionalities are implemented by idlelib
 ##########################
 from idlelib.AutoComplete import AutoComplete
+import idlelib.AutoCompleteWindow
+idlelib.AutoCompleteWindow.KEYPRESS_SEQUENCES = ()
 from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
@@ -513,10 +515,15 @@ class ConsoleText(ScrolledText):
 
     def onKeyPress(self, evt, codeList=[]):       
         # Experimenting with idlelib's AutoComplete
-        ##############################################################        
+        ##############################################################
+        keysym = evt.keysym        
         if self.__autoComplete.autocompletewindow and \
                 self.__autoComplete.autocompletewindow.is_active():
-            return self.__autoComplete.autocompletewindow.keypress_event(evt)
+            if self.__autoComplete.autocompletewindow.keypress_event(evt) == 'break':
+                return 'break'
+            else:
+                if keysym == 'Tab':
+                    return 'break'
             
         if evt.keysym == 'Tab':
             return self.__autoComplete.autocomplete_event(evt)
