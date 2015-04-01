@@ -489,21 +489,7 @@ class ConsoleText(ScrolledText):
         #############################################################                        
         self.promptSymbol = '>>> '        
         
-
         
-    def write(self, content, tag=''):
-        # The write method does not insert text into the console window.
-        # The actural "write" operation is carried out by "updateContent".
-        # "write" is called by PRODUCER.
-        self.__queue.put((tag, content))
-        if thread.get_ident() == Application.instance.mainThreadId:
-            # If the current thread is not the main thread, the Tk update() should not be called,
-            # or the vital objects of the application may be modified by more than one threads simultaneously.
-            try:            
-                self.update()
-            except TclError:
-                pass
-
     def updateContent(self, tag, content):
         r, c    = self.getCursorPos(END)
         start   = 'end-5c'
@@ -547,7 +533,7 @@ class ConsoleText(ScrolledText):
                         # Execute a system command
                         app.execute(code)
                         self.promptSymbol   = '>>> '
-                        self.write('\n')
+                        self.updateContent(tag='', content='\n')
                         return 'break'
                     if strippedCode == '':
                         code    = '\n'.join(codeList)
@@ -555,20 +541,20 @@ class ConsoleText(ScrolledText):
                     strippedCode    = code.strip()
                     if strippedCode == '':
                         self.promptSymbol   = '>>> '
-                        self.write('\n') 
+                        self.updateContent(tag='', content='\n') 
                     elif strippedCode[-1] in (':', '\\') or codeList:
                         codeList.append(code)
                         self.promptSymbol   = '... '
-                        self.write('\n')
+                        self.updateContent(tag='', content='\n')
                     else:
                         self.promptSymbol   = '>>> '
-                        self.write('\n')
+                        self.updateContent(tag='', content='\n')
                         try:
                             ret = app.execute(code)
                         except:
                             traceback.print_exc()
                         if ret != None:
-                            self.write(repr(ret)+'\n', 'RETVAL')
+                            self.updateContent(tag='RETVAL', content=repr(ret)+'\n')
     
                 finally:
                     self.text.mark_set(INSERT, END)
