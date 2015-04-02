@@ -184,9 +184,7 @@ class EditGroup(Group):
     def beamData(self):
         beamParams = self.__paramlist.list.get(0, END)
         if not beamParams:
-            # stderr print 'no beam is specified'
             self._app.printError('An error occurred!')
-        # msgbox An error has encounted. Please check the Console window for more details.
             self._app.printTip(
                 [
                     {
@@ -322,8 +320,6 @@ class PatternWindow(FigureWindow):
     
     @Scripting.printable    
     def setIdealPattern(self, center, width):
-        #self.angles = angles = r_[-90:90.1:0.1]
-        #self.idealPattern = pattern2corrmtx.ideal_pattern(angles, center, width)
         self.__piecewisePattern.createPiecewisePattern(
             self.angles,
             center,
@@ -332,8 +328,6 @@ class PatternWindow(FigureWindow):
 
     @Scripting.printable    
     def plotIdealPattern(self):
-#        self.figureBook.plot(angles, pattern2corrmtx.ideal_pattern(angles, center, width),
-#            curveName='Ideal Pattern', color='b')
         pattern = self.__piecewisePattern        
         self.figureBook.plot(
             pattern.samplesAngle, 
@@ -353,7 +347,6 @@ class PatternWindow(FigureWindow):
     @Scripting.printable    
     def solve(self, M, display=False):
         self.__problem.M = M
-        #self.__problem.angles = self.angles
         self.__problem.idealPattern = self.__piecewisePattern
         self.R = self.__problem.solve(verbose=display)
         
