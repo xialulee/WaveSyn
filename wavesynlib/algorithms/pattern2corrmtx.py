@@ -7,12 +7,59 @@ Created on Wed Apr 30 22:19:30 2014
 
 from numpy import exp, kron, mat, pi, r_, real, sin, vstack, zeros
 import cvxpy as cp
+import collections
+from abc import ABCMeta, abstractproperty
+
+class BasePattern(object):
+    __metaclass__ = ABCMeta
+    
+
+    @abstractproperty    
+    def samplesMagnitude(self):
+        raise NotImplementedError
+        
+    @abstractproperty        
+    def samplesAngle(self):
+        raise NotImplementedError
+    
+    @classmethod
+    def __subclasshook__(cls, C):
+        if cls is BasePattern:
+            if hasattr(C, 'samplesMagnitude') and hasattr(C, 'samplesAngle'):
+                return True
+        return NotImplemented
 
 
+class PiecewisePattern(BasePattern):
+    '''Create and maintain a piecewise beam pattern.
+center: the centers of the beams (in degree);
+width:  the width of the beams (in degree).'''    
+    def __init__(self, samplesAngle=None, beamsAngle=None, beamsWidth=None):
+        self.__samplesAngle = []
+        self.__samplesMagnitude = []
+        if samplesAngle is not None and beamsAngle is not None and beamsWidth is not None:
+            self.createPiecewisePattern(samplesAngle, beamsAngle, beamsWidth)
 
+    def createPiecewisePattern(self, samplesAngle, beamsAngle, beamsWidth):
+        mag = zeros(len(samplesAngle))  
+        for k in range(len(beamsAngle)):
+            for idx, theta in enumerate(samplesAngle):
+                if abs(theta - beamsAngle[k]) < beamsWidth[k]/2.0:
+                    mag[idx]    = 1
+        self.__samplesAngle = samplesAngle
+        self.__samplesMagnitude = mag
+        return self
+        
+    @property
+    def samplesAngle(self):
+        return self.__samplesAngle
+        
+    @property
+    def samplesMagnitude(self):
+        return self.__samplesMagnitude
 
-def Jmat(M):
-    'Create a complex M^2 * M^2 matrix which satisfies vec(R) == Jr'
+def matJ(M):
+    'Return a complex M^2 * M^2 permutaion matrix J which satisfies vec(R) == Jr.'
     ret = zeros((M**2, M**2), complex)
     
     k   = 0
@@ -34,37 +81,23 @@ def Jmat(M):
     return mat(ret)
     
     
-def Amat(M, angles):
-    'The steering matrix'
+def matA(M, angles):
+    'The steering matrix.'
     ret = zeros((M, len(angles)), complex)
     for col, theta in enumerate(angles):
         ret[:, col] = exp(1j * pi * r_[0:M] * \
         sin(pi * theta / 180.))
     return mat(ret)
     
-#def unnamed():
-#    theta   = r_[-90:90.1:0.1]
-def ideal_pattern(angles, beamangle, beamwidth):
-    ret = zeros(len(angles))  
-    for k in range(len(beamangle)):
-        for idx, theta in enumerate(angles):
-            if abs(theta - beamangle[k]) < beamwidth[k]/2.0:
-                ret[idx]    = 1
-    return ret
+
     
-def Gmat(M, angles, idealpattern):
+def matG(M, angles, magnitude):
     G1  = mat(zeros((M**2+1, M**2+1)))
-    #G2  = mat(zeros((M**2+1, M**2+1)))
-    A   = mat(Amat(M, angles))
-    J   = mat(Jmat(M))
-    #w   = mat(np.ones((len(angles), 1)))
+    A   = mat(matA(M, angles))
+    J   = mat(matJ(M))
     for idx, theta in enumerate(angles):
         g   = -(kron(A[:,idx].T, A[:,idx].H) * J).T
-        #G1  += vstack((idealpattern[idx], g)) * np.hstack((idealpattern[idx], g.T))
-        #vstack((idealpattern[idx], g))
-        #print idealpattern[idx].shape
-        t   = mat(vstack((idealpattern[idx], g)));
-        #G1  += np.outer(*([vstack((idealpattern[idx], g))]*2))
+        t   = mat(vstack((magnitude[idx], g)));
         G1  += real(t * t.T)
     G1  = 1.0/len(angles) * G1
     G1  = real(G1)
@@ -75,48 +108,45 @@ def Gmat(M, angles, idealpattern):
 def corrmtx2pattern(R, angles):
     M   = R.shape[0]
     ret = zeros(len(angles))    
-    A   = Amat(M, angles)
+    A   = matA(M, angles)
     for k in range(len(angles)):
-        #print (A[:,k].H * R * A[:,k])[0,0]
         ret[k]  = real((A[:, k].H * R * A[:, k])[0,0])
     ret /= max(ret)
     return ret
-#####################################################
-# test
-#M   = 10                
-#angles  = r_[-90:90.1:0.1]
-#idealp  = ideal_pattern(angles, [-20], [20])
-#Gamma   = Gmat(M, angles, idealp)    
-#print Gamma            
-#####################################################  
+
 class Problem(object):
     def __init__(self):
         self.__M    = None
-        self.__idealp   = None
-        self.angles = None
+        self.__idealPattern   = None
         self.__Gamma    = None
     
     @property
     def M(self):
+        '''The number of the array elements.'''
         return self.__M 
 
     @M.setter
     def M(self, val):
         val = int(val)
         if val != self.__M:
-            #self.__Gamma    = cp.Parameter(M**2+1, M**2+1)
             self.__M    = val            
-            #self.__setup()
             
     @property
-    def idealpattern(self):
-        return self.__idealp
+    def idealPattern(self):
+        return self.__idealPattern
         
-    @idealpattern.setter
-    def idealpattern(self, val):
-        Gamma   = Gmat(self.M, self.angles, val)
-        #self.__Gamma(Gamma)
-        self.__Gamma    = Gamma
+    @idealPattern.setter
+    def idealPattern(self, val):
+        if not isinstance(val, BasePattern):
+            raise TypeError('idealPattern should assign to an instance of a derived class of BasePattern.')
+        if (not isinstance(val.samplesAngle, collections.Iterable)) or\
+                (not isinstance(val.samplesMagnitude, collections.Iterable)):
+            raise TypeError('angle and magnitude of idealPattern should be iterable.')
+        if len(val.samplesAngle) != len(val.samplesMagnitude):
+            raise Exception('len(idealPattern.angle) should equal len(idealPattern.magnitude).')
+        Gamma   = matG(self.M, val.samplesAngle, val.samplesMagnitude)
+        self.__Gamma    = Gamma 
+        self.__idealPattern = val
             
     def solve(self, *args, **kwargs):
         self.__setup()
@@ -128,10 +158,10 @@ class Problem(object):
     def __setup(self):  
         M   = self.__M           
         Rreal = cp.semidefinite(2*M, 'Rreal')
-# Rreal = [B1 B3
-#          B2 B4 ]
-#       = [ReR -ImR
-#          ImR  ReR]    
+        # Rreal = [B1 B3
+        #          B2 B4 ]
+        #       = [ReR -ImR
+        #          ImR  ReR]    
         B1 = Rreal[0:M, 0:M]
         B2 = Rreal[M:(2*M), 0:M]
         B3 = Rreal[0:M, M:(2*M)]
@@ -162,21 +192,30 @@ class Problem(object):
 
         objective   = cp.Minimize(cp.quad_form(rho, self.__Gamma))
 
-#objective = cp.Minimize(cp.norm(R))
-#objective = quad_form()
-
         problem     = cp.Problem(objective, constraints)
         self.__problem  = problem
         self.__ReR      = B1
         self.__ImR      = B2
-#problem.solve()
 
 
 
-#R = (B1.value + 1j * B2.value).todense()
-#print complexR
-#savemat('complexR.mat', {'R':complexR})
-#pattern = corrmtx2pattern(R, angles)
-#plot(angles, pattern)
-#hold(True)
-#plot(angles, idealp, 'r')
+
+
+if __name__ == '__main__':
+    from pylab import *
+    def test():
+        M   = 10                
+        angles  = r_[-90:90.1:0.1]
+        idealp = PiecewisePattern(angles, [40], [20])        
+        
+        problem = Problem()
+        problem.M = M
+        problem.idealPattern = idealp
+        R = problem.solve(verbose=True)    
+        
+        pattern = corrmtx2pattern(R, angles)
+        plot(angles, pattern)
+        hold(True)
+        plot(angles, idealp.samplesMagnitude, 'r')  
+        show()    
+    test()

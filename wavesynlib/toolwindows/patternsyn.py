@@ -77,8 +77,9 @@ class OptimizeGroup(Group):
         center, width = topwin.grpEdit.beamData
         topwin.figureBook.clear()
         
-        topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
-        topwin.setIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
+
+        topwin.setIdealPattern(center, width)
+        topwin.plotIdealPattern()        
         # Create a new thread for solving the correlation matrix.
         def solveFunc():
             printCode   = True
@@ -176,7 +177,8 @@ class EditGroup(Group):
     def onPlotIdealPattern(self):
         printCode   = True
         center, width = self.beamData
-        self.__topwin.plotIdealPattern(ScriptCode('r_[-90:90.1:0.1]'), center, width)
+        self.__topwin.setIdealPattern(center, width)
+        self.__topwin.plotIdealPattern()
         
     @property
     def beamData(self):
@@ -267,9 +269,9 @@ class PatternWindow(FigureWindow):
     windowName = 'WaveSyn-PatternFitting'        
     def __init__(self, *args, **kwargs):
         FigureWindow.__init__(self, *args, **kwargs)
-        # The toolbar
+        # The toolbar {
         toolTabs    = self.toolTabs
-            # Algorithm tab
+            # Algorithm tab {
         frmAlgo = Frame(toolTabs)
         grpSolve = OptimizeGroup(frmAlgo, topwin=self)
         grpSolve.pack(side=LEFT, fill=Y)
@@ -278,19 +280,19 @@ class PatternWindow(FigureWindow):
         self.__grpEdit = grpEdit
         
         toolTabs.add(frmAlgo, text='Algorithm')
-            # End Algorithm tab
+            # } End Algorithm tab
             
-            # View Tab
+            # View Tab {
         self.makeViewTab()
-            # End View tab
+            # } End View tab
         
-            # Export tab
+            # Export tab {
         self.makeExportTab()
         frmExport   = self.exportFrame
         grpExport = FileExportGroup(frmExport, topwin=self)
         grpExport.pack(side=LEFT, fill=Y)
-            # End Export tab
-        # End toolbar
+            # } End Export tab
+        # } End toolbar
         
         self.idealPattern = None
         self.angles = None
@@ -308,7 +310,9 @@ class PatternWindow(FigureWindow):
         figPolar    = figureBook[1]
         figPolar.plotFunction = lambda angles, pattern, **kwargs: figPolar.plot(angles/180.*pi, pattern, **kwargs)
                
+        self.angles = r_[-90:90.1:0.1]
         self.__problem = pattern2corrmtx.Problem()
+        self.__piecewisePattern = pattern2corrmtx.PiecewisePattern()
         self.R = None
         
                 
@@ -317,14 +321,26 @@ class PatternWindow(FigureWindow):
         return self.__grpEdit
     
     @Scripting.printable    
-    def setIdealPattern(self, angles, center, width):
-        self.angles = angles = r_[-90:90.1:0.1]
-        self.idealPattern = pattern2corrmtx.ideal_pattern(angles, center, width)
+    def setIdealPattern(self, center, width):
+        #self.angles = angles = r_[-90:90.1:0.1]
+        #self.idealPattern = pattern2corrmtx.ideal_pattern(angles, center, width)
+        self.__piecewisePattern.createPiecewisePattern(
+            self.angles,
+            center,
+            width
+        )
 
     @Scripting.printable    
-    def plotIdealPattern(self, angles, center, width):
-        self.figureBook.plot(angles, pattern2corrmtx.ideal_pattern(angles, center, width),
-            curveName='Ideal Pattern', color='b')
+    def plotIdealPattern(self):
+#        self.figureBook.plot(angles, pattern2corrmtx.ideal_pattern(angles, center, width),
+#            curveName='Ideal Pattern', color='b')
+        pattern = self.__piecewisePattern        
+        self.figureBook.plot(
+            pattern.samplesAngle, 
+            pattern.samplesMagnitude,
+            curveName='Ideal Pattern',
+            color='b'
+        )
     
     @Scripting.printable        
     def plotCurrentData(self):
@@ -337,8 +353,8 @@ class PatternWindow(FigureWindow):
     @Scripting.printable    
     def solve(self, M, display=False):
         self.__problem.M = M
-        self.__problem.angles = self.angles
-        self.__problem.idealpattern = self.idealPattern
+        #self.__problem.angles = self.angles
+        self.__problem.idealPattern = self.__piecewisePattern
         self.R = self.__problem.solve(verbose=display)
         
     @Scripting.printable    
