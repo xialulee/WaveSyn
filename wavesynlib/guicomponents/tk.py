@@ -1,8 +1,15 @@
-#-*- coding:utf-8 -*
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Apr 03 15:46:05 2015
+
+@author: Feng-cong Li
+"""
+
 
 from Tkinter    import *
 from ttk        import *
 from Tkinter    import Frame
+import tkFont
 
 from functools  import partial
 
@@ -122,7 +129,6 @@ class LabeledScale(Frame, object):
         self.__labelValue   = lblVal
         
     def onChange(self, val):
-#        val = self.__scale.get()
         self.__labelValue['text']  = self.__formatter(val)
         
     def get(self):
@@ -312,29 +318,6 @@ class ScrolledText(Frame):
             return False
 
 
-
-# Will be moved to stdstream.py later
-class StreamChain(object):
-    def __init__(self):
-        self.__streamlist   = []
-
-    def __iadd__(self, stream):
-        self.__streamlist.append(stream)
-        return self
-
-    def remove(self, stream):
-        while True:
-            try:
-                del self.__streamlist[self.__streamlist.index(stream)]
-            except ValueError:
-                break
-
-    def write(self, content):
-        for stream in self.__streamlist:
-            stream.write(content)
-
-
-
 class ScrolledList(Frame, object):
     methodNameMap   = {
         'insert':'insert', 
@@ -414,6 +397,92 @@ class Group(Frame, object):
         
 
 
+class FontFrame(Frame, object):
+    def __init__(self, master=None, **kw):
+        Frame.__init__(self, master, **kw)
+        
+#        buttonFrame = Frame(self)
+#        buttonFrame.pack(side=BOTTOM)
+#        btnCancel = Button(buttonFrame, text='Cancel')
+#        btnCancel.pack(side=RIGHT)
+#        btnOk = Button(buttonFrame, text='OK')
+#        btnOk.pack(side=RIGHT)
+        
+        # Font selector
+        selectorFrame = LabelFrame(self, text='Font Selector')
+        selectorFrame.pack(side=LEFT)
+        # Font face
+        faceFrame = LabelFrame(selectorFrame, text='Font Face')
+        faceFrame.pack()
+        faceList = ScrolledList(faceFrame)
+        faceList.pack()
+        fonts = list(tkFont.families(self))
+        fonts.sort()
+        for font in fonts:
+            faceList.insert(END, font)
+        faceList.listClick = self.onFaceSelect
+        self.faceList = faceList
+            
+        # Font size
+        sizeFrame = LabelFrame(selectorFrame, text='Font Size')
+        sizeFrame.pack()
+        sizeCombo = Combobox(sizeFrame, takefocus=1, stat='readonly')
+        sizeCombo.pack()
+        sizeCombo['value'] = range(7, 23)
+        sizeCombo.current(0)
+        sizeCombo.bind('<<ComboboxSelected>>', self.onSizeSelect)
+        self.sizeCombo = sizeCombo
+        
+        # Font Sample
+        defaultFont = ('Courier', 10, tkFont.NORMAL)
+        sampleFrame = LabelFrame(self, text='Samples')
+        sampleFrame.pack(side=RIGHT, expand=YES, fill=Y)
+        sampleLabel = Label(sampleFrame, text='\tabcdefghij\t\n\tABCDEFGHIJ\t\n\t0123456789\t', font=defaultFont)
+        sampleLabel.pack(expand=YES)
+        self.sampleLabel = sampleLabel
+        
+        self.face = defaultFont[0]
+        self.size = defaultFont[1]
+        sizeCombo.current(self.size - 7)
+        
+    def onFaceSelect(self, index, face):
+        size = self.sizeCombo.get()
+        self.setSample(face, size)
+        
+    def onSizeSelect(self, event):
+        self.setSample(self.face, self.sizeCombo.get())
+        
+    def setSample(self, face, size):
+        self.face = face
+        self.size = size
+        self.sampleLabel.config(font=(self.face, self.size, tkFont.NORMAL))                            
+            
+def askFont():
+    win = Toplevel()
+    win.title('Font Dialog')
+
+    buttonFrame = Frame(win)
+    retval = [None]
+    def onClick(ret=None):
+        win.destroy()
+        retval[0] = ret
+    
+    buttonFrame.pack(side=BOTTOM)
+    btnCancel = Button(buttonFrame, text='Cancel', command=lambda: onClick())
+    btnCancel.pack(side=RIGHT)
+    btnOk = Button(buttonFrame, text='OK', command=lambda: onClick((fontFrame.face, fontFrame.size)))
+    btnOk.pack(side=RIGHT)    
+        
+    
+    fontFrame = FontFrame(win)
+    fontFrame.pack()
+    win.focus_set()
+    win.grab_set()
+    win.wait_window()
+    return retval[0]
+
+
+
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer            
 class GUIConsumer(object):                    
     def __init__(self, producer, timer):
@@ -458,10 +527,13 @@ class GUIConsumer(object):
         
         
 if __name__ == '__main__':
-    window  = Tk()
-    tree    = ScrolledTree(window)
-    root    = tree.insert('', END, text='root')
-    node    = tree.insert(root, END, text='node')
+#    window  = Tk()
+#    tree    = ScrolledTree(window)
+#    root    = tree.insert('', END, text='root')
+#    node    = tree.insert(root, END, text='node')
+#    window.mainloop()
+    window = Tk()
+    print askFont()
     window.mainloop()
     
 

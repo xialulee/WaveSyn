@@ -6,7 +6,7 @@ Created on Mon Mar 30 10:14:20 2015
 """
 from Tkinter import * 
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer
-from wavesynlib.guicomponents import ParamItem
+from wavesynlib.guicomponents.tk import ParamItem
 
 
 class TkTimer(BaseObservableTimer):    

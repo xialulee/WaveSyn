@@ -29,7 +29,7 @@ from wavesynlib.objectmodel    import ModelNode, NodeList, NodeDict
 from wavesynlib.common         import autoSubs, evalFmt, setMultiAttr
 from wavesynlib.common         import MethodDelegator, Observable
 
-from wavesynlib.guicomponents import Group, ParamItem, ScrolledList, LabeledScale
+from wavesynlib.guicomponents.tk import Group, ParamItem, ScrolledList, LabeledScale
 
 
 colorMap = {

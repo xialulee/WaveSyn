@@ -16,7 +16,7 @@ from scipy.io import savemat
 
 from wavesynlib.application import Application, uiImagePath, ScriptCode, Scripting, WaveSynThread
 from wavesynlib.basewindow import FigureWindow
-from wavesynlib.guicomponents import Group, ParamItem, ScrolledList
+from wavesynlib.guicomponents.tk import Group, ParamItem, ScrolledList
 from wavesynlib.common import setMultiAttr, autoSubs
 
 from wavesynlib.algorithms import pattern2corrmtx

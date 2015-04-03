@@ -54,7 +54,7 @@ from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from wavesynlib.objectmodel import ModelNode
-from wavesynlib.guicomponents import StreamChain, TaskbarIcon, ScrolledText, ValueChecker
+from wavesynlib.guicomponents.tk import TaskbarIcon, ScrolledText, ValueChecker
 
 from wavesynlib.interfaces.timer.tk import TkTimer
 
@@ -489,7 +489,7 @@ class ConsoleText(ScrolledText):
         self.colorDelegator = ColorDelegator()
         self.percolator.insertfilter(self.colorDelegator)   
         #############################################################                        
-        self.promptSymbol = '>>> '        
+        self.promptSymbol = '>>> '    
         
         
     def updateContent(self, tag, content):
@@ -642,10 +642,6 @@ Have a nice day.
     def text(self):
         return self.__txtStdOutErr.text
                                                                     
-    def showPrompt(self):
-        'Only used by "clear" method.'
-        self.__txtStdOutErr.write('')
-
     @Scripting.printable    
     def save(self, filename): # for scripting system
         with open(filename, 'w') as f:
@@ -661,7 +657,7 @@ Have a nice day.
     @Scripting.printable    
     def clear(self):
         self.__txtStdOutErr.clear()
-        self.showPrompt()
+        print('', sep='', end='')
         
     def onClear(self):
         printCode   = True # For macro recording
