@@ -104,6 +104,42 @@ class ObjectWithLock(object):
         return self._lock
         
         
+class Nonblocking(object):
+    class TheThread(threading.Thread):
+        def __init__(self, func, args, kwargs):
+            self.func   = func
+            self.args   = args
+            self.kwargs = kwargs
+            self.retval = None
+            threading.Thread.__init__(self)
+        def run(self):
+            ret = self.func(*self.args, **self.kwargs)
+            self.retval = ret            
+            
+    def __init__(self, func):
+        self.__doc__    = func.__doc__
+        self.__func     = func
+        self.__thread   = None
+        
+    def __call__(self, *args, **kwargs):
+        self.__thread   = self.TheThread(self.__func, args, kwargs)
+        self.__thread.start()
+        return self
+        
+    def isRunning(self):
+        if self.__thread is None:
+            return False
+        return self.__thread.isAlive()
+        
+    @property
+    def returnValue(self):
+        if self.isRunning():
+            return None
+        else:
+            return self.__thread.retval
+                
+        
+        
 class Singleton(type):
     '''This class is a meta class, which helps to create singleton class.'''
     def __call__(self, *args, **kwargs):

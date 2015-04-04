@@ -16,7 +16,7 @@ from wavesynlib.guicomponents.tk  import Group, ParamItem
 from wavesynlib.guicomponents.classselector import askClassName
 from wavesynlib.application       import Application, ScriptCode, Scripting
 from wavesynlib.basewindow        import FigureWindow
-from wavesynlib.common            import setMultiAttr, autoSubs, evalFmt
+from wavesynlib.common            import setMultiAttr, autoSubs, evalFmt, Nonblocking
 from wavesynlib.mathtools         import Algorithm, AlgorithmDict, AlgorithmNode
 
 
@@ -252,21 +252,12 @@ class AlgoSelGroup(Group):
     def onLoadAlgorithm(self):
         printCode   = True
         
-        class ClassSelectorThread(threading.Thread):
-            def __init__(self):
-                self.classInfo   = None
-                threading.Thread.__init__(self)
-            def run(self):
-                classInfo = askClassName('wavesynlib.algorithms', Algorithm)
-                self.classInfo = classInfo
-
-        classSelectorThread = ClassSelectorThread()
-        classSelectorThread.start()
-        while classSelectorThread.isAlive():
+        funcObj    = Nonblocking(askClassName)('wavesynlib.algorithms', Algorithm)
+        while funcObj.isRunning():
             self._topwin.update()
             time.sleep(0.1)
+        classInfo   = funcObj.returnValue
         
-        classInfo   = classSelectorThread.classInfo
         if not classInfo:
             return
         moduleName, className   = classInfo

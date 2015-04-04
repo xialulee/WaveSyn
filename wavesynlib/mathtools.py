@@ -198,7 +198,6 @@ class AlgorithmNode(ModelNode, WindowComponent):
 
     def __init__(self, moduleName, className):
         super(AlgorithmNode, self).__init__()
-#        mod         = __import__(autoSubs('wavesynlib.algorithms.$moduleName'), globals(), locals(), [className], -1)
         mod = importlib.import_module(moduleName)
         algorithm   = getattr(mod, className)()
         self.__meta = self.Meta()
