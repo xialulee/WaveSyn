@@ -251,7 +251,22 @@ class AlgoSelGroup(Group):
         
     def onLoadAlgorithm(self):
         printCode   = True
-        classInfo = askClassName('wavesynlib.algorithms', Algorithm)
+        
+        class ClassSelectorThread(threading.Thread):
+            def __init__(self):
+                self.classInfo   = None
+                threading.Thread.__init__(self)
+            def run(self):
+                classInfo = askClassName('wavesynlib.algorithms', Algorithm)
+                self.classInfo = classInfo
+
+        classSelectorThread = ClassSelectorThread()
+        classSelectorThread.start()
+        while classSelectorThread.isAlive():
+            self._topwin.update()
+            time.sleep(0.1)
+        
+        classInfo   = classSelectorThread.classInfo
         if not classInfo:
             return
         moduleName, className   = classInfo
