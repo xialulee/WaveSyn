@@ -13,10 +13,11 @@ from ttk import *
 
 from wavesynlib import guicomponents
 from wavesynlib.guicomponents.tk  import Group, ParamItem
+from wavesynlib.guicomponents.classselector import askClassName
 from wavesynlib.application       import Application, ScriptCode, Scripting
-from wavesynlib.basewindow        import FigureWindow, askClassName
+from wavesynlib.basewindow        import FigureWindow
 from wavesynlib.common            import setMultiAttr, autoSubs, evalFmt
-from wavesynlib.mathtools         import AlgorithmDict, AlgorithmNode
+from wavesynlib.mathtools         import Algorithm, AlgorithmDict, AlgorithmNode
 
 
 import threading
@@ -250,7 +251,10 @@ class AlgoSelGroup(Group):
         
     def onLoadAlgorithm(self):
         printCode   = True
-        moduleName, className   = askClassName()
+        classInfo = askClassName('wavesynlib.algorithms', Algorithm)
+        if not classInfo:
+            return
+        moduleName, className   = classInfo
         self._topwin.loadAlgorithm(moduleName=moduleName, className=className)
 
 

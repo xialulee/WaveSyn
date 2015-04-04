@@ -247,14 +247,19 @@ class ScrolledTree(Frame):
         
     def makeWidgets(self):
         sbar    = Scrollbar(self)
-        tree    = ttk.Treeview(self)
+        tree    = Treeview(self)
         sbar.config(command=tree.yview)
         tree.config(yscrollcommand=sbar.set)
         sbar.pack(side=RIGHT, fill=Y)
         tree.pack(side=LEFT, expand=YES, fill=BOTH)
         self.tree   = tree
         
-    for new, origin in (('insert', 'insert'), ('delete', 'delete')):
+    for new, origin in (
+            ('insert', 'insert'), 
+            ('delete', 'delete'),
+            ('selection', 'selection'),
+            ('item', 'item')
+    ):
         locals()[new]    = MethodDelegator('tree', origin)        
 
 

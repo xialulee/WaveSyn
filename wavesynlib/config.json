@@ -43,7 +43,7 @@
 	},
 	
 	"SingleWaveformAlgorithms":[
-		{"ModuleName":	"isaa", "ClassName":	"DIAC"}
+		{"ModuleName":	"wavesynlib.algorithms.isaa", "ClassName":	"DIAC"}
 	]
 }
 

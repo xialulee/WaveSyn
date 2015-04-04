@@ -1,6 +1,7 @@
 from numpy import abs, isscalar, linalg, ndarray, mat, matrix, hstack
 from numpy.linalg   import matrix_rank, svd
 from collections import OrderedDict
+import importlib
 
 import abc
 
@@ -197,7 +198,8 @@ class AlgorithmNode(ModelNode, WindowComponent):
 
     def __init__(self, moduleName, className):
         super(AlgorithmNode, self).__init__()
-        mod         = __import__(autoSubs('wavesynlib.algorithms.$moduleName'), globals(), locals(), [className], -1)
+#        mod         = __import__(autoSubs('wavesynlib.algorithms.$moduleName'), globals(), locals(), [className], -1)
+        mod = importlib.import_module(moduleName)
         algorithm   = getattr(mod, className)()
         self.__meta = self.Meta()
         self.__meta.moduleName  = moduleName
