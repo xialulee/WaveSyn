@@ -90,7 +90,7 @@ class EvalFormatter(Formatter):
         self.caller = sys._getframe(self.level)
         return Formatter.format(self, format_string, *args, **kwargs)
                 
-#evalFmt = EvalFormatter().format
+
 def evalFmt(formatString):
     return EvalFormatter(level=2).format(formatString)                
 
@@ -103,6 +103,31 @@ class ObjectWithLock(object):
             self._lock  = threading.Lock()
         return self._lock
         
+
+class FunctionChain(object):
+    def __init__(self):
+        self.__functions    = []
+    
+    def __call__(self, *args, **kwargs):
+        retval     = None
+        for func in self.__functions:
+            retval     = func(*args, **kwargs)
+        return retval
+    
+    def addFunction(self, func):
+        self.__functions.append(func)
+    
+    def deleteFunction(self, func):
+        self.__functions.remove(func)
+    
+    def deleteFunctions(self):
+        self.__functions    = []
+    
+    def countFunction(self):
+        return len(self.__functions)
+    
+
+
         
 class Nonblocking(object):
     class TheThread(threading.Thread):

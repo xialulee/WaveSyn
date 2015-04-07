@@ -406,13 +406,6 @@ class FontFrame(Frame, object):
     def __init__(self, master=None, **kw):
         Frame.__init__(self, master, **kw)
         
-#        buttonFrame = Frame(self)
-#        buttonFrame.pack(side=BOTTOM)
-#        btnCancel = Button(buttonFrame, text='Cancel')
-#        btnCancel.pack(side=RIGHT)
-#        btnOk = Button(buttonFrame, text='OK')
-#        btnOk.pack(side=RIGHT)
-        
         # Font selector
         selectorFrame = LabelFrame(self, text='Font Selector')
         selectorFrame.pack(side=LEFT)
