@@ -33,6 +33,7 @@ class ModelNode(object):
     _xmlrpcexport_  = []    
     
     def __init__(self, nodeName='', isRoot=False, **kwargs):
+        super(ModelNode, self).__init__()
         if '_attributeLock' not in self.__dict__:
             object.__setattr__(self, '_attributeLock', set())
         self.parentNode = None
@@ -104,26 +105,37 @@ then node will have a property named 'a', which cannot be re-assigned.
             if isinstance(self.__dict__[attrName], ModelNode)}            
         
 
+class Dict(dict, object):
+    def __init__(self, *args, **kwargs):
+        super(Dict, self).__init__()
+
 # NodeDict
-class NodeDict(ModelNode, dict):
+class NodeDict(ModelNode, Dict):
     _xmlrpcexport_  = []    
     
     def __init__(self, nodeName=''):
-        dict.__init__(self)
-        ModelNode.__init__(self, nodeName=nodeName)
+#        dict.__init__(self)
+#        ModelNode.__init__(self, nodeName=nodeName)
+        super(NodeDict, self).__init__(nodeName=nodeName)
         
     def __setitem__(self, key, val):
         object.__setattr__(val, 'parentNode', self)
         val.lockAttribute('parentNode')
         dict.__setitem__(self, key, val)
 
+
+class List(list, object):
+    def __init__(self, *args, **kwargs):
+        super(List, self).__init__()
+
 # NodeList       
-class NodeList(ModelNode, list):
+class NodeList(ModelNode, List):
     _xmlrpcexport_  = []
     
     def __init__(self, nodeName=''):
-        list.__init__(self)
-        ModelNode.__init__(self, nodeName='')
+#        list.__init__(self)
+#        ModelNode.__init__(self, nodeName='')
+        super(NodeList, self).__init__(nodeName=nodeName)
         self.__elemLock = True
 
     

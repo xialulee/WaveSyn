@@ -284,6 +284,10 @@ class PatternWindow(FigureWindow):
         self.makeViewTab()
             # } End View tab
         
+            # Marker Tab {
+        self.makeMarkerTab()
+            #} End Marker tab
+        
             # Export tab {
         self.makeExportTab()
         frmExport   = self.exportFrame

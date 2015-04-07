@@ -303,6 +303,7 @@ class SingleWindow(FigureWindow):
 
         
         self.makeViewTab()
+        self.makeMarkerTab()
         self.makeExportTab()
         # End toolbar
         figureBook.makeFigures(

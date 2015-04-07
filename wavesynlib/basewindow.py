@@ -12,6 +12,8 @@ from Tkinter import *
 from ttk import *
 from Tkinter import Frame, PanedWindow, Label
 from tkFileDialog import asksaveasfilename
+from tkSimpleDialog import askstring
+
 from PIL import ImageTk
 
 import matplotlib
@@ -141,7 +143,7 @@ class WindowComponent(object):
         
 
   
-class DataFigure(ModelNode):
+class DataFigure(ModelNode, Observable):
     class Indicators(ModelNode):
         def __init__(self, nodeName='', dataFig=None, callback=None):
             super(DataFigure.Indicators, self).__init__(nodeName=nodeName)
@@ -234,6 +236,10 @@ class DataFigure(ModelNode):
         lineObject = self.axes.plot(*args, **kwargs)
         self.lineObjects.append(lineObject)
         self.update()
+        
+    def drawImage(self, *args, **kwargs):
+        self.axes.imshow(*args, **kwargs)
+        self.update()
                                
     @property
     def majorGrid(self):
@@ -308,6 +314,7 @@ class DataFigure(ModelNode):
     @Scripting.printable    
     def update(self):
         self.__canvas.show()
+        self.notifyObservers()
 
 
     @Scripting.printable
@@ -332,6 +339,10 @@ class DataFigure(ModelNode):
         finally:
             remove(filename)
 
+    @Scripting.printable
+    def setTitle(self, title):
+        self.axes.set_title(title)
+        self.update()
                                
     def clear(self):
         self.axes.clear()
@@ -341,7 +352,9 @@ class DataFigure(ModelNode):
     
     @Scripting.printable    
     def axis(self, r):
-        return self.axes.axis(r)
+        retval  = self.axes.axis(r)
+        self.update()
+        return retval
         
     @Scripting.printable
     def autoScale(self):
@@ -450,7 +463,17 @@ an instance of the GridGroup class.
                 self.__figureBook.deleteSelLines(idx=None)
             else:
                 return
-                
+
+    class LabelGroupObserver(object):
+        def __init__(self, figureBook):
+            self.__figureBook   = figureBook
+            
+        def update(self, labelType, labelString):
+            nameMap     = {'title':'setTitle', 'xlabel':'setXLabel', 'ylabel':'setYLabel'}            
+            printCode   = True
+            currentFigure   = self.__figureBook.currentFigure
+            getattr(currentFigure, nameMap[labelType])(labelString)
+                        
     class IndicatorGroupObserver(object):
         def __init__(self, figureBook):
             self.__figureBook   = figureBook
@@ -468,6 +491,13 @@ an instance of the GridGroup class.
 #                self.__figureBook.currentFigure.indicators.axvspan(xmin, xmax, **props)
                 getattr(self.__figureBook.currentFigure.indicators, meta['type'])(theMin, theMax, **props)
                 self.__figureBook.updateIndicatorList()
+                
+    class DataFigureObserver(object):
+        def __init__(self, figureBook):
+            self.__figureBook   = figureBook
+            
+        def update(self, *args, **kwargs):
+            self.__figureBook.notifyObservers(*args, **kwargs)
 
         
     def __init__(self, *args, **kwargs):
@@ -525,19 +555,22 @@ The rest parameters are passed to PanedWindow.__init__.
         self.__indicatorListbox = ScrolledList(listFrm, relief=GROOVE)
         self.__indicatorListbox.listConfig(width=20)
         self.__indicatorListbox.pack(fill=BOTH, expand=YES)
-        
-      
-        
-
+                      
         with self.attributeLock:
             setMultiAttr(self,
                 panedWindow = panedWindow,
                 gridGroupObserver   = self.GridGroupObserver(self), 
                 axisGroupObserver   = self.AxisGroupObserver(self),
                 clearGroupObserver  = self.ClearGroupObserver(self),
+                labelGroupObserver  = self.LabelGroupObserver(self),
                 indicatorGroupObserver  = self.IndicatorGroupObserver(self),
+                dataFigureObserver  = self.DataFigureObserver(self),
                 dataPool    = []
             )
+            
+    def append(self, val):
+        val.addObserver(self.dataFigureObserver)
+        return super(FigureBook, self).append(val)
             
     def notifyObservers(self, **kwargs):
         cf      = self.currentFigure
@@ -937,6 +970,25 @@ class ClearGroup(Observable, Group):
 
 
 
+class LabelGroup(Observable, Group):
+    def __init__(self, *args, **kwargs):
+        super(LabelGroup, self).__init__(*args, **kwargs)
+        Button(self, text='Title', command=self.onTitleClick).pack()
+        Button(self, text='Label', command=self.onLabelClick).pack()
+        Button(self, text='Legend', command=self.onLegendClick).pack()
+        self.name   = 'Label'
+        
+    def onTitleClick(self):
+        titleString     = askstring('Title', 'Enter the title of current figure:')
+        self.notifyObservers('title', titleString)
+    
+    def onLabelClick(self):
+        pass
+    
+    def onLegendClick(self):
+        pass
+
+
 class IndicatorGroup(Observable, Group):
     def __init__(self, *args, **kwargs):
         super(IndicatorGroup, self).__init__(*args, **kwargs)
@@ -1083,20 +1135,37 @@ class FigureWindow(WindowNode):
         grpClear.pack(side=LEFT, fill=Y)
         grpClear.addObserver(self.figureBook.clearGroupObserver)
         
-        grpIndicator    = IndicatorGroup(frmView, bd=2, relief=GROOVE)
-        grpIndicator.pack(side=LEFT, fill=Y)
-        grpIndicator.addObserver(self.figureBook.indicatorGroupObserver)
         
         with self.attributeLock:    
             setMultiAttr(self,
                 grpGrid  = grpGrid,
                 grpAxis  = grpAxis,
                 grpClear = grpClear,
-                grpIndicator    = grpIndicator,
                 viewFrame  = frmView
             )
             
         toolTabs.add(frmView, text='View')
+        
+        
+    def makeMarkerTab(self):
+        toolTabs    = self.toolTabs
+        frmMarker   = Frame(toolTabs)
+        
+        grpLabel        = LabelGroup(frmMarker, bd=2, relief=GROOVE)
+        grpLabel.pack(side=LEFT, fill=Y)
+        grpLabel.addObserver(self.figureBook.labelGroupObserver)        
+        
+        grpIndicator    = IndicatorGroup(frmMarker, bd=2, relief=GROOVE)
+        grpIndicator.pack(side=LEFT, fill=Y)
+        grpIndicator.addObserver(self.figureBook.indicatorGroupObserver)
+        
+        with self.attributeLock:
+            setMultiAttr(self,
+                grpLabel        = grpLabel,
+                grpIndicator    = grpIndicator
+            )
+        
+        toolTabs.add(frmMarker, text='Marker')
             
             
     def makeExportTab(self):
