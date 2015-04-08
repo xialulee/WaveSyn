@@ -1054,7 +1054,7 @@ class FigureExportGroup(Group):
     def __init__(self, *args, **kwargs):
         self._app = Application.instance
         self.__topwin = kwargs.pop('topwin')
-        Group.__init__(self, *args, **kwargs)
+        super(FigureExportGroup, self).__init__(*args, **kwargs)
         self.__uiImages = []
         imageFigureExportBtn = ImageTk.PhotoImage(
             file=uiImagePath('Pattern_ExportFigure_Button.png')

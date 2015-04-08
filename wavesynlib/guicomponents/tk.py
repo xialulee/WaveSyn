@@ -263,7 +263,7 @@ class ScrolledTree(Frame):
         locals()[new]    = MethodDelegator('tree', origin)        
 
 
-class ScrolledText(Frame):
+class ScrolledText(Frame, object):
     '''This class is based on Programming Python 3rd Edition P517'''
     def __init__(self, parent=None, text='', file=None):
         Frame.__init__(self, parent)

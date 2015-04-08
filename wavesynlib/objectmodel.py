@@ -16,6 +16,7 @@ from wavesynlib.common import autoSubs, MethodLock
 # http://pypix.com/python/context-managers/        
 class AttributeLock(object):
     def __init__(self, node):
+        super(AttributeLock, self).__init__()
         if not isinstance(node, ModelNode):
             raise TypeError, 'Only the instance of ModelNode is accepted.'
         self.node   = node
@@ -114,8 +115,6 @@ class NodeDict(ModelNode, Dict):
     _xmlrpcexport_  = []    
     
     def __init__(self, nodeName=''):
-#        dict.__init__(self)
-#        ModelNode.__init__(self, nodeName=nodeName)
         super(NodeDict, self).__init__(nodeName=nodeName)
         
     def __setitem__(self, key, val):
@@ -133,8 +132,6 @@ class NodeList(ModelNode, List):
     _xmlrpcexport_  = []
     
     def __init__(self, nodeName=''):
-#        list.__init__(self)
-#        ModelNode.__init__(self, nodeName='')
         super(NodeList, self).__init__(nodeName=nodeName)
         self.__elemLock = True
 

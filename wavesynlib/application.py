@@ -95,7 +95,7 @@ class Scripting(ModelNode):
         return params
         
     def __init__(self, rootNode):
-        ModelNode.__init__(self)
+        super(Scripting, self).__init__()
         self.__rootNode = rootNode
             
     def executeFile(self, filename):
@@ -216,7 +216,7 @@ wavesyn
     ''' '''
     def __init__(self):
         # The instance of this class is the root of the model tree. Thus isRoot is set to True
-        ModelNode.__init__(self, nodeName=Scripting.rootName, isRoot=True)
+        super(Application, self).__init__(nodeName=Scripting.rootName, isRoot=True)
         Scripting.nameSpace['locals'][Scripting.rootName] = self
         Scripting.nameSpace['globals'] = globals()
         self.homePage = 'https://github.com/xialulee/WaveSyn'
@@ -443,7 +443,7 @@ def uiImagePath(filename):
                 
 class Clipboard(ModelNode):
     def __init__(self, *args, **kwargs):
-        ModelNode.__init__(self, *args, **kwargs)
+        super(Clipboard, self).__init__(*args, **kwargs)
        
     @Scripting.printable
     def clear(self):
@@ -463,7 +463,7 @@ class ConsoleText(ScrolledText):
             self.__consoleText.write(streamType, content)
     
     def __init__(self, *args, **kwargs):
-        ScrolledText.__init__(self, *args, **kwargs)
+        super(ConsoleText, self).__init__(*args, **kwargs)
         # The shared queue of the PRODUCER-CONSUMER model.
         self.__queue    = Queue.Queue()
         self.text.tag_configure('STDOUT',   foreground='black')
@@ -597,7 +597,7 @@ Have a nice day.
             self.__console.consoleText.updateContent(tag=streamType, content=content)
 
     def __init__(self, *args, **kwargs):
-        ModelNode.__init__(self, *args, **kwargs)
+        super(ConsoleWindow, self).__init__(*args, **kwargs)
         app = Application.instance
         root = app.root
         root.title('WaveSyn-Console')

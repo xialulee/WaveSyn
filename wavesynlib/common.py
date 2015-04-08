@@ -34,6 +34,7 @@ class Observable(object):
             
 class SimpleObserver(object):
     def __init__(self, func):
+        super(SimpleObserver, self).__init__()
         self.__func = func
 
     def update(self, *args, **kwargs):
@@ -42,6 +43,7 @@ class SimpleObserver(object):
 
 class MethodDelegator(object):
     def __init__(self, attrName, methodName):
+        super(MethodDelegator, self).__init__()
         self.attrName   = attrName
         self.methodName = methodName
     
@@ -51,6 +53,7 @@ class MethodDelegator(object):
         
 class MethodLock(object):
     def __init__(self, method, lockName):
+        super(MethodLock, self).__init__()
         self.__descriptor   = method
         self.__lockName     = lockName
         
@@ -74,7 +77,7 @@ def autoSubs(template):
     
 class EvalFormatter(Formatter):
     def __init__(self, level=1):
-        Formatter.__init__(self)
+        super(EvalFormatter, self).__init__()
         self.caller = None # Will be set by method "format".
         self.level  = level
                              
@@ -106,6 +109,7 @@ class ObjectWithLock(object):
 
 class FunctionChain(object):
     def __init__(self):
+        super(FunctionChain, self).__init__()
         self.__functions    = []
     
     def __call__(self, *args, **kwargs):
@@ -142,6 +146,7 @@ class Nonblocking(object):
             self.retval = ret            
             
     def __init__(self, func):
+        super(Nonblocking, self).__init__()
         self.__doc__    = func.__doc__
         self.__func     = func
         self.__thread   = None
