@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from numpy import abs, isscalar, linalg, ndarray, mat, matrix, hstack
 from numpy.linalg   import matrix_rank, svd
 from collections import OrderedDict
@@ -250,12 +252,38 @@ class AlgorithmNode(ModelNode, WindowComponent):
         for k in range(len(allArguments)):
             self.topWindow.currentData  = queue.get()
             self.topWindow.plotCurrentData()
+            
+    @Scripting.printable
+    def parallelRun(self, allArguments):
+        queue   = mp.Queue()
+        retval  = {'process':[], 'queue':queue}
+        for procID, (args, kwargs) in enumerate(allArguments):
+            p   = mp.Process(target=parFunc, args=(type(self.__algorithm), procID, queue, args, kwargs))
+            retval['process'].append(p)
+            p.start()            
+        return retval
+            
+        
 
     
     
 def parallelFunc(algorithmClass, queue, args, kwargs):
     result  = algorithmClass()(*args, **kwargs)
     queue.put(result)        
+    
+    
+########################NEW#############################
+def parFunc(algorithmClass, procID, queue, args, kwargs):
+    PROGRESS_ID     = 1
+    RESULT_ID       = 0
+    def progressChecker(k, K, y, *args, **kwargs):                
+        queue.put((PROGRESS_ID, procID, int(k / K * 100)))
+    algorithm   = algorithmClass()
+    algorithm.progressChecker.append(progressChecker)
+    algorithm.progressChecker.interval  = 100
+    result  = algorithm(*args, **kwargs)
+    queue.put((RESULT_ID, result))
+########################################################    
 ###################################################################################################
 
 

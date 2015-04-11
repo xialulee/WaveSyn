@@ -12,12 +12,12 @@ from Tkinter import *
 from ttk import *
 
 from wavesynlib import guicomponents
-from wavesynlib.guicomponents.tk  import Group, ParamItem
-from wavesynlib.guicomponents.classselector import askClassName
-from wavesynlib.application       import Application, ScriptCode, Scripting
-from wavesynlib.basewindow        import FigureWindow
-from wavesynlib.common            import setMultiAttr, autoSubs, evalFmt, Nonblocking
-from wavesynlib.mathtools         import Algorithm, AlgorithmDict, AlgorithmNode
+from wavesynlib.guicomponents.tk                import Group, ParamItem
+from wavesynlib.guicomponents.classselector     import askClassName
+from wavesynlib.application                     import Application, ScriptCode, Scripting
+from wavesynlib.basewindow                      import FigureWindow
+from wavesynlib.common                          import setMultiAttr, autoSubs, evalFmt, Nonblocking
+from wavesynlib.mathtools                       import Algorithm, AlgorithmDict, AlgorithmNode
 
 
 import threading
@@ -254,9 +254,11 @@ class AlgoSelGroup(Group):
         
         funcObj    = Nonblocking(askClassName)('wavesynlib.algorithms', Algorithm)
         while funcObj.isRunning():
-            self._topwin.update()
+            #self._topwin.update()
+            Application.doEvents()
             time.sleep(0.1)
-        classInfo   = funcObj.returnValue
+        
+        classInfo   = funcObj.returnValue        
         
         if not classInfo:
             return

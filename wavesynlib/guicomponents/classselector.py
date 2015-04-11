@@ -9,6 +9,7 @@ import os
 import sys
 import importlib
 import subprocess as sp
+import multiprocessing as mp
 import inspect
 
 from Tkinter import *
@@ -18,7 +19,7 @@ from Tkinter import Frame
 from wavesynlib.guicomponents.tk import ScrolledTree
 
 
-class ClassSelector(object):
+class ClassSelector(object):        
     def __init__(self, packageName, baseClass, displayBaseClass=False):
         self.__packageName = packageName
         self.__baseClass = baseClass
@@ -86,6 +87,38 @@ def askClassName(packageName, baseClass):
     p           = sp.Popen(['python', filePath, packageName, baseClass.__module__, baseClass.__name__], stdout=sp.PIPE);
     stdout, stderr  = p.communicate()
     return stdout.strip().split()
+    
+
+
+# Use multiprocessing for creating nonblocking ClassSelector dialog.
+# However, it seems that multiprocessing will copy the parent process (not only the selector poped out, but also another a new wavesyn console came out).
+# So, createProcess is not used.
+# Maybe later I'll figure out how to solve this problem.
+class ClassSelectorProcess(object):
+    def __init__(self, process, parentConn):
+        self.process        = process
+        self.parentConn     = parentConn
+        
+    def start(self):
+        return self.process.start()
+        
+    def isAlive(self):
+        return self.process.is_alive()
+    
+    @property    
+    def returnValue(self):
+        if self.isAlive():
+            raise Exception('ClassSelector process is still running.')
+        return self.parentConn.recv()
+
+def classSelectorProcess(conn, args, kwargs):
+    conn.send(ClassSelector(*args, **kwargs).doModel())
+    
+def createProcess(*args, **kwargs): 
+    parentConn, childConn   = mp.Pipe()
+    process     = mp.Process(target=classSelectorProcess, args=(childConn, args, kwargs))        
+    return ClassSelectorProcess(process, parentConn)
+# End
 
         
         

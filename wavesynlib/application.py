@@ -414,6 +414,10 @@ wavesyn
     def mainloop(self):
         return self.root.mainloop()
         
+    @classmethod
+    def doEvents(cls):
+        cls.instance.root.update()
+        
     def startXMLRPCServer(self, addr='localhost', port=8000):
         from wavesynlib.interfaces.xmlrpc.server    import startXMLRPCServer
         startXMLRPCServer(addr, port)        

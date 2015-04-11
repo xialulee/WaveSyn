@@ -30,6 +30,10 @@ class StreamChain(object):
     def write(self, content):
         for stream in self.__streamlist:
             stream.write(content)
+            
+    def flush(self):
+        for stream in self.__streamlist:
+            stream.flush()
 
 class StreamManager(Observable):
     class Stream(object):
