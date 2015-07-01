@@ -1,7 +1,7 @@
 WaveSyn
 =======
 
-WaveSyn is a platform for testing and evaluating radar waveform synthesis algorithms originally used by Dr. Yi-nan Zhao's [(orcid)](http://orcid.org/0000-0002-7335-8164) research team. This team is dedicated to developing advanced radar signal processing techniques including adaptive detector and adaptive waveform design methods. The main author of WaveSyn is Feng-cong Li [(orcid)](http://orcid.org/0000-0002-3337-2578).
+WaveSyn is a platform for testing and evaluating radar waveform synthesis algorithms originally used by Dr. Yi-nan Zhao's [(orcid)](http://orcid.org/0000-0002-7335-8164) research team. This team is dedicated to developing advanced radar signal processing techniques including adaptive detector and adaptive waveform design methods. The main author of WaveSyn is Dr. Feng-cong Li [(orcid)](http://orcid.org/0000-0002-3337-2578).
 
 Pattern synthesis for MIMO radars
 -------
