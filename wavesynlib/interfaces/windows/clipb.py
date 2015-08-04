@@ -91,7 +91,7 @@ EndFragment:{3: 13d}
                 templateLen,
                 templateLen+len(s)
         )
-        htmlStr         = ''.join((templateHead, s, templateHead))
+        htmlStr         = ''.join((templateHead, s, templateTail))
         win32clipboard.SetClipboardData(CF_HTML, htmlStr)
     else: # not html
         if code:
