@@ -4,6 +4,9 @@
 # xialulee
 
 from comtypes import *
+from ctypes import POINTER
+from ctypes.wintypes import HWND, HICON, DWORD, UINT, BOOL, LPCWSTR, RECT
+ULONGLONG = c_uint64
 
 GUID_CTaskbarList   = GUID('{56FDF344-FD6D-11d0-958A-006097C9A090}')
 
@@ -28,94 +31,95 @@ class ITaskbarList4(IUnknown):
         COMMETHOD([], HRESULT, 'HrInit'),
 
         COMMETHOD([], HRESULT, 'AddTab',
-            (['in'], c_voidp, 'hwnd')
+            (['in'], HWND, 'hwnd')
         ),
 
         COMMETHOD([], HRESULT, 'DeleteTab',
-            (['in'], c_voidp, 'hwnd')
+            (['in'], HWND, 'hwnd')
         ),
 
         COMMETHOD([], HRESULT, 'ActivateTab',
-            (['in'], c_voidp, 'hwnd')
+            (['in'], HWND, 'hwnd')
         ),
 
         COMMETHOD([], HRESULT, 'SetActiveAlt',
-            (['in'], c_voidp, 'hwnd')
+            (['in'], HWND, 'hwnd')
         ),
 
         # ITaskbarList2
         COMMETHOD([], HRESULT, 'MarkFullscreenWindow',
-            (['in'], c_voidp, 'hwnd'),
-            (['in'], c_bool, 'fFullscreen')
+            (['in'], HWND, 'hwnd'),
+            (['in'], BOOL, 'fFullscreen')
         ),
 
         # ITaskbarList3
         COMMETHOD([], HRESULT, 'SetProgressValue',
-            (['in'], c_voidp, 'hwnd'),
-            (['in'], c_uint64, 'ullCompleted'),
-            (['in'], c_uint64, 'ullTotal')
+            (['in'], HWND, 'hwnd'),
+            (['in'], ULONGLONG, 'ullCompleted'),
+            (['in'], ULONGLONG, 'ullTotal')
         ),
 
         COMMETHOD([], HRESULT, 'SetProgressState',
-            (['in'], c_voidp, 'hwnd'),
+            (['in'], HWND, 'hwnd'),
             (['in'], c_uint, 'tbpFlags')
         ),
 
         COMMETHOD([], HRESULT, 'RegisterTab',
-            (['in'], c_voidp, 'hwndTab'),
-            (['in'], c_voidp, 'hwndMDI')
+            (['in'], HWND, 'hwndTab'),
+            (['in'], HWND, 'hwndMDI')
         ),
 
         COMMETHOD([], HRESULT, 'UnregisterTab',
-            (['in'], c_voidp, 'hwndTab')
+            (['in'], HWND, 'hwndTab')
         ),
 
         COMMETHOD([], HRESULT, 'SetTabOrder',
-            (['in'], c_voidp, 'hwndTab'),
-            (['in'], c_voidp, 'hwndInsertBefore')
+            (['in'], HWND, 'hwndTab'),
+            (['in'], HWND, 'hwndInsertBefore')
         ),
 
         COMMETHOD([], HRESULT, 'SetTabActive',
-            (['in'], c_voidp, 'hwndTab'),
-            (['in'], c_voidp, 'hwndInsertBefore'),
-            (['in'], c_uint32, 'dwReserved')
+            (['in'], HWND, 'hwndTab'),
+            (['in'], HWND, 'hwndInsertBefore'),
+            (['in'], DWORD, 'dwReserved')
         ),
 
         COMMETHOD([], HRESULT, 'ThumbBarAddButtons',
-            (['in'], c_voidp, 'hwnd'),
-            (['in'], c_uint32, 'cButtons'),
+            (['in'], HWND, 'hwnd'),
+            (['in'], UINT, 'cButtons'),
             (['in'], c_voidp, 'pButtons')
         ),
 
         COMMETHOD([], HRESULT, 'ThumbBarUpdateButtons',
-            (['in'], c_voidp, 'hwnd'),
-            (['in'], c_uint32, 'cButtons'),
+            (['in'], HWND, 'hwnd'),
+            (['in'], UINT, 'cButtons'),
             (['in'], c_voidp, 'pButtons')
         ),
 
         COMMETHOD([], HRESULT, 'ThumbBarSetImageList',
-            (['in'], c_voidp, 'hwnd'),
+            (['in'], HWND, 'hwnd'),
             (['in'], c_voidp, 'himl')
         ),
 
         COMMETHOD([], HRESULT, 'SetOverlayIcon',
-            (['in'], c_voidp, 'hwnd'),
-            (['in'], c_voidp, 'hIcon')
+            (['in'], HWND, 'hwnd'),
+            (['in'], HICON, 'hIcon'),
+            (['in'], LPCWSTR, 'pszDescription')
         ),
 
         COMMETHOD([], HRESULT, 'SetThumbnailTooltip',
-            (['in'], c_voidp, 'hwnd'),
-            (['in'], c_voidp, 'pszTip')
+            (['in'], HWND, 'hwnd'),
+            (['in'], LPCWSTR, 'pszTip')
         ),
 
         COMMETHOD([], HRESULT, 'SetThumbnailClip',
-            (['in'], c_voidp, 'hwnd'),
-            (['in'], c_voidp, 'prcClip')
+            (['in'], HWND, 'hwnd'),
+            (['in'], POINTER(RECT), 'prcClip')
         ),
 
         # ITaskbarList4
         COMMETHOD([], HRESULT, 'SetTabProperties',
-            (['in'], c_voidp, 'hwndTab'),
+            (['in'], HWND, 'hwndTab'),
             (['in'], c_uint32, 'stpFlags')
         )
     ]
