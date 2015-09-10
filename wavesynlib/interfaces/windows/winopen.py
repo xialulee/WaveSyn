@@ -9,7 +9,6 @@ import os
 import sys
 
 def winopen(path):
-    path = sys.argv[1]
     if os.path.isdir(path):
         os.system('explorer.exe ' + path)
     elif os.path.isfile(path):

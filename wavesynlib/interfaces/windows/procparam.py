@@ -9,9 +9,9 @@ import sys
 import platform
 
 
-wqlStringTemplate   = 'select commandline from win32_process where name="{0}"'
 
-def ironpythonMain(wqlString):    
+
+def ironpythonQuery(wqlString):    
     import clr
     clr.AddReference('System.Management')
     from System.Management import SelectQuery, ManagementObjectSearcher
@@ -19,24 +19,30 @@ def ironpythonMain(wqlString):
     q = SelectQuery(wqlString)
     s = ManagementObjectSearcher(q)
     
-    for i in s.Get():
-        print i['commandline']    
+    return [i['commandline'] for i in s.Get()]
     
     
-def cpythonMain(wqlString):
+def cpythonQuery(wqlString):
     from win32com.client import Dispatch
     computerName    = '.'
     locator         = Dispatch('WbemScripting.SWbemLocator')
     server          = locator.ConnectServer(computerName, r'root\cimv2')
     q               = server.ExecQuery(wqlString)
-    for i in q:
-        print i.commandline
+
+    return [i.commandline for i in q]
+
+def query(procName):
+    wqlStringTemplate   = 'select commandline from win32_process where name="{0}"'
+    wqlString   = wqlStringTemplate.format(procName)
+    return globals()[platform.python_implementation().lower() + 'Query'](wqlString)
         
         
 def main():
-    wqlString   = wqlStringTemplate.format(sys.argv[1])
+    procName = sys.argv[1]
     try:
-        globals()[platform.python_implementation().lower() + 'Main'](wqlString)
+        result = query(procName)
+        for item in result:
+            print item
     except KeyError:
         sys.stderr.write('Not supported Python implementation.\n')
         sys.exit(1)
