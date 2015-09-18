@@ -6,6 +6,9 @@ import win32clipboard
 import getopt
 import re
 import msvcrt
+from cStringIO  import StringIO
+from PIL        import Image, ImageGrab
+
 
 # --2009.10.16 PM 04:00 Created by xialulee--
 #   accept /r and /w for copy clipboard to stdout and copy stdin to clipboard respectively
@@ -31,11 +34,12 @@ import msvcrt
 #   add new function image2clipb
 # --2015.03.13 PM 04:05 Modified by xialulee--
 #   add --html option. Now support writing HTML string to clipboard.
-#
-# --ActivePython2.6.6.15--
+# --2015.09.18 PM 02:28 Modified by xialulee--
+#   add new function clipbToImageFilePath
+# 
 # --xialulee--
 
-ERROR_NOERROR, ERROR_PARAM, ERROR_CLIPB = range(3)
+ERROR_NOERROR, ERROR_PARAM, ERROR_CLIPB, ERROR_IMAGE = range(4)
 NEWLINE = re.compile(r'(?<!\r)\n')
 CF_HTML = win32clipboard.RegisterClipboardFormat('HTML Format')
 
@@ -102,13 +106,11 @@ EndFragment:{3: 13d}
     return exitcode
 
 
-def image2clipb(filename):
+def imageFileToClipb(fileObj):
     '''Read an image file and write the image data into clipboard.
 See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
 '''
-    from PIL        import Image
-    from cStringIO  import StringIO
-    image   = Image.open(filename)
+    image   = Image.open(fileObj)
     sio     = StringIO()
     image.convert('RGB').save(sio, 'BMP')
     data    = sio.getvalue()[14:]
@@ -119,6 +121,16 @@ See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-
         win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
     finally:
         win32clipboard.CloseClipboard()
+        
+        
+def clipbToImageFilePath(filePath):
+    image   = ImageGrab.grabclipboard()
+    if image:
+        image.save(filePath)
+        return True
+    else:
+        return False
+    
 
 
 def usage():
@@ -130,7 +142,7 @@ def usage():
     perr(' -w, --write\t\tcopy stdin to clipboard\n')
     perr(
 ''' -i,
- -imagefile=FILENAME'\tread an image file specified by FILENAME
+ --imagefile=FILENAME'\tread an image file specified by FILENAME
 \t\t\tand put it into clipboard if "-w" is specified.\n'''
 )
     perr(
@@ -200,12 +212,22 @@ def main():
             filename    = a
 
     if rw == 'r':
-        exitcode    = clipb2stdout(mode, code, null)
+        if im:
+            if clipbToImageFilePath(filename) is False:
+                exitcode = ERROR_IMAGE
+            else:
+                exitcode = ERROR_NOERROR
+        else:
+            exitcode    = clipb2stdout(mode, code, null)
+        sys.exit(exitcode)
     elif rw == 'w':
         if im:
-            image2clipb(filename)
+            with open(filename, 'rb') as f:
+                imageFileToClipb(f)
+            exitcode    = ERROR_NOERROR
         else:
             exitcode    = stdin2clipb(mode, code, tee, null)
+        sys.exit(exitcode)
     else:
         sys.stderr.write('Clipb-Error: Error parameter\n')
         sys.stderr.write('Please specify -r or -w\n\n')
