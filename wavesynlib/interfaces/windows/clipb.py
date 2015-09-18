@@ -8,6 +8,7 @@ import re
 import msvcrt
 from cStringIO  import StringIO
 from PIL        import Image, ImageGrab
+from psd_tools  import PSDImage
 
 
 # --2009.10.16 PM 04:00 Created by xialulee--
@@ -35,7 +36,8 @@ from PIL        import Image, ImageGrab
 # --2015.03.13 PM 04:05 Modified by xialulee--
 #   add --html option. Now support writing HTML string to clipboard.
 # --2015.09.18 PM 02:28 Modified by xialulee--
-#   add new function clipbToImageFilePath
+#   add new function clipbToImageFilePath which can read image in clipboard and write it into a file. 
+#   imageFileToClip now support photoshop .PSD file. 
 # 
 # --xialulee--
 
@@ -106,11 +108,15 @@ EndFragment:{3: 13d}
     return exitcode
 
 
-def imageFileToClipb(fileObj):
+def imageFileToClipb(fileObj, isPSD=False):
     '''Read an image file and write the image data into clipboard.
 See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
 '''
-    image   = Image.open(fileObj)
+    if isPSD:
+        psd     = PSDImage.from_stream(fileObj)
+        image   =psd.as_PIL()
+    else:
+        image   = Image.open(fileObj)
     sio     = StringIO()
     image.convert('RGB').save(sio, 'BMP')
     data    = sio.getvalue()[14:]
@@ -222,8 +228,9 @@ def main():
         sys.exit(exitcode)
     elif rw == 'w':
         if im:
+            isPSD = True if os.path.splitext(filename)[-1].lower() == '.psd' else False
             with open(filename, 'rb') as f:
-                imageFileToClipb(f)
+                imageFileToClipb(f, isPSD)
             exitcode    = ERROR_NOERROR
         else:
             exitcode    = stdin2clipb(mode, code, tee, null)
