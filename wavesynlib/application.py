@@ -63,6 +63,8 @@ from wavesynlib.interfaces.editor.externaleditor  import EditorDict, EditorNode
 
 from wavesynlib.stdstream  import StreamManager
 
+from wavesynlib.cuda import Worker as CUDAWorker
+
         
 # Scripting Sub-System
 class ScriptCode(object):
@@ -268,7 +270,9 @@ wavesyn
                                 
                 streamManager   =StreamManager(),                
                 
-                configFileName  = configFileName
+                configFileName  = configFileName,
+                
+                cudaWorker      = CUDAWorker()
             )        
         
         

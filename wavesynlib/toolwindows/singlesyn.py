@@ -97,7 +97,8 @@ class OptimizeGroup(Group):
         print(autoSubs('Total time consumption: $deltaT (s)'))
 
     def serialRun(self):
-        tbicon = self._app.tbicon
+        app    = self._app
+        tbicon = app.tbicon
         self.__stopflag = False
         wavnum = self.__num.getInt()
         progress = [0]
@@ -107,14 +108,37 @@ class OptimizeGroup(Group):
 
         params = self.__topwin.grpParams.getParams()
 
-        class AlgoThread(threading.Thread):
-            def __init__(self, algo, params, waveform, progress):
-                self.algo = algo
-                self.progress = progress
-                threading.Thread.__init__(self)
-            def run(self):
-                printCode   = True
-                self.algo.run(**params)
+        if algorithm.needCUDA:
+            class AlgoThread(object):
+                def __init__(self, algo, params, waveform, progress):                    
+                    app.cudaWorker.activate()
+                    self.__params   = params,
+                    self.__algo     = algo
+                
+                def start(self):
+                    params  = self.__params[0]
+                    #print (params)
+                    for p in params:
+                        if hasattr(params[p], 'code'): # Temp solution
+                            params[p]   = eval(params[p].code)
+                    app.cudaWorker.messageIn.put({'command':'call', 'callable object':self.__algo.run, 'args':[], 'kwargs':params})
+                    
+                def isAlive(self):
+                    ret         = None
+                    try:
+                        ret     = app.cudaWorker.messageOut.get_nowait()
+                    except:
+                        pass
+                    return False if ret else True
+        else:
+            class AlgoThread(threading.Thread):
+                def __init__(self, algo, params, waveform, progress):
+                    self.algo = algo
+                    self.progress = progress
+                    threading.Thread.__init__(self)
+                def run(self):
+                    printCode   = True
+                    self.algo.run(**params)
         
         self.__finishedwavbar['maximum'] = wavnum
 
@@ -123,6 +147,9 @@ class OptimizeGroup(Group):
             
         algorithm.progressChecker.append(progressChecker)
         algorithm.progressChecker.interval  = int(self.__pci.entryText)
+        
+        algorithm.presetParams(params) # for algorithms which will allocate resources depend on parameters and allocation procedure must be executed in the main thread.        
+        
         try:
             for cnt in range(wavnum):
                 algothread = AlgoThread(algorithm, params, waveform, progress)

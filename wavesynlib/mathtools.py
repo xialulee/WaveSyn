@@ -182,6 +182,9 @@ class Algorithm(object):
     def __call__(self, *args, **kwargs):
         pass
     
+    def presetParams(self, params):
+        pass
+    
     @property
     def progressChecker(self):
         return self.__progressChecker
@@ -202,6 +205,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
         super(AlgorithmNode, self).__init__()
         mod = importlib.import_module(moduleName)
         algorithm   = getattr(mod, className)()
+        self.__cuda = True if hasattr(algorithm, '__CUDA__') and algorithm.__CUDA__ else False
         self.__meta = self.Meta()
         self.__meta.moduleName  = moduleName
         self.__meta.className   = className
@@ -220,6 +224,10 @@ class AlgorithmNode(ModelNode, WindowComponent):
 
     def __getitem__(self, key):
         return getattr(self.__meta, key)
+
+    @property
+    def needCUDA(self):
+        return self.__cuda
 
     @property
     def meta(self):
@@ -241,7 +249,10 @@ class AlgorithmNode(ModelNode, WindowComponent):
         if isinstance(self.parentNode, AlgorithmDict):
             return evalFmt('{self.parentNode.nodePath}["{self.meta.name}"]')
         else:
-            return ModelNode.nodePath        
+            return ModelNode.nodePath
+            
+    def presetParams(self, params):
+        self.__algorithm.presetParams(params)
 
 ##############################Experimenting with multiprocessing###################################
     @Scripting.printable
