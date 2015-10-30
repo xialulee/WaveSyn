@@ -4,7 +4,8 @@ Created on Fri Oct 23 10:21:48 2015
 
 @author: Feng-cong Li
 """
-
+from __future__ import print_function
+from __future__ import division
 
 from win32api       import SendMessage
 
@@ -19,7 +20,7 @@ class ProgressBarReader(object):
     @property
     def position(self):
         pos = SendMessage(self.__handle, PBM_GETPOS, 0, 0)
-        return int(float(pos) / self.__rangeMax * 100)
+        return pos * 100 // self.__rangeMax
 
 
 
@@ -29,14 +30,14 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.common              import SimpleObserver
 import sys
 
-if __name__ == '__main__':
+
+if __name__ == '__main__':    
     handle  = sys.argv[1]
     if handle[:2] == '0x':
         handle = int(handle[2:], base=16)
     else:
         handle = int(handle)
         
-    
     root     = Tk()
     tbIcon   = tktools.TaskbarIcon(root)
     pbReader = ProgressBarReader(handle)
@@ -51,5 +52,4 @@ if __name__ == '__main__':
     timer.active = True
     
     root.mainloop()
-    
     

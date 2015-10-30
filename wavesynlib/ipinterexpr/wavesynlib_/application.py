@@ -142,6 +142,27 @@ class Application(ModelNode):
         #self.printTip(evalFmt('{win.nodePath} is closed, and its ID becomes defunct for scripting system hereafter'))
         self.windows.pop(id(win))         
         
-    
+ 
+import threading
+class WaveSynThread(object):
+    class Thread(threading.Thread):
+        def __init__(self, func):
+            self.func   = func
+            threading.Thread.__init__(self)
+            
+        def run(self):
+            self.func()
+            
+    @staticmethod
+    def start(func):
+        app = Application.instance
+        theThread  = WaveSynThread.Thread(func)
+        theThread.start()
+        while theThread.isAlive():
+            app.root.update()
+            for winId in app.windows:
+                app.windows[winId].update()
+
+   
 def uiImagePath(filename):
     return os.path.join(Application.instance.dirPath, 'images', filename)     
