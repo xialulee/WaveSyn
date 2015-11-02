@@ -24,10 +24,9 @@ class TBPFLAG:
     TBPF_ERROR          = 4
     TBPF_PAUSED         = 8
 
-class ITaskbarList4(IUnknown):
-    _iid_   = GUID('{c43dc798-95d1-4bea-9030-bb99e2983a1a}')
+class ITaskbarList(IUnknown):
+    _iid_   = GUID('{56FDF342-FD6D-11D0-958A-006097C9A090}')
     _methods_   = [
-        # ITaskbarList
         COMMETHOD([], HRESULT, 'HrInit'),
 
         COMMETHOD([], HRESULT, 'AddTab',
@@ -44,15 +43,23 @@ class ITaskbarList4(IUnknown):
 
         COMMETHOD([], HRESULT, 'SetActiveAlt',
             (['in'], HWND, 'hwnd')
-        ),
-
-        # ITaskbarList2
+        )
+    ]
+        
+        
+class ITaskbarList2(ITaskbarList):
+    _iid_   = GUID('{602D4995-B13A-429B-A66E-1935E44F4317}')
+    _methods_   = [        
         COMMETHOD([], HRESULT, 'MarkFullscreenWindow',
             (['in'], HWND, 'hwnd'),
             (['in'], BOOL, 'fFullscreen')
-        ),
-
-        # ITaskbarList3
+        )
+    ]
+        
+        
+class ITaskbarList3(ITaskbarList2):
+    _iid_   = GUID('{EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF}')
+    _methods_   = [        
         COMMETHOD([], HRESULT, 'SetProgressValue',
             (['in'], HWND, 'hwnd'),
             (['in'], ULONGLONG, 'ullCompleted'),
@@ -115,11 +122,36 @@ class ITaskbarList4(IUnknown):
         COMMETHOD([], HRESULT, 'SetThumbnailClip',
             (['in'], HWND, 'hwnd'),
             (['in'], POINTER(RECT), 'prcClip')
-        ),
+        )
+    ]
 
-        # ITaskbarList4
+
+class ITaskbarList4(ITaskbarList3):
+    _iid_   = GUID('{C43DC798-95D1-4BEA-9030-BB99E2983A1A}')
+    _methods_   = [
         COMMETHOD([], HRESULT, 'SetTabProperties',
             (['in'], HWND, 'hwndTab'),
             (['in'], c_uint32, 'stpFlags')
         )
     ]
+    
+    
+    
+if __name__ == '__main__':
+    from Tkinter import *
+    from comtypes import CoCreateInstance
+    from win32gui import GetParent    
+    
+    tbm = CoCreateInstance(GUID_CTaskbarList, interface=ITaskbarList3)
+    
+    def onMove_gen(root):
+        def onMove(value):
+            tbm.SetProgressValue(GetParent(root.winfo_id()), int(value), 100)
+        return onMove
+    
+    root    = Tk()
+    tbar    = Scale(root, from_=0, to=100, orient=HORIZONTAL, command=onMove_gen(root))
+    tbar.pack()
+    root.mainloop()
+    
+    
