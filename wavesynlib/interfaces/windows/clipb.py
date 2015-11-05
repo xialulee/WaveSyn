@@ -45,7 +45,7 @@ ERROR_NOERROR, ERROR_PARAM, ERROR_CLIPB, ERROR_IMAGE = range(4)
 NEWLINE = re.compile(r'(?<!\r)\n')
 CF_HTML = win32clipboard.RegisterClipboardFormat('HTML Format')
 
-def clipb2stdout(mode, code, null):
+def clipb2stream(stream, mode, code, null):
     exitcode = ERROR_NOERROR
     win32clipboard.OpenClipboard(0)
     try:
@@ -60,19 +60,21 @@ def clipb2stdout(mode, code, null):
             s = s[:s.index('\x00')]
         if mode == 't':
             s = s.replace('\r\n', '\n')
-        sys.stdout.write(s)
+        stream.write(s)
     win32clipboard.CloseClipboard()
     return exitcode
 
-def stdin2clipb(mode, code, tee, null):
+def stdin2stream(stream, mode, code, tee, null):
     exitcode = ERROR_NOERROR
-    s = sys.stdin.read()
+    #s = sys.stdin.read()
+    s = stream.read()
     if null:
         s = s[:s.index('\x00')]
     if mode == 't':
         s = NEWLINE.sub('\r\n', s)        
     if tee:
-        sys.stdout.write(s)
+        #sys.stdout.write(s)
+        tee.write(s)
     if code:
         s = s.decode(code, 'ignore')
     
@@ -210,7 +212,7 @@ def main():
         if o in ('-w', '--write'):
             rw      = 'w'
         if o in ('-T', '--tee'):
-            tee     = True
+            tee     = sys.stdout
         if o in ('-N', '--null'):
             null    = True
         if o in ('-i', '--imagefile'):
@@ -224,7 +226,7 @@ def main():
             else:
                 exitcode = ERROR_NOERROR
         else:
-            exitcode    = clipb2stdout(mode, code, null)
+            exitcode    = clipb2stream(sys.stdout, mode, code, null)
         sys.exit(exitcode)
     elif rw == 'w':
         if im:
@@ -233,7 +235,7 @@ def main():
                 imageFileToClipb(f, isPSD)
             exitcode    = ERROR_NOERROR
         else:
-            exitcode    = stdin2clipb(mode, code, tee, null)
+            exitcode    = stdin2stream(sys.stdin, mode, code, tee, null)
         sys.exit(exitcode)
     else:
         sys.stderr.write('Clipb-Error: Error parameter\n')
