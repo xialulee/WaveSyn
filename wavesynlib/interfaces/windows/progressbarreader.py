@@ -31,7 +31,11 @@ from wavesynlib.common              import SimpleObserver
 import sys
 
 
-if __name__ == '__main__':    
+import ctypes as ct
+APPID = 'wavesyn.interfaces.windows.progressbarreader'
+
+if __name__ == '__main__':
+    ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     handle  = sys.argv[1]
     if handle[:2] == '0x':
         handle = int(handle[2:], base=16)

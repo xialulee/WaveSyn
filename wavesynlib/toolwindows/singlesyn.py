@@ -171,7 +171,7 @@ class OptimizeGroup(Group):
         finally:
             algorithm.progressChecker.remove(progressChecker)
         self.__finishedwav.set(0)
-        tbicon.state = guicomponents.tk.TBPF_NOPROGRESS
+        tbicon.state = guicomponents.tk.TBPFLAG.TBPF_NOPROGRESS
         
     def parallelRun(self):
         class AlgoThread(threading.Thread):

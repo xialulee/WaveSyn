@@ -19,11 +19,20 @@ from wavesynlib.common     import MethodDelegator
 __DEBUG__ = False
 
 
-TBPF_NOPROGRESS     = 0
-TBPF_INDETERMINATE  = 1
-TBPF_NORMAL         = 2
-TBPF_ERROR          = 4
-TBPF_PAUSED         = 8
+class TBPFLAG:
+    __slots__   = ('TBPF_NOPROGRESS',
+                   'TBPF_INDETERMINATE',
+                   'TBPF_NORMAL',
+                   'TBPF_ERROR',
+                   'TBPF_PAUSED'
+    )
+
+    TBPF_NOPROGRESS     = 0
+    TBPF_INDETERMINATE  = 1
+    TBPF_NORMAL         = 2
+    TBPF_ERROR          = 4
+    TBPF_PAUSED         = 8
+    
 import platform
 win7plus    = False
 if platform.system() == 'Windows':
@@ -32,7 +41,7 @@ if platform.system() == 'Windows':
         win7plus    = True
 
 if win7plus:
-    from wavesynlib.interfaces.windows.taskbarmanager import ITaskbarList4, GUID_CTaskbarList, TBPFLAG
+    from wavesynlib.interfaces.windows.shell.taskbarmanager import ITaskbarList4, GUID_CTaskbarList, TBPFLAG
     from comtypes import CoCreateInstance
     import ctypes as ct
     GetParent   = ct.windll.user32.GetParent
