@@ -35,10 +35,17 @@ def main(argv):
         if o in ('-a', '--all'):
             allCmd = True
     
-    name    = args[0]
-    name    = os.path.splitext(name)[0]
-    paths   = os.environ['PATH'].split(os.path.pathsep)
-    exts    = os.environ['PATHEXT'].split(os.path.pathsep)
+    name        = args[0]
+    name, ext   = os.path.splitext(name)
+    paths       = os.environ['PATH'].split(os.path.pathsep)
+    exts        = os.environ['PATHEXT'].split(os.path.pathsep)
+    
+    if ext: 
+        if ext.upper() not in [e.upper() for e in exts]:
+            print('The file {} is not executable.'.format(args[0]), file=sys.stderr)        
+            return ERROR_NOTFOUND
+        else:
+            exts = [ext]
 
     paths.insert(0, '.')
     
