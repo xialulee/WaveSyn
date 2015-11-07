@@ -22,30 +22,38 @@ def usage():
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], \
-            '',\
-            []\
+            'a',\
+            ['all']\
         ) # TODO
     except getopt.GetoptError, err:
         print(str(err), file=sys.stderr)
         usage()
         return ERROR_PARAM
+        
+    allCmd = False
+    for o, a in opts:
+        if o in ('-a', '--all'):
+            allCmd = True
     
     name    = args[0]
+    name    = os.path.splitext(name)[0]
     paths   = os.environ['PATH'].split(os.path.pathsep)
     exts    = os.environ['PATHEXT'].split(os.path.pathsep)
 
     paths.insert(0, '.')
     
-    filePath = ''
+    filePaths = []
     
     for path, ext in product(paths, exts):
         testPath = ''.join([os.path.join(path, name), ext])
         if os.path.exists(testPath):
-            filePath = os.path.abspath(testPath)
-            break        
+            filePaths.append(os.path.abspath(testPath))
+            if not allCmd:
+                break        
             
-    if filePath:
-        print(filePath)
+    if filePaths:
+        for filePath in filePaths:
+            print(filePath)
     else:
         print('which.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
         return ERROR_NOTFOUND
