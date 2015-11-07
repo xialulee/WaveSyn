@@ -55,6 +55,8 @@ def clipb2stream(stream, mode, code, null):
         exitcode = ERROR_CLIPB
     else:
         if code:
+            if code == '@': # Automatical encoding using sys.getfilesystemencoding().
+                code = sys.getfilesystemencoding()
             s = s.encode(code, 'ignore')
         if null:
             s = s[:s.index('\x00')]
@@ -76,6 +78,8 @@ def stdin2stream(stream, mode, code, tee, null):
         #sys.stdout.write(s)
         tee.write(s)
     if code:
+        if code == '@': #Automatical decoding using sys.getfilesystemencoding().
+            code = sys.getfilesystemencoding()
         s = s.decode(code, 'ignore')
     
     win32clipboard.OpenClipboard(0)
