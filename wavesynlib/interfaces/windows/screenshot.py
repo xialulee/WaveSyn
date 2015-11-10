@@ -41,7 +41,7 @@ class RectSelCanvas(Canvas, Observable):
 if __name__ == '__main__':
     root    = Tk()
     
-    canvas  = RectSelCanvas(root)
+    canvas  = RectSelCanvas(root, cursor='crosshair')
     canvas.pack(fill=BOTH, expand=YES)    
     
     image           = ImageGrab.grab()
