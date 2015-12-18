@@ -343,7 +343,7 @@ class PatternWindow(FigureWindow):
     @Scripting.printable        
     def plotCurrentData(self):
         R   = self.R
-        if R == None:
+        if R is None:
             pass # To do: raise a error
         self.figureBook.plot(self.angles, pattern2corrmtx.corrmtx2pattern(R, self.angles),
             curveName='Synthesized Pattern', color='g')

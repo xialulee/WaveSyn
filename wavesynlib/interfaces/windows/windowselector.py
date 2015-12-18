@@ -6,13 +6,17 @@ Created on Fri Oct 30 13:07:27 2015
 """
 from __future__ import print_function
 
+import sys
+import getopt
 
-from ctypes.wintypes import POINT, RECT
+
+from ctypes.wintypes import DWORD, POINT, RECT
 from ctypes          import byref, windll
-WindowFromPoint      = windll.user32.WindowFromPoint
-GetCursorPos         = windll.user32.GetCursorPos
-GetParent            = windll.user32.GetParent
-GetWindowRect        = windll.user32.GetWindowRect
+WindowFromPoint             = windll.user32.WindowFromPoint
+GetCursorPos                = windll.user32.GetCursorPos
+GetParent                   = windll.user32.GetParent
+GetWindowRect               = windll.user32.GetWindowRect
+GetWindowThreadProcessId    = windll.user32.GetWindowThreadProcessId
 
 
 from Tkinter import *
@@ -64,9 +68,35 @@ class WindowSelector(object):
             return None
         else:
             return self.__selWindow
+            
+    @property
+    def selectedProcess(self):
+        pid = DWORD()
+        if self.selectedWindow:
+            GetWindowThreadProcessId(self.selectedWindow, byref(pid))
+            return pid.value
+        else:
+            return None
+            
         
         
-if __name__ == '__main__':
+def main(argv):
+    try:
+        opts, args = getopt.getopt(argv[1:], 'hp', ['hwnd', 'pid'])
+    except getopt.GetoptError, err:
+        print(str(err), file=sys.stderr)
+        return 1
+        
     win = WindowSelector()
     win.mainloop()
-    print(win.selectedWindow)
+                
+    for o, a in opts:
+        if o in ('-p', '--pid'):
+            print(win.selectedProcess)
+        elif o in ('-h', '--hwnd'):
+            print(win.selectedWindow)
+        
+    
+    
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
