@@ -10,8 +10,7 @@ from __future__   import division, print_function
 
 import itertools
 
-from numpy        import angle, arange, atleast_1d, complex128, correlate, exp, isscalar, mat, pi, r_, sort, sqrt, zeros
-from numpy.matlib import repmat
+from numpy        import angle, atleast_1d, complex128, correlate, exp, isscalar, mat, pi, r_, sort, sqrt, zeros
 
 from numpy.linalg import eigvals, pinv, svd
 from numpy.random import randn
@@ -28,19 +27,18 @@ def Rx(x, m=None):
         m = N
     elif m > N:
         raise ValueError("The number of rows/columns of R should less than or equal to vector lenght N.")
-    temp        = mat(arange(0, m))
     # generate a indices matrix, as
     # 0 -1 -2 -3 ...
     # 1  0 -1 -2 ...
     # 2  1  0 -1 ...
     # 3  2  1  0 ...
     # ...    
-    indices     = repmat(temp.T, 1, m) - repmat(temp, m, 1)
+    indices     = r_['c', :m] - r_['r', :m]
     # Please use newest version of numpy.
     # Since the old version calculates correlate without conjugate for complex vectors.
     acHat       = correlate(x, x, mode='full')
     # using autocorrelation samples and indices matrix to create Rx
-    # Rxx =
+    # Rx =
     #   r[ 0] r[-1] r[-2] r[-3] ...
     #   r[ 1] r[ 0] r[-1] r[-2] ...
     #   r[ 2] r[ 1] r[ 0] r[-1] ...
