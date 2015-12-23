@@ -10,9 +10,9 @@ from __future__   import division, print_function
 
 import itertools
 
-from numpy        import angle, atleast_1d, complex128, correlate, exp, isscalar, mat, pi, r_, sort, sqrt, zeros
+from numpy        import abs, angle, array, atleast_1d, complex128, correlate, exp, isscalar, mat, pi, r_, roots, sort, sqrt, zeros
 
-from numpy.linalg import eigh, eigvals, pinv, svd
+from numpy.linalg import eigh, eigvals, pinv
 from numpy.random import randn
 
 
@@ -48,10 +48,11 @@ def Rx(x, m=None):
     
 def LS_ESPRIT(Rx, p):
     '''Estimate signal frequencies using LS-ESPRIT algorithm
-    Rxx: autocorrelation matrix of signal;
-    p:   number of complex sinusoids
+    Rx: autocorrelation matrix of signal;
+    p:   number of complex sinusoids;
     return value: normalized frequencies.
     '''
+    p       = int(p)
     Rx      = mat(Rx)
     N       = Rx.shape[0]
     # eigh is a newly added function in numpy 1.8.0 which calculates the eigenvalue and eigenvectors efficiently for Hermitian matrix. 
@@ -64,6 +65,33 @@ def LS_ESPRIT(Rx, p):
     U1      = mat(Usig[1:, :])
     # Eigenvalues of U1\U0
     return -angle(eigvals(pinv(U1)*U0)) / 2 / pi
+    
+    
+    
+def root_MUSIC(Rx, p):
+    '''Estimate signal frequencies using root-MUSIC algorithm
+    Rx: auto-correlation matrix of signal;
+    p:  number of complex sinusoids;
+    return value: normalized frequencies.
+    '''
+    p       = int(p)
+    N       = Rx.shape[0]
+    D, U    = eigh(Rx) # Notice! Ascending order!
+    M       = N - p # The dimension of the noise subspace.
+    Un      = U[:, :M] # orthonormal basis of the noise subspace.
+    
+    P       = 0
+    for k in range(M):
+        P += correlate(array(Un[:, k]).flatten(), array(Un[:, k]).flatten(), mode='full')
+    rootsP  = roots(P)
+    # Remove all the roots outside the unit circle
+    rootsP  = rootsP[(abs(rootsP)<=1).nonzero()]
+    # Sort roots with respect to its distance to the unit circle
+    sortedRoots     = [(abs(abs(e)-1), e) for e in rootsP]
+    sortedRoots.sort()
+    sortedRoots     = array([sr[1] for sr in sortedRoots])
+    return angle(sortedRoots[:p]) / 2 / pi
+    
     
 
 def genTestSig(n, freqs, amps, noisePow):
@@ -97,5 +125,6 @@ if __name__ == '__main__':
     print('Power of additive white Gaussian noise is', noisePow)
     x           = genTestSig(N, freqs, amps, noisePow)
     R           = Rx(x)
-    print('Estimated frequencies are:', sort(LS_ESPRIT(R, len(freqs))))
+    print('Estimated frequencies (ESPRIT) are:    ', sort(LS_ESPRIT(R, len(freqs))))
+    print('Estimated frequencies (root-MUSIC) are:', sort(root_MUSIC(R, len(freqs))))
     
