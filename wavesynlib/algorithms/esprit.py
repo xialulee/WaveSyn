@@ -12,7 +12,7 @@ import itertools
 
 from numpy        import angle, atleast_1d, complex128, correlate, exp, isscalar, mat, pi, r_, sort, sqrt, zeros
 
-from numpy.linalg import eigvals, pinv, svd
+from numpy.linalg import eigh, eigvals, pinv, svd
 from numpy.random import randn
 
 
@@ -54,9 +54,11 @@ def LS_ESPRIT(Rx, p):
     '''
     Rx      = mat(Rx)
     N       = Rx.shape[0]
-    U, S, VH    = svd(Rx)
+    # eigh is a newly added function in numpy 1.8.0 which calculates the eigenvalue and eigenvectors efficiently for Hermitian matrix. 
+    D, U    = eigh(Rx)
     # Obtain signal subspace from U
-    Usig    = U[:, :p]
+    # Unlike numpy.linalg.svd, the eigenvalue and the corresponding eigenvectors calculated by eigh are in ascending order. 
+    Usig    = U[:, (N-p):]
     # 
     U0      = mat(Usig[:N-1, :])
     U1      = mat(Usig[1:, :])
