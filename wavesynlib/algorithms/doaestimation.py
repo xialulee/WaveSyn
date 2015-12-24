@@ -16,6 +16,9 @@ from numpy.linalg import eigh, eigvals, pinv
 from numpy.random import randn
 
 
+autocorrelate   = lambda x: correlate(x, x, mode='full')
+
+
 def Rx(x, m=None):
     '''Estimate autocorrelation matrix of vector x
     x:  signal vector
@@ -36,7 +39,7 @@ def Rx(x, m=None):
     indices     = r_['c', :m] - r_['r', :m]
     # Please use newest version of numpy.
     # Since the old version calculates correlate without conjugate for complex vectors.
-    acHat       = correlate(x, x, mode='full')
+    acHat       = autocorrelate(x)
     # using autocorrelation samples and indices matrix to create Rx
     # Rx =
     #   r[ 0] r[-1] r[-2] r[-3] ...
@@ -78,11 +81,8 @@ def root_MUSIC(Rx, p):
     N       = Rx.shape[0]
     D, U    = eigh(Rx) # Notice! Ascending order!
     M       = N - p # The dimension of the noise subspace.
-    Un      = U[:, :M] # orthonormal basis of the noise subspace.
-    
-    P       = 0
-    for k in range(M):
-        P += correlate(array(Un[:, k]).flatten(), array(Un[:, k]).flatten(), mode='full')
+    Un      = array(U[:, :M]) # orthonormal basis of the noise subspace.    
+    P       = sum(autocorrelate(Un[:, k]) for k in range(M))
     rootsP  = roots(P)
     # Remove all the roots outside the unit circle
     rootsP  = rootsP[(abs(rootsP)<=1).nonzero()]
