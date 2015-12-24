@@ -87,10 +87,8 @@ def root_MUSIC(Rx, p):
     # Remove all the roots outside the unit circle
     rootsP  = rootsP[(abs(rootsP)<=1).nonzero()]
     # Sort roots with respect to its distance to the unit circle
-    sortedRoots     = [(abs(abs(e)-1), e) for e in rootsP]
-    sortedRoots.sort()
-    sortedRoots     = array([sr[1] for sr in sortedRoots])
-    return angle(sortedRoots[:p]) / 2 / pi
+    rootsP  = rootsP[(abs(abs(rootsP) - 1)).argsort()]
+    return angle(rootsP[:p]) / 2 / pi
     
     
 

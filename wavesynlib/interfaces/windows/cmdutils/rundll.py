@@ -10,6 +10,7 @@ import sys
 
 import ctypes
 from ctypes import wintypes
+import win32con
 
 def main(argv):
     dllName     = argv[1]
@@ -17,10 +18,13 @@ def main(argv):
     
     argList     = []
     for arg in argv[3:]:
-        value, tp   = arg.split(':')
-        tp          = getattr(wintypes, tp)
-        obj         = tp()
-        obj.value   = type(obj.value)(value)
+        value, tp   = arg.split(':')        
+        if tp == 'WIN32CONST':
+            obj         = getattr(win32con, value)
+        else:
+            tp          = getattr(wintypes, tp)            
+            obj         = tp()
+            obj.value   = type(obj.value)(value)
         argList.append(obj)        
 
     if hasattr(ctypes.windll, dllName):
@@ -28,7 +32,8 @@ def main(argv):
     else:
         dll     = ctypes.windll.LoadLibrary(dllName)
             
-    getattr(dll, funcName)(*argList)
+    retval  = getattr(dll, funcName)(*argList)
+    print(retval)
     
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
