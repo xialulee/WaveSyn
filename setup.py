@@ -16,6 +16,8 @@ setup(
       scripts=["scripts/launchwavesyn.py"],
       package_data = {
         # If any package contains *.json/png/pyw files, include them:
-        '': ['*.json', '*.png', '*.pyw']
+        # .m files for Matlab functions and scripts.
+        # .ps1 files for PowerShell scripts.
+        '': ['*.json', '*.png', '*.pyw', '*.ps1', '*.m']
       }
 )
