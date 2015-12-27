@@ -54,7 +54,9 @@ def main(argv):
     for path, ext in product(paths, exts):
         testPath = ''.join([os.path.join(path, name), ext])
         if os.path.exists(testPath):
-            filePaths.append(os.path.abspath(testPath))
+            absTestPath    = os.path.abspath(testPath)
+            if absTestPath not in filePaths: # Prevent redundant output
+                filePaths.append(absTestPath)
             if not allCmd:
                 break        
             
