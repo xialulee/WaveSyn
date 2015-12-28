@@ -12,6 +12,8 @@ import sys
 
 from itertools import product
 
+from wavesynlib.interfaces.windows.winopen import winopen
+
 ERROR_NOERROR, ERROR_NOTFOUND, ERROR_PARAM = range(3)
 
 
@@ -23,17 +25,20 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], \
             'a',\
-            ['all']\
+            ['all', 'winopen']\
         ) # TODO
     except getopt.GetoptError, err:
         print(str(err), file=sys.stderr)
         usage()
         return ERROR_PARAM
         
-    allCmd = False
+    allCmd  = False
+    wopen   = False
     for o, a in opts:
         if o in ('-a', '--all'):
             allCmd = True
+        if o == '--winopen':
+            wopen   = True
     
     name        = args[0]
     name, ext   = os.path.splitext(name)
@@ -63,6 +68,8 @@ def main(argv):
     if filePaths:
         for filePath in filePaths:
             print(filePath)
+            if wopen:
+                winopen(filePath)
     else:
         print('which.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
         return ERROR_NOTFOUND
