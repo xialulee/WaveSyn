@@ -66,14 +66,14 @@ def clipb2stream(stream, mode, code, null):
     win32clipboard.CloseClipboard()
     return exitcode
 
-def stdin2stream(stream, mode, code, tee, null):
+def stream2clipb(stream, mode, code, tee, null):
     exitcode = ERROR_NOERROR
     #s = sys.stdin.read()
     s = stream.read()
     if null:
         s = s[:s.index('\x00')]
     if mode == 't':
-        s = NEWLINE.sub('\r\n', s)        
+        s = NEWLINE.sub('\r\n', s)      
     if tee:
         #sys.stdout.write(s)
         tee.write(s)
@@ -239,7 +239,7 @@ def main():
                 imageFileToClipb(f, isPSD)
             exitcode    = ERROR_NOERROR
         else:
-            exitcode    = stdin2stream(sys.stdin, mode, code, tee, null)
+            exitcode    = stream2clipb(sys.stdin, mode, code, tee, null)
         sys.exit(exitcode)
     else:
         sys.stderr.write('Clipb-Error: Error parameter\n')
