@@ -12,7 +12,7 @@ import sys
 
 from itertools import product
 
-from wavesynlib.interfaces.windows.winopen import winopen
+from wavesynlib.interfaces.windows.shell.winopen import winopen
 
 ERROR_NOERROR, ERROR_NOTFOUND, ERROR_PARAM = range(3)
 
