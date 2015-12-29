@@ -11,6 +11,9 @@ from ttk        import *
 from Tkinter    import Frame
 import tkFont
 
+import PIL
+from PIL        import ImageTk
+
 from functools  import partial
 
 from wavesynlib.common     import MethodDelegator
@@ -532,6 +535,17 @@ class GUIConsumer(object):
         if self.__active is True and self.__producerThread is None:
             self.__producerThread = thread.start_new_thread(self.__runProducer)
         
+class ArrayRenderMixin(object):
+    def renderArray(self, arr, imageId=None):
+        image   = PIL.Image.fromarray(arr)
+        photoImage   = ImageTk.PhotoImage(image=image)
+
+        if not imageId:
+            imageId  = self.create_image((0, 0), image=photoImage)
+        else:
+            self.itemconfig(imageId, image=photoImage)
+        return imageId, photoImage
+
         
 if __name__ == '__main__':
 #    window  = Tk()
