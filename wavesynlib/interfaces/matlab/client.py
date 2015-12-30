@@ -19,7 +19,7 @@ import inspect
 def selfDir():
     return abspath(dirname(inspect.getfile(inspect.currentframe())))
 
-class MatlabCOMClient(object):
+class MatlabCOMClient(object): # To Do: an instance attribute. For some functions, if they found instance is not None, then they will not create a new instance of this class.
     class NameSpace(object):
         def __init__(self, matlabObj, nameSpace): 
             self.__matlabObj    = matlabObj
