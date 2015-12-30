@@ -58,7 +58,8 @@ from wavesynlib.guicomponents.tk import TaskbarIcon, ScrolledText, ValueChecker
 
 from wavesynlib.interfaces.timer.tk import TkTimer
 
-from wavesynlib.common import setMultiAttr, autoSubs, evalFmt, Singleton
+from wavesynlib.common import setMultiAttr, Singleton
+from wavesynlib.languagecenter.utils import autoSubs, evalFmt
 from wavesynlib.interfaces.editor.externaleditor  import EditorDict, EditorNode
 
 from wavesynlib.stdstream  import StreamManager

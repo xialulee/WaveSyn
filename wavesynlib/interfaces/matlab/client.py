@@ -11,7 +11,7 @@ from comtypes.automation import VARIANT
 
 from numpy import array, ndarray, isrealobj
 
-from wavesynlib.common import evalFmt
+from wavesynlib.languagecenter.utils import evalFmt
 
 from os.path import abspath, dirname
 import inspect

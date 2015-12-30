@@ -26,12 +26,13 @@ import matplotlib.pyplot as pyplot
 from numpy          import deg2rad, rad2deg
 
 
-from wavesynlib.application    import Application, Scripting, uiImagePath
-from wavesynlib.objectmodel    import ModelNode, NodeList, NodeDict
-from wavesynlib.common         import autoSubs, evalFmt, setMultiAttr
-from wavesynlib.common         import MethodDelegator, Observable
+from wavesynlib.application          import Application, Scripting, uiImagePath
+from wavesynlib.objectmodel          import ModelNode, NodeList, NodeDict
+from wavesynlib.common               import setMultiAttr
+from wavesynlib.languagecenter.utils import autoSubs, evalFmt
+from wavesynlib.common               import MethodDelegator, Observable
 
-from wavesynlib.guicomponents.tk import Group, ParamItem, ScrolledList, LabeledScale
+from wavesynlib.guicomponents.tk     import Group, ParamItem, ScrolledList, LabeledScale
 
 
 colorMap = {

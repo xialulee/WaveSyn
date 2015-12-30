@@ -6,11 +6,11 @@ Created on Wed Aug 06 15:57:18 2014
 """
 import thread
 import operator
-import xmlrpclib
+
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-from wavesynlib.application    import Application, Scripting, ScriptCode
-from wavesynlib.common         import evalFmt
+from wavesynlib.application           import Application, Scripting, ScriptCode
+from wavesynlib.languagecenter.utils  import evalFmt
 
 
 

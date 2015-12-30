@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 from tkFileDialog import askopenfilename, asksaveasfilename
 from Tkinter import Tk
-from wavesynlib.common import autoSubs
+from wavesynlib.languagecenter.utils import autoSubs
 
 def selfDir():
     return abspath(dirname(inspect.getfile(inspect.currentframe())))

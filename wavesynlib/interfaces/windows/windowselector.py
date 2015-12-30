@@ -21,8 +21,9 @@ GetWindowThreadProcessId    = windll.user32.GetWindowThreadProcessId
 
 from Tkinter import *
 
-from wavesynlib.interfaces.timer.tk import TkTimer
-from wavesynlib.common              import SimpleObserver, evalFmt
+from wavesynlib.interfaces.timer.tk  import TkTimer
+from wavesynlib.common               import SimpleObserver
+from wavesynlib.languagecenter.utils import evalFmt
 
 class WindowSelector(object):
     def __init__(self):

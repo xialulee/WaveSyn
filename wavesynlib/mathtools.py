@@ -7,10 +7,10 @@ import importlib
 
 import abc
 
-from wavesynlib.common         import evalFmt, autoSubs
-from wavesynlib.objectmodel    import ModelNode, NodeDict
-from wavesynlib.application    import Scripting
-from wavesynlib.basewindow     import WindowComponent
+from wavesynlib.languagecenter.utils import evalFmt
+from wavesynlib.objectmodel          import ModelNode, NodeDict
+from wavesynlib.application          import Scripting
+from wavesynlib.basewindow           import WindowComponent
 
 ##########################Experimenting with multiprocessing###############################
 import multiprocessing as mp

@@ -16,7 +16,8 @@ from wavesynlib.guicomponents.tk                import Group, ParamItem
 from wavesynlib.guicomponents.classselector     import askClassName
 from wavesynlib.application                     import Application, ScriptCode, Scripting
 from wavesynlib.basewindow                      import FigureWindow
-from wavesynlib.common                          import setMultiAttr, autoSubs, evalFmt, Nonblocking
+from wavesynlib.common                          import setMultiAttr, Nonblocking
+from wavesynlib.languagecenter.utils            import autoSubs, evalFmt
 from wavesynlib.mathtools                       import Algorithm, AlgorithmDict, AlgorithmNode
 
 

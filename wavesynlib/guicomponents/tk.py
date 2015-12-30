@@ -541,7 +541,7 @@ class ArrayRenderMixin(object):
         photoImage   = ImageTk.PhotoImage(image=image)
 
         if not imageId:
-            imageId  = self.create_image((0, 0), image=photoImage)
+            imageId  = self.create_image((0, 0), image=photoImage, anchor='nw')
         else:
             self.itemconfig(imageId, image=photoImage)
         return imageId, photoImage
