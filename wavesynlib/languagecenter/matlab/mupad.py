@@ -43,6 +43,7 @@ def exprTreeStrToSymList(treeStr):
     return tree
     
     
+def symListToSciPy(symList): # To Do: Function arguments translation (some homonymic functions of MuPad and SciPy have different arguments definitions)
     try:
         iter(symList)
     except TypeError:
