@@ -27,7 +27,7 @@ from Tkinter import *
 from ttk import *
 
 import Tix
-from Tkinter import Frame
+from Tkinter      import Frame
 from tkFileDialog import asksaveasfilename
 
 
@@ -53,22 +53,15 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from wavesynlib.objectmodel import ModelNode
-from wavesynlib.guicomponents.tk import TaskbarIcon, ScrolledText, ValueChecker
-
-from wavesynlib.interfaces.timer.tk import TkTimer
-
-from wavesynlib.common import setMultiAttr, Singleton
-from wavesynlib.languagecenter.utils import autoSubs, evalFmt
-from wavesynlib.interfaces.editor.externaleditor  import EditorDict, EditorNode
-
-from wavesynlib.stdstream  import StreamManager
-
-from wavesynlib.cuda import Worker as CUDAWorker
-
-        
-from wavesynlib.languagecenter.wavesynscript import Scripting
-from wavesynlib.languagecenter.modelnode     import LangCenterNode
+from wavesynlib.guicomponents.tk                 import TaskbarIcon, ScrolledText, ValueChecker
+from wavesynlib.interfaces.timer.tk              import TkTimer
+from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
+from wavesynlib.stdstream                        import StreamManager
+from wavesynlib.cuda                             import Worker as CUDAWorker
+from wavesynlib.languagecenter.utils             import autoSubs, evalFmt, setMultiAttr
+from wavesynlib.languagecenter.designpatterns    import Singleton        
+from wavesynlib.languagecenter.wavesynscript     import Scripting, ModelNode
+from wavesynlib.languagecenter.modelnode         import LangCenterNode
 
 
 def makeMenu(win, menu, json=False):

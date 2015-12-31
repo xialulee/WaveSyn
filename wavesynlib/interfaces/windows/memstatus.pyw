@@ -9,9 +9,9 @@ from Tkinter  import *
 from comtypes import *
 import ctypes as ct
 
-from wavesynlib.guicomponents       import tk as tktools
-from wavesynlib.interfaces.timer.tk import TkTimer
-from wavesynlib.common import SimpleObserver
+from wavesynlib.guicomponents                import tk as tktools
+from wavesynlib.interfaces.timer.tk          import TkTimer
+from wavesynlib.languagecenter.designpatters import SimpleObserver
 
 TBPFLAG = tktools.TBPFLAG
 

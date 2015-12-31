@@ -6,17 +6,18 @@ Created on Fri Apr 03 15:46:05 2015
 """
 
 
-from Tkinter    import *
-from ttk        import *
-from Tkinter    import Frame
+from Tkinter                                  import *
+from ttk                                      import *
+from Tkinter                                  import Frame
 import tkFont
 
 import PIL
-from PIL        import ImageTk
+from PIL                                      import ImageTk
 
-from functools  import partial
+from functools                                import partial
 
-from wavesynlib.common     import MethodDelegator
+from wavesynlib.languagecenter.utils          import MethodDelegator
+from wavesynlib.languagecenter.designpatterns import SimpleObserver
 
 
 __DEBUG__ = False

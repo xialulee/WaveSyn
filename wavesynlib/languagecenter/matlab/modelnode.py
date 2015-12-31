@@ -4,8 +4,7 @@ Created on Thu Dec 31 16:07:51 2015
 
 @author: Feng-cong Li
 """
-from wavesynlib.objectmodel                  import ModelNode
-from wavesynlib.languagecenter.wavesynscript import Scripting
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 import wavesynlib.interfaces.matlab.client   as matlabclient
 
 class MatlabServerNode(ModelNode):

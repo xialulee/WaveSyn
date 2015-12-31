@@ -3,7 +3,7 @@
 
 from Tkinter import *
 from os import path
-from wavesynlib.common import Observable
+from wavesynlib.languagecenter.designpatterns import Observable
 from tkFileDialog import asksaveasfilename
 from PIL import ImageGrab
 from PIL.ImageTk import PhotoImage

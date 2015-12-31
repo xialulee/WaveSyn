@@ -5,8 +5,7 @@ Created on Thu Dec 31 16:59:26 2015
 @author: Feng-cong Li
 """
 
-from wavesynlib.objectmodel                     import ModelNode
-from wavesynlib.languagecenter.wavesynscript    import Scripting
+from wavesynlib.languagecenter.wavesynscript    import Scripting, ModelNode
 from wavesynlib.languagecenter.matlab.modelnode import MatlabServerNode 
 
 

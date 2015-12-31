@@ -8,8 +8,7 @@ import importlib
 import abc
 
 from wavesynlib.languagecenter.utils         import evalFmt
-from wavesynlib.objectmodel                  import ModelNode, NodeDict
-from wavesynlib.languagecenter.wavesynscript import Scripting
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 from wavesynlib.basewindow                   import WindowComponent
 
 ##########################Experimenting with multiprocessing###############################

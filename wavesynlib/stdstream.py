@@ -5,7 +5,7 @@ Created on Sun Oct 26 21:06:35 2014
 @author: Feng-cong Li
 """
 
-from wavesynlib.common     import  Observable
+from wavesynlib.languagecenter.designpatterns import  Observable
 import Queue
 
 import sys

@@ -1,6 +1,6 @@
-from wavesynlib.objectmodel          import ModelNode, NodeDict
-from wavesynlib.common               import Observable
-from wavesynlib.languagecenter.utils import evalFmt
+from wavesynlib.languagecenter.wavesynscript  import ModelNode, NodeDict
+from wavesynlib.languagecenter.designpatterns import Observable
+from wavesynlib.languagecenter.utils          import evalFmt
 import threading
 import subprocess
 import tempfile

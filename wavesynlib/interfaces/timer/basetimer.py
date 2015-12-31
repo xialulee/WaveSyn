@@ -5,8 +5,8 @@ Created on Mon March 30 2015
 @author: Feng-cong Li
 """
 
-from wavesynlib.common import Observable
-from abc import ABCMeta, abstractproperty
+from wavesynlib.languagecenter.designpatterns import Observable
+from abc                                      import ABCMeta, abstractproperty
 
 class BaseObservableTimer(Observable):
     __metaclass__ = ABCMeta

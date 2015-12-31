@@ -7,7 +7,7 @@ Created on Fri Oct 23 10:21:48 2015
 from __future__ import print_function
 from __future__ import division
 
-from win32api       import SendMessage
+from win32api   import SendMessage
 
 PBM_GETRANGE = 1031
 PBM_GETPOS   = 1032
@@ -24,10 +24,10 @@ class ProgressBarReader(object):
 
 
 
-from Tkinter                        import Tk
-from wavesynlib.guicomponents       import tk as tktools
-from wavesynlib.interfaces.timer.tk import TkTimer
-from wavesynlib.common              import SimpleObserver
+from Tkinter                                  import Tk
+from wavesynlib.guicomponents                 import tk as tktools
+from wavesynlib.interfaces.timer.tk           import TkTimer
+from wavesynlib.languagecenter.designpatterns import SimpleObserver
 import sys
 
 

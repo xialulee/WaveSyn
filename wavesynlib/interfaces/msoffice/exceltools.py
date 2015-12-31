@@ -4,13 +4,13 @@ Created on Mon Jul 28 15:05:11 2014
 
 @author: xialulee
 """
-from Tkinter    import *
-from ttk        import *
-from openpyxl.reader.excel import load_workbook
-from copy import copy
+from Tkinter                         import *
+from ttk                             import *
+from openpyxl.reader.excel           import load_workbook
+from copy                            import copy
 
-from wavesynlib.guicomponents import ScrolledList
-from wavesynlib.common     import MethodDelegator
+from wavesynlib.guicomponents        import ScrolledList
+from wavesynlib.languagecenter.utils import MethodDelegator
 
 def selectSheet(workBook, ignoreBlankSheet=True, labelText='Select a sheet'):
     retval  = [0]

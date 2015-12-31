@@ -4,36 +4,34 @@ Created on Fri May 23 15:58:34 2014
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division
+from __future__                               import print_function, division
 
-from tkColorChooser import askcolor
+from tkColorChooser                           import askcolor
 
-from Tkinter import *
-from ttk import *
-from Tkinter import Frame, PanedWindow, Label
-from tkFileDialog import asksaveasfilename
-from tkSimpleDialog import askstring
+from Tkinter                                  import *
+from ttk                                      import *
+from Tkinter                                  import Frame, PanedWindow, Label
+from tkFileDialog                             import asksaveasfilename
+from tkSimpleDialog                           import askstring
 
-from PIL import ImageTk
+from PIL                                      import ImageTk
 
 import matplotlib
 matplotlib.use('TkAgg')
-from matplotlib.ticker import MultipleLocator
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.ticker                        import MultipleLocator
+from matplotlib.figure                        import Figure
+from matplotlib.backends.backend_tkagg        import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import matplotlib.pyplot as pyplot
 
-from numpy          import deg2rad, rad2deg
+from numpy                                    import deg2rad, rad2deg
 
 
-from wavesynlib.application                  import Application, uiImagePath
-from wavesynlib.languagecenter.wavesynscript import Scripting
-from wavesynlib.languagecenter.utils         import autoSubs, evalFmt
-from wavesynlib.objectmodel                  import ModelNode, NodeList, NodeDict
-from wavesynlib.common                       import setMultiAttr
-from wavesynlib.common                       import MethodDelegator, Observable
-
-from wavesynlib.guicomponents.tk             import Group, ParamItem, ScrolledList, LabeledScale
+from wavesynlib.application                   import Application, uiImagePath
+from wavesynlib.languagecenter.wavesynscript  import Scripting
+from wavesynlib.languagecenter.utils          import autoSubs, evalFmt, MethodDelegator, setMultiAttr
+from wavesynlib.languagecenter.wavesynscript  import ModelNode, NodeList, NodeDict
+from wavesynlib.languagecenter.designpatterns import Observable
+from wavesynlib.guicomponents.tk              import Group, ParamItem, ScrolledList, LabeledScale
 
 
 colorMap = {
