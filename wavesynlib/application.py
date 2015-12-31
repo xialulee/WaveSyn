@@ -284,7 +284,7 @@ wavesyn
         with self.execThreadLock:
             self.streamManager.write(expr+'\n', 'HISTORY')
             ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
-            if ret != None:
+            if ret is not None:
                 self.streamManager.write(str(ret)+'\n', 'RETVAL')
             return ret    
                               
@@ -515,7 +515,7 @@ class ConsoleText(ScrolledText):
                             ret = app.execute(code)
                         except:
                             traceback.print_exc()
-                        if ret != None:
+                        if ret is not None:
                             self.updateContent(tag='RETVAL', content=repr(ret)+'\n')
     
                 finally:

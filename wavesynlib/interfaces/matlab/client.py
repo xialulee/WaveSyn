@@ -4,6 +4,7 @@ Created on Sat Dec 26 15:06:30 2015
 
 @author: Feng-cong Li
 """
+import datetime
 
 from comtypes            import byref, client, COMError
 from comtypes.safearray  import safearray_as_ndarray
@@ -26,7 +27,7 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
             self.__nameSpace    = nameSpace
             
         def __getAvailableName(self):
-            for k in range(1048576): # Try to find an available name not used in the workspace.
+            for k in range(1048576): # Try to find an available name not used in the workspace. Or execute global name before continuing.
                 try:
                     name        = 'wavesyn_temp_variable' + str(k) 
                     self[name]  
@@ -36,26 +37,43 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
             return retval
             
             
-        def __getitem__(self, name):
-            if self.__matlabObj.call('eval', 1, evalFmt('isreal({name})')):
-                with safearray_as_ndarray:
-                    retval  = self.__matlabObj.handle.GetVariable(name, self.__nameSpace)
+        def __getitem__(self, name): # To Do: Remove global workspace support
+            if self.__matlabObj.call('eval', 1, autoSubs('isnumeric($name)'))[0]:
+                if self.__matlabObj.call('eval', 1, autoSubs('isreal($name)'))[0]:
+                    with safearray_as_ndarray:
+                        retval  = self.__matlabObj.handle.GetVariable(name, self.__nameSpace)
+                else:
+                    tempReal    = self.__getAvailableName() 
+                    try:
+                        self.__matlabObj.execute(autoSubs('$tempReal = real($name);'))
+                        with safearray_as_ndarray:
+                            realPart    = self.__matlabObj.handle.GetVariable(tempReal, self.__nameSpace)
+                    finally:
+                        self.__matlabObj.execute(autoSubs('clear $tempReal'))
+                    
+                    tempImag    = self.__getAvailableName()  
+                    try:
+                        self.__matlabObj.execute(autoSubs('$tempImag = imag($name);'))
+                        with safearray_as_ndarray:
+                            imagPart    = self.__matlabObj.handle.GetVariable(tempImag, self.__nameSpace)                    
+                    finally:
+                        self.__matlabObj.execute(autoSubs('clear $tempImag'))
+
+                    retval  = realPart + 1j * imagPart
             else:
-                tempReal    = self.__getAvailableName()
+                mtype   = str(self.__matlabObj.call('eval', 1, autoSubs('class($name)'))[0]) # The result is unicode. Convert to str.
+
+                def datetimeConvert():
+                    keys        = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'Second']
+                    values      = []
+                    for key in keys:
+                        values.append(int(self.__matlabObj.call('eval', 1, '.'.join([name, key]))[0]))
+                    return datetime.datetime(*values) 
+
                 try:
-                    self.__matlabObj.execute(evalFmt('{tempReal} = real({name});'))
-                    with safearray_as_ndarray:
-                        realPart    = self.__matlabObj.handle.GetVariable(tempReal, self.__nameSpace)
-                finally:
-                    self.__matlabObj.execute(evalFmt('clear {tempReal}'))
-                tempImag    = self.__getAvailableName()                    
-                try:
-                    self.__matlabObj.execute(evalFmt('{tempImag} = imag({name});'))
-                    with safearray_as_ndarray:
-                        imagPart    = self.__matlabObj.handle.GetVariable(tempImag, self.__nameSpace)                    
-                finally:
-                    self.__matlabObj.execute(evalFmt('clear {tempImag}'))
-                retval  = realPart + 1j * imagPart
+                    retval  = locals()[mtype+'Convert']()
+                except KeyError:
+                    raise TypeError('Not supported Matlab type.')
             return retval
             
         def __setitem__(self, name, value):
@@ -105,6 +123,6 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
     def nsBase(self):
         return self.__base
         
-    @property
+    @property # Remove global workspace read support
     def nsGlobal(self):
         return self.__global
