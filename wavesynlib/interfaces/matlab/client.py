@@ -11,7 +11,7 @@ from comtypes.automation import VARIANT
 
 from numpy import array, ndarray, isrealobj
 
-from wavesynlib.languagecenter.utils import evalFmt
+from wavesynlib.languagecenter.utils import autoSubs, evalFmt
 
 from os.path import abspath, dirname
 import inspect
@@ -89,6 +89,9 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
         with safearray_as_ndarray:
             retval  = self.__handle.Execute(command)
         return retval
+        
+    def getMuPadExprTree(self, symName):
+        return self.call('eval', 2, autoSubs('wavesyn_matlab.getMuPadExprTree($symName)'))
         
     @property
     def handle(self):

@@ -6,6 +6,7 @@ Created on Thu Dec 31 16:07:51 2015
 """
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 import wavesynlib.interfaces.matlab.client   as matlabclient
+import mupad
 
 class MatlabServerNode(ModelNode):
     def __init__(self, *args, **kwargs):
@@ -35,3 +36,10 @@ class MatlabServerNode(ModelNode):
             self.__server.nsGlobal[name]    = value
         else:
             self.__server.nsBase[name]      = value
+            
+    @Scripting.printable
+    def mupadSymToScipy(self, symName):
+        tree, var   = self.__server.getMuPadExprTree(symName)
+        varList     = mupad.varListStrToSymList(var)
+        treeList    = mupad.exprTreeStrToSymList(tree)
+        return mupad.symListToScipy(treeList, varList)

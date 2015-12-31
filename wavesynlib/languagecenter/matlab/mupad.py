@@ -9,7 +9,8 @@ http://blog.sina.com.cn/s/blog_4513dde60101pkho.html
 """
 from __future__ import print_function
 
-from wavesynlib.languagecenter.utils import evalFmt
+from wavesynlib.languagecenter.utils import autoSubs, evalFmt
+from scipy                           import special
 
 class OperatorMap(object):
     def __init__(self):
@@ -22,7 +23,27 @@ class OperatorMap(object):
     def __getitem__(self, key):
         return self.__opMap[key]
         
+    def __contains__(self, key):
+        return key in self.__opMap
+        
 operatorMap     = OperatorMap()
+
+class FunctionMap(object):
+    def __init__(self):
+        self.__funcMap  = {
+            'igamma':   self.igammaTranslate
+        }
+        
+    def __getitem__(self, key):
+        return self.__funcMap[key]
+        
+    def __contains__(self, key):
+        return key in self.__funcMap
+        
+    def igammaTranslate(self, a, x):
+        return autoSubs('(special.gamma($a) * special.gammaincc($a, $x))')
+        
+functionMap     = FunctionMap()
 
 class Symbol(object):
     def __init__(self, name):
@@ -66,12 +87,16 @@ def symListToScipy(symList, varList):
         head, tail      = symList[0], symList[1:]
         if not tail:
             return repr(head)
-        try:
-            newTail     = [_symListToSciPy(item) for item in tail]
-            op          = operatorMap[head.name]
+            
+        newTail     = [_symListToSciPy(item) for item in tail]
+        if head.name in operatorMap: # head is an operator
+            op  = operatorMap[head.name]
             return evalFmt('({op.join(newTail)})')
-        except KeyError: # Function call
+        elif head.name in functionMap: # head is function needs arguments translation
+            return functionMap[head.name](*newTail)
+        else: # head is a function without argument translation
             return evalFmt('{head.name}({",".join(newTail)})')
+        
             
     exprStr     = _symListToSciPy(symList)
     varStr      = ','.join([sym.name for sym in varList])
