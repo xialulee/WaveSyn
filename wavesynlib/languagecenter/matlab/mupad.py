@@ -7,6 +7,8 @@ Created on Wed Dec 30 22:47:05 2015
 Originally posted on my blog:
 http://blog.sina.com.cn/s/blog_4513dde60101pkho.html
 """
+from __future__ import print_function
+
 from wavesynlib.languagecenter.utils import evalFmt
 
 class OperatorMap(object):
@@ -43,17 +45,35 @@ def exprTreeStrToSymList(treeStr):
     return tree
     
     
-def symListToSciPy(symList): # To Do: Function arguments translation (some homonymic functions of MuPad and SciPy have different arguments definitions)
-    try:
-        iter(symList)
-    except TypeError:
-        symList     = [symList]
-    head, tail      = symList[0], symList[1:]
-    if not tail:
-        return repr(head)
-    try:
-        newTail     = [symListToSciPy(item) for item in tail]
-        op          = operatorMap[head.name]
-        return evalFmt('({op.join(newTail)})')
-    except KeyError: # Function call
-        return evalFmt('{head.name}({",".join(newTail)})')
+def varListStrToSymList(varListStr):
+    class LocalNameSpace(object):
+        def __init__(self):
+            self.syms   = []
+            
+        def __getitem__(self, key):
+            return Symbol(key)
+            
+    localSpace  = LocalNameSpace()
+    return eval(varListStr, {}, localSpace)
+    
+    
+def symListToScipy(symList, varList):
+    def _symListToSciPy(symList): # To Do: Function arguments translation (some homonymic functions of MuPad and SciPy have different arguments definitions)
+        try:
+            iter(symList)
+        except TypeError:
+            symList     = [symList]
+        head, tail      = symList[0], symList[1:]
+        if not tail:
+            return repr(head)
+        try:
+            newTail     = [_symListToSciPy(item) for item in tail]
+            op          = operatorMap[head.name]
+            return evalFmt('({op.join(newTail)})')
+        except KeyError: # Function call
+            return evalFmt('{head.name}({",".join(newTail)})')
+            
+    exprStr     = _symListToSciPy(symList)
+    varStr      = ','.join([sym.name for sym in varList])
+    codeStr     = evalFmt('lambda {varStr}: {exprStr}')
+    return eval(codeStr), codeStr

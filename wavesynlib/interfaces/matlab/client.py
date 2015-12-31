@@ -19,7 +19,7 @@ import inspect
 def selfDir():
     return abspath(dirname(inspect.getfile(inspect.currentframe())))
 
-class MatlabCOMClient(object): # To Do: an instance attribute. For some functions, if they found instance is not None, then they will not create a new instance of this class.
+class MatlabCOMServer(object): # To Do: an instance attribute. For some functions, if they found instance is not None, then they will not create a new instance of this class.
     class NameSpace(object):
         def __init__(self, matlabObj, nameSpace): 
             self.__matlabObj    = matlabObj
@@ -80,10 +80,10 @@ class MatlabCOMClient(object): # To Do: an instance attribute. For some function
     def close(self):
         return self.__handle.Quit()
         
-    def call(self, fname, nOut, *args):
+    def call(self, fname, nOut, *args): # To Do: Properly handle complex return values 
         retval  = VARIANT()
         self.__handle.Feval(fname, nOut, byref(retval), *args)
-        return array(retval.value)
+        return retval.value
         
     def execute(self, command):
         with safearray_as_ndarray:
@@ -96,7 +96,7 @@ class MatlabCOMClient(object): # To Do: an instance attribute. For some function
         
     @property
     def processId(self):
-        return self.call('wavesyn_matlab.processId', 1)[0]
+        return self.call('wavesyn_matlab.getProcessId', 1)[0]
         
     @property
     def nsBase(self):

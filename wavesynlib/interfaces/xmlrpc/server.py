@@ -9,8 +9,9 @@ import operator
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-from wavesynlib.application           import Application, Scripting, ScriptCode
-from wavesynlib.languagecenter.utils  import evalFmt
+from wavesynlib.application                  import Application
+from wavesynlib.languagecenter.utils         import evalFmt
+from wavesynlib.languagecenter.wavesynscript import Scripting, ScriptCode
 
 
 

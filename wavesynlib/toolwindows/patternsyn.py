@@ -14,11 +14,12 @@ from PIL import ImageTk
 from numpy import *
 from scipy.io import savemat
 
-from wavesynlib.application import Application, uiImagePath, ScriptCode, Scripting, WaveSynThread
-from wavesynlib.basewindow import FigureWindow
-from wavesynlib.guicomponents.tk import Group, ParamItem, ScrolledList
-from wavesynlib.common import setMultiAttr
-from wavesynlib.languagecenter.utils import autoSubs
+from wavesynlib.application                  import Application, uiImagePath, WaveSynThread
+from wavesynlib.basewindow                   import FigureWindow
+from wavesynlib.guicomponents.tk             import Group, ParamItem, ScrolledList
+from wavesynlib.common                       import setMultiAttr
+from wavesynlib.languagecenter.utils         import autoSubs
+from wavesynlib.languagecenter.wavesynscript import Scripting
 
 from wavesynlib.algorithms import pattern2corrmtx
 

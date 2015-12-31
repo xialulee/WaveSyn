@@ -67,67 +67,8 @@ from wavesynlib.stdstream  import StreamManager
 from wavesynlib.cuda import Worker as CUDAWorker
 
         
-# Scripting Sub-System
-class ScriptCode(object):
-    def __init__(self, code):
-        self.code = code
-        
-class Scripting(ModelNode):
-    _xmlrpcexport_  = []    
-    
-    rootName = 'wavesyn' # The name of the object model tree's root
-    nameSpace = {'locals':{}, 'globals':{}}
-    
-    @staticmethod
-    def paramsToStr(*args, **kwargs):
-        def paramToStr(param):
-            if isinstance(param, ScriptCode):
-                return param.code
-            else:
-                return repr(param)
-                
-        strArgs = ', '.join([paramToStr(arg) for arg in args]) if args else ''
-        strKwargs = ', '.join([evalFmt('{key}={paramToStr(kwargs[key])}') for key in kwargs]) \
-            if kwargs else ''        
-       
-            
-        if strArgs and strKwargs:
-            params = ', '.join((strArgs, strKwargs))
-        else:
-            params = strArgs if strArgs else strKwargs
-        return params
-        
-    def __init__(self, rootNode):
-        super(Scripting, self).__init__()
-        self.__rootNode = rootNode
-            
-    def executeFile(self, filename):
-        execfile(filename, **self.nameSpace) #?
-                
-    @staticmethod    
-    def printable(method):
-        def func(self, *args, **kwargs):
-            callerLocals    = sys._getframe(1).f_locals
-            #####################################
-            #print(method.__name__, True if 'printCode' in callerLocals else False)
-            #####################################            
-            if 'printCode' in callerLocals and callerLocals['printCode']:
-                ret = Application.instance.printAndEval(
-                    evalFmt(
-                        '{self.nodePath}.{method.__name__}({Scripting.paramsToStr(*args, **kwargs)})'
-                    )
-                )
-            else:                          
-                ret = method(self, *args, **kwargs)
-            return ret
-        func.__doc__    = method.__doc__
-        func.__name__   = method.__name__
-        return func
-
-                                   
-# End Scripting Sub-System
-        
-        
+from wavesynlib.languagecenter.wavesynscript import Scripting
+from wavesynlib.languagecenter.modelnode     import LangCenterNode
 
 
 def makeMenu(win, menu, json=False):
@@ -192,7 +133,7 @@ class WaveSynThread(object):
 
 
 
-class Application(ModelNode):
+class Application(ModelNode): # Create an ABC for root node to help wavesynscript.Scripting determine whether the node is root. 
     '''This class is the root of the model tree.
 In the scripting system, it is named as "wavesyn" (case sensitive).
 It also manages the whole application and provide services for other components.
@@ -222,6 +163,7 @@ wavesyn
         super(Application, self).__init__(nodeName=Scripting.rootName, isRoot=True)
         Scripting.nameSpace['locals'][Scripting.rootName] = self
         Scripting.nameSpace['globals'] = globals()
+        Scripting.rootNode = self
         self.homePage = 'https://github.com/xialulee/WaveSyn'
         
         filePath    = getsourcefile(type(self))
@@ -258,6 +200,8 @@ wavesyn
                 mainThreadId        = mainThreadId,
                 execThreadLock      = threading.RLock(),
                 xmlrpcCommandSlot   = CommandSlot(),
+
+                langCenter          = LangCenterNode(),
             
                 # Validation Functions
                 valueChecker        = valueChecker,
