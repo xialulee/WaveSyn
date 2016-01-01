@@ -4,7 +4,6 @@ Created on Sat Dec 26 15:06:30 2015
 
 @author: Feng-cong Li
 """
-import datetime
 
 from comtypes            import byref, client, COMError
 from comtypes.safearray  import safearray_as_ndarray
@@ -15,10 +14,16 @@ from numpy import array, ndarray, isrealobj
 from wavesynlib.languagecenter.utils import autoSubs, evalFmt
 
 from os.path import abspath, dirname
-import inspect
 
+import inspect
 def selfDir():
     return abspath(dirname(inspect.getfile(inspect.currentframe())))
+    
+
+from datatype             import BaseConverter, DateTimeConverter
+from mupad                import SymConverter         
+    
+    
 
 class MatlabCOMServer(object): # To Do: an instance attribute. For some functions, if they found instance is not None, then they will not create a new instance of this class.
     class NameSpace(object):
@@ -62,18 +67,10 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
                     retval  = realPart + 1j * imagPart
             else:
                 mtype   = str(self.__matlabObj.call('eval', 1, autoSubs('class($name)'))[0]) # The result is unicode. Convert to str.
-
-                def datetimeConvert():
-                    keys        = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'Second']
-                    values      = []
-                    for key in keys:
-                        values.append(int(self.__matlabObj.call('eval', 1, '.'.join([name, key]))[0]))
-                    return datetime.datetime(*values) 
-
-                try:
-                    retval  = locals()[mtype+'Convert']()
-                except KeyError:
-                    raise TypeError('Not supported Matlab type.')
+                converter   = self.__matlabObj.getTypeConverter(mtype)
+                if not converter:
+                    raise TypeError(autoSubs('Matlab type "$mtype" is not supported.'))
+                retval      = converter(name)
             return retval
             
         def __setitem__(self, name, value):
@@ -87,10 +84,14 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
     progID  = 'matlab.application'
     
     def __init__(self):
-        self.__handle   = client.CreateObject(self.progID)
-        self.__base     = self.NameSpace(self, 'base')
-        self.__global   = self.NameSpace(self, 'global')
+        self.__handle               = client.CreateObject(self.progID)
+        self.__base                 = self.NameSpace(self, 'base')
+        self.__global               = self.NameSpace(self, 'global')
+        self.__typeConverter        = {}
+        self.addTypeConverter(DateTimeConverter())
+        self.addTypeConverter(SymConverter())
         self.execute(evalFmt('addpath {selfDir()}'))
+        
         
     def release(self):
         return self.__handle.Release()
@@ -110,6 +111,18 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
         
     def getMuPadExprTree(self, symName):
         return self.call('eval', 2, autoSubs('wavesyn_matlab.getMuPadExprTree($symName)'))
+        
+    def addTypeConverter(self, converter):
+        if not isinstance(converter, BaseConverter):
+            raise TypeError('The given converter does not support BaseConverter protocol.')
+        converter.server    = self
+        self.__typeConverter[converter.matlabTypeName]  = converter.convert
+        
+    def getTypeConverter(self, typeName):
+        try:
+            return self.__typeConverter[typeName]
+        except KeyError:
+            return None
         
     @property
     def handle(self):

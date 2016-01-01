@@ -9,8 +9,11 @@ http://blog.sina.com.cn/s/blog_4513dde60101pkho.html
 """
 from __future__ import print_function
 
-from wavesynlib.languagecenter.utils import autoSubs, evalFmt
 from scipy                           import special
+
+
+from wavesynlib.languagecenter.utils     import autoSubs, evalFmt
+from wavesynlib.interfaces.matlab.mupad  import Symbol
 
 class OperatorMap(object):
     def __init__(self):
@@ -45,16 +48,7 @@ class FunctionMap(object):
         
 functionMap     = FunctionMap()
 
-class Symbol(object):
-    def __init__(self, name):
-        self.__name     = name
-        
-    @property
-    def name(self):
-        return self.__name
-        
-    def __repr__(self):
-        return self.__name
+
         
         
 def exprTreeStrToSymList(treeStr):
