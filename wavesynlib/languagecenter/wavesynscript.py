@@ -106,7 +106,14 @@ then node will have a property named 'a', which cannot be re-assigned.
     @property
     def childNodes(self):
         return {attrName:self.__dict__[attrName].nodePath for attrName in self.__dict__ 
-            if isinstance(self.__dict__[attrName], ModelNode)}            
+            if isinstance(self.__dict__[attrName], ModelNode)} 
+            
+    @property
+    def rootNode(self):
+        node    = self
+        while not node.isRoot:
+            node    = node.parentNode
+        return node
         
 
 class Dict(dict, object):

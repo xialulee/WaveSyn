@@ -54,6 +54,7 @@ from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from wavesynlib.guicomponents.tk                 import TaskbarIcon, ScrolledText, ValueChecker
+from wavesynlib.interfaces.clipboard.modelnode   import Clipboard
 from wavesynlib.interfaces.timer.tk              import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream                        import StreamManager
@@ -387,17 +388,7 @@ wavesyn
 def uiImagePath(filename):
     return os.path.join(Application.instance.dirPath, 'images', filename)        
                 
-class Clipboard(ModelNode):
-    def __init__(self, *args, **kwargs):
-        super(Clipboard, self).__init__(*args, **kwargs)
-       
-    @Scripting.printable
-    def clear(self):
-        Application.instance.root.clipboard_clear()
-    
-    @Scripting.printable
-    def append(self, content):
-        Application.instance.root.clipboard_append(content)
+
         
 # How to implement a thread safe console?
 # see: http://effbot.org/zone/tkinter-threads.htm              

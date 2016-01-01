@@ -240,7 +240,7 @@ class FileExportGroup(Group):
             printCode   = True
             clipboard   = Application.instance.clipboard
             clipboard.clear()
-            clipboard.append(autoSubs('load $filename'))
+            clipboard.write(autoSubs('load $filename'))
 
         self.__topwin.saveMat(filename)
         tip = [
