@@ -53,7 +53,7 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from wavesynlib.guicomponents.tk                 import TaskbarIcon, ScrolledText, ValueChecker
+from wavesynlib.guicomponents.tk                 import DirIndicator, TaskbarIcon, ScrolledText, ValueChecker
 from wavesynlib.interfaces.clipboard.modelnode   import Clipboard
 from wavesynlib.interfaces.timer.tk              import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
@@ -186,9 +186,9 @@ wavesyn
         with self.attributeLock:
             setMultiAttr(self,
                 # UI elements
-                root = root,        
-                balloon = Tix.Balloon(root),
-                tbicon = TaskbarIcon(root),
+                root                = root,        
+                balloon             = Tix.Balloon(root),
+                tbicon              = TaskbarIcon(root),
                 # End UI elements
                 
                 mainThreadId        = mainThreadId,
@@ -266,16 +266,6 @@ wavesyn
         editorID    = self.editors.add(EditorNode(editorPath=editorPath))
         self.editors[editorID].launch()
         return editorID
-
-
-#
-#    @callAndPrintDoc        
-#    def newPatternWin(self, printDoc=False):
-#        '''This method creates a new PatternFitting window.
-#Its return value is the ID of the new window.
-#You can access the created window using its ID in the scripting system.
-#A PatternWindow can synthesize a correlation matrix of which the beam pattern fits the given ideal pattern best.'''        
-#        return self.windows.add(node=PatternWindow())
         
     def createTimer(self, interval=100, active=False):
         return TkTimer(self.root, interval, active)
@@ -538,6 +528,9 @@ Have a nice day.
         app = Application.instance
         root = app.root
         root.title('WaveSyn-Console')
+        dirIndicator = DirIndicator()
+        dirIndicator.pack(fill=X)
+        app.monitorTimer.addObserver(dirIndicator)
         txtStdOutErr = ConsoleText(root)
         txtStdOutErr.pack(expand=YES, fill=BOTH)
         self.__txtStdOutErr = txtStdOutErr

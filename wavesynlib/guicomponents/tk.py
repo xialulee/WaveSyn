@@ -4,12 +4,13 @@ Created on Fri Apr 03 15:46:05 2015
 
 @author: Feng-cong Li
 """
-
+import os
 
 from Tkinter                                  import *
 from ttk                                      import *
 from Tkinter                                  import Frame
 import tkFont
+from tkFileDialog                             import askdirectory
 
 import PIL
 from PIL                                      import ImageTk
@@ -149,6 +150,32 @@ class LabeledScale(Frame, object):
         
     def set(self, val):
         return self.__scale.set(val)
+
+
+
+class DirIndicator(Frame, object):
+    def __init__(self, *args, **kwargs):
+        Frame.__init__(self, *args, **kwargs)
+        self.__entry        = Entry(self)
+        self.__entry.pack(fill=X, expand=YES, side=LEFT)
+        self.__button       = Button(self, command=self.__onButtonClick)
+        self.__button.pack(fill=X, side=LEFT)
+        self.__cwd          = None
+        
+    def __onButtonClick(self):
+        directory   = askdirectory()
+        if directory:
+            self.__entry.delete(0, END)
+            self.__entry.insert(0, directory)
+            os.chdir(directory)         
+        
+        
+    def update(self, *args, **kwargs):
+        cwd     = os.getcwd()
+        if self.__cwd != cwd:
+            self.__cwd  = cwd
+            self.__entry.delete(0, END)
+            self.__entry.insert(0, cwd)            
 
         
         
