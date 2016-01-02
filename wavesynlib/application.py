@@ -53,7 +53,7 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from wavesynlib.guicomponents.tk                 import DirIndicator, TaskbarIcon, ScrolledText, ValueChecker
+from wavesynlib.guicomponents.tk                 import DirIndicator, TaskbarIcon, ScrolledText, ValueChecker, PilImageFrame
 from wavesynlib.interfaces.clipboard.modelnode   import Clipboard
 from wavesynlib.interfaces.timer.tk              import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
@@ -326,6 +326,14 @@ wavesyn
                 text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
                 text.tag_bind(tagName, '<Enter>', lambda dumb: text.config(cursor='hand2'))
                 text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.defaultCursor))
+                streamManager.write('\n')
+            elif item['type'] == 'pil_image':
+                streamManager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
+                text    = self.console.text                
+                text.insert(END, '\n')
+                pilFrame    = PilImageFrame(text, pilImage=item['image'])
+                text.window_create(END, window=pilFrame)
+                text.insert(END, '\n')
                 streamManager.write('\n')
                 
                                             

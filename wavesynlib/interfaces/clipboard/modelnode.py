@@ -40,5 +40,12 @@ if platform.system().lower() == 'windows':
                 stream.write(content)
                 stream.seek(0)
                 clipb.stream2clipb(stream, fmt, code, None, None)
-else: # Use Tk clipboard, which is cross-platform.
+                
+        @Scripting.printable
+        def toConsoleQR(self):
+            import qrcode
+            string  = self.read()
+            image   = qrcode.make(string)
+            self.rootNode.printTip([{'type':'pil_image', 'image':image}])
+else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
     Clipboard   = TkClipboard   

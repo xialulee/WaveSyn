@@ -264,6 +264,16 @@ class ParamItem(Frame, object):
         self.__entry.config(validate='key', validatecommand=func)
                 
 
+class PilImageFrame(Frame, object):
+    def __init__(self, *args, **kwargs):
+        pilImage    = kwargs.pop('pilImage')
+        photo   = ImageTk.PhotoImage(pilImage)
+        self.__photoImage   = photo
+        Frame.__init__(self, *args, **kwargs)
+        self.__label        = label = Label(self, image=photo)
+        label.pack(expand=YES, fill=BOTH)
+        
+
 
 
 class TextWinHotkey(Text):
