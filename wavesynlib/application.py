@@ -294,8 +294,9 @@ wavesyn
                 PIPE    = subprocess.PIPE
                 p = subprocess.Popen(strippedCode[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
                 (stdout, stderr)    = p.communicate()
-                print(stdout)
-                print(stderr, file=sys.stderr)
+                encoding            = sys.getfilesystemencoding()
+                print(stdout.decode(encoding, 'ignore'))
+                print(stderr.decode(encoding, 'ignore'), file=sys.stderr)                
                 return
             try:
                 ret = self.eval(code)
