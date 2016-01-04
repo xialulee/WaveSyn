@@ -402,6 +402,7 @@ class ConsoleText(ScrolledText):
         super(ConsoleText, self).__init__(*args, **kwargs)
         # The shared queue of the PRODUCER-CONSUMER model.
         self.__queue    = Queue.Queue()
+        self.text['wrap']   = 'word'
         self.text.tag_configure('STDOUT',   foreground='black')
         self.text.tag_configure('STDERR',   foreground='red')
         self.text.tag_configure('TIP', foreground='forestgreen')
