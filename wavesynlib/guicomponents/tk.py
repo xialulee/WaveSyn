@@ -153,29 +153,59 @@ class LabeledScale(Frame, object):
 
 
 
+#class DirIndicator(Frame, object):
+#    def __init__(self, *args, **kwargs):
+#        Frame.__init__(self, *args, **kwargs)
+#        self.__entry        = Entry(self)
+#        self.__entry.pack(fill=X, expand=YES, side=LEFT)
+#        self.__button       = Button(self, command=self.__onButtonClick)
+#        self.__button.pack(fill=X, side=LEFT)
+#        self.__cwd          = None
+#        
+#    def __onButtonClick(self):
+#        directory   = askdirectory()
+#        if directory:
+#            self.__entry.delete(0, END)
+#            self.__entry.insert(0, directory)
+#            os.chdir(directory)         
+#        
+#        
+#    def update(self, *args, **kwargs):
+#        cwd     = os.getcwd()
+#        if self.__cwd != cwd:
+#            self.__cwd  = cwd
+#            self.__entry.delete(0, END)
+#            self.__entry.insert(0, cwd)        
+            
+            
 class DirIndicator(Frame, object):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
-        self.__entry        = Entry(self)
-        self.__entry.pack(fill=X, expand=YES, side=LEFT)
-        self.__button       = Button(self, command=self.__onButtonClick)
-        self.__button.pack(fill=X, side=LEFT)
-        self.__cwd          = None
+        self.__text     = text      = Text(self, wrap=NONE, height=1.2, relief=SOLID)
+        text.bind('<Configure>', )
+        text.pack(fill=X, expand=YES, side=LEFT)
+        self.__button   = button    = Button(self, command=self.__onButtonClick)
+        button.pack(fill=X, side=LEFT)
+        self.__cwd      = None
         
     def __onButtonClick(self):
         directory   = askdirectory()
         if directory:
-            self.__entry.delete(0, END)
-            self.__entry.insert(0, directory)
-            os.chdir(directory)         
-        
-        
+            self.__text.delete('1.0', END)
+            self.__text.insert('1.0', directory)
+            os.chdir(directory)
+            
+    def __onResize(self):
+        self.__text.see(END)
+        self.__text.mark_set(INSERT, END)
+            
     def update(self, *args, **kwargs):
         cwd     = os.getcwd()
         if self.__cwd != cwd:
             self.__cwd  = cwd
-            self.__entry.delete(0, END)
-            self.__entry.insert(0, cwd)            
+            self.__text.delete('1.0', END)
+            self.__text.insert('1.0', cwd)
+        
 
         
         
