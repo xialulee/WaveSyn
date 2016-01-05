@@ -5,6 +5,7 @@ Created on Fri Apr 03 15:46:05 2015
 @author: Feng-cong Li
 """
 import os
+import sys
 
 from Tkinter                                  import *
 from ttk                                      import *
@@ -17,7 +18,7 @@ from PIL                                      import ImageTk
 
 from functools                                import partial
 
-from wavesynlib.languagecenter.utils          import MethodDelegator
+from wavesynlib.languagecenter.utils          import autoSubs, MethodDelegator
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 
 
@@ -150,64 +151,7 @@ class LabeledScale(Frame, object):
         
     def set(self, val):
         return self.__scale.set(val)
-
-
-
-#class DirIndicator(Frame, object):
-#    def __init__(self, *args, **kwargs):
-#        Frame.__init__(self, *args, **kwargs)
-#        self.__entry        = Entry(self)
-#        self.__entry.pack(fill=X, expand=YES, side=LEFT)
-#        self.__button       = Button(self, command=self.__onButtonClick)
-#        self.__button.pack(fill=X, side=LEFT)
-#        self.__cwd          = None
-#        
-#    def __onButtonClick(self):
-#        directory   = askdirectory()
-#        if directory:
-#            self.__entry.delete(0, END)
-#            self.__entry.insert(0, directory)
-#            os.chdir(directory)         
-#        
-#        
-#    def update(self, *args, **kwargs):
-#        cwd     = os.getcwd()
-#        if self.__cwd != cwd:
-#            self.__cwd  = cwd
-#            self.__entry.delete(0, END)
-#            self.__entry.insert(0, cwd)        
-            
-            
-class DirIndicator(Frame, object):
-    def __init__(self, *args, **kwargs):
-        Frame.__init__(self, *args, **kwargs)
-        self.__text     = text      = Text(self, wrap=NONE, height=1.2, relief=SOLID)
-        text.bind('<Configure>', )
-        text.pack(fill=X, expand=YES, side=LEFT)
-        self.__button   = button    = Button(self, command=self.__onButtonClick)
-        button.pack(fill=X, side=LEFT)
-        self.__cwd      = None
-        
-    def __onButtonClick(self):
-        directory   = askdirectory()
-        if directory:
-            self.__text.delete('1.0', END)
-            self.__text.insert('1.0', directory)
-            os.chdir(directory)
-            
-    def __onResize(self):
-        self.__text.see(END)
-        self.__text.mark_set(INSERT, END)
-            
-    def update(self, *args, **kwargs):
-        cwd     = os.getcwd()
-        if self.__cwd != cwd:
-            self.__cwd  = cwd
-            self.__text.delete('1.0', END)
-            self.__text.insert('1.0', cwd)
-        
-
-        
+                                                                  
         
 class ParamItem(Frame, object):
     def __init__(self, *args, **kwargs):
@@ -461,6 +405,138 @@ class ScrolledList(Frame, object):
             label = self.__list.get(index)
             if self.listClick:
                 self.listClick(index, label)
+                
+                
+                
+class DirIndicator(Frame, object):
+    def __init__(self, *args, **kwargs):
+        Frame.__init__(self, *args, **kwargs)
+        self.__text     = text      = Text(self, wrap=NONE, height=1.2, relief=SOLID)
+        text.bind('<Configure>', self._onResize)
+        text.bind('<KeyPress>', self._onKeyPress)
+        text.pack(fill=X, expand=YES, side=LEFT)
+        self.__defaultCursor        = text['cursor']
+        self.__defaultBGColor       = text['background']
+
+
+        # Browse Button
+        text.tag_config('browse_button', foreground='orange')
+        text.tag_bind('browse_button', '<Button-1>', self._onButtonClick)
+        text.tag_bind('browse_button', '<Enter>', lambda *args: self._handCursor(True))
+        text.tag_bind('browse_button', '<Leave>', lambda *args: self._handCursor(False))
+        # End Browse Button
+                
+        self.__blankLen     = 2
+        self.__browseText   = '...'
+        self.__coding       = sys.getfilesystemencoding()
+        self.__cwd          = None
+        
+        from wavesynlib.interfaces.timer.tk import TkTimer
+        self.__timer        = TkTimer(self, interval=500)
+        self.__timer.addObserver(self)
+        self.__timer.active = True
+                        
+    def _onButtonClick(self, *args):
+        directory   = askdirectory()
+        if directory:
+            os.chdir(directory)
+            
+    def _onResize(self, *args):
+        self.__text.see(END)
+        self.__text.mark_set(INSERT, END)
+
+
+    def _handCursor(self, hand):
+        text    = self.__text
+        if hand:
+            text.config(cursor='hand2')
+        else:
+            text.config(cursor=self.__defaultCursor)
+
+    def _onFolderNameHover(self, tagName, enter=True, bgColor='pale green'):
+        self._handCursor(enter)
+        bgColor     = bgColor if enter else self.__defaultBGColor
+        self.__text.tag_config(tagName, background=bgColor)        
+        
+    def _onSepClick(self, evt, path, menu=[None]):
+        items   = [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item))]
+        if items: # Not Empty
+            x, y    = self.winfo_pointerx(), self.winfo_pointery()
+            menuWin = menu[0]
+            if menuWin is not None:
+                menuWin.destroy()
+            menuWin     = menu[0]   = Toplevel()
+            menuWin.overrideredirect(1) # No Title bar
+            menuWin.geometry(autoSubs('200x300+$x+$y'))
+            menuWin.bind('<FocusOut>', lambda evt: menuWin.destroy())
+            itemList    = ScrolledList(menuWin)
+            itemList.pack(expand=YES, fill=BOTH)
+            itemList.list.focus_set()
+            for item in items:
+                itemList.insert(END, item)
+                
+            def onListClick(index, label):
+                fullPath    = os.path.join(path, label)
+                os.chdir(fullPath)
+                menuWin.destroy()
+                
+            itemList.listClick  = onListClick
+                        
+    def _onKeyPress(self, evt):
+        if evt.keycode == 13: # \n
+            path    = self._getPathInText()
+            if os.path.exists(path):
+                os.chdir(path)
+            else:
+                self._refresh(self.__cwd)
+            return 'break' # Not pass the event to the next handler.
+            
+    def _getPathInText(self):
+        path    = self.__text.get('1.0', END)
+        path    = path[:-(self.__blankLen + len(self.__browseText))]            
+        return path
+            
+    def update(self, *args, **kwargs): # Observer protocol. 
+        cwd     = os.getcwd()
+        cwd     = cwd.replace(os.path.altsep, os.path.sep)
+        if self.__cwd != cwd:
+            self._refresh(cwd)
+
+    def _refresh(self, cwd):
+        text        = self.__text
+        self.__cwd  = cwd
+        
+        
+        text    = self.__text
+        text.delete('1.0', END)
+        folderList  = cwd.split(os.path.sep)
+        cumPath     = ''
+        for index, folder in enumerate(folderList):
+            folder      = folder.decode(self.__coding, 'ignore')
+            cumPath += folder + os.path.sep 
+            
+            # Configure folder name
+            tagName     = 'folder_name_' + str(index)
+            text.tag_config(tagName)
+            text.tag_bind(tagName, '<Button-1>', lambda evt, cumPath=cumPath: os.chdir(cumPath))
+            text.tag_bind(tagName, '<Enter>', lambda evt, tagName=tagName: self._onFolderNameHover(tagName, enter=True))
+            text.tag_bind(tagName, '<Leave>', lambda evt, tagName=tagName: self._onFolderNameHover(tagName, enter=False))
+            text.insert(END, folder, tagName)
+            # END Configure folder name
+            
+            # Configure folder sep
+            sepName     = 'sep_tag_' + str(index)                
+            text.tag_config(sepName)
+            text.tag_bind(sepName, '<Button-1>', lambda evt, cumPath=cumPath: self._onSepClick(evt, cumPath))
+            text.tag_bind(sepName, '<Enter>', lambda evt, tagName=sepName: self._onFolderNameHover(tagName, enter=True, bgColor='orange'))
+            text.tag_bind(sepName, '<Leave>', lambda evt, tagName=sepName: self._onFolderNameHover(tagName, enter=False, bgColor='orange'))
+            text.insert(END, os.path.sep, sepName)
+            # END Configure folder sep
+        
+
+        text.insert(END, ' '*self.__blankLen)
+        text.insert(END, self.__browseText, 'browse_button')                  
+                
 
 class Group(Frame, object):
     def __init__(self, *args, **kwargs):

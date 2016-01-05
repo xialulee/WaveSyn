@@ -538,9 +538,10 @@ Have a nice day.
         app = Application.instance
         root = app.root
         root.title('WaveSyn-Console')
+
         dirIndicator = DirIndicator()
         dirIndicator.pack(fill=X)
-        app.monitorTimer.addObserver(dirIndicator)
+        
         txtStdOutErr = ConsoleText(root)
         txtStdOutErr.pack(expand=YES, fill=BOTH)
         self.__txtStdOutErr = txtStdOutErr
