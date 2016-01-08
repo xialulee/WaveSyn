@@ -9,6 +9,9 @@ from __future__ import print_function, division, unicode_literals
 import os
 import sys
 
+import math
+import cmath
+
 from Tkinter                                       import *
 from ttk                                           import *
 from Tkinter                                       import Frame
@@ -670,6 +673,225 @@ class GUIConsumer(object):
         self.__active = val
         if self.__active is True and self.__producerThread is None:
             self.__producerThread = thread.start_new_thread(self.__runProducer)
+            
+            
+            
+
+class IQSlider(Frame, Observable):                
+    class Indicator(object):
+        def __init__(self, iq, solid=True):
+            self.__iq           = iq
+            self.__line         = iq.canvas.create_line(0, 0, 1, 1, fill='yellow')
+            self.__circle       = iq.canvas.create_oval(0, 0, 1, 1, outline='yellow')
+            self.__xLine        = iq.canvas.create_line(0, 0, 1, 1, fill='cyan')
+            self.__yLine        = iq.canvas.create_line(0, 0, 1, 1, fill='cyan')            
+            self.__textIQ       = iq.canvas.create_text((0, 0), anchor='se', fill='cyan', font=('Times New Roman',))
+            self.__textPolar    = iq.canvas.create_text((0, 0), anchor='ne', fill='yellow', font=('Times New Roman',))
+            self.__radius       = 3
+            if not solid:
+                iq.canvas.itemconfig(self.__line, dash=[1, 1])
+                iq.canvas.itemconfig(self.__xLine, dash=[1, 1])
+                iq.canvas.itemconfig(self.__yLine, dash=[1, 1])
+            self.__active   = False
+                
+        def setPos(self, pos):
+            radius  = self.__radius
+            center  = self.__iq.center
+            
+            iq      = self.__iq            
+            
+            iq.canvas.coords(self.__line, center.real, center.imag, pos.real, pos.imag)
+            iq.canvas.coords(self.__circle, pos.real-radius, pos.imag-radius, pos.real+radius, pos.imag+radius)
+            
+            iq.canvas.coords(self.__xLine, center.real-iq.radius, pos.imag, center.real+iq.radius, pos.imag)
+            iq.canvas.coords(self.__yLine, pos.real, center.imag-iq.radius, pos.real, center.imag+iq.radius)
+            
+            iMag    = (pos.real - center.real) / iq.radius * iq.iRange
+            qMag    = -(pos.imag - center.imag) / iq.radius * iq.qRange
+            
+            iq.canvas.itemconfig(self.__textIQ, text=u' I:{}, Q:{} '.format(int(iMag), int(qMag)))            
+            iq.canvas.coords(self.__textIQ, pos.real, pos.imag)
+            
+            iq.canvas.itemconfig(self.__textPolar, text=u' A:{}, ϕ:{}° '.format(int(abs(iMag+1j*qMag)), int(360*math.atan2(qMag, iMag)/2/math.pi)))                        
+            iq.canvas.coords(self.__textPolar, pos.real, pos.imag)
+            
+            if pos.imag - center.imag < 0:
+                anchor  = 'sw'
+            else:
+                anchor  = 'ne'
+            iq.canvas.itemconfig(self.__textPolar, anchor=anchor)
+            
+            if center.real - pos.real < 0:
+                anchor  = 'nw'
+            else:
+                anchor  = 'se'
+            iq.canvas.itemconfig(self.__textIQ, anchor=anchor)                
+            
+            self.__active   = True
+            
+        @property
+        def active(self):
+            return self.__active
+            
+    
+    
+    def __init__(self, *args, **kwargs):
+        self.__iRange   =   iRange  = kwargs.pop('iRange')
+        self.__qRange   =   qRange  = kwargs.pop('qRange')
+        Frame.__init__(self, *args, **kwargs)
+        Observable.__init__(self)
+                       
+        self.__canvas   = canvas    = Canvas(self)
+
+        canvas.grid(row=0, column=0, sticky='wens')
+        canvas['bg']    = 'black'
+
+        self.__qSlider  = qSlider   = Scale(self, from_=qRange, to=-qRange, orient='vertical')
+
+        qSlider.grid(row=0, column=1, sticky='e')
+        self.__iSlider  = iSlider   = Scale(self, from_=-iRange, to=iRange, orient='horizontal')        
+
+        iSlider.grid(row=1, column=0, sticky='s')
+        
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        
+        self.__pad  = 10        
+        self.__width    = 0
+        self.__height   = 0
+        self.__center   = None
+        self.__radius   = 0
+        self.__bbox     = None
+        
+        self.__compMag  = 0 + 0j
+        
+        canvas.bind('<Configure>', self._onResize)
+        self.__borderBox    = canvas.create_rectangle(0, 0, 10, 10, outline='green')        
+        self.__borderCircle = canvas.create_oval(0, 0, 10, 10, outline='green', dash=[1, 2])
+        self.__middleCircle = canvas.create_oval(0, 0, 10, 10, outline='green', dash=[1, 2])
+        self.__vLine        = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
+        self.__hLine        = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
+        self.__dLine        = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
+        self.__cdLine       = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
+        self.__scaleCircles = []
+        for k in range(12):
+            self.__scaleCircles.append(canvas.create_oval(0, 0, 10, 10, fill='green'))
+            
+        self.__indicator1   = self.Indicator(self, solid=False)
+        self.__indicator2   = self.Indicator(self)
+        
+        canvas.bind('<Motion>', self._onMouseMove)
+        canvas.bind('<Button-1>', self._onClick)
+        iSlider['command']  = self._onIQScale
+        qSlider['command']  = self._onIQScale
+        
+
+    @property
+    def canvas(self):
+        return self.__canvas
+        
+    @property
+    def center(self):
+        return self.__center
+        
+    @property
+    def bbox(self):
+        return self.__bbox
+        
+    @property
+    def radius(self):
+        return self.__radius
+        
+    @property
+    def iRange(self):
+        return self.__iRange
+        
+    @property
+    def qRange(self):
+        return self.__qRange
+        
+    def isInBox(self, pos):
+        bbox    = self.bbox
+        if bbox[0]<=pos.real<=bbox[2] and bbox[1]<=pos.imag<=bbox[3]:
+            return True
+        else:
+            return False
+                
+    def _redraw(self):
+        canvas  = self.__canvas
+        radius  = self.__radius
+        center  = self.__center
+        b1      = center - radius - 1j * radius
+        b2      = center + radius + 1j * radius
+        bbox    = [int(b) for b in (b1.real, b1.imag, b2.real, b2.imag)]
+        canvas.coords(self.__borderBox, *bbox)
+        canvas.coords(self.__borderCircle, *bbox)        
+        
+        bm1     = center - 0.5*radius - 0.5j * radius
+        bm2     = center + 0.5*radius + 0.5j * radius
+        canvas.coords(self.__middleCircle, bm1.real, bm1.imag, bm2.real, bm2.imag)
+        
+        canvas.coords(self.__vLine, int(center.real), bbox[1], int(center.real), bbox[3])
+        canvas.coords(self.__hLine, bbox[0], int(center.imag), bbox[2], int(center.imag))
+        canvas.coords(self.__dLine, *bbox)
+        canvas.coords(self.__cdLine, bbox[0], bbox[3], bbox[2], bbox[1])
+                
+        exp     = cmath.exp
+        sR      = 3
+        delta   = 2 * math.pi / len(self.__scaleCircles)
+        
+        for index, circle in enumerate(self.__scaleCircles):
+            pos = radius * exp(1j * delta * index) + center            
+            canvas.coords(circle, pos.real-sR, pos.imag-sR, pos.real+sR, pos.imag+sR)
+            
+        if self.__indicator2.active:
+            posX    = self.__compMag.real / self.__iRange * radius + center.real
+            posY    = -self.__compMag.imag / self.__qRange * radius + center.imag
+            self.__indicator2.setPos(posX + 1j * posY)
+            
+        if self.__indicator1.active:
+            posX    = self.__iSlider.get() / self.__iRange * radius + center.real
+            posY    = -self.__qSlider.get() / self.__qRange * radius + center.imag
+            self.__indicator1.setPos(posX + 1j * posY)
+        
+        
+    def _onResize(self, event):
+        pad     = self.__pad
+        width, height   = event.width, event.height
+        size                = min(width, height) - pad
+        self.__iSlider['length']   = size
+        self.__qSlider['length']   = size 
+        self.__radius   = radius    = size / 2 - pad
+        self.__width    = width
+        self.__height   = height
+        self.__center   = center    = (width / 2) + 1j * (height / 2)
+        
+        b1      = center - radius - 1j * radius
+        b2      = center + radius + 1j * radius
+        self.__bbox     = [int(b) for b in (b1.real, b1.imag, b2.real, b2.imag)]                
+        self._redraw()
+        
+    def _onMouseMove(self, event):
+        pos     = event.x + 1j * event.y
+        if self.isInBox(pos):
+            absPos  = pos-self.center
+            bbox    = self.bbox
+            radius  = (bbox[2] - bbox[0]) / 2
+            self.__iSlider.set(int(absPos.real/radius*self.__iRange))
+            self.__qSlider.set(int(-absPos.imag/radius*self.__qRange))
+            self.__indicator1.setPos(pos)
+            
+    def _onClick(self, event):
+        pos     = event.x + 1j * event.y
+        if self.isInBox(pos):
+            self.__indicator2.setPos(pos)
+            self.__compMag  = self.__iSlider.get() + 1j * self.__qSlider.get()
+            
+    def _onIQScale(self, val):
+        self._redraw()
+
+            
+            
         
 class ArrayRenderMixin(object):
     def renderArray(self, arr, imageId=None):
@@ -689,8 +911,12 @@ if __name__ == '__main__':
 #    root    = tree.insert('', END, text='root')
 #    node    = tree.insert(root, END, text='node')
 #    window.mainloop()
-    window = Tk()
-    print (askFont())
-    window.mainloop()
+#    window = Tk()
+#    print (askFont())
+#    window.mainloop()
+    root    = Tk()
+    iq      = IQSlider(root, iRange=512, qRange=512, relief='raised')
+    iq.pack(expand='yes', fill='both')
+    root.mainloop()
     
 
