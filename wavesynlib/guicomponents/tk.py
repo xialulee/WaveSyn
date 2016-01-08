@@ -674,7 +674,42 @@ class GUIConsumer(object):
         if self.__active is True and self.__producerThread is None:
             self.__producerThread = thread.start_new_thread(self.__runProducer)
             
-            
+
+class ComplexCanvas(Canvas, object):
+    def __init__(self, *args, **kwargs):
+        Canvas.__init__(self, *args, **kwargs)
+        self.__center   = None
+        
+    @property
+    def center(self):
+        return self.__center
+        
+    @center.setter
+    def center(self, val):
+        self.__center   = val
+    
+    def createCircle(self, radius, **options):
+        center  = self.__center
+        bbox    = (center.real-radius, center.imag-radius, center.real+radius, center.imag+radius)
+        return self.create_oval(*bbox, **options)
+        
+    def createLine(self, p1, p2, **options):
+        p1      = p1 + self.center
+        p2      = p2 + self.center
+        bbox    = (p1.real, p1.imag, p2.real, p2.imag)
+        return self.create_line(*bbox, **options)
+        
+    def complexCoords(self, itemID, p1=None, p2=None, radius=None, angle=None):
+        if p1:
+            p1      = p1 + self.center
+            p2      = p2 + self.center
+            bbox    = (p1.real, p1.imag, p2.real, p2.imag)
+        else:
+            delta   = radius * cmath.exp(1j * angle)
+            p3      = self.center - delta
+            p4      = self.center + delta
+            bbox    = (p3.real, p3.imag, p4.real, p4.imag)
+        self.coords(itemID, *bbox)
             
 
 class IQSlider(Frame, Observable):                
@@ -698,9 +733,12 @@ class IQSlider(Frame, Observable):
             radius  = self.__radius
             center  = self.__iq.center
             
-            iq      = self.__iq            
+            iq      = self.__iq   
             
-            iq.canvas.coords(self.__line, center.real, center.imag, pos.real, pos.imag)
+            phi     = cmath.phase(pos-center)
+            endPoint= iq.radius * cmath.exp(1j * phi) + center
+            
+            iq.canvas.coords(self.__line, center.real, center.imag, endPoint.real, endPoint.imag)
             iq.canvas.coords(self.__circle, pos.real-radius, pos.imag-radius, pos.real+radius, pos.imag+radius)
             
             iq.canvas.coords(self.__xLine, center.real-iq.radius, pos.imag, center.real+iq.radius, pos.imag)
@@ -715,17 +753,16 @@ class IQSlider(Frame, Observable):
             iq.canvas.itemconfig(self.__textPolar, text=u' A:{}, ϕ:{}° '.format(int(abs(iMag+1j*qMag)), int(360*math.atan2(qMag, iMag)/2/math.pi)))                        
             iq.canvas.coords(self.__textPolar, pos.real, pos.imag)
             
-            if pos.imag - center.imag < 0:
-                anchor  = 'sw'
+            if (pos.imag - center.imag) * (pos.real - center.real) > 0:
+                anchorB     = 'sw'
+                anchorY     = 'ne'                
             else:
-                anchor  = 'ne'
-            iq.canvas.itemconfig(self.__textPolar, anchor=anchor)
-            
-            if center.real - pos.real < 0:
-                anchor  = 'nw'
-            else:
-                anchor  = 'se'
-            iq.canvas.itemconfig(self.__textIQ, anchor=anchor)                
+                anchorB     = 'se'
+                anchorY     = 'nw'
+                
+                
+            iq.canvas.itemconfig(self.__textPolar, anchor=anchorY)
+            iq.canvas.itemconfig(self.__textIQ, anchor=anchorB)                
             
             self.__active   = True
             
@@ -741,7 +778,7 @@ class IQSlider(Frame, Observable):
         Frame.__init__(self, *args, **kwargs)
         Observable.__init__(self)
                        
-        self.__canvas   = canvas    = Canvas(self)
+        self.__canvas   = canvas    = ComplexCanvas(self)
 
         canvas.grid(row=0, column=0, sticky='wens')
         canvas['bg']    = 'black'
@@ -774,8 +811,12 @@ class IQSlider(Frame, Observable):
         self.__dLine        = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
         self.__cdLine       = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
         self.__scaleCircles = []
-        for k in range(12):
-            self.__scaleCircles.append(canvas.create_oval(0, 0, 10, 10, fill='green'))
+        for k in range(60):
+            if k % 5 == 0:
+                color   = 'gold'
+            else:
+                color   = 'green'
+            self.__scaleCircles.append(canvas.create_oval(0, 0, 10, 10, fill=color))
             
         self.__indicator1   = self.Indicator(self, solid=False)
         self.__indicator2   = self.Indicator(self)
@@ -821,28 +862,29 @@ class IQSlider(Frame, Observable):
         canvas  = self.__canvas
         radius  = self.__radius
         center  = self.__center
-        b1      = center - radius - 1j * radius
-        b2      = center + radius + 1j * radius
-        bbox    = [int(b) for b in (b1.real, b1.imag, b2.real, b2.imag)]
-        canvas.coords(self.__borderBox, *bbox)
-        canvas.coords(self.__borderCircle, *bbox)        
         
-        bm1     = center - 0.5*radius - 0.5j * radius
-        bm2     = center + 0.5*radius + 0.5j * radius
-        canvas.coords(self.__middleCircle, bm1.real, bm1.imag, bm2.real, bm2.imag)
+        canvas.center   = center
         
-        canvas.coords(self.__vLine, int(center.real), bbox[1], int(center.real), bbox[3])
-        canvas.coords(self.__hLine, bbox[0], int(center.imag), bbox[2], int(center.imag))
-        canvas.coords(self.__dLine, *bbox)
-        canvas.coords(self.__cdLine, bbox[0], bbox[3], bbox[2], bbox[1])
+        b1      = - radius - 1j * radius
+        b2      = radius + 1j * radius
+
+        for item in (self.__borderBox, self.__borderCircle):
+            canvas.complexCoords(item, p1=b1, p2=b2)
+                
+        canvas.complexCoords(self.__middleCircle, p1=0.5*b1, p2=0.5*b2)
+        
+        canvas.complexCoords(self.__vLine, -1j*radius, 1j*radius)
+        canvas.complexCoords(self.__hLine, -radius, radius)
+        canvas.complexCoords(self.__dLine, p1=b1, p2=b2)
+        canvas.complexCoords(self.__cdLine, p1=b1.conjugate(), p2=b2.conjugate())
                 
         exp     = cmath.exp
-        sR      = 3
+        sR      = 3 + 3j
         delta   = 2 * math.pi / len(self.__scaleCircles)
         
         for index, circle in enumerate(self.__scaleCircles):
-            pos = radius * exp(1j * delta * index) + center            
-            canvas.coords(circle, pos.real-sR, pos.imag-sR, pos.real+sR, pos.imag+sR)
+            pos = radius * exp(1j * delta * index)
+            canvas.complexCoords(circle, p1=pos-sR, p2=pos+sR)
             
         if self.__indicator2.active:
             posX    = self.__compMag.real / self.__iRange * radius + center.real
