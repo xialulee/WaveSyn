@@ -4,7 +4,7 @@ Created on Fri May 23 15:58:34 2014
 
 @author: Feng-cong Li
 """
-from __future__                               import print_function, division
+from __future__                               import print_function, division, unicode_literals
 
 from tkColorChooser                           import askcolor
 

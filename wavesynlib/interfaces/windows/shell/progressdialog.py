@@ -10,18 +10,7 @@ from ctypes.wintypes import *
 # ULONGLONG is not defined in ctypes.wintypes
 ULONGLONG = c_ulonglong
 
-PROGDLG_NORMAL          = 0
-PROGDLG_MODAL           = 1
-PROGDLG_AUTOTIME        = 2
-PROGDLG_NOTIME          = 4
-PROGDLG_NOMINIMIZE      = 8
-PROGDLG_NOPROGRESSBAR   = 0x10
-PROGDLG_MARQUEEPROGRESS = 0x20
-PROGDLG_NOCANCEL        = 0x40
-
-PDTIMER_RESET           = 1
-PDTIMER_PAUSE           = 2
-PDTIMER_RESUME          = 3
+from wavesynlib.interfaces.windows.shell.constants import *
 
 
 CLSID_ProgressDialog = GUID('{F8383852-FCD3-11d1-A6B9-006097DF5BD4}')

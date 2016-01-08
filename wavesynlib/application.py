@@ -6,6 +6,7 @@ Created on Fri May 02 15:48:27 2014
 """
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 
 def dependenciesForMyprogram():
@@ -58,11 +59,12 @@ from wavesynlib.interfaces.clipboard.modelnode   import Clipboard
 from wavesynlib.interfaces.timer.tk              import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream                        import StreamManager
-from wavesynlib.cuda                             import Worker as CUDAWorker
+#from wavesynlib.cuda                             import Worker as CUDAWorker
 from wavesynlib.languagecenter.utils             import autoSubs, evalFmt, setMultiAttr
 from wavesynlib.languagecenter.designpatterns    import Singleton        
 from wavesynlib.languagecenter.wavesynscript     import Scripting, ModelNode
 from wavesynlib.languagecenter.modelnode         import LangCenterNode
+from wavesynlib.languagecenter                   import templates
 
 
 def makeMenu(win, menu, json=False):
@@ -209,9 +211,9 @@ wavesyn
                                 
                 streamManager   =StreamManager(),                
                 
-                configFileName  = configFileName,
+                configFileName  = configFileName
                 
-                cudaWorker      = CUDAWorker()
+#                cudaWorker      = CUDAWorker()
             )        
         
         
@@ -372,7 +374,7 @@ wavesyn
                     ret, err    = None, None
                     try:
                         ret = self.printAndEval(evalFmt('{nodePath}.{methodName}({paramsToStr(*args, **kwargs)})')) # paramToStr used here
-                    except Exception, error:
+                    except Exception as error:
                         err = error
                     ret = 0 if ret is None else ret
                     self.xmlrpcCommandSlot.returnVal    = (ret, err)
@@ -519,13 +521,7 @@ class ConsoleText(ScrolledText):
         
         
 class ConsoleWindow(ModelNode):
-    strWelcome = '''Good {0}, dear user(s). Welcome to WaveSyn!
-WaveSyn is a platform for testing and evaluating waveform synthesis algorithms.
-The following modules are imported and all the objects in them can be used directly in the scripting system:
-numpy.
-Be ware that "print" is a function rather than a statement in the scripting environment.
-Have a nice day.
-'''
+    
     class StreamObserver(object):
         def __init__(self, console):
             self.__console  = console
@@ -551,12 +547,12 @@ Have a nice day.
 
         nowtime = datetime.now().hour
         if nowtime >= 19:
-            greetings = 'evening'
+            time    = 'evening'
         elif nowtime >= 12:
-            greetings = 'afternoon'
+            time    = 'afternoon'
         else:
-            greetings = 'morning'
-        app.streamManager.write(self.strWelcome.format(greetings), 'TIP')
+            time    = 'morning'
+        app.streamManager.write(templates.greeting.format(time), 'TIP')
         menu    = kwargs['menu']
         makeMenu(root, menu, json=True)
         self.__defaultCursor = self.__txtStdOutErr.text['cursor']

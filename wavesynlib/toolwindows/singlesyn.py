@@ -11,14 +11,15 @@ import time
 from Tkinter import *
 from ttk import *
 
-from wavesynlib import guicomponents
-from wavesynlib.guicomponents.tk                import Group, ParamItem
-from wavesynlib.guicomponents.classselector     import askClassName
-from wavesynlib.application                     import Application
-from wavesynlib.basewindow                      import FigureWindow
-from wavesynlib.languagecenter.utils            import autoSubs, evalFmt, setMultiAttr, Nonblocking
-from wavesynlib.languagecenter.wavesynscript    import ScriptCode, Scripting
-from wavesynlib.mathtools                       import Algorithm, AlgorithmDict, AlgorithmNode
+
+from wavesynlib.guicomponents.tk                   import Group, ParamItem
+from wavesynlib.interfaces.windows.shell.constants import TBPFLAG
+from wavesynlib.guicomponents.classselector        import askClassName
+from wavesynlib.application                        import Application
+from wavesynlib.basewindow                         import FigureWindow
+from wavesynlib.languagecenter.utils               import autoSubs, evalFmt, setMultiAttr, Nonblocking
+from wavesynlib.languagecenter.wavesynscript       import ScriptCode, Scripting
+from wavesynlib.mathtools                          import Algorithm, AlgorithmDict, AlgorithmNode
 
 
 import threading
@@ -172,7 +173,7 @@ class OptimizeGroup(Group):
         finally:
             algorithm.progressChecker.remove(progressChecker)
         self.__finishedwav.set(0)
-        tbicon.state = guicomponents.tk.TBPFLAG.TBPF_NOPROGRESS
+        tbicon.state = TBPFLAG.TBPF_NOPROGRESS
         
     def parallelRun(self):
         class AlgoThread(threading.Thread):

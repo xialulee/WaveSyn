@@ -1,7 +1,9 @@
 # 2013.09.20 PM 02:00
 # taskbarmanager.py
 # python 2.7
-# xialulee
+# Feng-cong Li
+
+from __future__ import print_function, division, unicode_literals
 
 from comtypes import *
 from ctypes import POINTER
@@ -10,19 +12,6 @@ ULONGLONG = c_uint64
 
 GUID_CTaskbarList   = GUID('{56FDF344-FD6D-11d0-958A-006097C9A090}')
 
-class TBPFLAG:
-    __slots__   = ('TBPF_NOPROGRESS',
-                   'TBPF_INDETERMINATE',
-                   'TBPF_NORMAL',
-                   'TBPF_ERROR',
-                   'TBPF_PAUSED'
-    )
-
-    TBPF_NOPROGRESS     = 0
-    TBPF_INDETERMINATE  = 1
-    TBPF_NORMAL         = 2
-    TBPF_ERROR          = 4
-    TBPF_PAUSED         = 8
 
 class ITaskbarList(IUnknown):
     _iid_   = GUID('{56FDF342-FD6D-11D0-958A-006097C9A090}')

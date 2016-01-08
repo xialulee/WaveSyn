@@ -4,40 +4,30 @@ Created on Fri Apr 03 15:46:05 2015
 
 @author: Feng-cong Li
 """
+from __future__ import print_function, division, unicode_literals
+
 import os
 import sys
 
-from Tkinter                                  import *
-from ttk                                      import *
-from Tkinter                                  import Frame
+from Tkinter                                       import *
+from ttk                                           import *
+from Tkinter                                       import Frame
 import tkFont
-from tkFileDialog                             import askdirectory
+from tkFileDialog                                  import askdirectory
 
 import PIL
-from PIL                                      import ImageTk
+from PIL                                           import ImageTk
 
-from functools                                import partial
+from functools                                     import partial
 
-from wavesynlib.languagecenter.utils          import autoSubs, MethodDelegator
-from wavesynlib.languagecenter.designpatterns import SimpleObserver
+from wavesynlib.languagecenter.utils               import autoSubs, MethodDelegator
+from wavesynlib.languagecenter.designpatterns      import SimpleObserver, Observable
 
 
 __DEBUG__ = False
 
 
-class TBPFLAG:
-    __slots__   = ('TBPF_NOPROGRESS',
-                   'TBPF_INDETERMINATE',
-                   'TBPF_NORMAL',
-                   'TBPF_ERROR',
-                   'TBPF_PAUSED'
-    )
 
-    TBPF_NOPROGRESS     = 0
-    TBPF_INDETERMINATE  = 1
-    TBPF_NORMAL         = 2
-    TBPF_ERROR          = 4
-    TBPF_PAUSED         = 8
     
 import platform
 win7plus    = False
@@ -47,7 +37,7 @@ if platform.system() == 'Windows':
         win7plus    = True
 
 if win7plus:
-    from wavesynlib.interfaces.windows.shell.taskbarmanager import ITaskbarList4, GUID_CTaskbarList, TBPFLAG
+    from wavesynlib.interfaces.windows.shell.taskbarmanager import ITaskbarList4, GUID_CTaskbarList
     from comtypes import CoCreateInstance
     import ctypes as ct
     GetParent   = ct.windll.user32.GetParent
@@ -332,8 +322,8 @@ class ScrolledText(Frame, object):
             where   = self.text.search(target, INSERT, END)
             if where:
                 if __DEBUG__:
-                    print 'Ctrl+F: searching for {0}'.format(target)
-                    print 'position', where
+                    print('Ctrl+F: searching for {0}'.format(target))
+                    print('position', where)
                 pastit  = where + ('+%dc' % len(target))
                 self.text.tag_remove(SEL, '1.0', END)
                 self.text.tag_add(SEL, where, pastit)
@@ -408,9 +398,10 @@ class ScrolledList(Frame, object):
                 
                 
                 
-class DirIndicator(Frame, object):
+class DirIndicator(Frame, Observable):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
+        Observable.__init__(self)
         self.__text     = text      = Text(self, wrap=NONE, height=1.2, relief=SOLID)
         text.bind('<Configure>', self._onResize)
         text.bind('<KeyPress>', self._onKeyPress)
@@ -496,11 +487,12 @@ class DirIndicator(Frame, object):
         path    = path[:-(self.__blankLen + len(self.__browseText))]            
         return path
             
-    def update(self, *args, **kwargs): # Observer protocol. 
+    def update(self, *args, **kwargs): # Observer protocol. For TkTimer.
         cwd     = os.getcwd()
         cwd     = cwd.replace(os.path.altsep, os.path.sep)
         if self.__cwd != cwd:
             self._refresh(cwd)
+            self.notifyObservers(cwd)
 
     def _refresh(self, cwd):
         text        = self.__text
@@ -698,7 +690,7 @@ if __name__ == '__main__':
 #    node    = tree.insert(root, END, text='node')
 #    window.mainloop()
     window = Tk()
-    print askFont()
+    print (askFont())
     window.mainloop()
     
 
