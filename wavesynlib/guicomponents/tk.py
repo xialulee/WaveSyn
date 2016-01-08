@@ -699,15 +699,16 @@ class ComplexCanvas(Canvas, object):
         bbox    = (p1.real, p1.imag, p2.real, p2.imag)
         return self.create_line(*bbox, **options)
         
-    def complexCoords(self, itemID, p1=None, p2=None, radius=None, angle=None):
+    def complexCoords(self, itemID, p1=None, p2=None, radius=None, center=0.0):
         if p1:
             p1      = p1 + self.center
             p2      = p2 + self.center
             bbox    = (p1.real, p1.imag, p2.real, p2.imag)
         else:
-            delta   = radius * cmath.exp(1j * angle)
-            p3      = self.center - delta
-            p4      = self.center + delta
+            center  += self.center
+            delta   = radius + 1j * radius
+            p3      = center - delta
+            p4      = center + delta
             bbox    = (p3.real, p3.imag, p4.real, p4.imag)
         self.coords(itemID, *bbox)
             
@@ -879,12 +880,12 @@ class IQSlider(Frame, Observable):
         canvas.complexCoords(self.__cdLine, p1=b1.conjugate(), p2=b2.conjugate())
                 
         exp     = cmath.exp
-        sR      = 3 + 3j
+        sR      = 3
         delta   = 2 * math.pi / len(self.__scaleCircles)
         
         for index, circle in enumerate(self.__scaleCircles):
             pos = radius * exp(1j * delta * index)
-            canvas.complexCoords(circle, p1=pos-sR, p2=pos+sR)
+            canvas.complexCoords(circle, center=pos, radius=sR)
             
         if self.__indicator2.active:
             posX    = self.__compMag.real / self.__iRange * radius + center.real
