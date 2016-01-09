@@ -6,7 +6,7 @@ Created on Mon Mar 30 10:14:20 2015
 """
 from Tkinter import * 
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer
-from wavesynlib.guicomponents.tk import ParamItem
+from wavesynlib.guicomponents.tk import LabeledEntry
 
 
 class TkTimer(BaseObservableTimer):    
@@ -16,7 +16,7 @@ class TkTimer(BaseObservableTimer):
             self.__timer    = timer
             
             Toplevel.__init__(self, *args, **kwargs)
-            interval    = ParamItem(self)
+            interval    = LabeledEntry(self)
             interval.label_text  = 'Interval (ms)'
             interval.entry_text  = str(timer.interval)
             interval.entry_width = 5

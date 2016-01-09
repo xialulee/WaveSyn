@@ -12,7 +12,7 @@ from Tkinter import *
 from ttk import *
 
 
-from wavesynlib.guicomponents.tk                   import Group, ParamItem
+from wavesynlib.guicomponents.tk                   import Group, LabeledEntry
 from wavesynlib.interfaces.windows.shell.constants import TBPFLAG
 from wavesynlib.guicomponents.classselector        import ask_class_name
 from wavesynlib.application                        import Application
@@ -40,7 +40,7 @@ class OptimizeGroup(Group):
         
         parameter_frame    = Frame(self)
         parameter_frame.pack(side=LEFT, expand=YES, fill=Y)
-        self.__num = ParamItem(parameter_frame)
+        self.__num = LabeledEntry(parameter_frame)
         set_attributes(self.__num,
             label_text   = 'num',
             entry_text   = '1',
@@ -53,7 +53,7 @@ class OptimizeGroup(Group):
 
      
 
-        self.__pci  = ParamItem(parameter_frame)
+        self.__pci  = LabeledEntry(parameter_frame)
         set_attributes(self.__pci,
             label_text   = 'PCI',
             entry_text   = '100',
@@ -226,7 +226,7 @@ class ParamsGroup(Group):
         params = algorithm['parameters']
         for index, name in enumerate(params):
             param = params[name]
-            paramitem = ParamItem(frm)
+            paramitem = LabeledEntry(frm)
             paramitem.label_text = name
             paramitem.label_width = 5
             paramitem.entry_width = 8

@@ -16,7 +16,7 @@ from scipy.io import savemat
 
 from wavesynlib.application                  import Application, get_gui_image_path, WaveSynThread
 from wavesynlib.basewindow                   import FigureWindow
-from wavesynlib.guicomponents.tk             import Group, ParamItem, ScrolledList
+from wavesynlib.guicomponents.tk             import Group, LabeledEntry, ScrolledList
 from wavesynlib.languagecenter.utils         import auto_subs, set_attributes
 from wavesynlib.languagecenter.wavesynscript import Scripting
 
@@ -39,7 +39,7 @@ class OptimizeGroup(Group):
         self.__gui_images.append(imageMLbl)
         Label(frm, image=imageMLbl).pack(side=LEFT)
         
-        self.__M = ParamItem(frm)
+        self.__M = LabeledEntry(frm)
         self.__M.label.config(text='M')
         self.__M.entry_width = 6
         self.__M.entry_text = 10
@@ -100,7 +100,7 @@ class EditGroup(Group):
         Group.__init__(self, *args, **kwargs)
         frm = Frame(self)
         
-        self.__center = ParamItem(frm)
+        self.__center = LabeledEntry(frm)
         set_attributes(self.__center,        
             label_text   = 'center(deg)',        
             entry_text   = 0,    
@@ -111,7 +111,7 @@ class EditGroup(Group):
         self.__center.pack(side=TOP)        
         self._app.balloon.bind_widget(self.__center, balloonmsg='Specify the beam center here.')
         
-        self.__width = ParamItem(frm)
+        self.__width = LabeledEntry(frm)
         set_attributes(self.__width,
             label_text   = 'width(deg)',
             entry_text   = 20,
@@ -337,7 +337,7 @@ class PatternWindow(FigureWindow):
         self.figure_book.plot(
             pattern.samplesAngle, 
             pattern.samplesMagnitude,
-            curveName='Ideal Pattern',
+            curve_name='Ideal Pattern',
             color='b'
         )
     
@@ -347,7 +347,7 @@ class PatternWindow(FigureWindow):
         if R is None:
             pass # To do: raise a error
         self.figure_book.plot(self.angles, pattern2corrmtx.corrmtx2pattern(R, self.angles),
-            curveName='Synthesized Pattern', color='g')
+            curve_name='Synthesized Pattern', color='g')
             
     @Scripting.printable    
     def solve(self, M, display=False):

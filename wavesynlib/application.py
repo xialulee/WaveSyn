@@ -74,6 +74,7 @@ def make_menu(win, menu, json=False):
         else:
             f   = Application.instance.eval
         return lambda: f(code)
+        
     def make(top, tree):
         for top_item in tree:
             if 'Command' in top_item:
@@ -90,6 +91,7 @@ def make_menu(win, menu, json=False):
                 submenu = Menu(top, tearoff=tearoff)
                 make(submenu, top_item['SubMenu']) # recursion
                 top.add_cascade(label=top_item['Name'], menu=submenu, underline=int(top_item['UnderLine']))
+                
     top = Menu(win)
     make(top, menu)
     win.config(menu=top)        

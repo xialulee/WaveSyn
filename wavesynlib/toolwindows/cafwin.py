@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from wavesynlib.basewindow import FigureWindow
-from wavesynlib.guicomponents.tk import Group, ParamItem
+from wavesynlib.guicomponents.tk import Group, LabeledEntry
 from wavesynlib.algorithms import ambiguityfunction
 
 
@@ -26,12 +26,12 @@ class LoadGroup(Group):
         self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
         Button(self, text='Load *.mat', command=self.onLoadClick).pack()
-        paramX = ParamItem(self)
+        paramX = LabeledEntry(self)
         paramX.label_text = 'x = '
         paramX.entry_width = 6
         paramX.pack()
         self.__paramX = paramX
-        paramY = ParamItem(self)
+        paramY = LabeledEntry(self)
         paramY.label_text = 'y = '
         paramY.entry_width = 6
         paramY.pack()
