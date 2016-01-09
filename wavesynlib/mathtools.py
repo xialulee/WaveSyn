@@ -255,20 +255,20 @@ class AlgorithmNode(ModelNode, WindowComponent):
 
 ##############################Experimenting with multiprocessing###################################
     @Scripting.printable
-    def parallel_run_and_plot(self, allArguments):     
+    def parallel_run_and_plot(self, all_args):     
         queue   = mp.Queue()
-        for args, kwargs in allArguments:
+        for args, kwargs in all_args:
             mp.Process(target=parallelFunc, args=(type(self.__algorithm), queue, args, kwargs)).start()
-        for k in range(len(allArguments)):
+        for k in range(len(all_args)):
             self.top_window.current_data  = queue.get()
             self.top_window.plot_current_data()
             
     @Scripting.printable
-    def parallel_run(self, allArguments):
+    def parallel_run(self, all_args):
         queue   = mp.Queue()
         retval  = {'process':[], 'queue':queue}
-        for procID, (args, kwargs) in enumerate(allArguments):
-            p   = mp.Process(target=parFunc, args=(type(self.__algorithm), procID, queue, args, kwargs))
+        for process_id, (args, kwargs) in enumerate(all_args):
+            p   = mp.Process(target=parFunc, args=(type(self.__algorithm), process_id, queue, args, kwargs))
             retval['process'].append(p)
             p.start()            
         return retval
@@ -283,11 +283,11 @@ def parallelFunc(algorithm_class, queue, args, kwargs):
     
     
 ########################NEW#############################
-def parFunc(algorithm_class, procID, queue, args, kwargs):
+def parFunc(algorithm_class, process_id, queue, args, kwargs):
     PROGRESS_ID     = 1
     RESULT_ID       = 0
     def progress_checker(k, K, y, *args, **kwargs):                
-        queue.put((PROGRESS_ID, procID, int(k / K * 100)))
+        queue.put((PROGRESS_ID, process_id, int(k / K * 100)))
     algorithm   = algorithm_class()
     algorithm.progress_checker.append(progress_checker)
     algorithm.progress_checker.interval  = 100

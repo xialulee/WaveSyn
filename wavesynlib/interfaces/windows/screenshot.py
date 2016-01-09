@@ -14,8 +14,8 @@ class RectSelCanvas(Canvas, Observable):
         Canvas.__init__(self, master, cnf, **kw)
         Observable.__init__(self)
         self.__boxId    = None
-        self.__startX   = None
-        self.__startY   = None
+        self.__start_x   = None
+        self.__start_y   = None
         
         self.bind('<Button-1>', self.onButton1Press)
         self.bind('<B1-Motion>', self.onMouseMove)
@@ -25,17 +25,17 @@ class RectSelCanvas(Canvas, Observable):
         self.__boxId    = self.create_rectangle(
             event.x, event.y, event.x, event.y
         )
-        self.__startX   = event.x
-        self.__startY   = event.y
+        self.__start_x   = event.x
+        self.__start_y   = event.y
         
     def onMouseMove(self, event):
-        self.coords(self.__boxId, self.__startX, self.__startY, event.x, event.y)
+        self.coords(self.__boxId, self.__start_x, self.__start_y, event.x, event.y)
     
     def onButton1Release(self, event):
         self.delete(self.__boxId)
-        self.notify_observers(self.__startX, self.__startY, event.x, event.y)
-        self.__startX   = None
-        self.__startY   = None
+        self.notify_observers(self.__start_x, self.__start_y, event.x, event.y)
+        self.__start_x   = None
+        self.__start_y   = None
 
 
 if __name__ == '__main__':

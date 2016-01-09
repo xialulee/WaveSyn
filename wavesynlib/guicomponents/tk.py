@@ -558,53 +558,53 @@ class FontFrame(Frame, object):
         Frame.__init__(self, master, **kw)
         
         # Font selector
-        selectorFrame = LabelFrame(self, text='Font Selector')
-        selectorFrame.pack(side=LEFT)
+        selector_frame = LabelFrame(self, text='Font Selector')
+        selector_frame.pack(side=LEFT)
         # Font face
-        faceFrame = LabelFrame(selectorFrame, text='Font Face')
-        faceFrame.pack()
-        faceList = ScrolledList(faceFrame)
-        faceList.pack()
+        face_frame = LabelFrame(selector_frame, text='Font Face')
+        face_frame.pack()
+        face_list = ScrolledList(face_frame)
+        face_list.pack()
         fonts = list(tkFont.families(self))
         fonts.sort()
         for font in fonts:
-            faceList.insert(END, font)
-        faceList.list_click_callback = self._on_face_select
-        self.faceList = faceList
+            face_list.insert(END, font)
+        face_list.list_click_callback = self._on_face_select
+        self.face_list = face_list
             
         # Font size
-        sizeFrame = LabelFrame(selectorFrame, text='Font Size')
-        sizeFrame.pack()
-        sizeCombo = Combobox(sizeFrame, takefocus=1, stat='readonly')
-        sizeCombo.pack()
-        sizeCombo['value'] = range(7, 23)
-        sizeCombo.current(0)
-        sizeCombo.bind('<<ComboboxSelected>>', self._on_size_select)
-        self.sizeCombo = sizeCombo
+        size_frame = LabelFrame(selector_frame, text='Font Size')
+        size_frame.pack()
+        size_combo = Combobox(size_frame, takefocus=1, stat='readonly')
+        size_combo.pack()
+        size_combo['value'] = range(7, 23)
+        size_combo.current(0)
+        size_combo.bind('<<ComboboxSelected>>', self._on_size_select)
+        self.size_combo = size_combo
         
         # Font Sample
-        defaultFont = ('Courier', 10, tkFont.NORMAL)
-        sampleFrame = LabelFrame(self, text='Samples')
-        sampleFrame.pack(side=RIGHT, expand=YES, fill=Y)
-        sampleLabel = Label(sampleFrame, text='\tabcdefghij\t\n\tABCDEFGHIJ\t\n\t0123456789\t', font=defaultFont)
-        sampleLabel.pack(expand=YES)
-        self.sampleLabel = sampleLabel
+        default_font = ('Courier', 10, tkFont.NORMAL)
+        sample_frame = LabelFrame(self, text='Samples')
+        sample_frame.pack(side=RIGHT, expand=YES, fill=Y)
+        sample_label = Label(sample_frame, text='\tabcdefghij\t\n\tABCDEFGHIJ\t\n\t0123456789\t', font=default_font)
+        sample_label.pack(expand=YES)
+        self.sample_label = sample_label
         
-        self.face = defaultFont[0]
-        self.size = defaultFont[1]
-        sizeCombo.current(self.size - 7)
+        self.face = default_font[0]
+        self.size = default_font[1]
+        size_combo.current(self.size - 7)
         
     def _on_face_select(self, index, face):
-        size = self.sizeCombo.get()
+        size = self.size_combo.get()
         self._set_sample(face, size)
         
     def _on_size_select(self, event):
-        self._set_sample(self.face, self.sizeCombo.get())
+        self._set_sample(self.face, self.size_combo.get())
         
     def _set_sample(self, face, size):
         self.face = face
         self.size = size
-        self.sampleLabel.config(font=(self.face, self.size, tkFont.NORMAL))                            
+        self.sample_label.config(font=(self.face, self.size, tkFont.NORMAL))                            
             
 def ask_font():
     win = Toplevel()
@@ -699,7 +699,7 @@ class ComplexCanvas(Canvas, object):
         bbox    = (p1.real, p1.imag, p2.real, p2.imag)
         return self.create_line(*bbox, **options)
         
-    def complex_coords(self, itemID, p1=None, p2=None, radius=None, center=0.0):
+    def complex_coords(self, item_id, p1=None, p2=None, radius=None, center=0.0):
         if p1:
             p1      = p1 + self.center
             p2      = p2 + self.center
@@ -710,7 +710,7 @@ class ComplexCanvas(Canvas, object):
             p3      = center - delta
             p4      = center + delta
             bbox    = (p3.real, p3.imag, p4.real, p4.imag)
-        self.coords(itemID, *bbox)
+        self.coords(item_id, *bbox)
             
 
 class IQSlider(Frame, Observable):                
@@ -721,7 +721,7 @@ class IQSlider(Frame, Observable):
             self.__circle       = iq.canvas.create_oval(0, 0, 1, 1, outline='yellow')
             self.__xLine        = iq.canvas.create_line(0, 0, 1, 1, fill='cyan')
             self.__yLine        = iq.canvas.create_line(0, 0, 1, 1, fill='cyan')            
-            self.__textIQ       = iq.canvas.create_text((0, 0), anchor='se', fill='cyan', font=('Times New Roman',))
+            self.__iq_text       = iq.canvas.create_text((0, 0), anchor='se', fill='cyan', font=('Times New Roman',))
             self.__textPolar    = iq.canvas.create_text((0, 0), anchor='ne', fill='yellow', font=('Times New Roman',))
             self.__radius       = 3
             if not solid:
@@ -745,25 +745,25 @@ class IQSlider(Frame, Observable):
             iq.canvas.coords(self.__xLine, center.real-iq.radius, pos.imag, center.real+iq.radius, pos.imag)
             iq.canvas.coords(self.__yLine, pos.real, center.imag-iq.radius, pos.real, center.imag+iq.radius)
             
-            iMag    = (pos.real - center.real) / iq.radius * iq.i_range
-            qMag    = -(pos.imag - center.imag) / iq.radius * iq.q_range
+            i_magnitude    = (pos.real - center.real) / iq.radius * iq.i_range
+            q_magnitude    = -(pos.imag - center.imag) / iq.radius * iq.q_range
             
-            iq.canvas.itemconfig(self.__textIQ, text=u' I:{}, Q:{} '.format(int(iMag), int(qMag)))            
-            iq.canvas.coords(self.__textIQ, pos.real, pos.imag)
+            iq.canvas.itemconfig(self.__iq_text, text=u' I:{}, Q:{} '.format(int(i_magnitude), int(q_magnitude)))            
+            iq.canvas.coords(self.__iq_text, pos.real, pos.imag)
             
-            iq.canvas.itemconfig(self.__textPolar, text=u' A:{}, ϕ:{}° '.format(int(abs(iMag+1j*qMag)), int(360*math.atan2(qMag, iMag)/2/math.pi)))                        
+            iq.canvas.itemconfig(self.__textPolar, text=u' A:{}, ϕ:{}° '.format(int(abs(i_magnitude+1j*q_magnitude)), int(360*math.atan2(q_magnitude, i_magnitude)/2/math.pi)))                        
             iq.canvas.coords(self.__textPolar, pos.real, pos.imag)
             
             if (pos.imag - center.imag) * (pos.real - center.real) > 0:
-                anchorB     = 'sw'
-                anchorY     = 'ne'                
+                anchor_cart     = 'sw'
+                anchor_polar    = 'ne'                
             else:
-                anchorB     = 'se'
-                anchorY     = 'nw'
+                anchor_cart     = 'se'
+                anchor_polar    = 'nw'
                 
                 
-            iq.canvas.itemconfig(self.__textPolar, anchor=anchorY)
-            iq.canvas.itemconfig(self.__textIQ, anchor=anchorB)                
+            iq.canvas.itemconfig(self.__textPolar, anchor=anchor_polar)
+            iq.canvas.itemconfig(self.__iq_text, anchor=anchor_cart)                
             
             self.__active   = True
             
@@ -784,12 +784,12 @@ class IQSlider(Frame, Observable):
         canvas.grid(row=0, column=0, sticky='wens')
         canvas['bg']    = 'black'
 
-        self.__qSlider  = qSlider   = Scale(self, from_=q_range, to=-q_range, orient='vertical')
+        self.__q_slider  = q_slider   = Scale(self, from_=q_range, to=-q_range, orient='vertical')
 
-        qSlider.grid(row=0, column=1, sticky='e')
-        self.__iSlider  = iSlider   = Scale(self, from_=-i_range, to=i_range, orient='horizontal')        
+        q_slider.grid(row=0, column=1, sticky='e')
+        self.__i_slider  = i_slider   = Scale(self, from_=-i_range, to=i_range, orient='horizontal')        
 
-        iSlider.grid(row=1, column=0, sticky='s')
+        i_slider.grid(row=1, column=0, sticky='s')
         
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -801,7 +801,7 @@ class IQSlider(Frame, Observable):
         self.__radius   = 0
         self.__bbox     = None
         
-        self.__compMag  = 0 + 0j
+        self.__complex_magnitude  = 0 + 0j
         
         canvas.bind('<Configure>', self._on_resize)
         self.__borderBox    = canvas.create_rectangle(0, 0, 10, 10, outline='green')        
@@ -811,21 +811,21 @@ class IQSlider(Frame, Observable):
         self.__hLine        = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
         self.__dLine        = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
         self.__cdLine       = canvas.create_line(0, 0, 10, 10, fill='green', dash=[1, 2])
-        self.__scaleCircles = []
+        self.__scale_circles = []
         for k in range(60):
             if k % 5 == 0:
                 color   = 'gold'
             else:
                 color   = 'green'
-            self.__scaleCircles.append(canvas.create_oval(0, 0, 10, 10, fill=color))
+            self.__scale_circles.append(canvas.create_oval(0, 0, 10, 10, fill=color))
             
         self.__indicator1   = self.Indicator(self, solid=False)
         self.__indicator2   = self.Indicator(self)
         
         canvas.bind('<Motion>', self._on_mouse_move)
         canvas.bind('<Button-1>', self._on_click)
-        iSlider['command']  = self._on_iq_scale
-        qSlider['command']  = self._on_iq_scale
+        i_slider['command']  = self._on_iq_scale
+        q_slider['command']  = self._on_iq_scale
         
 
     @property
@@ -880,30 +880,30 @@ class IQSlider(Frame, Observable):
         canvas.complex_coords(self.__cdLine, p1=b1.conjugate(), p2=b2.conjugate())
                 
         exp     = cmath.exp
-        sR      = 3
-        delta   = 2 * math.pi / len(self.__scaleCircles)
+        __scale_circle_radius      = 3
+        delta   = 2 * math.pi / len(self.__scale_circles)
         
-        for index, circle in enumerate(self.__scaleCircles):
+        for index, circle in enumerate(self.__scale_circles):
             pos = radius * exp(1j * delta * index)
-            canvas.complex_coords(circle, center=pos, radius=sR)
+            canvas.complex_coords(circle, center=pos, radius=__scale_circle_radius)
             
         if self.__indicator2.active:
-            posX    = self.__compMag.real / self.__i_range * radius + center.real
-            posY    = -self.__compMag.imag / self.__q_range * radius + center.imag
-            self.__indicator2.set_pos(posX + 1j * posY)
+            pos_x    = self.__complex_magnitude.real / self.__i_range * radius + center.real
+            pos_y    = -self.__complex_magnitude.imag / self.__q_range * radius + center.imag
+            self.__indicator2.set_pos(pos_x + 1j * pos_y)
             
         if self.__indicator1.active:
-            posX    = self.__iSlider.get() / self.__i_range * radius + center.real
-            posY    = -self.__qSlider.get() / self.__q_range * radius + center.imag
-            self.__indicator1.set_pos(posX + 1j * posY)
+            pos_x    = self.__i_slider.get() / self.__i_range * radius + center.real
+            pos_y    = -self.__q_slider.get() / self.__q_range * radius + center.imag
+            self.__indicator1.set_pos(pos_x + 1j * pos_y)
         
         
     def _on_resize(self, event):
         pad     = self.__pad
         width, height   = event.width, event.height
         size                = min(width, height) - pad
-        self.__iSlider['length']   = size
-        self.__qSlider['length']   = size 
+        self.__i_slider['length']   = size
+        self.__q_slider['length']   = size 
         self.__radius   = radius    = size / 2 - pad
         self.__width    = width
         self.__height   = height
@@ -920,15 +920,15 @@ class IQSlider(Frame, Observable):
             absPos  = pos-self.center
             bbox    = self.bbox
             radius  = (bbox[2] - bbox[0]) / 2
-            self.__iSlider.set(int(absPos.real/radius*self.__i_range))
-            self.__qSlider.set(int(-absPos.imag/radius*self.__q_range))
+            self.__i_slider.set(int(absPos.real/radius*self.__i_range))
+            self.__q_slider.set(int(-absPos.imag/radius*self.__q_range))
             self.__indicator1.set_pos(pos)
             
     def _on_click(self, event):
         pos     = event.x + 1j * event.y
         if self.is_point_in_box(pos):
             self.__indicator2.set_pos(pos)
-            self.__compMag  = self.__iSlider.get() + 1j * self.__qSlider.get()
+            self.__complex_magnitude  = self.__i_slider.get() + 1j * self.__q_slider.get()
             
     def _on_iq_scale(self, val):
         self._redraw()

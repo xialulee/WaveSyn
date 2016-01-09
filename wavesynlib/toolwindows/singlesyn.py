@@ -38,9 +38,9 @@ class OptimizeGroup(Group):
         
       
         
-        paramFrm    = Frame(self)
-        paramFrm.pack(side=LEFT, expand=YES, fill=Y)
-        self.__num = ParamItem(paramFrm)
+        parameter_frame    = Frame(self)
+        parameter_frame.pack(side=LEFT, expand=YES, fill=Y)
+        self.__num = ParamItem(parameter_frame)
         set_attributes(self.__num,
             label_text   = 'num',
             entry_text   = '1',
@@ -53,7 +53,7 @@ class OptimizeGroup(Group):
 
      
 
-        self.__pci  = ParamItem(paramFrm)
+        self.__pci  = ParamItem(parameter_frame)
         set_attributes(self.__pci,
             label_text   = 'PCI',
             entry_text   = '100',
@@ -63,9 +63,9 @@ class OptimizeGroup(Group):
         )
         self.__pci.pack(side=TOP)
         
-        self.__bParallel    = IntVar()
-        self.__chkParallel  = Checkbutton(paramFrm, text="Parallel", variable=self.__bParallel)
-        self.__chkParallel.pack()
+        self.__parallel_checker_variable    = IntVar()
+        self.__parallel_checker  = Checkbutton(parameter_frame, text="Parallel", variable=self.__parallel_checker_variable)
+        self.__parallel_checker.pack()
         
         progfrm = Frame(self)
         progfrm.pack(side=LEFT, expand=YES, fill=Y)
@@ -74,11 +74,11 @@ class OptimizeGroup(Group):
         self.__genbtn.pack(side=TOP)  
         Button(progfrm, text='Stop', command=self._on_stop_button_click).pack(side=TOP)         
         
-        self.__progress = IntVar()
+        self.__progressbar_variable = IntVar()
         self.__finishedwav = IntVar()        
-        self.__progbar = Progressbar(progfrm, orient='horizontal', variable=self.__progress, maximum=100)
-        self.__progbar.pack(side=LEFT)
-        self.__progbar.config(length=55)   
+        self.__progressbar = Progressbar(progfrm, orient='horizontal', variable=self.__progressbar_variable, maximum=100)
+        self.__progressbar.pack(side=LEFT)
+        self.__progressbar.config(length=55)   
         self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav)
         self.__finishedwavbar.pack(side=LEFT)
         self.__finishedwavbar.config(length=30)  
@@ -91,16 +91,16 @@ class OptimizeGroup(Group):
         
     def _on_solve_click(self):
         t1  = time.clock()
-        if self.__bParallel.get():
+        if self.__parallel_checker_variable.get():
             self.parallel_run()
         else:
             self.serial_run()        
-        deltaT  = time.clock() - t1
-        print(auto_subs('Total time consumption: $deltaT (s)'))
+        delta_t  = time.clock() - t1
+        print(auto_subs('Total time consumption: $delta_t (s)'))
 
     def serial_run(self):
         app    = self._app
-        tbicon = app.tbicon
+        taskbar_icon = app.taskbar_icon
         self.__stopflag = False
         wavnum = self.__num.get_int()
         progress = [0]
@@ -108,7 +108,7 @@ class OptimizeGroup(Group):
 
         algorithm   = self.__topwin.current_algorithm          
 
-        params = self.__topwin.grpParams.get_parameters()
+        params = self.__topwin.parameter_group.get_parameters()
 
         if algorithm.need_cuda:
             class AlgoThread(object):
@@ -157,13 +157,13 @@ class OptimizeGroup(Group):
                 algothread.start()
     
                 while algothread.is_alive():
-                    self.__progress.set(progress[0])
-                    tbicon.progress = int((cnt*100+progress[0])/(wavnum*100)*100)
+                    self.__progressbar_variable.set(progress[0])
+                    taskbar_icon.progress = int((cnt*100+progress[0])/(wavnum*100)*100)
                     self.__topwin.update()
                     if self.__stopflag:
                         break
                     time.sleep(0.05)
-                self.__progress.set(0)
+                self.__progressbar_variable.set(0)
                 if self.__stopflag:
                     break
                 printCode   = True
@@ -172,7 +172,7 @@ class OptimizeGroup(Group):
         finally:
             algorithm.progress_checker.remove(progress_checker)
         self.__finishedwav.set(0)
-        tbicon.state = TBPFLAG.TBPF_NOPROGRESS
+        taskbar_icon.state = TBPFLAG.TBPF_NOPROGRESS
         
     def parallel_run(self):
         class AlgoThread(threading.Thread):
@@ -187,7 +187,7 @@ class OptimizeGroup(Group):
                 paramStr    = eval_format('[([], dict({Scripting.convert_args_to_str(**self.parameters)}))]*{self.num}')
                 self.algorithm.parallel_run_and_plot(ScriptCode(paramStr))
         algorithm   = self.__topwin.current_algorithm
-        parameters  = self.__topwin.grpParams.get_parameters()
+        parameters  = self.__topwin.parameter_group.get_parameters()
         theThread   = AlgoThread(algorithm, parameters, self.__num.get_int())
         theThread.start()
         while theThread.is_alive():
@@ -312,21 +312,21 @@ class SingleWindow(FigureWindow):
         figure_book  = self.figure_book
         
         frmAlgo = Frame(tool_tabs)
-        grpAlgoSel  = AlgoSelGroup(frmAlgo, topwin=self)
-        grpAlgoSel.pack(side=LEFT, fill=Y)
+        algorithm_selection_group  = AlgoSelGroup(frmAlgo, topwin=self)
+        algorithm_selection_group.pack(side=LEFT, fill=Y)
         
-        grpParams   = ParamsGroup(frmAlgo, topwin=self)
-        grpParams.pack(side=LEFT, fill=Y)
+        parameter_group   = ParamsGroup(frmAlgo, topwin=self)
+        parameter_group.pack(side=LEFT, fill=Y)
         
-        grpSolve    = OptimizeGroup(frmAlgo, topwin=self)
-        grpSolve.pack(side=LEFT, fill=Y)
+        solve_group    = OptimizeGroup(frmAlgo, topwin=self)
+        solve_group.pack(side=LEFT, fill=Y)
         tool_tabs.add(frmAlgo, text='Algorithm')
         
         with self.attribute_lock:
             set_attributes(self,
-                grpAlgoSel  = grpAlgoSel,
-                grpParams   = grpParams,
-                grpSolve    = grpSolve                         
+                algorithm_selection_group  = algorithm_selection_group,
+                parameter_group   = parameter_group,
+                solve_group    = solve_group                         
             )
         
 
@@ -351,15 +351,15 @@ class SingleWindow(FigureWindow):
         for algo in algorithms:
             self.load_algorithm(module_name=algo['ModuleName'], class_name=algo['ClassName'])
 
-        self.grpAlgoSel.algorithm_list.current(len(algorithms)-1)
+        self.algorithm_selection_group.algorithm_list.current(len(algorithms)-1)
         
-        figEnvelope = figure_book[0]
-        figEnvelope.plot_function  = lambda current_data, *args, **kwargs:\
-            figEnvelope.plot(abs(current_data), *args, **kwargs)
+        envelope_figure = figure_book[0]
+        envelope_figure.plot_function  = lambda current_data, *args, **kwargs:\
+            envelope_figure.plot(abs(current_data), *args, **kwargs)
         
-        figPhase    = figure_book[1]
-        figPhase.plot_function   = lambda current_data, *args, **kwargs:\
-            figPhase.plot(angle(current_data), *args, **kwargs)
+        phase_figure    = figure_book[1]
+        phase_figure.plot_function   = lambda current_data, *args, **kwargs:\
+            phase_figure.plot(angle(current_data), *args, **kwargs)
             
         def plot_acdb(current_data, *args, **kwargs):
             s   = current_data
@@ -369,35 +369,35 @@ class SingleWindow(FigureWindow):
             ac      = convolve(s, conj(s[::-1]))
             acdb    = 20*log10(abs(ac))
             acdb    = acdb - max(acdb)
-            figAuto.plot(r_[(-N+1):N], acdb, *args, **kwargs)            
+            autocorrelatino_figure.plot(r_[(-N+1):N], acdb, *args, **kwargs)            
             
-        figAuto     = figure_book[2]
-        figAuto.plot_function    = plot_acdb
+        autocorrelatino_figure     = figure_book[2]
+        autocorrelatino_figure.plot_function    = plot_acdb
             
-        figPSD      = figure_book[3]
-        figPSD.plot_function     = lambda current_data, *args, **kwargs:\
-            figPSD.plot(abs(fft.fft(current_data)), *args, **kwargs)
+        psd_figure      = figure_book[3]
+        psd_figure.plot_function     = lambda current_data, *args, **kwargs:\
+            psd_figure.plot(abs(fft.fft(current_data)), *args, **kwargs)
             
     
     @Scripting.printable        
     def load_algorithm(self, module_name, class_name):
         node    = AlgorithmNode(module_name, class_name)
         self.algorithms.add(node)
-        values  = self.grpAlgoSel.algorithm_list['values']
+        values  = self.algorithm_selection_group.algorithm_list['values']
         if values == '':
             values  = []
         if isinstance(values, tuple):
             values  = list(values)
         values.append(node['name'])
-        self.grpAlgoSel.algorithm_list['values']  = values
-        self.grpAlgoSel.algorithm_list.current(len(values)-1)
-        self.grpParams.append_algorithm(node)
+        self.algorithm_selection_group.algorithm_list['values']  = values
+        self.algorithm_selection_group.algorithm_list.current(len(values)-1)
+        self.parameter_group.append_algorithm(node)
 
         
     def change_algorithm(self, algorithmName):
-        self.grpParams.change_algorithm(algorithmName)        
+        self.parameter_group.change_algorithm(algorithmName)        
         
     @property
     def current_algorithm(self):
-        return self.algorithms[self.grpAlgoSel.algorithm_list.get()]
+        return self.algorithms[self.algorithm_selection_group.algorithm_list.get()]
             

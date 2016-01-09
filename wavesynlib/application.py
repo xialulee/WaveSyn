@@ -188,22 +188,22 @@ wavesyn
         with self.attribute_lock:
             set_attributes(self,
                 # UI elements
-                root                = root,        
-                balloon             = Tix.Balloon(root),
-                tbicon              = TaskbarIcon(root),
+                root                    = root,        
+                balloon                 = Tix.Balloon(root),
+                taskbar_icon            = TaskbarIcon(root),
                 # End UI elements
                 
-                main_thread_id        = main_thread_id,
-                exec_thread_lock      = threading.RLock(),
-                xmlrpc_command_slot   = CommandSlot(),
+                main_thread_id          = main_thread_id,
+                exec_thread_lock        = threading.RLock(),
+                xmlrpc_command_slot     = CommandSlot(),
 
-                langCenter          = LangCenterNode(),
+                langCenter              = LangCenterNode(),
             
                 # Validation Functions
-                value_checker        = value_checker,
-                check_int            = value_checker.check_int,
-                check_float          = value_checker.check_float,
-                check_positive_float  = value_checker.check_positive_float,
+                value_checker           = value_checker,
+                check_int               = value_checker.check_int,
+                check_float             = value_checker.check_float,
+                check_positive_float    = value_checker.check_positive_float,
                 # End Validation Functions
                 
                 file_path    = file_path,

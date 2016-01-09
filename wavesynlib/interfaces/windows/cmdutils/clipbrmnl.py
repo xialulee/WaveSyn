@@ -12,7 +12,7 @@ from   cStringIO import StringIO
 
 def main(argv):
     stream  = StringIO()
-    clipb.clipb2stream(stream, mode='t', code='@', null=False)
+    clipb.clipboard_to_stream(stream, mode='t', code='@', null=False)
     stream.seek(0)
     string  = stream.read()
     temp    = re.sub(r'(?<=[^ ])\n', ' \n', string)
@@ -20,7 +20,7 @@ def main(argv):
     stream  = StringIO()
     stream.write(string)
     stream.seek(0)
-    clipb.stream2clipb(stream, mode='t', code='@', tee=None, null=False)
+    clipb.stream_to_clipboard(stream, mode='t', code='@', tee=None, null=False)
     
 
 if __name__ == '__main__':

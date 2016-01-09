@@ -39,7 +39,7 @@ if platform.system().lower() == 'windows':
                 stream  = StringIO()
                 stream.write(content)
                 stream.seek(0)
-                clipb.stream2clipb(stream, fmt, code, None, None)
+                clipb.stream_to_clipboard(stream, fmt, code, None, None)
                 
         @Scripting.printable
         def to_console_qr(self):

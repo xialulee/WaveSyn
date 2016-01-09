@@ -84,10 +84,10 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
             else:
                 self.__matlab_object.handle.PutWorkspaceData(name, self.__name_space, value)
     
-    progID  = 'matlab.application'
+    matlab_program_id  = 'matlab.application'
     
     def __init__(self):
-        self.__handle               = client.CreateObject(self.progID)
+        self.__handle               = client.CreateObject(self.matlab_program_id)
         self.__base                 = self.NameSpace(self, 'base')
         self.__global               = self.NameSpace(self, 'global')
         self.__type_converter        = {}

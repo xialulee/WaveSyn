@@ -13,13 +13,13 @@ class Observable(object):
     def add_observer(self, observer):
         self.__observers.append(observer)
         
-    def deleteObserver(self, observer):
+    def delete_observer(self, observer):
         self.__observers.remove(observer)
         
-    def deleteObservers(self):
+    def delete_all_observers(self):
         self.__observers    = []
         
-    def countObservers(self):
+    def count_observers(self):
         return len(self.__observers)
         
     def notify_observers(self, *args, **kwargs):

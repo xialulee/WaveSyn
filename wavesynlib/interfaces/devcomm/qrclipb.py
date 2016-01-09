@@ -11,7 +11,7 @@ import platform
 from cStringIO import StringIO
 
 if platform.system() == 'Windows':
-    from wavesynlib.interfaces.windows.clipb import clipb2stream
+    from wavesynlib.interfaces.windows.clipb import clipboard_to_stream
     
 import sys    
 import getopt
@@ -36,7 +36,7 @@ def main(argv):
         
         
     stream = StringIO()
-    clipb2stream(stream, None, code, None)
+    clipboard_to_stream(stream, None, code, None)
     stream.seek(0)
     origStdin = sys.stdin
     sys.stdin = stream

@@ -64,6 +64,6 @@ class StreamManager(Observable):
         try:
             while True:
                 stream_type, content = self.queue.get_nowait()
-                self.notifyObservers(stream_type, content)
+                self.notify_observers(stream_type, content)
         except Queue.Empty:
             pass

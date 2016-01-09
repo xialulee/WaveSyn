@@ -36,7 +36,7 @@ from psd_tools  import PSDImage
 # --2015.03.13 PM 04:05 Modified by xialulee--
 #   add --html option. Now support writing HTML string to clipboard.
 # --2015.09.18 PM 02:28 Modified by xialulee--
-#   add new function clipbToImageFilePath which can read image in clipboard and write it into a file. 
+#   add new function clipboard_to_image_file which can read image in clipboard and write it into a file. 
 #   imageFileToClip now support photoshop .PSD file. 
 # 
 # --xialulee--
@@ -45,7 +45,7 @@ ERROR_NOERROR, ERROR_PARAM, ERROR_CLIPB, ERROR_IMAGE = range(4)
 NEWLINE = re.compile(r'(?<!\r)\n')
 CF_HTML = win32clipboard.RegisterClipboardFormat('HTML Format')
 
-def clipb2stream(stream, mode, code, null):
+def clipboard_to_stream(stream, mode, code, null):
     exitcode = ERROR_NOERROR
     win32clipboard.OpenClipboard(0)
     try:
@@ -66,7 +66,7 @@ def clipb2stream(stream, mode, code, null):
     win32clipboard.CloseClipboard()
     return exitcode
 
-def stream2clipb(stream, mode, code, tee, null):
+def stream_to_clipboard(stream, mode, code, tee, null):
     exitcode = ERROR_NOERROR
     #s = sys.stdin.read()
     s = stream.read()
@@ -85,26 +85,26 @@ def stream2clipb(stream, mode, code, tee, null):
     win32clipboard.OpenClipboard(0)
     win32clipboard.EmptyClipboard()        
     if mode == 'html':
-        templateHead    = '''Version:0.9
+        template_head    = '''Version:0.9
 StartHTML:{0: 13d}
 EndHTML:{1: 13d}
 StartFragment:{2: 13d}
 EndFragment:{3: 13d}
 <HTML>
 <BODY>'''
-        templateTail    = '</BODY></HTML>'
-        templateLen     = 125
+        template_tail    = '</BODY></HTML>'
+        template_length     = 125
         s   = s.encode('utf-8')
         if len(s) >  9999999999860:
             raise Exception('content too long.')
-        templateHead    = templateHead.format(
-                templateLen-13,
-                templateLen+len(s)+14,
-                templateLen,
-                templateLen+len(s)
+        template_head    = template_head.format(
+                template_length-13,
+                template_length+len(s)+14,
+                template_length,
+                template_length+len(s)
         )
-        htmlStr         = ''.join((templateHead, s, templateTail))
-        win32clipboard.SetClipboardData(CF_HTML, htmlStr)
+        html_string         = ''.join((template_head, s, template_tail))
+        win32clipboard.SetClipboardData(CF_HTML, html_string)
     else: # not html
         if code:
             win32clipboard.SetClipboardData(win32clipboard.CF_UNICODETEXT, s)
@@ -114,11 +114,11 @@ EndFragment:{3: 13d}
     return exitcode
 
 
-def imageFileToClipb(fileObj, isPSD=False):
+def image_file_to_clipboard(fileObj, is_psd=False):
     '''Read an image file and write the image data into clipboard.
 See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
 '''
-    if isPSD:
+    if is_psd:
         psd     = PSDImage.from_stream(fileObj)
         image   =psd.as_PIL()
     else:
@@ -135,7 +135,7 @@ See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-
         win32clipboard.CloseClipboard()
         
         
-def clipbToImageFilePath(file_path):
+def clipboard_to_image_file(file_path):
     image   = ImageGrab.grabclipboard()
     if image:
         image.save(file_path)
@@ -225,21 +225,21 @@ def main():
 
     if rw == 'r':
         if im:
-            if clipbToImageFilePath(filename) is False:
+            if clipboard_to_image_file(filename) is False:
                 exitcode = ERROR_IMAGE
             else:
                 exitcode = ERROR_NOERROR
         else:
-            exitcode    = clipb2stream(sys.stdout, mode, code, null)
+            exitcode    = clipboard_to_stream(sys.stdout, mode, code, null)
         sys.exit(exitcode)
     elif rw == 'w':
         if im:
-            isPSD = True if os.path.splitext(filename)[-1].lower() == '.psd' else False
+            is_psd = True if os.path.splitext(filename)[-1].lower() == '.psd' else False
             with open(filename, 'rb') as f:
-                imageFileToClipb(f, isPSD)
+                image_file_to_clipboard(f, is_psd)
             exitcode    = ERROR_NOERROR
         else:
-            exitcode    = stream2clipb(sys.stdin, mode, code, tee, null)
+            exitcode    = stream_to_clipboard(sys.stdin, mode, code, tee, null)
         sys.exit(exitcode)
     else:
         sys.stderr.write('Clipb-Error: Error parameter\n')

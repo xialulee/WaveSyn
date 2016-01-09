@@ -116,8 +116,8 @@ class CAFWindow(FigureWindow):
         frmCAF = Frame(tool_tabs)
         grpLoad = LoadGroup(frmCAF, topwin = self)
         grpLoad.pack(side=LEFT, fill=Y)
-        grpColormap     = ColormapGroup(frmCAF, topwin=self)
-        grpColormap.pack(side=LEFT, fill=Y)
+        colormap_group     = ColormapGroup(frmCAF, topwin=self)
+        colormap_group.pack(side=LEFT, fill=Y)
         tool_tabs.add(frmCAF, text='CAF')
             # } End data tab
         
