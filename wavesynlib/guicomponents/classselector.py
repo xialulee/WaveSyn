@@ -20,71 +20,71 @@ from wavesynlib.guicomponents.tk import ScrolledTree
 
 
 class ClassSelector(object):        
-    def __init__(self, packageName, baseClass, displayBaseClass=False):
-        self.__packageName = packageName
-        self.__baseClass = baseClass
-        self.__displayBaseClass = displayBaseClass
+    def __init__(self, package_name, base_class, display_base_class=False):
+        self.__package_name = package_name
+        self.__base_class = base_class
+        self.__display_base_class = display_base_class
         self.__window = window = Toplevel()
         window.title('Class Selector')
-        self.__selectedClassName = ''
-        self.__selectedModuleName = ''
+        self.__selected_class_name = ''
+        self.__selected_module_name = ''
         
         self.__tree = tree = ScrolledTree(window)
         tree.pack()
-        classes = self.loadModules()
+        classes = self.load_modules()
         for package in classes:
             packageNode = tree.insert('', END, text=package)
-            for className in classes[package]:
-                tree.insert(packageNode, END, text=className, values=package)
+            for class_name in classes[package]:
+                tree.insert(packageNode, END, text=class_name, values=package)
                 
-        buttonFrame = Frame(window)
-        buttonFrame.pack()
-        def onClick(moduleName, className):
-            self.__selectedModuleName   = moduleName
-            self.__selectedClassName    = className
+        button_frame = Frame(window)
+        button_frame.pack()
+        def _on_click(module_name, class_name):
+            self.__selected_module_name   = module_name
+            self.__selected_class_name    = class_name
             window.destroy()
-        cancelBtn = Button(buttonFrame, text='Cancel', command=lambda: onClick('', ''))
-        cancelBtn.pack(side=RIGHT)
-        okBtn     = Button(
-            buttonFrame, 
+        cancel_button = Button(button_frame, text='Cancel', command=lambda: _on_click('', ''))
+        cancel_button.pack(side=RIGHT)
+        ok_button     = Button(
+            button_frame, 
             text='OK', 
-            command=lambda: onClick(
+            command=lambda: _on_click(
                 tree.item(tree.selection(), 'values')[0],
                 tree.item(tree.selection(), 'text')
             )
         )
-        okBtn.pack(side=RIGHT)
+        ok_button.pack(side=RIGHT)
         
-    def doModel(self):
+    def do_model(self):
         win = self.__window
         win.focus_set()
         win.grab_set()
         win.wait_window() 
-        return self.__selectedModuleName, self.__selectedClassName
+        return self.__selected_module_name, self.__selected_class_name
         
-    def loadModules(self):
+    def load_modules(self):
         retval = {}
-        package = importlib.import_module(self.__packageName)
-        packagePath = os.path.split(package.__file__)[0]
-        for item in os.listdir(packagePath):
-            fileName = item.split('.')            
-            if fileName[-1] == 'py':
-                mod = importlib.import_module('.'.join((self.__packageName, fileName[0])))
-                modItemNames = dir(mod)
-                for modItemName in modItemNames:
-                    modItem = getattr(mod, modItemName)
-                    if isinstance(modItem, type) and issubclass(modItem, self.__baseClass):
-                        if not self.__displayBaseClass and modItem is self.__baseClass:
+        package = importlib.import_module(self.__package_name)
+        package_path = os.path.split(package.__file__)[0]
+        for item in os.listdir(package_path):
+            filename = item.split('.')            
+            if filename[-1] == 'py':
+                mod = importlib.import_module('.'.join((self.__package_name, filename[0])))
+                mod_item_names = dir(mod)
+                for mod_item_name in mod_item_names:
+                    mod_item = getattr(mod, mod_item_name)
+                    if isinstance(mod_item, type) and issubclass(mod_item, self.__base_class):
+                        if not self.__display_base_class and mod_item is self.__base_class:
                             continue
                         if mod.__name__ not in retval:
                             retval[mod.__name__] = []
-                        retval[mod.__name__].append(modItemName)
+                        retval[mod.__name__].append(mod_item_name)
         return retval
                 
 
-def askClassName(packageName, baseClass):
-    filePath    = inspect.getsourcefile(ClassSelector)
-    p           = sp.Popen(['python', filePath, packageName, baseClass.__module__, baseClass.__name__], stdout=sp.PIPE);
+def ask_class_name(package_name, base_class):
+    file_path    = inspect.getsourcefile(ClassSelector)
+    p           = sp.Popen(['python', file_path, package_name, base_class.__module__, base_class.__name__], stdout=sp.PIPE);
     stdout, stderr  = p.communicate()
     return stdout.strip().split()
     
@@ -92,46 +92,46 @@ def askClassName(packageName, baseClass):
 
 # Use multiprocessing for creating nonblocking ClassSelector dialog.
 # However, it seems that multiprocessing will copy the parent process (not only the selector poped out, but also another a new wavesyn console came out).
-# So, createProcess is not used.
+# So, create_process is not used.
 # Maybe later I'll figure out how to solve this problem.
 class ClassSelectorProcess(object):
-    def __init__(self, process, parentConn):
+    def __init__(self, process, parent_conn):
         self.process        = process
-        self.parentConn     = parentConn
+        self.parent_conn     = parent_conn
         
     def start(self):
         return self.process.start()
         
-    def isAlive(self):
+    def is_alive(self):
         return self.process.is_alive()
     
     @property    
-    def returnValue(self):
-        if self.isAlive():
+    def return_value(self):
+        if self.is_alive():
             raise Exception('ClassSelector process is still running.')
-        return self.parentConn.recv()
+        return self.parent_conn.recv()
 
-def classSelectorProcess(conn, args, kwargs):
-    conn.send(ClassSelector(*args, **kwargs).doModel())
+def selector_procedure(conn, args, kwargs):
+    conn.send(ClassSelector(*args, **kwargs).do_model())
     
-def createProcess(*args, **kwargs): 
-    parentConn, childConn   = mp.Pipe()
-    process     = mp.Process(target=classSelectorProcess, args=(childConn, args, kwargs))        
-    return ClassSelectorProcess(process, parentConn)
+def create_process(*args, **kwargs): 
+    parent_conn, child_conn   = mp.Pipe()
+    process     = mp.Process(target=selector_procedure, args=(child_conn, args, kwargs))        
+    return ClassSelectorProcess(process, parent_conn)
 # End
 
         
         
 if __name__ == '__main__':
-    packageName     = sys.argv[1]
-    moduleName      = sys.argv[2]
-    baseClassName   = sys.argv[3]
-    mod             = importlib.import_module(moduleName)
-    baseClassObj    = getattr(mod, baseClassName)
+    package_name        = sys.argv[1]
+    module_name         = sys.argv[2]
+    base_class_name      = sys.argv[3]
+    mod                 = importlib.import_module(module_name)
+    base_class_object   = getattr(mod, base_class_name)
     root = Tk()
     root.withdraw()
-    classSel = ClassSelector(packageName, baseClassObj) 
-    for s in classSel.doModel():
+    class_selector = ClassSelector(package_name, base_class_object) 
+    for s in class_selector.do_model():
         print s
     
         

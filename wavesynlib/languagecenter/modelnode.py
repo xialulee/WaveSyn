@@ -15,6 +15,6 @@ class LangCenterNode(ModelNode):
         
     @Scripting.printable
     def connectMatlab(self):
-        with self.attributeLock:
+        with self.attribute_lock:
             self.matlab     = MatlabServerNode()
             self.matlab.connectServer()

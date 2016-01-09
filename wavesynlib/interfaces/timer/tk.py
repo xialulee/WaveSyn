@@ -17,15 +17,15 @@ class TkTimer(BaseObservableTimer):
             
             Toplevel.__init__(self, *args, **kwargs)
             interval    = ParamItem(self)
-            interval.labelText  = 'Interval (ms)'
-            interval.entryText  = str(timer.interval)
-            interval.entryWidth = 5
+            interval.label_text  = 'Interval (ms)'
+            interval.entry_text  = str(timer.interval)
+            interval.entry_width = 5
             interval.pack(side=TOP)
             self.interval   = interval
             
             self.active   = IntVar(timer.active)
-            Checkbutton(self, text='Activate', variable=self.active, command=self.onActivateClick).pack(side=TOP)
-            Button(self, text='OK', command=self.onOKClick).pack(side=TOP)
+            Checkbutton(self, text='Activate', variable=self.active, command=self._on_active_button_click).pack(side=TOP)
+            Button(self, text='OK', command=self._on_ok_button_click).pack(side=TOP)
             
             def hide(): self.visible    = False
             self.protocol('WM_DELETE_WINDOW', hide)
@@ -33,11 +33,11 @@ class TkTimer(BaseObservableTimer):
             self.__visible  = True
             self.visible = False
 
-        def onActivateClick(self):
+        def _on_active_button_click(self):
             self.__timer.active = self.active.get()
             
-        def onOKClick(self):
-            self.__timer.interval   = self.interval.getInt()
+        def _on_ok_button_click(self):
+            self.__timer.interval   = self.interval.get_int()
          
         @property    
         def visible(self):
@@ -61,17 +61,17 @@ class TkTimer(BaseObservableTimer):
             widget  = self.ConfigDialog(timer=self)
         self.__widget   = widget        
         
-    def showConfigDialog(self, visible=True):
+    def show_config_dialog(self, visible=True):
         if not isinstance(self.__widget, self.ConfigDialog):
             raise TypeError('This TkTimer does not have a config dialog.')
         config  = self.__widget
         config.visible  = visible
         
         
-    def __timerFunc(self):
+    def __timer_callback(self):
         if self.active:
-            self.notifyObservers()
-            self.__widget.after(self.interval, self.__timerFunc)
+            self.notify_observers()
+            self.__widget.after(self.interval, self.__timer_callback)
         
 
     @property
@@ -81,7 +81,7 @@ class TkTimer(BaseObservableTimer):
     @interval.setter
     def interval(self, val):
         if isinstance(self.__widget, self.ConfigDialog):
-            self.__widget.interval.entryText    = str(val)
+            self.__widget.interval.entry_text    = str(val)
         self.__interval = val
     
     @property
@@ -95,6 +95,6 @@ class TkTimer(BaseObservableTimer):
         if isinstance(self.__widget, self.ConfigDialog):        
             self.__widget.active.set(val)
         if val and not lastVal:
-            self.__timerFunc()
+            self.__timer_callback()
     
     

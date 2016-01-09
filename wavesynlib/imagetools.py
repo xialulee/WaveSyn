@@ -53,7 +53,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 class ImageFrame(Frame, object):
     def __init__(self, master):
         super(ImageFrame, self).__init__(master)
-        figure = Figure(figsize=(5,4), dpi=100)
+        figure = Figure((5,4), dpi=100)
         self.figure = figure
         canvas = FigureCanvasTkAgg(figure, master=master)
         canvas.show()

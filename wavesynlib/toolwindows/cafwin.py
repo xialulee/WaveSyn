@@ -15,7 +15,6 @@ from scipy.io import loadmat
 import numpy as np
 import matplotlib.pyplot as plt
 
-#from wavesynlib.application import Application
 from wavesynlib.basewindow import FigureWindow
 from wavesynlib.guicomponents.tk import Group, ParamItem
 from wavesynlib.algorithms import ambiguityfunction
@@ -28,31 +27,31 @@ class LoadGroup(Group):
         Group.__init__(self, *args, **kwargs)
         Button(self, text='Load *.mat', command=self.onLoadClick).pack()
         paramX = ParamItem(self)
-        paramX.labelText = 'x = '
-        paramX.entryWidth = 6
+        paramX.label_text = 'x = '
+        paramX.entry_width = 6
         paramX.pack()
         self.__paramX = paramX
         paramY = ParamItem(self)
-        paramY.labelText = 'y = '
-        paramY.entryWidth = 6
+        paramY.label_text = 'y = '
+        paramY.entry_width = 6
         paramY.pack()
         self.__paramY = paramY
         self.name = 'Load'
         
     def onLoadClick(self):
         dialogParam = {'filetypes':[('Matlab', '.mat')]}
-        fileName = askopenfilename(**dialogParam)
-        if not fileName:
+        filename = askopenfilename(**dialogParam)
+        if not filename:
             return
-        matData = loadmat(fileName)
+        matData = loadmat(filename)
         xName = askstring('Variable Name', 'Enter the name of the 1st sequence:')
-        self.__paramX.entryText = xName
+        self.__paramX.entry_text = xName
         x = matData[xName].flatten()
         yName = askstring('Variable Name', 'Enter the name of the 2nd sequence:')
         y = matData[yName].flatten()
-        self.__paramY.entryText = yName
+        self.__paramY.entry_text = yName
         dcaf = np.abs(ambiguityfunction.discaf(x, y))
-        self.__topwin.figureBook[0].drawImage(dcaf)
+        self.__topwin.figure_book[0].show_image(dcaf)
         self.__topwin.caf   = dcaf
         
         
@@ -102,7 +101,7 @@ class ColormapGroup(Group):
     def onApplyClick(self):
         caf      = self.__topwin.caf
         if caf is not None:
-            self.__topwin.figureBook[0].drawImage(caf, cmap=plt.get_cmap(self.__cmapList.get()))
+            self.__topwin.figure_book[0].show_image(caf, cmap=plt.get_cmap(self.__cmapList.get()))
             
         
         
@@ -112,23 +111,23 @@ class CAFWindow(FigureWindow):
     def __init__(self, *args, **kwargs):
         FigureWindow.__init__(self, *args, **kwargs)
         # The toolbar {
-        toolTabs = self.toolTabs
+        tool_tabs = self.tool_tabs
             # Data tab {
-        frmCAF = Frame(toolTabs)
+        frmCAF = Frame(tool_tabs)
         grpLoad = LoadGroup(frmCAF, topwin = self)
         grpLoad.pack(side=LEFT, fill=Y)
         grpColormap     = ColormapGroup(frmCAF, topwin=self)
         grpColormap.pack(side=LEFT, fill=Y)
-        toolTabs.add(frmCAF, text='CAF')
+        tool_tabs.add(frmCAF, text='CAF')
             # } End data tab
         
-        self.makeViewTab()
-        self.makeMarkerTab()
+        self.make_view_tab()
+        self.make_marker_tab()
         #} End toolbar
         
-        figureBook = self.figureBook
-        figureBook.makeFigures(
-            figureMeta=[
+        figure_book = self.figure_book
+        figure_book.make_figures(
+            figure_meta=[
                 {'name':'discrete-CAF', 'polar':False}
             ]
         )

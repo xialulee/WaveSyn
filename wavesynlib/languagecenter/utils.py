@@ -10,7 +10,7 @@ import sys
 import threading
 from string import Template, Formatter
 
-def autoSubs(template):
+def auto_subs(template):
     return Template(template).substitute(sys._getframe(1).f_locals)
     
     
@@ -33,7 +33,7 @@ class EvalFormatter(Formatter):
         return Formatter.format(self, format_string, *args, **kwargs)
                 
 
-def evalFmt(formatString):
+def eval_format(formatString):
     return EvalFormatter(level=2).format(formatString) 
 
 
@@ -42,13 +42,13 @@ def evalFmt(formatString):
 
 
 class MethodDelegator(object):
-    def __init__(self, attrName, methodName):
+    def __init__(self, attribute_name, method_name):
         super(MethodDelegator, self).__init__()
-        self.attrName   = attrName
-        self.methodName = methodName
+        self.attribute_name   = attribute_name
+        self.method_name = method_name
     
     def __get__(self, obj, type=None):
-        return getattr(getattr(obj, self.attrName), self.methodName)  
+        return getattr(getattr(obj, self.attribute_name), self.method_name)  
         
         
 class MethodLock(object):
@@ -61,15 +61,15 @@ class MethodLock(object):
         lock    = getattr(obj, self.__lockName)
         descriptor  = self.__descriptor
         if lock:
-            raise AttributeError, evalFmt('Method {descriptor.__name__} has been locked and cannot be called.')
+            raise AttributeError, eval_format('Method {descriptor.__name__} has been locked and cannot be called.')
         else:
             return self.__descriptor.__get__(obj, type)        
         
         
-def setMultiAttr(obj, **kwargs):
+def set_attributes(obj, **kwargs):
     '''This function mimics the VisualBasic "with" statement.'''    
-    for attrName in kwargs:
-        setattr(obj, attrName, kwargs[attrName])
+    for attribute_name in kwargs:
+        setattr(obj, attribute_name, kwargs[attribute_name])
         
 
 class ObjectWithLock(object):    
@@ -133,10 +133,10 @@ class Nonblocking(object):
     def isRunning(self):
         if self.__thread is None:
             return False
-        return self.__thread.isAlive()
+        return self.__thread.is_alive()
         
     @property
-    def returnValue(self):
+    def return_value(self):
         if self.isRunning():
             return None
         else:

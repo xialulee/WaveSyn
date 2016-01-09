@@ -10,30 +10,30 @@ import operator
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 from wavesynlib.application                  import Application
-from wavesynlib.languagecenter.utils         import evalFmt
+from wavesynlib.languagecenter.utils         import eval_format
 from wavesynlib.languagecenter.wavesynscript import Scripting, ScriptCode
 
 
 
 # Server End
 def getRootNodePath():
-    return Scripting.rootName
+    return Scripting.root_name
 
 
-def getitem(nodePath, index):
-    return Application.instance.execute(evalFmt('{nodePath}[{repr(index)}].nodePath'))
+def getitem(node_path, index):
+    return Application.instance.execute(eval_format('{node_path}[{repr(index)}].node_path'))
     # if repr is not used, the index of str type cannot be handled correctly.
 
-def getChildNodes(nodePath=Scripting.rootName):
-    return Application.instance.execute(evalFmt('{nodePath}.childNodes'))
+def getChildNodes(node_path=Scripting.root_name):
+    return Application.instance.execute(eval_format('{node_path}.child_nodes'))
     
-def getMethodDoc(nodePath, methodName):
-    doc = Application.instance.execute(evalFmt('{nodePath}.{methodName}.__doc__'))    
+def getMethodDoc(node_path, method_name):
+    doc = Application.instance.execute(eval_format('{node_path}.{method_name}.__doc__'))    
     return '' if doc is None else doc
     
-def getMethods(nodePath=Scripting.rootName):
+def getMethods(node_path=Scripting.root_name):
     execute = Application.instance.execute
-    nodeObj = execute(nodePath)
+    nodeObj = execute(node_path)
     mro     = type(nodeObj).__mro__
     return list(set(
         reduce(
@@ -43,15 +43,15 @@ def getMethods(nodePath=Scripting.rootName):
         )
     ))    
         
-def getRepr(nodePath=Scripting.rootName):
-    return Application.instance.execute(evalFmt('{nodePath}.__repr__()'))
+def getRepr(node_path=Scripting.root_name):
+    return Application.instance.execute(eval_format('{node_path}.__repr__()'))
   
 
 class CommandSlot(object):
     def __init__(self):
         self.__threadLock   = thread.allocate_lock()
         self.__command      = None
-        self.__returnVal    = None
+        self.__return_value    = None
         
     @property
     def command(self):
@@ -69,22 +69,22 @@ class CommandSlot(object):
             break
         
     @property
-    def returnVal(self):
+    def return_value(self):
         while True:            
             with self.__threadLock:                
-                if self.__returnVal is not None:
-                    ret = self.__returnVal
-                    self.__returnVal    = None
+                if self.__return_value is not None:
+                    ret = self.__return_value
+                    self.__return_value    = None
                     return ret
                     
-    @returnVal.setter
-    def returnVal(self, val):
+    @return_value.setter
+    def return_value(self, val):
         with self.__threadLock:
-            self.__returnVal    = val
+            self.__return_value    = val
     
 
   
-def callMethod(nodePath, methodName, args, kwargs):
+def callMethod(node_path, method_name, args, kwargs):
     app = Application.instance
     codeFeature = 'wavesyn_xmlrpcclient_scripting_code'
     args    = [ScriptCode(arg[codeFeature]) if isinstance(arg, dict) and arg.has_key(codeFeature) else arg for arg in args]
@@ -92,15 +92,15 @@ def callMethod(nodePath, methodName, args, kwargs):
         val = kwargs[key]
         if isinstance(val, dict) and val.has_key(codeFeature):
             kwargs[key] = ScriptCode(val[codeFeature])
-    app.xmlrpcCommandSlot.command   = (nodePath, methodName, args, kwargs)
-    ret, err = app.xmlrpcCommandSlot.returnVal
+    app.xmlrpc_command_slot.command   = (node_path, method_name, args, kwargs)
+    ret, err = app.xmlrpc_command_slot.return_value
     if err is not None:
         raise err
     return 0 if ret is None else ret
     
         
 
-def startXMLRPCServer(addr='localhost', port=8000):        
+def start_xmlrpc_server(addr='localhost', port=8000):        
     server = SimpleXMLRPCServer((addr, port))
     functions   = [
         getRootNodePath,

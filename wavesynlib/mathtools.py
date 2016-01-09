@@ -7,7 +7,7 @@ import importlib
 
 import abc
 
-from wavesynlib.languagecenter.utils         import evalFmt
+from wavesynlib.languagecenter.utils         import eval_format
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 from wavesynlib.basewindow                   import WindowComponent
 
@@ -66,7 +66,7 @@ the code can be simplified a lot.
             y_last  = f(x)
             for k in range(1, n):
                 y   = f(y_last)
-                if newOp.progressChecker(k, n, y, y_last):
+                if newOp.progress_checker(k, n, y, y_last):
                     break
                 if newOp.iterThreshold > 0 and dist(y, y_last) <= newOp.iterThreshold:
                     break
@@ -176,7 +176,7 @@ class Algorithm(object):
     __name__        = None
     
     def __init__(self):
-        self.__progressChecker    = ProgressChecker()
+        self.__progress_checker    = ProgressChecker()
     
     def __call__(self, *args, **kwargs):
         pass
@@ -185,8 +185,8 @@ class Algorithm(object):
         pass
     
     @property
-    def progressChecker(self):
-        return self.__progressChecker
+    def progress_checker(self):
+        return self.__progress_checker
 
 
 class AlgorithmNode(ModelNode, WindowComponent):
@@ -200,17 +200,17 @@ class AlgorithmNode(ModelNode, WindowComponent):
     __parameters__      = None
     __name__            = None
 
-    def __init__(self, moduleName, className):
+    def __init__(self, module_name, class_name):
         super(AlgorithmNode, self).__init__()
-        mod = importlib.import_module(moduleName)
-        algorithm   = getattr(mod, className)()
+        mod = importlib.import_module(module_name)
+        algorithm   = getattr(mod, class_name)()
         self.__cuda = True if hasattr(algorithm, '__CUDA__') and algorithm.__CUDA__ else False
         self.__meta = self.Meta()
-        self.__meta.moduleName  = moduleName
-        self.__meta.className   = className
+        self.__meta.module_name  = module_name
+        self.__meta.class_name   = class_name
         self.__meta.name    = algorithm.__name__
         self.__algorithm    = algorithm
-        self.__topWindow    = None
+        self.__top_window    = None
         
         if algorithm.__parameters__:
             for item in algorithm.__parameters__:
@@ -225,7 +225,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
         return getattr(self.__meta, key)
 
     @property
-    def needCUDA(self):
+    def need_cuda(self):
         return self.__cuda
 
     @property
@@ -233,38 +233,38 @@ class AlgorithmNode(ModelNode, WindowComponent):
         return self.__meta
         
     @property
-    def progressChecker(self):
-        return self.__algorithm.progressChecker
+    def progress_checker(self):
+        return self.__algorithm.progress_checker
 
                     
     @Scripting.printable
     def run(self, *args, **kwargs):
         result  = self.__algorithm(*args, **kwargs)
-        self.topWindow.currentData  = result    
+        self.top_window.current_data  = result    
         
                         
     @property
-    def nodePath(self):
+    def node_path(self):
         if isinstance(self.parentNode, AlgorithmDict):
-            return evalFmt('{self.parentNode.nodePath}["{self.meta.name}"]')
+            return eval_format('{self.parentNode.node_path}["{self.meta.name}"]')
         else:
-            return ModelNode.nodePath
+            return ModelNode.node_path
             
     def presetParams(self, params):
         self.__algorithm.presetParams(params)
 
 ##############################Experimenting with multiprocessing###################################
     @Scripting.printable
-    def parallelRunAndPlot(self, allArguments):     
+    def parallel_run_and_plot(self, allArguments):     
         queue   = mp.Queue()
         for args, kwargs in allArguments:
             mp.Process(target=parallelFunc, args=(type(self.__algorithm), queue, args, kwargs)).start()
         for k in range(len(allArguments)):
-            self.topWindow.currentData  = queue.get()
-            self.topWindow.plotCurrentData()
+            self.top_window.current_data  = queue.get()
+            self.top_window.plot_current_data()
             
     @Scripting.printable
-    def parallelRun(self, allArguments):
+    def parallel_run(self, allArguments):
         queue   = mp.Queue()
         retval  = {'process':[], 'queue':queue}
         for procID, (args, kwargs) in enumerate(allArguments):
@@ -277,20 +277,20 @@ class AlgorithmNode(ModelNode, WindowComponent):
 
     
     
-def parallelFunc(algorithmClass, queue, args, kwargs):
-    result  = algorithmClass()(*args, **kwargs)
+def parallelFunc(algorithm_class, queue, args, kwargs):
+    result  = algorithm_class()(*args, **kwargs)
     queue.put(result)        
     
     
 ########################NEW#############################
-def parFunc(algorithmClass, procID, queue, args, kwargs):
+def parFunc(algorithm_class, procID, queue, args, kwargs):
     PROGRESS_ID     = 1
     RESULT_ID       = 0
-    def progressChecker(k, K, y, *args, **kwargs):                
+    def progress_checker(k, K, y, *args, **kwargs):                
         queue.put((PROGRESS_ID, procID, int(k / K * 100)))
-    algorithm   = algorithmClass()
-    algorithm.progressChecker.append(progressChecker)
-    algorithm.progressChecker.interval  = 100
+    algorithm   = algorithm_class()
+    algorithm.progress_checker.append(progress_checker)
+    algorithm.progress_checker.interval  = 100
     result  = algorithm(*args, **kwargs)
     queue.put((RESULT_ID, result))
 ########################################################    
@@ -298,12 +298,12 @@ def parFunc(algorithmClass, procID, queue, args, kwargs):
 
 
 class AlgorithmDict(NodeDict, WindowComponent):
-    def __init__(self, nodeName=''):
-        NodeDict.__init__(self, nodeName=nodeName)
+    def __init__(self, node_name=''):
+        NodeDict.__init__(self, node_name=node_name)
                 
     def __setitem__(self, key, val):
         if not isinstance(val, AlgorithmNode):
-            raise TypeError, evalFmt('{self.nodePath} only accepts instance of Algorithm or of its subclasses.')
+            raise TypeError, eval_format('{self.node_path} only accepts instance of Algorithm or of its subclasses.')
         if key != val.meta.name:
             raise ValueError, 'The key should be identical to the name of the algorithm.'
         NodeDict.__setitem__(self, key, val)

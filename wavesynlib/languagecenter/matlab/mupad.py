@@ -12,7 +12,7 @@ from __future__ import print_function
 from scipy                           import special
 
 
-from wavesynlib.languagecenter.utils     import autoSubs, evalFmt
+from wavesynlib.languagecenter.utils     import auto_subs, eval_format
 from wavesynlib.interfaces.matlab.mupad  import Symbol
 
 class OperatorMap(object):
@@ -44,7 +44,7 @@ class FunctionMap(object):
         return key in self.__funcMap
         
     def igammaTranslate(self, a, x):
-        return autoSubs('(special.gamma($a) * special.gammaincc($a, $x))')
+        return auto_subs('(special.gamma($a) * special.gammaincc($a, $x))')
         
 functionMap     = FunctionMap()
 
@@ -85,14 +85,14 @@ def symListToScipy(symList, varList):
         newTail     = [_symListToSciPy(item) for item in tail]
         if head.name in operatorMap: # head is an operator
             op  = operatorMap[head.name]
-            return evalFmt('({op.join(newTail)})')
+            return eval_format('({op.join(newTail)})')
         elif head.name in functionMap: # head is function needs arguments translation
             return functionMap[head.name](*newTail)
         else: # head is a function without argument translation
-            return evalFmt('{head.name}({",".join(newTail)})')
+            return eval_format('{head.name}({",".join(newTail)})')
         
             
     exprStr     = _symListToSciPy(symList)
     varStr      = ','.join([sym.name for sym in varList])
-    codeStr     = evalFmt('lambda {varStr}: {exprStr}')
+    codeStr     = eval_format('lambda {varStr}: {exprStr}')
     return eval(codeStr), codeStr

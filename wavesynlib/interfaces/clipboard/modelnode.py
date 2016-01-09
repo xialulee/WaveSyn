@@ -16,15 +16,15 @@ class TkClipboard(ModelNode):
        
     @Scripting.printable
     def clear(self):
-        self.rootNode.root.clipboard_clear()
+        self.root_node.root.clipboard_clear()
     
     @Scripting.printable
     def write(self, content):
-        self.rootNode.root.clipboard_append(content)
+        self.root_node.root.clipboard_append(content)
         
     @Scripting.printable
     def read(self):
-        return self.rootNode.root.clipboard_get() 
+        return self.root_node.root.clipboard_get() 
 
 
 if platform.system().lower() == 'windows':
@@ -42,10 +42,10 @@ if platform.system().lower() == 'windows':
                 clipb.stream2clipb(stream, fmt, code, None, None)
                 
         @Scripting.printable
-        def toConsoleQR(self):
+        def to_console_qr(self):
             import qrcode
             string  = self.read()
             image   = qrcode.make(string)
-            self.rootNode.printTip([{'type':'pil_image', 'image':image}])
+            self.root_node.print_tip([{'type':'pil_image', 'image':image}])
 else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
     Clipboard   = TkClipboard   

@@ -27,16 +27,16 @@ class MatlabServerNode(ModelNode):
     @Scripting.printable
     def getVar(self, name, globalVar=False):
         if globalVar:
-            return self.__server.nsGlobal[name]
+            return self.__server.global_namespace[name]
         else:
-            return self.__server.nsBase[name]
+            return self.__server.base_namespace[name]
             
     @Scripting.printable
     def setVar(self, name, value, globalVar=False):
         if globalVar:
-            self.__server.nsGlobal[name]    = value
+            self.__server.global_namespace[name]    = value
         else:
-            self.__server.nsBase[name]      = value
+            self.__server.base_namespace[name]      = value
             
     @Scripting.printable
     def mupadSymToScipy(self, symName):

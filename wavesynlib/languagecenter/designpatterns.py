@@ -10,7 +10,7 @@ class Observable(object):
         super(Observable, self).__init__(*args, **kwargs)
         self.__observers    = []
 
-    def addObserver(self, observer):
+    def add_observer(self, observer):
         self.__observers.append(observer)
         
     def deleteObserver(self, observer):
@@ -22,7 +22,7 @@ class Observable(object):
     def countObservers(self):
         return len(self.__observers)
         
-    def notifyObservers(self, *args, **kwargs):
+    def notify_observers(self, *args, **kwargs):
         for observer in self.__observers:
             observer.update(*args, **kwargs)
             

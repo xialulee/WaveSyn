@@ -56,9 +56,9 @@ def main(argv):
         
     path = path.encode(encoding)
     
-    pathList = root.tk.splitlist(path)
+    path_list = root.tk.splitlist(path)
     
-    for path in pathList:
+    for path in path_list:
         print(path)
         
     return ERROR_NOERROR

@@ -135,10 +135,10 @@ See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-
         win32clipboard.CloseClipboard()
         
         
-def clipbToImageFilePath(filePath):
+def clipbToImageFilePath(file_path):
     image   = ImageGrab.grabclipboard()
     if image:
-        image.save(filePath)
+        image.save(file_path)
         return True
     else:
         return False

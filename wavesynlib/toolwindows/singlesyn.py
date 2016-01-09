@@ -14,10 +14,10 @@ from ttk import *
 
 from wavesynlib.guicomponents.tk                   import Group, ParamItem
 from wavesynlib.interfaces.windows.shell.constants import TBPFLAG
-from wavesynlib.guicomponents.classselector        import askClassName
+from wavesynlib.guicomponents.classselector        import ask_class_name
 from wavesynlib.application                        import Application
 from wavesynlib.basewindow                         import FigureWindow
-from wavesynlib.languagecenter.utils               import autoSubs, evalFmt, setMultiAttr, Nonblocking
+from wavesynlib.languagecenter.utils               import auto_subs, eval_format, set_attributes, Nonblocking
 from wavesynlib.languagecenter.wavesynscript       import ScriptCode, Scripting
 from wavesynlib.mathtools                          import Algorithm, AlgorithmDict, AlgorithmNode
 
@@ -41,25 +41,25 @@ class OptimizeGroup(Group):
         paramFrm    = Frame(self)
         paramFrm.pack(side=LEFT, expand=YES, fill=Y)
         self.__num = ParamItem(paramFrm)
-        setMultiAttr(self.__num,
-            labelText   = 'num',
-            entryText   = '1',
-            labelWidth  = 5,
-            entryWidth  = 8,
-            checkFunc   = self._app.checkInt
+        set_attributes(self.__num,
+            label_text   = 'num',
+            entry_text   = '1',
+            label_width  = 5,
+            entry_width  = 8,
+            checker_function   = self._app.check_int
         )
-        self.__num.entry.bind('<Return>', lambda event: self.onSolveClick())
+        self.__num.entry.bind('<Return>', lambda event: self._on_solve_click())
         self.__num.pack(side=TOP)
 
      
 
         self.__pci  = ParamItem(paramFrm)
-        setMultiAttr(self.__pci,
-            labelText   = 'PCI',
-            entryText   = '100',
-            labelWidth  = 5,
-            entryWidth  = 8,
-            checkFunc   = self._app.checkInt
+        set_attributes(self.__pci,
+            label_text   = 'PCI',
+            entry_text   = '100',
+            label_width  = 5,
+            entry_width  = 8,
+            checker_function   = self._app.check_int
         )
         self.__pci.pack(side=TOP)
         
@@ -70,9 +70,9 @@ class OptimizeGroup(Group):
         progfrm = Frame(self)
         progfrm.pack(side=LEFT, expand=YES, fill=Y)
 
-        self.__genbtn = Button(progfrm, text='Generate', command=self.onSolveClick)
+        self.__genbtn = Button(progfrm, text='Generate', command=self._on_solve_click)
         self.__genbtn.pack(side=TOP)  
-        Button(progfrm, text='Stop', command=self.onStopBtnClick).pack(side=TOP)         
+        Button(progfrm, text='Stop', command=self._on_stop_button_click).pack(side=TOP)         
         
         self.__progress = IntVar()
         self.__finishedwav = IntVar()        
@@ -89,28 +89,28 @@ class OptimizeGroup(Group):
         self.getparams = None
         self.__stopflag = False
         
-    def onSolveClick(self):
+    def _on_solve_click(self):
         t1  = time.clock()
         if self.__bParallel.get():
-            self.parallelRun()
+            self.parallel_run()
         else:
-            self.serialRun()        
+            self.serial_run()        
         deltaT  = time.clock() - t1
-        print(autoSubs('Total time consumption: $deltaT (s)'))
+        print(auto_subs('Total time consumption: $deltaT (s)'))
 
-    def serialRun(self):
+    def serial_run(self):
         app    = self._app
         tbicon = app.tbicon
         self.__stopflag = False
-        wavnum = self.__num.getInt()
+        wavnum = self.__num.get_int()
         progress = [0]
         waveform = [0]
 
-        algorithm   = self.__topwin.currentAlgorithm          
+        algorithm   = self.__topwin.current_algorithm          
 
-        params = self.__topwin.grpParams.getParams()
+        params = self.__topwin.grpParams.get_parameters()
 
-        if algorithm.needCUDA:
+        if algorithm.need_cuda:
             class AlgoThread(object):
                 def __init__(self, algo, params, waveform, progress):                    
                     app.cudaWorker.activate()
@@ -119,13 +119,12 @@ class OptimizeGroup(Group):
                 
                 def start(self):
                     params  = self.__params[0]
-                    #print (params)
                     for p in params:
                         if hasattr(params[p], 'code'): # Temp solution
                             params[p]   = eval(params[p].code)
                     app.cudaWorker.messageIn.put({'command':'call', 'callable object':self.__algo.run, 'args':[], 'kwargs':params})
                     
-                def isAlive(self):
+                def is_alive(self):
                     ret         = None
                     try:
                         ret     = app.cudaWorker.messageOut.get_nowait()
@@ -144,11 +143,11 @@ class OptimizeGroup(Group):
         
         self.__finishedwavbar['maximum'] = wavnum
 
-        def progressChecker(k, K, y, *args, **kwargs):                
+        def progress_checker(k, K, y, *args, **kwargs):                
             progress[0] = int(k / K * 100)                  
             
-        algorithm.progressChecker.append(progressChecker)
-        algorithm.progressChecker.interval  = int(self.__pci.entryText)
+        algorithm.progress_checker.append(progress_checker)
+        algorithm.progress_checker.interval  = int(self.__pci.entry_text)
         
         algorithm.presetParams(params) # for algorithms which will allocate resources depend on parameters and allocation procedure must be executed in the main thread.        
         
@@ -157,7 +156,7 @@ class OptimizeGroup(Group):
                 algothread = AlgoThread(algorithm, params, waveform, progress)
                 algothread.start()
     
-                while algothread.isAlive():
+                while algothread.is_alive():
                     self.__progress.set(progress[0])
                     tbicon.progress = int((cnt*100+progress[0])/(wavnum*100)*100)
                     self.__topwin.update()
@@ -168,14 +167,14 @@ class OptimizeGroup(Group):
                 if self.__stopflag:
                     break
                 printCode   = True
-                self.__topwin.plotCurrentData()
+                self.__topwin.plot_current_data()
                 self.__finishedwav.set(cnt+1)
         finally:
-            algorithm.progressChecker.remove(progressChecker)
+            algorithm.progress_checker.remove(progress_checker)
         self.__finishedwav.set(0)
         tbicon.state = TBPFLAG.TBPF_NOPROGRESS
         
-    def parallelRun(self):
+    def parallel_run(self):
         class AlgoThread(threading.Thread):
             def __init__(self, algorithm, parameters, num):
                 self.algorithm  = algorithm
@@ -184,19 +183,19 @@ class OptimizeGroup(Group):
                 super(AlgoThread, self).__init__()
             def run(self):
                 printCode   = True
-                #parameters  = Scripting.paramsToStr(**self.parameters)
-                paramStr    = evalFmt('[([], dict({Scripting.paramsToStr(**self.parameters)}))]*{self.num}')
-                self.algorithm.parallelRunAndPlot(ScriptCode(paramStr))
-        algorithm   = self.__topwin.currentAlgorithm
-        parameters  = self.__topwin.grpParams.getParams()
-        theThread   = AlgoThread(algorithm, parameters, self.__num.getInt())
+                #parameters  = Scripting.convert_args_to_str(**self.parameters)
+                paramStr    = eval_format('[([], dict({Scripting.convert_args_to_str(**self.parameters)}))]*{self.num}')
+                self.algorithm.parallel_run_and_plot(ScriptCode(paramStr))
+        algorithm   = self.__topwin.current_algorithm
+        parameters  = self.__topwin.grpParams.get_parameters()
+        theThread   = AlgoThread(algorithm, parameters, self.__num.get_int())
         theThread.start()
-        while theThread.isAlive():
+        while theThread.is_alive():
             self.__topwin.update()            
             time.sleep(0.05)
             
 
-    def onStopBtnClick(self):
+    def _on_stop_button_click(self):
         self.__stopflag = True
 
 
@@ -217,7 +216,7 @@ class ParamsGroup(Group):
           
         self.name = 'Parameters'
 
-    def appendAlgorithm(self, algorithm):
+    def append_algorithm(self, algorithm):
         #To do: when algo is reset, the frm should be removed
         for algoName in self.__frameDict:
             self.__frameDict[algoName]['frame'].pack_forget()
@@ -225,19 +224,19 @@ class ParamsGroup(Group):
         frm.pack()
         paramInfo   = {}
         params = algorithm['parameters']
-        for idx, name in enumerate(params):
+        for index, name in enumerate(params):
             param = params[name]
             paramitem = ParamItem(frm)
-            paramitem.labelText = name
-            paramitem.labelWidth = 5
-            paramitem.entryWidth = 8
+            paramitem.label_text = name
+            paramitem.label_width = 5
+            paramitem.entry_width = 8
             if self.balloon:
                 self.balloon.bind_widget(paramitem.label, balloonmsg=param.shortdesc)
             if param.type == 'int':
-                paramitem.checkFunc = self._app.checkInt
+                paramitem.checker_function = self._app.check_int
             elif param.type == 'float':
-                paramitem.checkFunc = self._app.checkFloat
-            paramitem.grid(row=idx%self.__MAXROW, column=idx//self.__MAXROW)
+                paramitem.checker_function = self._app.check_float
+            paramitem.grid(row=index%self.__MAXROW, column=index//self.__MAXROW)
             #self.__params[param.name] = {'gui':paramitem, 'meta':param}
             paramInfo[param.name] = {'gui':paramitem, 'meta':param}
         self.__algo = algorithm
@@ -245,12 +244,12 @@ class ParamsGroup(Group):
         self.__frameDict[algorithm['name']]   = dict(frame=frm, paramInfo=paramInfo)
         self.__params   = paramInfo
 
-    def getParams(self):
+    def get_parameters(self):
         params = self.__params
         convert = {'int':int, 'float':float, 'expression':lambda expr: ScriptCode(expr), '':lambda x: x}
-        return {name: convert[params[name]['meta'].type](params[name]['gui'].entryText) for name in params}
+        return {name: convert[params[name]['meta'].type](params[name]['gui'].entry_text) for name in params}
         
-    def changeAlgorithm(self, algorithmName):
+    def change_algorithm(self, algorithmName):
         for algoName in self.__frameDict:
             self.__frameDict[algoName]['frame'].pack_forget()        
         self.__frameDict[algorithmName]['frame'].pack()
@@ -262,58 +261,57 @@ class AlgoSelGroup(Group):
         self._topwin  = kwargs.pop('topwin')
         super(AlgoSelGroup, self).__init__(*args, **kwargs)
         
-        self.__algoList = Combobox(self, value=[], takefocus=1, stat='readonly', width=12)
-        self.__algoList['values']   = []
-        self.__algoList.pack()
-        self.__algoList.bind('<<ComboboxSelected>>', self.onAlgorithmChange)
+        self.__algorithm_list = Combobox(self, value=[], takefocus=1, stat='readonly', width=12)
+        self.__algorithm_list['values']   = []
+        self.__algorithm_list.pack()
+        self.__algorithm_list.bind('<<ComboboxSelected>>', self._on_algorithm_change)
         
-        Button(self, text='Load Algorithm', command=self.onLoadAlgorithm).pack()
+        Button(self, text='Load Algorithm', command=self._on_load_algorithm).pack()
         
         self.name = 'Algorithms'          
         
     @property
-    def algoList(self):
-        return self.__algoList
+    def algorithm_list(self):
+        return self.__algorithm_list
         
-    def onAlgorithmChange(self, event):
-        self._topwin.changeAlgorithm(event.widget.get())
+    def _on_algorithm_change(self, event):
+        self._topwin.change_algorithm(event.widget.get())
         
-    def onLoadAlgorithm(self):
+    def _on_load_algorithm(self):
         printCode   = True
         
-        funcObj    = Nonblocking(askClassName)('wavesynlib.algorithms', Algorithm)
+        funcObj    = Nonblocking(ask_class_name)('wavesynlib.algorithms', Algorithm)
         while funcObj.isRunning():
-            #self._topwin.update()
-            Application.doEvents()
+            Application.do_events()
             time.sleep(0.1)
         
-        classInfo   = funcObj.returnValue        
+        classInfo   = funcObj.return_value        
         
         if not classInfo:
             return
-        moduleName, className   = classInfo
-        self._topwin.loadAlgorithm(moduleName=moduleName, className=className)
+        module_name, class_name   = classInfo
+        self._topwin.load_algorithm(module_name=module_name, class_name=class_name)
 
 
 class SingleWindow(FigureWindow):      
     windowName  = 'WaveSyn-SingleSyn' 
 
-    _xmlrpcexport_  = ['loadAlgorithm']
+    _xmlrpcexport_  = ['load_algorithm']
        
     def __init__(self, *args, **kwargs):     
         FigureWindow.__init__(self, *args, **kwargs)
-        self.currentData    = None
+        self.current_data    = None
                 
         # algorithm dict and current data
         self.algorithms = AlgorithmDict()
-        self.lockAttribute('algorithms')
+        self.lock_attribute('algorithms')
         #        
         
         # The toolbar
-        toolTabs    = self.toolTabs
-        figureBook  = self.figureBook
+        tool_tabs    = self.tool_tabs
+        figure_book  = self.figure_book
         
-        frmAlgo = Frame(toolTabs)
+        frmAlgo = Frame(tool_tabs)
         grpAlgoSel  = AlgoSelGroup(frmAlgo, topwin=self)
         grpAlgoSel.pack(side=LEFT, fill=Y)
         
@@ -322,10 +320,10 @@ class SingleWindow(FigureWindow):
         
         grpSolve    = OptimizeGroup(frmAlgo, topwin=self)
         grpSolve.pack(side=LEFT, fill=Y)
-        toolTabs.add(frmAlgo, text='Algorithm')
+        tool_tabs.add(frmAlgo, text='Algorithm')
         
-        with self.attributeLock:
-            setMultiAttr(self,
+        with self.attribute_lock:
+            set_attributes(self,
                 grpAlgoSel  = grpAlgoSel,
                 grpParams   = grpParams,
                 grpSolve    = grpSolve                         
@@ -333,12 +331,12 @@ class SingleWindow(FigureWindow):
         
 
         
-        self.makeViewTab()
-        self.makeMarkerTab()
-        self.makeExportTab()
+        self.make_view_tab()
+        self.make_marker_tab()
+        self.make_export_tab()
         # End toolbar
-        figureBook.makeFigures(
-            figureMeta  = [
+        figure_book.make_figures(
+            figure_meta  = [
                 dict(name='Envelope',           polar=False),
                 dict(name='Phase',              polar=False),
                 dict(name='AutoCorrelation',    polar=False),
@@ -346,25 +344,25 @@ class SingleWindow(FigureWindow):
             ]
         )
         
-        with open(Application.instance.configFileName) as f:
+        with open(Application.instance.config_file_path) as f:
             config  = json.load(f)
         algorithms  = config['SingleWaveformAlgorithms']
 
         for algo in algorithms:
-            self.loadAlgorithm(moduleName=algo['ModuleName'], className=algo['ClassName'])
+            self.load_algorithm(module_name=algo['ModuleName'], class_name=algo['ClassName'])
 
-        self.grpAlgoSel.algoList.current(len(algorithms)-1)
+        self.grpAlgoSel.algorithm_list.current(len(algorithms)-1)
         
-        figEnvelope = figureBook[0]
-        figEnvelope.plotFunction  = lambda currentData, *args, **kwargs:\
-            figEnvelope.plot(abs(currentData), *args, **kwargs)
+        figEnvelope = figure_book[0]
+        figEnvelope.plot_function  = lambda current_data, *args, **kwargs:\
+            figEnvelope.plot(abs(current_data), *args, **kwargs)
         
-        figPhase    = figureBook[1]
-        figPhase.plotFunction   = lambda currentData, *args, **kwargs:\
-            figPhase.plot(angle(currentData), *args, **kwargs)
+        figPhase    = figure_book[1]
+        figPhase.plot_function   = lambda current_data, *args, **kwargs:\
+            figPhase.plot(angle(current_data), *args, **kwargs)
             
-        def plot_acdb(currentData, *args, **kwargs):
-            s   = currentData
+        def plot_acdb(current_data, *args, **kwargs):
+            s   = current_data
             if not isinstance(s, ndarray):
                 s   = array(s)
             N       = len(s)
@@ -373,33 +371,33 @@ class SingleWindow(FigureWindow):
             acdb    = acdb - max(acdb)
             figAuto.plot(r_[(-N+1):N], acdb, *args, **kwargs)            
             
-        figAuto     = figureBook[2]
-        figAuto.plotFunction    = plot_acdb
+        figAuto     = figure_book[2]
+        figAuto.plot_function    = plot_acdb
             
-        figPSD      = figureBook[3]
-        figPSD.plotFunction     = lambda currentData, *args, **kwargs:\
-            figPSD.plot(abs(fft.fft(currentData)), *args, **kwargs)
+        figPSD      = figure_book[3]
+        figPSD.plot_function     = lambda current_data, *args, **kwargs:\
+            figPSD.plot(abs(fft.fft(current_data)), *args, **kwargs)
             
     
     @Scripting.printable        
-    def loadAlgorithm(self, moduleName, className):
-        node    = AlgorithmNode(moduleName, className)
+    def load_algorithm(self, module_name, class_name):
+        node    = AlgorithmNode(module_name, class_name)
         self.algorithms.add(node)
-        values  = self.grpAlgoSel.algoList['values']
+        values  = self.grpAlgoSel.algorithm_list['values']
         if values == '':
             values  = []
         if isinstance(values, tuple):
             values  = list(values)
         values.append(node['name'])
-        self.grpAlgoSel.algoList['values']  = values
-        self.grpAlgoSel.algoList.current(len(values)-1)
-        self.grpParams.appendAlgorithm(node)
+        self.grpAlgoSel.algorithm_list['values']  = values
+        self.grpAlgoSel.algorithm_list.current(len(values)-1)
+        self.grpParams.append_algorithm(node)
 
         
-    def changeAlgorithm(self, algorithmName):
-        self.grpParams.changeAlgorithm(algorithmName)        
+    def change_algorithm(self, algorithmName):
+        self.grpParams.change_algorithm(algorithmName)        
         
     @property
-    def currentAlgorithm(self):
-        return self.algorithms[self.grpAlgoSel.algoList.get()]
+    def current_algorithm(self):
+        return self.algorithms[self.grpAlgoSel.algorithm_list.get()]
             

@@ -20,48 +20,48 @@ class Proxy(object):
         return self.__proxy
         
     def getRootNode(self):
-        nodePath    = self.__proxy.getRootNodePath()
-        return ProxyNode(self.__proxy, nodePath)
+        node_path    = self.__proxy.getRootNodePath()
+        return ProxyNode(self.__proxy, node_path)
 
 
 class ProxyNode(object):    
-    def __init__(self, proxy, nodePath):
-        self.nodePath   = nodePath
+    def __init__(self, proxy, node_path):
+        self.node_path   = node_path
         self.__proxy    = proxy
-        self.__reprStr  = proxy.getRepr(nodePath)
-        childNodes  = proxy.getChildNodes(nodePath)
-        methods     = set(proxy.getMethods(nodePath))
-        self.childNodes = childNodes
+        self.__reprStr  = proxy.getRepr(node_path)
+        child_nodes  = proxy.getChildNodes(node_path)
+        methods     = set(proxy.getMethods(node_path))
+        self.child_nodes = child_nodes
         self.methods    = methods
-        for nodeName in childNodes:
-            self.__dict__[nodeName] = None
+        for node_name in child_nodes:
+            self.__dict__[node_name] = None
         for method in methods:
             self.__dict__[method]   = None
             
-    def __getattribute__(self, attrName):
-        childNodes  = object.__getattribute__(self, 'childNodes')
+    def __getattribute__(self, attribute_name):
+        child_nodes  = object.__getattribute__(self, 'child_nodes')
         methods     = object.__getattribute__(self, 'methods')
-        nodePath    = object.__getattribute__(self, 'nodePath')
-        if attrName in childNodes:
-            return ProxyNode(self.__proxy, childNodes[attrName])
-        elif attrName in methods:
-            method  = ProxyMethod(self.__proxy, nodePath, attrName)
+        node_path    = object.__getattribute__(self, 'node_path')
+        if attribute_name in child_nodes:
+            return ProxyNode(self.__proxy, child_nodes[attribute_name])
+        elif attribute_name in methods:
+            method  = ProxyMethod(self.__proxy, node_path, attribute_name)
             return method
         else:
-            return object.__getattribute__(self, attrName)
+            return object.__getattribute__(self, attribute_name)
             
     def __repr__(self):
         return self.__reprStr
         
     def __getitem__(self, index):
-        return ProxyNode(self.__proxy, self.__proxy.getitem(self.nodePath, index))
+        return ProxyNode(self.__proxy, self.__proxy.getitem(self.node_path, index))
             
 class ProxyMethod(object):
-    def __init__(self, proxy, nodePath, methodName):
-        self.__nodePath = nodePath
+    def __init__(self, proxy, node_path, method_name):
+        self.__node_path = node_path
         self.__proxy    = proxy
-        self.__methodName   = methodName
-        self.__doc__        = proxy.getMethodDoc(nodePath, methodName)        
+        self.__method_name   = method_name
+        self.__doc__        = proxy.getMethodDoc(node_path, method_name)        
         
     def __call__(self, *args, **kwargs):
-        return self.__proxy.callMethod(self.__nodePath, self.__methodName, args, kwargs)
+        return self.__proxy.callMethod(self.__node_path, self.__method_name, args, kwargs)

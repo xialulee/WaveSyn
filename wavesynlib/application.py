@@ -9,7 +9,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 
-def dependenciesForMyprogram():
+def dependencies_for_my_program():
     '''This function is used to solve the bugs of py2exe'''
     from scipy.sparse.csgraph   import _validation 
     from scipy.special          import _ufuncs_cxx
@@ -54,54 +54,54 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from wavesynlib.guicomponents.tk                 import DirIndicator, TaskbarIcon, ScrolledText, ValueChecker, PilImageFrame
+from wavesynlib.guicomponents.tk                 import DirIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
 from wavesynlib.interfaces.clipboard.modelnode   import Clipboard
 from wavesynlib.interfaces.timer.tk              import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream                        import StreamManager
 #from wavesynlib.cuda                             import Worker as CUDAWorker
-from wavesynlib.languagecenter.utils             import autoSubs, evalFmt, setMultiAttr
+from wavesynlib.languagecenter.utils             import auto_subs, eval_format, set_attributes
 from wavesynlib.languagecenter.designpatterns    import Singleton        
 from wavesynlib.languagecenter.wavesynscript     import Scripting, ModelNode
 from wavesynlib.languagecenter.modelnode         import LangCenterNode
 from wavesynlib.languagecenter                   import templates
 
 
-def makeMenu(win, menu, json=False):
-    def funcGen(code, printCode=True):
-        if printCode:
-            f   = Application.instance.printAndEval
+def make_menu(win, menu, json=False):
+    def func_gen(code, print_code=True):
+        if print_code:
+            f   = Application.instance.print_and_eval
         else:
             f   = Application.instance.eval
         return lambda: f(code)
     def make(top, tree):
-        for topItem in tree:
-            if 'Command' in topItem:
+        for top_item in tree:
+            if 'Command' in top_item:
                 if json: # json cannot store callable objects.
-                    printCode   = topItem.get('Print', True)
-                    cmd = funcGen(topItem['Command'], printCode)
+                    printCode   = top_item.get('Print', True)
+                    cmd = func_gen(top_item['Command'], printCode)
                 else:
                     # Python data object can store callable object, 
-                    # and topItem['Command'] should be a callable object in this circumstance.
-                    cmd = topItem['Command'] 
-                top.add_command(label=topItem['Name'], command=cmd, underline=topItem['UnderLine'])
+                    # and top_item['Command'] should be a callable object in this circumstance.
+                    cmd = top_item['Command'] 
+                top.add_command(label=top_item['Name'], command=cmd, underline=top_item['UnderLine'])
             else:
-                tearoff = 1 if 'TearOff' not in topItem else int(topItem['TearOff'])
+                tearoff = 1 if 'TearOff' not in top_item else int(top_item['TearOff'])
                 submenu = Menu(top, tearoff=tearoff)
-                make(submenu, topItem['SubMenu']) # recursion
-                top.add_cascade(label=topItem['Name'], menu=submenu, underline=int(topItem['UnderLine']))
+                make(submenu, top_item['SubMenu']) # recursion
+                top.add_cascade(label=top_item['Name'], menu=submenu, underline=int(top_item['UnderLine']))
     top = Menu(win)
     make(top, menu)
     win.config(menu=top)        
         
 
         
-def callAndPrintDoc(func):
+def call_and_print_doc(func):
     '''This function is used as a decorator.'''
     def f(*args, **kwargs):
         ret = func(*args, **kwargs)
         if 'printDoc' in kwargs and kwargs['printDoc']:
-            Application.instance.printTip(func.__doc__)
+            Application.instance.print_tip(func.__doc__)
         return ret
     f.__doc__   = func.__doc__
     return f
@@ -122,7 +122,7 @@ class WaveSynThread(object):
         app = Application.instance
         theThread  = WaveSynThread.Thread(func)
         theThread.start()
-        while theThread.isAlive():
+        while theThread.is_alive():
             app.root.update()
             for winId in app.windows:
                 app.windows[winId].update()
@@ -141,77 +141,77 @@ wavesyn
 -clipboard
 -windows[id]
     -instance of PatternFitting
-        -figureBook
+        -figure_book
     -instance of SingleSyn
-        -figureBook
+        -figure_book
     -instance of MIMOSyn
-        -figureBook
+        -figure_book
 '''    
     __metaclass__ = Singleton
     
     _xmlrpcexport_  = [
-        'createWindow',
-        'openHomePage'
+        'create_window',
+        'open_home_page'
     ]
     ''' '''
     def __init__(self):
-        # The instance of this class is the root of the model tree. Thus isRoot is set to True
-        super(Application, self).__init__(nodeName=Scripting.rootName, isRoot=True)
-        Scripting.nameSpace['locals'][Scripting.rootName] = self
-        Scripting.nameSpace['globals'] = globals()
-        Scripting.rootNode = self
-        self.homePage = 'https://github.com/xialulee/WaveSyn'
+        # The instance of this class is the root of the model tree. Thus is_root is set to True
+        super(Application, self).__init__(node_name=Scripting.root_name, is_root=True)
+        Scripting.name_space['locals'][Scripting.root_name] = self
+        Scripting.name_space['globals'] = globals()
+        Scripting.root_node = self
+        self.homepage = 'https://github.com/xialulee/WaveSyn'
         
-        filePath    = getsourcefile(type(self))
-        dirPath     = os.path.split(filePath)[0]
+        file_path    = getsourcefile(type(self))
+        dir_path     = os.path.split(file_path)[0]
         
         # load config file
-        configFileName  = os.path.join(dirPath, 'config.json')
-        with open(configFileName) as f:
+        config_file_path  = os.path.join(dir_path, 'config.json')
+        with open(config_file_path) as f:
             config  = json.load(f)
-        consoleMenu = config['ConsoleMenu']
-        self.editorInfo   = config['EditorInfo']
-        self.lockAttribute('editorInfo')
-        self.promptSymbols  = config['PromptSymbols']
+        console_menu = config['ConsoleMenu']
+        self.editor_info   = config['EditorInfo']
+        self.lock_attribute('editor_info')
+        self.prompt_symbols  = config['PromptSymbols']
 
-        tagDefs = config['TagDefs']
+        tag_defs = config['TagDefs']
         # End load config file
 
         root = Tix.Tk()
-        mainThreadId    = thread.get_ident()
+        main_thread_id    = thread.get_ident()
         
         from wavesynlib.interfaces.xmlrpc.server import CommandSlot
         
 
-        valueChecker    = ValueChecker(root)        
+        value_checker    = ValueChecker(root)        
         
-        with self.attributeLock:
-            setMultiAttr(self,
+        with self.attribute_lock:
+            set_attributes(self,
                 # UI elements
                 root                = root,        
                 balloon             = Tix.Balloon(root),
                 tbicon              = TaskbarIcon(root),
                 # End UI elements
                 
-                mainThreadId        = mainThreadId,
-                execThreadLock      = threading.RLock(),
-                xmlrpcCommandSlot   = CommandSlot(),
+                main_thread_id        = main_thread_id,
+                exec_thread_lock      = threading.RLock(),
+                xmlrpc_command_slot   = CommandSlot(),
 
                 langCenter          = LangCenterNode(),
             
                 # Validation Functions
-                valueChecker        = valueChecker,
-                checkInt            = valueChecker.checkInt,
-                checkFloat          = valueChecker.checkFloat,
-                checkPositiveFloat  = valueChecker.checkPositiveFloat,
+                value_checker        = value_checker,
+                check_int            = value_checker.check_int,
+                check_float          = value_checker.check_float,
+                check_positive_float  = value_checker.check_positive_float,
                 # End Validation Functions
                 
-                filePath    = filePath,
-                dirPath     = dirPath,
+                file_path    = file_path,
+                dir_path     = dir_path,
                                 
-                streamManager   =StreamManager(),                
+                stream_manager   =StreamManager(),                
                 
-                configFileName  = configFileName
+                config_file_path  = config_file_path
                 
 #                cudaWorker      = CUDAWorker()
             )        
@@ -232,69 +232,72 @@ wavesyn
                 code    = editor.code
                 if not code:
                     return
-                wavesyn.streamManager.write('WaveSyn: executing code from editor {0} listed as follows:\n'.format(id(editor)), 'TIP')
-                wavesyn.streamManager.write(code, 'HISTORY')
-                wavesyn.streamManager.write('\n')
+                wavesyn.stream_manager.write('WaveSyn: executing code from editor {0} listed as follows:\n'.format(id(editor)), 'TIP')
+                wavesyn.stream_manager.write(code, 'HISTORY')
+                wavesyn.stream_manager.write('\n')
                 wavesyn.execute(code)
 
-        self.editors.manager.addObserver(EditorObserver(self))
+        self.editors.manager.add_observer(EditorObserver(self))
 
-        with self.attributeLock:
-            self.monitorTimer    = self.createTimer(interval=100, active=False)
+        with self.attribute_lock:
+            self.monitor_timer    = self.create_timer(interval=100, active=False)
+            
         # Make wavesyn.editors.manager check wavesyn.editors every 100ms
-        self.monitorTimer.addObserver(self.editors.manager) 
-        self.monitorTimer.addObserver(self.streamManager)
+        self.monitor_timer.add_observer(self.editors.manager) 
+        
+        # Check std streams every 100ms
+        self.monitor_timer.add_observer(self.stream_manager)
         
         frm = Frame(root)
         frm.pack(side=TOP, fill=X)                
 
-        self.console = ConsoleWindow(menu=consoleMenu, tagDefs=tagDefs)
-        self.streamManager.addObserver(self.console.streamObserver) #!
+        self.console = ConsoleWindow(menu=console_menu, tag_defs=tag_defs)
+        self.stream_manager.add_observer(self.console.stream_observer) #!
              
         self.clipboard = Clipboard()
         self.scripting = Scripting(self)
-        self.noTip = False
+        self.no_tip = False
 
-        self.monitorTimer.active    = True
+        self.monitor_timer.active    = True
         
-    def createWindow(self, moduleName, className):
+    def create_window(self, module_name, class_name):
         '''Create a tool window.'''
-        mod = __import__(autoSubs('wavesynlib.toolwindows.$moduleName'), globals(), locals(), [className], -1)
-        return self.windows.add(node=getattr(mod, className)())
+        mod = __import__(auto_subs('wavesynlib.toolwindows.$module_name'), globals(), locals(), [class_name], -1)
+        return self.windows.add(node=getattr(mod, class_name)())
 
-    def launchEditor(self, editorPath=None):
-        if editorPath is None:
-            editorPath  = self.editorInfo['Path']
-        editorID    = self.editors.add(EditorNode(editorPath=editorPath))
-        self.editors[editorID].launch()
-        return editorID
+    def launch_editor(self, editor_path=None):
+        if editor_path is None:
+            editor_path  = self.editor_info['Path']
+        editor_id    = self.editors.add(EditorNode(editor_path=editor_path))
+        self.editors[editor_id].launch()
+        return editor_id
         
-    def createTimer(self, interval=100, active=False):
+    def create_timer(self, interval=100, active=False):
         return TkTimer(self.root, interval, active)
                      
         
-    def printAndEval(self, expr):
-        with self.execThreadLock:
-            self.streamManager.write(expr+'\n', 'HISTORY')
-            ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
+    def print_and_eval(self, expr):
+        with self.exec_thread_lock:
+            self.stream_manager.write(expr+'\n', 'HISTORY')
+            ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])
             if ret is not None:
-                self.streamManager.write(str(ret)+'\n', 'RETVAL')
+                self.stream_manager.write(str(ret)+'\n', 'RETVAL')
             return ret    
                               
     def eval(self, expr):
-        with self.execThreadLock:
-            ret = eval(expr, Scripting.nameSpace['globals'], Scripting.nameSpace['locals'])
-            Scripting.nameSpace['locals']['_']  = ret
+        with self.exec_thread_lock:
+            ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])
+            Scripting.name_space['locals']['_']  = ret
             return ret
         
     def execute(self, code):
-        with self.execThreadLock:
+        with self.exec_thread_lock:
             ret = None
-            strippedCode    = code.strip()
-            if strippedCode[0] == '!':
+            stripped_code    = code.strip()
+            if stripped_code[0] == '!':
                 # To do: system(code)
                 PIPE    = subprocess.PIPE
-                p = subprocess.Popen(strippedCode[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
+                p = subprocess.Popen(stripped_code[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
                 (stdout, stderr)    = p.communicate()
                 encoding            = sys.getfilesystemencoding()
                 print(stdout.decode(encoding, 'ignore'))
@@ -303,91 +306,91 @@ wavesyn
             try:
                 ret = self.eval(code)
             except SyntaxError:
-                exec code in Scripting.nameSpace['globals'], Scripting.nameSpace['locals']
+                exec code in Scripting.name_space['globals'], Scripting.name_space['locals']
             return ret
             
                     
             
-    def printTip(self, contents):
-        if self.noTip:
+    def print_tip(self, contents):
+        if self.no_tip:
             return
-        streamManager = self.streamManager
-        streamManager.write('WaveSyn: ', 'TIP')
+        stream_manager = self.stream_manager
+        stream_manager.write('WaveSyn: ', 'TIP')
         if type(contents) in (str, unicode):
-            streamManager.write(contents+'\n', 'TIP')
+            stream_manager.write(contents+'\n', 'TIP')
             return
         for item in contents:
             if item['type'] == 'text':
-                streamManager.write(''.join((item['content'],'\n')), 'TIP')
+                stream_manager.write(''.join((item['content'],'\n')), 'TIP')
             elif item['type'] == 'link':
                 command = item['command']
                 tagName = 'link' + str(id(command))
-                streamManager.write(item['content'], tagName)
+                stream_manager.write(item['content'], tagName)
                 text    = self.console.text
                 r, c = text.index(END).split('.')
                 text.tag_config(tagName, underline=1, foreground='blue')
                 text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
                 text.tag_bind(tagName, '<Enter>', lambda dumb: text.config(cursor='hand2'))
-                text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.defaultCursor))
-                streamManager.write('\n')
+                text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.default_cursor))
+                stream_manager.write('\n')
             elif item['type'] == 'pil_image':
-                streamManager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
+                stream_manager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
                 text    = self.console.text                
                 text.insert(END, '\n')
-                pilFrame    = PilImageFrame(text, pilImage=item['image'])
-                text.window_create(END, window=pilFrame)
+                pil_frame    = PILImageFrame(text, pil_image=item['image'])
+                text.window_create(END, window=pil_frame)
                 text.insert(END, '\n')
-                streamManager.write('\n')
+                stream_manager.write('\n')
                 
                                             
                 
-    def printError(self, text):
-        self.streamManager.write(text+'\n', 'STDERR')
+    def print_error(self, text):
+        self.stream_manager.write(text+'\n', 'STDERR')
         
             
-    def notifyWinQuit(self, win):
-        self.printTip(evalFmt('{win.nodePath} is closed, and its ID becomes defunct for scripting system hereafter'))
+    def on_window_quit(self, win):
+        self.print_tip(eval_format('{win.node_path} is closed, and its ID becomes defunct for scripting system hereafter'))
         self.windows.pop(id(win))
         
         
-    def openHomePage(self):
+    def open_home_page(self):
         '''Open the home page of wavesyn.'''
-        webbrowser.open(self.homePage, new=1, autoraise=True)
+        webbrowser.open(self.homepage, new=1, autoraise=True)
              
                     
     def mainloop(self):
         return self.root.mainloop()
         
     @classmethod
-    def doEvents(cls):
+    def do_events(cls):
         cls.instance.root.update()
         
-    def startXMLRPCServer(self, addr='localhost', port=8000):
-        from wavesynlib.interfaces.xmlrpc.server    import startXMLRPCServer
-        startXMLRPCServer(addr, port)        
-        def checkCommand():
-            command = self.xmlrpcCommandSlot.command
-            paramsToStr  = Scripting.paramsToStr # used by evalFmt
+    def start_xmlrpc_server(self, addr='localhost', port=8000):
+        from wavesynlib.interfaces.xmlrpc.server    import start_xmlrpc_server
+        start_xmlrpc_server(addr, port)        
+        def check_command():
+            command = self.xmlrpc_command_slot.command
+            convert_args_to_str  = Scripting.convert_args_to_str # used by eval_format
             try:
                 if command is not None:
-                    nodePath, methodName, args, kwargs  = command
+                    node_path, method_name, args, kwargs  = command
                     ret, err    = None, None
                     try:
-                        ret = self.printAndEval(evalFmt('{nodePath}.{methodName}({paramsToStr(*args, **kwargs)})')) # paramToStr used here
+                        ret = self.print_and_eval(eval_format('{node_path}.{method_name}({convert_args_to_str(*args, **kwargs)})')) # paramToStr used here
                     except Exception as error:
                         err = error
                     ret = 0 if ret is None else ret
-                    self.xmlrpcCommandSlot.returnVal    = (ret, err)
+                    self.xmlrpc_command_slot.return_value    = (ret, err)
             finally:
-                # Make sure that at any circumstance the checkCommand will be called repeatedly.
-                self.root.after(100, self.xmlrpcCheckCommand)
-        self.xmlrpcCheckCommand = checkCommand
-        self.root.after(100, checkCommand)
+                # Make sure that at any circumstance the check_command will be called repeatedly.
+                self.root.after(100, self.xmlrpc_check_command)
+        self.xmlrpc_check_command = check_command
+        self.root.after(100, check_command) # To Do: Use TkTimer instead of after
 
         
         
-def uiImagePath(filename):
-    return os.path.join(Application.instance.dirPath, 'images', filename)        
+def get_gui_image_path(filename):
+    return os.path.join(Application.instance.dir_path, 'images', filename)        
                 
 
         
@@ -395,10 +398,10 @@ def uiImagePath(filename):
 # see: http://effbot.org/zone/tkinter-threads.htm              
 class ConsoleText(ScrolledText):
     class StreamObserver(object):
-        def __init__(self, consoleText):
-            self.__consoleText  = consoleText
-        def update(self, streamType, content):
-            self.__consoleText.write(streamType, content)
+        def __init__(self, console_text):
+            self.__console_text  = console_text
+        def update(self, stream_type, content):
+            self.__console_text.write(stream_type, content)
     
     def __init__(self, *args, **kwargs):
         super(ConsoleText, self).__init__(*args, **kwargs)
@@ -411,28 +414,28 @@ class ConsoleText(ScrolledText):
         self.text.tag_configure('HISTORY',   foreground='purple')
         self.text.tag_configure('RETVAL',    foreground='orange')
         
-        self.text.bind('<KeyPress>', self.onKeyPress)
+        self.text.bind('<KeyPress>', self.on_key_press)
 
         
         # Experimenting with idlelib.AutoComplete
         #############################################################
-        self.indentwidth    = 4
-        self.tabwidth       = 4
+        self.indent_width    = 4
+        self.tab_width       = 4
         self.context_use_ps1    = '>>> '
-        self.__autoComplete = AutoComplete(self)  
+        self.__auto_complete = AutoComplete(self)  
         #############################################################
                 
         # Syntax highlight is implemented by idlelib
         #############################################################                
         self.percolator = Percolator(self.text)
-        self.colorDelegator = ColorDelegator()
-        self.percolator.insertfilter(self.colorDelegator)   
+        self.color_delegator = ColorDelegator()
+        self.percolator.insertfilter(self.color_delegator)   
         #############################################################                        
-        self.promptSymbol = '>>> '    
+        self.prompt_symbol = '>>> '    
         
         
-    def updateContent(self, tag, content):
-        r, c    = self.getCursorPos(END)
+    def update_content(self, tag, content):
+        r, c    = self.get_cursor_pos(END)
         start   = 'end-5c'
         stop    = 'end-1c'
         if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
@@ -444,79 +447,79 @@ class ConsoleText(ScrolledText):
         self.text.insert(END, content, tag)
 
         # Remove unnecessary highlighting
-        for tag in self.colorDelegator.tagdefs:
+        for tag in self.color_delegator.tagdefs:
             self.text.tag_remove(tag, start, "end")            
-        self.text.insert(END, self.promptSymbol)                
+        self.text.insert(END, self.prompt_symbol)                
         # Remove unnecessary highlighting
         self.text.tag_remove("TODO", "1.0", END)
         self.text.tag_add("SYNC", "1.0", END)                                
         self.text.see(END)                        
 
-    def onKeyPress(self, evt, codeList=[]):       
+    def on_key_press(self, evt, code_list=[]):       
         # Experimenting with idlelib's AutoComplete
         ##############################################################
         keysym = evt.keysym        
-        if self.__autoComplete.autocompletewindow and \
-                self.__autoComplete.autocompletewindow.is_active():
-            if self.__autoComplete.autocompletewindow.keypress_event(evt) == 'break':
+        if self.__auto_complete.autocompletewindow and \
+                self.__auto_complete.autocompletewindow.is_active():
+            if self.__auto_complete.autocompletewindow.keypress_event(evt) == 'break':
                 return 'break'
             else:
                 if keysym == 'Tab':
                     return 'break'
             
         if evt.keysym == 'Tab':
-            return self.__autoComplete.autocomplete_event(evt)
+            return self.__auto_complete.autocomplete_event(evt)
         ##############################################################
         if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
-            r, c    = self.getCursorPos()
-            prompt  = self.text.get(autoSubs('$r.0'), autoSubs('$r.4'))
+            r, c    = self.get_cursor_pos()
+            prompt  = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
             if prompt != '>>> ' and prompt != '... ':
                 return 'break'
             if evt.keycode==8 and c <= 4:
                 return 'break'
             if c < 4:
                 return 'break'
-            rend, cend  = self.getCursorPos('end-1c')
+            rend, cend  = self.get_cursor_pos('end-1c')
             if r < rend:
                 return 'break'                
             if evt.keycode == 13:
                 app = Application.instance
-                code    = self.text.get(autoSubs('$r.4'), autoSubs('$r.end'))
+                code    = self.text.get(auto_subs('$r.4'), auto_subs('$r.end'))
                 try:
-                    strippedCode     = code.strip()
-                    if strippedCode and strippedCode[0] == '!':
+                    stripped_code     = code.strip()
+                    if stripped_code and stripped_code[0] == '!':
                         # Execute a system command
                         app.execute(code)
-                        self.promptSymbol   = '>>> '
-                        self.updateContent(tag='', content='\n')
+                        self.prompt_symbol   = '>>> '
+                        self.update_content(tag='', content='\n')
                         return 'break'
-                    if strippedCode == '':
-                        code    = '\n'.join(codeList)
-                        del codeList[:]
-                    strippedCode    = code.strip()
-                    if strippedCode == '':
-                        self.promptSymbol   = '>>> '
-                        self.updateContent(tag='', content='\n') 
-                    elif strippedCode[-1] in (':', '\\') or codeList:
-                        codeList.append(code)
-                        self.promptSymbol   = '... '
-                        self.updateContent(tag='', content='\n')
+                    if stripped_code == '':
+                        code    = '\n'.join(code_list)
+                        del code_list[:]
+                    stripped_code    = code.strip()
+                    if stripped_code == '':
+                        self.prompt_symbol   = '>>> '
+                        self.update_content(tag='', content='\n') 
+                    elif stripped_code[-1] in (':', '\\') or code_list:
+                        code_list.append(code)
+                        self.prompt_symbol   = '... '
+                        self.update_content(tag='', content='\n')
                     else:
-                        self.promptSymbol   = '>>> '
-                        self.updateContent(tag='', content='\n')
+                        self.prompt_symbol   = '>>> '
+                        self.update_content(tag='', content='\n')
                         try:
                             ret = app.execute(code)
                         except:
                             traceback.print_exc()
                         if ret is not None:
-                            self.updateContent(tag='RETVAL', content=repr(ret)+'\n')
+                            self.update_content(tag='RETVAL', content=repr(ret)+'\n')
     
                 finally:
                     self.text.mark_set(INSERT, END)
                     self.text.see(END)
                     return 'break'            
                 
-    def getCursorPos(self, mark=INSERT): 
+    def get_cursor_pos(self, mark=INSERT): 
         return (int(i) for i in self.text.index(mark).split('.'))               
         
         
@@ -526,8 +529,8 @@ class ConsoleWindow(ModelNode):
         def __init__(self, console):
             self.__console  = console
             
-        def update(self, streamType, content):
-            self.__console.consoleText.updateContent(tag=streamType, content=content)
+        def update(self, stream_type, content):
+            self.__console.console_text.update_content(tag=stream_type, content=content)
 
     def __init__(self, *args, **kwargs):
         super(ConsoleWindow, self).__init__(*args, **kwargs)
@@ -535,15 +538,15 @@ class ConsoleWindow(ModelNode):
         root = app.root
         root.title('WaveSyn-Console')
 
-        dirIndicator = DirIndicator()
-        dirIndicator.pack(fill=X)
+        dir_indicator = DirIndicator()
+        dir_indicator.pack(fill=X)
         
-        txtStdOutErr = ConsoleText(root)
-        txtStdOutErr.pack(expand=YES, fill=BOTH)
-        self.__txtStdOutErr = txtStdOutErr
-        tagDefs = kwargs['tagDefs']
-        for key in tagDefs:
-            self.text.tag_configure(key, **tagDefs[key])        
+        self.__stdstream_text = stdstream_text = ConsoleText(root)
+        stdstream_text.pack(expand=YES, fill=BOTH)
+
+        tag_defs = kwargs['tag_defs']
+        for key in tag_defs:
+            self.text.tag_configure(key, **tag_defs[key])        
 
         nowtime = datetime.now().hour
         if nowtime >= 19:
@@ -552,55 +555,55 @@ class ConsoleWindow(ModelNode):
             time    = 'afternoon'
         else:
             time    = 'morning'
-        app.streamManager.write(templates.greeting.format(time), 'TIP')
+        app.stream_manager.write(templates.greeting.format(time), 'TIP')
         menu    = kwargs['menu']
-        makeMenu(root, menu, json=True)
-        self.__defaultCursor = self.__txtStdOutErr.text['cursor']
-        self.streamObserver = self.StreamObserver(self)
+        make_menu(root, menu, json=True)
+        self.__default_cursor = self.__stdstream_text.text['cursor']
+        self.stream_observer = self.StreamObserver(self)
         
         
     @property
-    def consoleText(self):
-        return self.__txtStdOutErr        
+    def console_text(self):
+        return self.__stdstream_text        
         
     @property
-    def promptSymbol(self):
-        return self.__txtStdOutErr.promptSymbol
+    def prompt_symbol(self):
+        return self.__stdstream_text.prompt_symbol
         
-    @promptSymbol.setter
-    def promptSymbol(self, val):
-        self.__txtStdOutErr.promptSymbol    = val
+    @prompt_symbol.setter
+    def prompt_symbol(self, val):
+        self.__stdstream_text.prompt_symbol    = val
         
     @property
-    def defaultCursor(self):
-        return self.__defaultCursor
+    def default_cursor(self):
+        return self.__default_cursor
                                                                
     @property
     def text(self):
-        return self.__txtStdOutErr.text
+        return self.__stdstream_text.text
                                                                     
     @Scripting.printable    
     def save(self, filename): # for scripting system
         with open(filename, 'w') as f:
-            f.write(self.__txtStdOutErr.getText())
+            f.write(self.__stdstream_text.get_text())
             
-    def onSaveAs(self):
+    def on_save_as(self):
         printCode   = True # For macro recording
-        fileName    = asksaveasfilename(filetypes=[('All types of files', '*.*')])
-        if not fileName:
+        filename    = asksaveasfilename(filetypes=[('All types of files', '*.*')])
+        if not filename:
             return
-        self.save(fileName)
+        self.save(filename)
     
     @Scripting.printable    
     def clear(self):
-        self.__txtStdOutErr.clear()
+        self.__stdstream_text.clear()
         print('', sep='', end='')
         
-    def onClear(self):
+    def on_clear(self):
         printCode   = True # For macro recording
         self.clear()
 
-    def windowAttributes(self, *args, **kwargs):
+    def set_window_attributes(self, *args, **kwargs):
         return Application.instance.root.wm_attributes(*args, **kwargs)        
         
         

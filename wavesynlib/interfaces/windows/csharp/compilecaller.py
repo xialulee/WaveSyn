@@ -14,9 +14,9 @@ import subprocess
 import tempfile
 from tkFileDialog import askopenfilename, asksaveasfilename
 from Tkinter import Tk
-from wavesynlib.languagecenter.utils import autoSubs
+from wavesynlib.languagecenter.utils import auto_subs
 
-def selfDir():
+def get_my_dir():
     return abspath(dirname(inspect.getfile(inspect.currentframe())))
 
     
@@ -35,13 +35,13 @@ class ScriptCaller
 
 def compileCaller(scriptPath, exeFileName):
     codeFile = tempfile.NamedTemporaryFile(delete=False)
-    print(autoSubs(callerCode), file=codeFile)
+    print(auto_subs(callerCode), file=codeFile)
     codeFile.close()
     
     try:    
         powershell = subprocess.Popen(['powershell.exe',
             '-ExecutionPolicy', 'Unrestricted',
-            join(selfDir(), 'cscompiler.ps1'),
+            join(get_my_dir(), 'cscompiler.ps1'),
             codeFile.name,
             exeFileName,
             'System.dll'

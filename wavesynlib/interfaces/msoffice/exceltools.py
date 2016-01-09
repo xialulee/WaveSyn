@@ -12,7 +12,7 @@ from copy                            import copy
 from wavesynlib.guicomponents        import ScrolledList
 from wavesynlib.languagecenter.utils import MethodDelegator
 
-def selectSheet(workBook, ignoreBlankSheet=True, labelText='Select a sheet'):
+def selectSheet(workBook, ignoreBlankSheet=True, label_text='Select a sheet'):
     retval  = [0]
     
     sheetNames  = workBook.getSheetNames()
@@ -30,7 +30,7 @@ def selectSheet(workBook, ignoreBlankSheet=True, labelText='Select a sheet'):
     
     win = Toplevel()
     win.resizable(width=False, height=False)
-    Label(win, text=labelText).pack()
+    Label(win, text=label_text).pack()
                 
     listBox = ScrolledList(win)
     listBox.pack()
@@ -38,7 +38,7 @@ def selectSheet(workBook, ignoreBlankSheet=True, labelText='Select a sheet'):
         listBox.insert(END, name)
         
     def onClick():
-        retval[0]   = listBox.list.get(listBox.curSelection[0])
+        retval[0]   = listBox.list.get(listBox.current_selection[0])
         win.destroy()
     Button(win, text='OK', command=onClick).pack()
     win.grab_set()
@@ -48,20 +48,20 @@ def selectSheet(workBook, ignoreBlankSheet=True, labelText='Select a sheet'):
     
     
 class WorkBook(object):
-    methodNameMap   = {
+    method_name_map   = {
         'getSheetNames':  'get_sheet_names',
         'getSheetByName':    'get_sheet_by_name'
     }
-    for methodName in methodNameMap:
-        locals()[methodName]    = MethodDelegator('book', methodNameMap[methodName])
+    for method_name in method_name_map:
+        locals()[method_name]    = MethodDelegator('book', method_name_map[method_name])
         
-    def __init__(self, fileName=None):
-        if fileName:
-            self.load(fileName)
+    def __init__(self, filename=None):
+        if filename:
+            self.load(filename)
             
-    def load(self, fileName):
-        self.__fileName = fileName
-        self.__book     = load_workbook(fileName)
+    def load(self, filename):
+        self.__filename = filename
+        self.__book     = load_workbook(filename)
         
     def getColumn(self, sheetName, columnIdx):
         workSheet   = self.__book.get_sheet_by_name(sheetName)

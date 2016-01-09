@@ -54,22 +54,22 @@ def main(argv):
 
     paths.insert(0, '.')
     
-    filePaths = []
+    file_paths = []
     
     for path, ext in product(paths, exts):
         testPath = ''.join([os.path.join(path, name), ext])
         if os.path.exists(testPath):
             absTestPath    = os.path.abspath(testPath)
-            if absTestPath not in filePaths: # Prevent redundant output
-                filePaths.append(absTestPath)
+            if absTestPath not in file_paths: # Prevent redundant output
+                file_paths.append(absTestPath)
             if not allCmd:
                 break        
             
-    if filePaths:
-        for filePath in filePaths:
-            print(filePath)
+    if file_paths:
+        for file_path in file_paths:
+            print(file_path)
             if wopen:
-                winopen(filePath)
+                winopen(file_path)
     else:
         print('which.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
         return ERROR_NOTFOUND

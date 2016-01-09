@@ -23,7 +23,7 @@ from PIL                                           import ImageTk
 
 from functools                                     import partial
 
-from wavesynlib.languagecenter.utils               import autoSubs, MethodDelegator
+from wavesynlib.languagecenter.utils               import auto_subs, MethodDelegator
 from wavesynlib.languagecenter.designpatterns      import SimpleObserver, Observable
 
 
@@ -73,14 +73,14 @@ else:
             pass
 
 
-def checkValue(d, i, P, s, S, v, V, W, func):
+def check_value(d, i, P, s, S, v, V, W, func):
     try:
         func(P)
         return True
     except ValueError:
         return True if P=='' or P=='-' else False
         
-def checkPositiveFloat(d, i, P, s, S, v, V, W):
+def check_positive_float(d, i, P, s, S, v, V, W):
     try:
         assert float(P) > 0
         return True
@@ -90,11 +90,11 @@ def checkPositiveFloat(d, i, P, s, S, v, V, W):
 class ValueChecker(object):
     def __init__(self, root):
         self.__root = root
-        self.checkInt   = (root.register(partial(checkValue, func=int)),
+        self.check_int   = (root.register(partial(check_value, func=int)),
                     '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.checkFloat = (root.register(partial(checkValue, func=float)),
+        self.check_float = (root.register(partial(check_value, func=float)),
                     '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        self.checkPositiveFloat = (root.register(checkPositiveFloat),
+        self.check_positive_float = (root.register(check_positive_float),
                        '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
 
 
@@ -130,14 +130,14 @@ class LabeledScale(Frame, object):
         self.__formatter    = formatter
         Frame.__init__(self, *args, **kwargs)
         Label(self, text=name).pack(side=LEFT)
-        self.__scale    = Scale(self, from_=from_, to=to, command=self.onChange)
+        self.__scale    = Scale(self, from_=from_, to=to, command=self._on_change)
         self.__scale.pack(side=LEFT, fill=X)
-        lblVal  = Label(self)
-        lblVal.pack(side=LEFT)
-        self.__labelValue   = lblVal
+        value_label  = Label(self)
+        value_label.pack(side=LEFT)
+        self.__value_label   = value_label
         
-    def onChange(self, val):
-        self.__labelValue['text']  = self.__formatter(val)
+    def _on_change(self, val):
+        self.__value_label['text']  = self.__formatter(val)
         
     def get(self):
         return self.__scale.get()
@@ -153,7 +153,7 @@ class ParamItem(Frame, object):
         self.__label.pack(side=LEFT)
         self.__entry    = Entry(self)
         self.__entry.pack(fill=X, expand=YES)
-        self.__checkFunc    = None
+        self.__checker_function    = None
         self.__image        = None
 
     @property
@@ -165,76 +165,76 @@ class ParamItem(Frame, object):
         return self.__entry
 
     @property
-    def labelText(self):
+    def label_text(self):
         return self.__label['text']
 
-    @labelText.setter
-    def labelText(self, text):
+    @label_text.setter
+    def label_text(self, text):
         self.__label['text']    = text
         
     @property
-    def labelImage(self):
+    def label_image(self):
         return self.__label['image']
         
-    @labelImage.setter
-    def labelImage(self, image):
+    @label_image.setter
+    def label_image(self, image):
         self.__image    = image
         self.__label['image']   = image
 
     @property
-    def entryText(self):
+    def entry_text(self):
         return self.__entry.get()
 
-    @entryText.setter
-    def entryText(self, text):
+    @entry_text.setter
+    def entry_text(self, text):
         self.__entry.delete(0, END)
         self.__entry.insert(0, text)
         
     @property
-    def entryVar(self):
+    def entry_variable(self):
         return self.__entry['textvariable']
         
-    @entryVar.setter
-    def entryVar(self, val):
+    @entry_variable.setter
+    def entry_variable(self, val):
         self.__entry.config(textvariable=val)
 
-    def getInt(self):
+    def get_int(self):
         i   = self.__entry.get()
         return 0 if not i else int(self.__entry.get())
 
-    def getFloat(self):
+    def get_float(self):
         return float(self.__entry.get())
 
     @property
-    def labelWidth(self):
+    def label_width(self):
         return self.__label['width']
 
-    @labelWidth.setter
-    def labelWidth(self, width):
+    @label_width.setter
+    def label_width(self, width):
         self.__label['width']   = width
 
     @property
-    def entryWidth(self):
+    def entry_width(self):
         return self.__entry['width']
 
-    @entryWidth.setter
-    def entryWidth(self, width):
+    @entry_width.setter
+    def entry_width(self, width):
         self.__entry['width']   = width
 
     @property
-    def checkFunc(self):
-        return self.__checkFunc
+    def checker_function(self):
+        return self.__checker_function
 
-    @checkFunc.setter
-    def checkFunc(self, func):
-        self.__checkFunc    = func
+    @checker_function.setter
+    def checker_function(self, func):
+        self.__checker_function    = func
         self.__entry.config(validate='key', validatecommand=func)
                 
 
-class PilImageFrame(Frame, object):
+class PILImageFrame(Frame, object):
     def __init__(self, *args, **kwargs):
-        pilImage    = kwargs.pop('pilImage')
-        photo   = ImageTk.PhotoImage(pilImage)
+        pil_image    = kwargs.pop('pil_image')
+        photo   = ImageTk.PhotoImage(pil_image)
         self.__photoImage   = photo
         Frame.__init__(self, *args, **kwargs)
         self.__label        = label = Label(self, image=photo)
@@ -246,10 +246,10 @@ class PilImageFrame(Frame, object):
 class TextWinHotkey(Text):
     def __init__(self, *args, **kwargs):
         Text.__init__(self, *args, **kwargs)
-        self.bind('<Control-Key-a>', lambda event: self.selectAll())
+        self.bind('<Control-Key-a>', lambda event: self.select_all())
         self.bind('<Control-Key-c>', lambda event: 0)
 
-    def selectAll(self):
+    def select_all(self):
         self.tag_add(SEL, '1.0', 'end-1c')
         self.see(INSERT)
         self.focus()
@@ -260,9 +260,9 @@ class ScrolledTree(Frame):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         self.pack(expand=YES, fill=BOTH)
-        self.makeWidgets()
+        self.make_widgets()
         
-    def makeWidgets(self):
+    def make_widgets(self):
         sbar    = Scrollbar(self)
         tree    = Treeview(self)
         sbar.config(command=tree.yview)
@@ -285,12 +285,12 @@ class ScrolledText(Frame, object):
     def __init__(self, parent=None, text='', file=None):
         Frame.__init__(self, parent)
         self.pack(expand=YES, fill=BOTH)
-        self.makeWidgets()
-        self.setText(text, file)
+        self.make_widgets()
+        self.set_text(text, file)
         
 
 
-    def makeWidgets(self):
+    def make_widgets(self):
         sbar    = Scrollbar(self)
         text    = TextWinHotkey(self, relief=SUNKEN)
         sbar.config(command=text.yview)
@@ -299,7 +299,7 @@ class ScrolledText(Frame, object):
         text.pack(side=LEFT, expand=YES, fill=BOTH)
         self.text   = text
 
-    def setText(self, text='', file=None):
+    def set_text(self, text='', file=None):
         if file:
             with open(file, 'r') as f:
                 text    = f.read().decode('gbk')
@@ -309,18 +309,18 @@ class ScrolledText(Frame, object):
         self.text.focus()
         
     def clear(self):
-        self.setText()
+        self.set_text()
 
-    def appendText(self, text=''):
+    def append_text(self, text=''):
         self.text.insert(END, text)
 
-    def getText(self):
+    def get_text(self):
         return self.text.get('1.0', END+'-1c')
 
-    def selectAll(self):
-        return self.text.selectAll()
+    def select_all(self):
+        return self.text.select_all()
 
-    def findText(self, target):
+    def find_text(self, target):
         if target:
             where   = self.text.search(target, INSERT, END)
             if where:
@@ -341,15 +341,15 @@ class ScrolledText(Frame, object):
 
 
 class ScrolledList(Frame, object):
-    methodNameMap   = {
+    method_name_map   = {
         'insert':'insert', 
         'delete':'delete', 
         'itemConfig':'itemconfig',
         'listConfig':'config'
     }
     
-    for methodName in methodNameMap:
-        locals()[methodName]    = MethodDelegator('list', methodNameMap[methodName])
+    for method_name in method_name_map:
+        locals()[method_name]    = MethodDelegator('list', method_name_map[method_name])
     
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
@@ -359,9 +359,9 @@ class ScrolledList(Frame, object):
         list.config(yscrollcommand=sbar.set)
         sbar.pack(side=RIGHT, fill=Y)
         list.pack(side=LEFT, expand=YES, fill=BOTH)
-        list.bind('<<ListboxSelect>>', self.onListboxClick)
+        list.bind('<<ListboxSelect>>', self._on_listbox_click)
         
-        self.__listClick = None
+        self.__list_click_callback = None
         self.__list = list
         self.__sbar = sbar
         
@@ -378,26 +378,26 @@ class ScrolledList(Frame, object):
         self.__list.delete(0, END)
                 
     @property
-    def curSelection(self):
+    def current_selection(self):
         return self.__list.curselection()
         
     @property
-    def listClick(self):
-        return self.__listClick
+    def list_click_callback(self):
+        return self.__list_click_callback
 
-    @listClick.setter
-    def listClick(self, val):
+    @list_click_callback.setter
+    def list_click_callback(self, val):
         if not callable(val):
             raise TypeError
-        self.__listClick = val
+        self.__list_click_callback = val
 
-    def onListboxClick(self, event):
+    def _on_listbox_click(self, event):
         index = self.__list.curselection()
         if len(index) > 0:
             index = index[0]
             label = self.__list.get(index)
-            if self.listClick:
-                self.listClick(index, label)
+            if self.list_click_callback:
+                self.list_click_callback(index, label)
                 
                 
                 
@@ -406,18 +406,18 @@ class DirIndicator(Frame, Observable):
         Frame.__init__(self, *args, **kwargs)
         Observable.__init__(self)
         self.__text     = text      = Text(self, wrap=NONE, height=1.2, relief=SOLID)
-        text.bind('<Configure>', self._onResize)
-        text.bind('<KeyPress>', self._onKeyPress)
+        text.bind('<Configure>', self._on_resize)
+        text.bind('<KeyPress>', self._on_key_press)
         text.pack(fill=X, expand=YES, side=LEFT)
         self.__defaultCursor        = text['cursor']
-        self.__defaultBGColor       = text['background']
+        self.__default_background_color       = text['background']
 
 
         # Browse Button
         text.tag_config('browse_button', foreground='orange')
-        text.tag_bind('browse_button', '<Button-1>', self._onButtonClick)
-        text.tag_bind('browse_button', '<Enter>', lambda *args: self._handCursor(True))
-        text.tag_bind('browse_button', '<Leave>', lambda *args: self._handCursor(False))
+        text.tag_bind('browse_button', '<Button-1>', self._on_button_click)
+        text.tag_bind('browse_button', '<Enter>', lambda *args: self._change_cursor_to_hand(True))
+        text.tag_bind('browse_button', '<Leave>', lambda *args: self._change_cursor_to_hand(False))
         # End Browse Button
                 
         self.__blankLen     = 2
@@ -427,32 +427,32 @@ class DirIndicator(Frame, Observable):
         
         from wavesynlib.interfaces.timer.tk import TkTimer
         self.__timer        = TkTimer(self, interval=500)
-        self.__timer.addObserver(self)
+        self.__timer.add_observer(self)
         self.__timer.active = True
                         
-    def _onButtonClick(self, *args):
+    def _on_button_click(self, *args):
         directory   = askdirectory()
         if directory:
             os.chdir(directory)
             
-    def _onResize(self, *args):
+    def _on_resize(self, *args):
         self.__text.see(END)
         self.__text.mark_set(INSERT, END)
 
 
-    def _handCursor(self, hand):
+    def _change_cursor_to_hand(self, hand):
         text    = self.__text
         if hand:
             text.config(cursor='hand2')
         else:
             text.config(cursor=self.__defaultCursor)
 
-    def _onFolderNameHover(self, tagName, enter=True, bgColor='pale green'):
-        self._handCursor(enter)
-        bgColor     = bgColor if enter else self.__defaultBGColor
-        self.__text.tag_config(tagName, background=bgColor)        
+    def _on_folder_name_hover(self, tagName, enter=True, background_color='pale green'):
+        self._change_cursor_to_hand(enter)
+        background_color     = background_color if enter else self.__default_background_color
+        self.__text.tag_config(tagName, background=background_color)        
         
-    def _onSepClick(self, evt, path, menu=[None]):
+    def _on_seperator_click(self, evt, path, menu=[None]):
         items   = [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item))]
         if items: # Not Empty
             x, y    = self.winfo_pointerx(), self.winfo_pointery()
@@ -461,7 +461,7 @@ class DirIndicator(Frame, Observable):
                 menuWin.destroy()
             menuWin     = menu[0]   = Toplevel()
             menuWin.overrideredirect(1) # No Title bar
-            menuWin.geometry(autoSubs('200x300+$x+$y'))
+            menuWin.geometry(auto_subs('200x300+$x+$y'))
             menuWin.bind('<FocusOut>', lambda evt: menuWin.destroy())
             itemList    = ScrolledList(menuWin)
             itemList.pack(expand=YES, fill=BOTH)
@@ -469,23 +469,23 @@ class DirIndicator(Frame, Observable):
             for item in items:
                 itemList.insert(END, item)
                 
-            def onListClick(index, label):
+            def on_list_click(index, label):
                 fullPath    = os.path.join(path, label)
                 os.chdir(fullPath)
                 menuWin.destroy()
                 
-            itemList.listClick  = onListClick
+            itemList.list_click_callback  = on_list_click
                         
-    def _onKeyPress(self, evt):
+    def _on_key_press(self, evt):
         if evt.keycode == 13: # \n
-            path    = self._getPathInText()
+            path    = self._get_path()
             if os.path.exists(path):
                 os.chdir(path)
             else:
                 self._refresh(self.__cwd)
             return 'break' # Not pass the event to the next handler.
             
-    def _getPathInText(self):
+    def _get_path(self):
         path    = self.__text.get('1.0', END)
         path    = path[:-(self.__blankLen + len(self.__browseText))]            
         return path
@@ -495,7 +495,7 @@ class DirIndicator(Frame, Observable):
         cwd     = cwd.replace(os.path.altsep, os.path.sep)
         if self.__cwd != cwd:
             self._refresh(cwd)
-            self.notifyObservers(cwd)
+            self.notify_observers(cwd)
 
     def _refresh(self, cwd):
         text        = self.__text
@@ -514,17 +514,17 @@ class DirIndicator(Frame, Observable):
             tagName     = 'folder_name_' + str(index)
             text.tag_config(tagName)
             text.tag_bind(tagName, '<Button-1>', lambda evt, cumPath=cumPath: os.chdir(cumPath))
-            text.tag_bind(tagName, '<Enter>', lambda evt, tagName=tagName: self._onFolderNameHover(tagName, enter=True))
-            text.tag_bind(tagName, '<Leave>', lambda evt, tagName=tagName: self._onFolderNameHover(tagName, enter=False))
+            text.tag_bind(tagName, '<Enter>', lambda evt, tagName=tagName: self._on_folder_name_hover(tagName, enter=True))
+            text.tag_bind(tagName, '<Leave>', lambda evt, tagName=tagName: self._on_folder_name_hover(tagName, enter=False))
             text.insert(END, folder, tagName)
             # END Configure folder name
             
             # Configure folder sep
             sepName     = 'sep_tag_' + str(index)                
             text.tag_config(sepName)
-            text.tag_bind(sepName, '<Button-1>', lambda evt, cumPath=cumPath: self._onSepClick(evt, cumPath))
-            text.tag_bind(sepName, '<Enter>', lambda evt, tagName=sepName: self._onFolderNameHover(tagName, enter=True, bgColor='orange'))
-            text.tag_bind(sepName, '<Leave>', lambda evt, tagName=sepName: self._onFolderNameHover(tagName, enter=False, bgColor='orange'))
+            text.tag_bind(sepName, '<Button-1>', lambda evt, cumPath=cumPath: self._on_seperator_click(evt, cumPath))
+            text.tag_bind(sepName, '<Enter>', lambda evt, tagName=sepName: self._on_folder_name_hover(tagName, enter=True, background_color='orange'))
+            text.tag_bind(sepName, '<Leave>', lambda evt, tagName=sepName: self._on_folder_name_hover(tagName, enter=False, background_color='orange'))
             text.insert(END, os.path.sep, sepName)
             # END Configure folder sep
         
@@ -569,7 +569,7 @@ class FontFrame(Frame, object):
         fonts.sort()
         for font in fonts:
             faceList.insert(END, font)
-        faceList.listClick = self.onFaceSelect
+        faceList.list_click_callback = self._on_face_select
         self.faceList = faceList
             
         # Font size
@@ -579,7 +579,7 @@ class FontFrame(Frame, object):
         sizeCombo.pack()
         sizeCombo['value'] = range(7, 23)
         sizeCombo.current(0)
-        sizeCombo.bind('<<ComboboxSelected>>', self.onSizeSelect)
+        sizeCombo.bind('<<ComboboxSelected>>', self._on_size_select)
         self.sizeCombo = sizeCombo
         
         # Font Sample
@@ -594,19 +594,19 @@ class FontFrame(Frame, object):
         self.size = defaultFont[1]
         sizeCombo.current(self.size - 7)
         
-    def onFaceSelect(self, index, face):
+    def _on_face_select(self, index, face):
         size = self.sizeCombo.get()
-        self.setSample(face, size)
+        self._set_sample(face, size)
         
-    def onSizeSelect(self, event):
-        self.setSample(self.face, self.sizeCombo.get())
+    def _on_size_select(self, event):
+        self._set_sample(self.face, self.sizeCombo.get())
         
-    def setSample(self, face, size):
+    def _set_sample(self, face, size):
         self.face = face
         self.size = size
         self.sampleLabel.config(font=(self.face, self.size, tkFont.NORMAL))                            
             
-def askFont():
+def ask_font():
     win = Toplevel()
     win.title('Font Dialog')
 
@@ -643,11 +643,11 @@ class GUIConsumer(object):
             raise TypeError('timer should be an instance of a derived class of BaseObservableTimer')
         self.__active = False
         self.__timer = timer
-        self.__timer.addObserver(SimpleObserver(self.__onTick))
+        self.__timer.add_observer(SimpleObserver(self._on_tick))
         self.__queue = Queue.Queue()
         self.__producerThread = None        
         
-    def __onTick(self):
+    def _on_tick(self):
         try:
             while True:
                 data = self.__queue.get_nowait()
@@ -656,7 +656,7 @@ class GUIConsumer(object):
         except Queue.Empty:
             pass
         
-    def __runProducer(self):
+    def _run_producer(self):
         producer = self.__producer
         while True:
             self.__queue.put(producer())
@@ -672,7 +672,7 @@ class GUIConsumer(object):
     def active(self, val):
         self.__active = val
         if self.__active is True and self.__producerThread is None:
-            self.__producerThread = thread.start_new_thread(self.__runProducer)
+            self.__producerThread = thread.start_new_thread(self._run_producer)
             
 
 class ComplexCanvas(Canvas, object):
@@ -688,18 +688,18 @@ class ComplexCanvas(Canvas, object):
     def center(self, val):
         self.__center   = val
     
-    def createCircle(self, radius, **options):
+    def complex_create_circle(self, radius, **options):
         center  = self.__center
         bbox    = (center.real-radius, center.imag-radius, center.real+radius, center.imag+radius)
         return self.create_oval(*bbox, **options)
         
-    def createLine(self, p1, p2, **options):
+    def complex_create_line(self, p1, p2, **options):
         p1      = p1 + self.center
         p2      = p2 + self.center
         bbox    = (p1.real, p1.imag, p2.real, p2.imag)
         return self.create_line(*bbox, **options)
         
-    def complexCoords(self, itemID, p1=None, p2=None, radius=None, center=0.0):
+    def complex_coords(self, itemID, p1=None, p2=None, radius=None, center=0.0):
         if p1:
             p1      = p1 + self.center
             p2      = p2 + self.center
@@ -730,7 +730,7 @@ class IQSlider(Frame, Observable):
                 iq.canvas.itemconfig(self.__yLine, dash=[1, 1])
             self.__active   = False
                 
-        def setPos(self, pos):
+        def set_pos(self, pos):
             radius  = self.__radius
             center  = self.__iq.center
             
@@ -745,8 +745,8 @@ class IQSlider(Frame, Observable):
             iq.canvas.coords(self.__xLine, center.real-iq.radius, pos.imag, center.real+iq.radius, pos.imag)
             iq.canvas.coords(self.__yLine, pos.real, center.imag-iq.radius, pos.real, center.imag+iq.radius)
             
-            iMag    = (pos.real - center.real) / iq.radius * iq.iRange
-            qMag    = -(pos.imag - center.imag) / iq.radius * iq.qRange
+            iMag    = (pos.real - center.real) / iq.radius * iq.i_range
+            qMag    = -(pos.imag - center.imag) / iq.radius * iq.q_range
             
             iq.canvas.itemconfig(self.__textIQ, text=u' I:{}, Q:{} '.format(int(iMag), int(qMag)))            
             iq.canvas.coords(self.__textIQ, pos.real, pos.imag)
@@ -774,8 +774,8 @@ class IQSlider(Frame, Observable):
     
     
     def __init__(self, *args, **kwargs):
-        self.__iRange   =   iRange  = kwargs.pop('iRange')
-        self.__qRange   =   qRange  = kwargs.pop('qRange')
+        self.__i_range   =   i_range  = kwargs.pop('i_range')
+        self.__q_range   =   q_range  = kwargs.pop('q_range')
         Frame.__init__(self, *args, **kwargs)
         Observable.__init__(self)
                        
@@ -784,10 +784,10 @@ class IQSlider(Frame, Observable):
         canvas.grid(row=0, column=0, sticky='wens')
         canvas['bg']    = 'black'
 
-        self.__qSlider  = qSlider   = Scale(self, from_=qRange, to=-qRange, orient='vertical')
+        self.__qSlider  = qSlider   = Scale(self, from_=q_range, to=-q_range, orient='vertical')
 
         qSlider.grid(row=0, column=1, sticky='e')
-        self.__iSlider  = iSlider   = Scale(self, from_=-iRange, to=iRange, orient='horizontal')        
+        self.__iSlider  = iSlider   = Scale(self, from_=-i_range, to=i_range, orient='horizontal')        
 
         iSlider.grid(row=1, column=0, sticky='s')
         
@@ -803,7 +803,7 @@ class IQSlider(Frame, Observable):
         
         self.__compMag  = 0 + 0j
         
-        canvas.bind('<Configure>', self._onResize)
+        canvas.bind('<Configure>', self._on_resize)
         self.__borderBox    = canvas.create_rectangle(0, 0, 10, 10, outline='green')        
         self.__borderCircle = canvas.create_oval(0, 0, 10, 10, outline='green', dash=[1, 2])
         self.__middleCircle = canvas.create_oval(0, 0, 10, 10, outline='green', dash=[1, 2])
@@ -822,10 +822,10 @@ class IQSlider(Frame, Observable):
         self.__indicator1   = self.Indicator(self, solid=False)
         self.__indicator2   = self.Indicator(self)
         
-        canvas.bind('<Motion>', self._onMouseMove)
-        canvas.bind('<Button-1>', self._onClick)
-        iSlider['command']  = self._onIQScale
-        qSlider['command']  = self._onIQScale
+        canvas.bind('<Motion>', self._on_mouse_move)
+        canvas.bind('<Button-1>', self._on_click)
+        iSlider['command']  = self._on_iq_scale
+        qSlider['command']  = self._on_iq_scale
         
 
     @property
@@ -845,14 +845,14 @@ class IQSlider(Frame, Observable):
         return self.__radius
         
     @property
-    def iRange(self):
-        return self.__iRange
+    def i_range(self):
+        return self.__i_range
         
     @property
-    def qRange(self):
-        return self.__qRange
+    def q_range(self):
+        return self.__q_range
         
-    def isInBox(self, pos):
+    def is_point_in_box(self, pos):
         bbox    = self.bbox
         if bbox[0]<=pos.real<=bbox[2] and bbox[1]<=pos.imag<=bbox[3]:
             return True
@@ -870,14 +870,14 @@ class IQSlider(Frame, Observable):
         b2      = radius + 1j * radius
 
         for item in (self.__borderBox, self.__borderCircle):
-            canvas.complexCoords(item, p1=b1, p2=b2)
+            canvas.complex_coords(item, p1=b1, p2=b2)
                 
-        canvas.complexCoords(self.__middleCircle, p1=0.5*b1, p2=0.5*b2)
+        canvas.complex_coords(self.__middleCircle, p1=0.5*b1, p2=0.5*b2)
         
-        canvas.complexCoords(self.__vLine, -1j*radius, 1j*radius)
-        canvas.complexCoords(self.__hLine, -radius, radius)
-        canvas.complexCoords(self.__dLine, p1=b1, p2=b2)
-        canvas.complexCoords(self.__cdLine, p1=b1.conjugate(), p2=b2.conjugate())
+        canvas.complex_coords(self.__vLine, -1j*radius, 1j*radius)
+        canvas.complex_coords(self.__hLine, -radius, radius)
+        canvas.complex_coords(self.__dLine, p1=b1, p2=b2)
+        canvas.complex_coords(self.__cdLine, p1=b1.conjugate(), p2=b2.conjugate())
                 
         exp     = cmath.exp
         sR      = 3
@@ -885,20 +885,20 @@ class IQSlider(Frame, Observable):
         
         for index, circle in enumerate(self.__scaleCircles):
             pos = radius * exp(1j * delta * index)
-            canvas.complexCoords(circle, center=pos, radius=sR)
+            canvas.complex_coords(circle, center=pos, radius=sR)
             
         if self.__indicator2.active:
-            posX    = self.__compMag.real / self.__iRange * radius + center.real
-            posY    = -self.__compMag.imag / self.__qRange * radius + center.imag
-            self.__indicator2.setPos(posX + 1j * posY)
+            posX    = self.__compMag.real / self.__i_range * radius + center.real
+            posY    = -self.__compMag.imag / self.__q_range * radius + center.imag
+            self.__indicator2.set_pos(posX + 1j * posY)
             
         if self.__indicator1.active:
-            posX    = self.__iSlider.get() / self.__iRange * radius + center.real
-            posY    = -self.__qSlider.get() / self.__qRange * radius + center.imag
-            self.__indicator1.setPos(posX + 1j * posY)
+            posX    = self.__iSlider.get() / self.__i_range * radius + center.real
+            posY    = -self.__qSlider.get() / self.__q_range * radius + center.imag
+            self.__indicator1.set_pos(posX + 1j * posY)
         
         
-    def _onResize(self, event):
+    def _on_resize(self, event):
         pad     = self.__pad
         width, height   = event.width, event.height
         size                = min(width, height) - pad
@@ -914,38 +914,38 @@ class IQSlider(Frame, Observable):
         self.__bbox     = [int(b) for b in (b1.real, b1.imag, b2.real, b2.imag)]                
         self._redraw()
         
-    def _onMouseMove(self, event):
+    def _on_mouse_move(self, event):
         pos     = event.x + 1j * event.y
-        if self.isInBox(pos):
+        if self.is_point_in_box(pos):
             absPos  = pos-self.center
             bbox    = self.bbox
             radius  = (bbox[2] - bbox[0]) / 2
-            self.__iSlider.set(int(absPos.real/radius*self.__iRange))
-            self.__qSlider.set(int(-absPos.imag/radius*self.__qRange))
-            self.__indicator1.setPos(pos)
+            self.__iSlider.set(int(absPos.real/radius*self.__i_range))
+            self.__qSlider.set(int(-absPos.imag/radius*self.__q_range))
+            self.__indicator1.set_pos(pos)
             
-    def _onClick(self, event):
+    def _on_click(self, event):
         pos     = event.x + 1j * event.y
-        if self.isInBox(pos):
-            self.__indicator2.setPos(pos)
+        if self.is_point_in_box(pos):
+            self.__indicator2.set_pos(pos)
             self.__compMag  = self.__iSlider.get() + 1j * self.__qSlider.get()
             
-    def _onIQScale(self, val):
+    def _on_iq_scale(self, val):
         self._redraw()
 
             
             
         
 class ArrayRenderMixin(object):
-    def renderArray(self, arr, imageId=None):
+    def render_array(self, arr, image_id=None):
         image   = PIL.Image.fromarray(arr)
         photoImage   = ImageTk.PhotoImage(image=image)
 
-        if not imageId:
-            imageId  = self.create_image((0, 0), image=photoImage, anchor='nw')
+        if not image_id:
+            image_id  = self.create_image((0, 0), image=photoImage, anchor='nw')
         else:
-            self.itemconfig(imageId, image=photoImage)
-        return imageId, photoImage
+            self.itemconfig(image_id, image=photoImage)
+        return image_id, photoImage
 
         
 if __name__ == '__main__':
@@ -955,10 +955,10 @@ if __name__ == '__main__':
 #    node    = tree.insert(root, END, text='node')
 #    window.mainloop()
 #    window = Tk()
-#    print (askFont())
+#    print (ask_font())
 #    window.mainloop()
     root    = Tk()
-    iq      = IQSlider(root, iRange=512, qRange=512, relief='raised')
+    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
     iq.pack(expand='yes', fill='both')
     root.mainloop()
     

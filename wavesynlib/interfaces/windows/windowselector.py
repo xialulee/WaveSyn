@@ -23,7 +23,7 @@ from Tkinter import *
 
 from wavesynlib.interfaces.timer.tk           import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
-from wavesynlib.languagecenter.utils          import evalFmt
+from wavesynlib.languagecenter.utils          import eval_format
 
 class WindowSelector(object):
     def __init__(self):
@@ -55,10 +55,10 @@ class WindowSelector(object):
             if not (cursorPos.y >= selfRect.top and cursorPos.x >= selfRect.left and cursorPos.y <= selfRect.bottom and cursorPos.x <= selfRect.right) and (handle != GetParent(selfHandle)):                
                 self.__selWindow = handle                
                 GetWindowRect(handle, byref(windowRect))
-                self.__root.geometry(evalFmt('+{max(0, windowRect.left)}+{max(0, windowRect.top)}'))                
+                self.__root.geometry(eval_format('+{max(0, windowRect.left)}+{max(0, windowRect.top)}'))                
 
         timer          = self.__timer
-        timer.addObserver(getWindow)
+        timer.add_observer(getWindow)
         timer.interval = 500
         timer.active = True
         self.__root.mainloop()

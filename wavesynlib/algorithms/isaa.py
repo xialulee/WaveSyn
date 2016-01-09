@@ -52,7 +52,7 @@ class DIAC(Algorithm):
             Qr      = array(Qr)        
         Proj_A_DIAC = CProj_A_DIAC(Qr)
         Tisaa   = (Proj_M1 * Proj_A_DIAC) ** K
-        Tisaa.progressChecker   = self.progressChecker
+        Tisaa.progress_checker   = self.progress_checker
         return Tisaa(s_init)
 
 

@@ -93,6 +93,6 @@ class DIAC(Algorithm):
             fft(s, a, 1) # Inverse            
             unimodularize(s, s)
             s[N:]       = cut
-            self.progressChecker(k, K, None)
+            self.progress_checker(k, K, None)
         return s.get()[:N]        
         

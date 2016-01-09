@@ -52,7 +52,7 @@ if __name__ == '__main__':
     def observer(*args, **kwargs):
         tbIcon.progress = pbReader.position
         
-    timer.addObserver(observer)
+    timer.add_observer(observer)
     timer.active = True
     
     root.mainloop()

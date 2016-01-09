@@ -1,25 +1,25 @@
 from wavesynlib.languagecenter.wavesynscript  import ModelNode, NodeDict
 from wavesynlib.languagecenter.designpatterns import Observable
-from wavesynlib.languagecenter.utils          import evalFmt
+from wavesynlib.languagecenter.utils          import eval_format
 import threading
 import subprocess
 import tempfile
 import os
 
 class EditorThread(threading.Thread):
-    def __init__(self, editorPath, filename):
-        self.editorPath = editorPath
+    def __init__(self, editor_path, filename):
+        self.editor_path = editor_path
         self.filename   = filename
         threading.Thread.__init__(self)
 
     def run(self):
-        subprocess.call([self.editorPath, self.filename])
+        subprocess.call([self.editor_path, self.filename])
 
 class EditorNode(ModelNode):
-    def __init__(self, nodeName='', editorPath=''):
-        ModelNode.__init__(self, nodeName=nodeName)
-        with self.attributeLock:
-            self.editorPath = editorPath
+    def __init__(self, node_name='', editor_path=''):
+        ModelNode.__init__(self, node_name=node_name)
+        with self.attribute_lock:
+            self.editor_path = editor_path
         self.__thread   = None
         self.code       = None
 
@@ -30,13 +30,13 @@ class EditorNode(ModelNode):
         with os.fdopen(fd):
             # Close the temp file, consequently the external editor can edit it without limitations.
             pass
-        with self.attributeLock:
+        with self.attribute_lock:
             self.filename   = filename
-        self.__thread   = EditorThread(self.editorPath, self.filename)
+        self.__thread   = EditorThread(self.editor_path, self.filename)
         self.__thread.start()
 
-    def isAlive(self):
-        alive   = self.__thread.isAlive()
+    def is_alive(self):
+        alive   = self.__thread.is_alive()
         if not alive and self.code is None:
             try:
                 with open(self.filename, 'r') as f:
@@ -54,21 +54,21 @@ class EditorManager(Observable):
     def update(self):
         if self.__editorDict:
             for editor in self.__editorDict.itervalues():
-                if not editor.isAlive():
-                    self.notifyObservers(editor)
+                if not editor.is_alive():
+                    self.notify_observers(editor)
                     self.__editorDict.pop(id(editor))
                     break
 
 
 class EditorDict(NodeDict):
-    def __init__(self, nodeName=''):
-        super(EditorDict, self).__init__(nodeName=nodeName)
-        with self.attributeLock:
+    def __init__(self, node_name=''):
+        super(EditorDict, self).__init__(node_name=node_name)
+        with self.attribute_lock:
             self.manager    = EditorManager(self)
 
     def __setitem__(self, key, val):
         if not isinstance(val, EditorNode):
-            raise TypeError, evalFmt('{self.nodePath} only accepts instance of EditorNode or of its subclasses.')
+            raise TypeError, eval_format('{self.node_path} only accepts instance of EditorNode or of its subclasses.')
         if key != id(val):
             raise ValueError, 'The key should be identical to the ID of the editor.'
         super(EditorDict, self).__setitem__(key, val)

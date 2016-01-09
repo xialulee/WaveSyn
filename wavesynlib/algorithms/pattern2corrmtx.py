@@ -43,9 +43,9 @@ width:  the width of the beams (in degree).'''
     def createPiecewisePattern(self, samplesAngle, beamsAngle, beamsWidth):
         mag = zeros(len(samplesAngle))  
         for k in range(len(beamsAngle)):
-            for idx, theta in enumerate(samplesAngle):
+            for index, theta in enumerate(samplesAngle):
                 if abs(theta - beamsAngle[k]) < beamsWidth[k]/2.0:
-                    mag[idx]    = 1
+                    mag[index]    = 1
         self.__samplesAngle = samplesAngle
         self.__samplesMagnitude = mag
         return self
@@ -95,9 +95,9 @@ def matG(M, angles, magnitude):
     G1  = mat(zeros((M**2+1, M**2+1)))
     A   = mat(matA(M, angles))
     J   = mat(matJ(M))
-    for idx, theta in enumerate(angles):
-        g   = -(kron(A[:,idx].T, A[:,idx].H) * J).T
-        t   = mat(vstack((magnitude[idx], g)));
+    for index, theta in enumerate(angles):
+        g   = -(kron(A[:,index].T, A[:,index].H) * J).T
+        t   = mat(vstack((magnitude[index], g)));
         G1  += real(t * t.T)
     G1  = 1.0/len(angles) * G1
     G1  = real(G1)

@@ -37,5 +37,5 @@ class CAN(Algorithm):
         s_init  = self.initpoint(N)       
         Tcan   = (Proj_M1 * Proj_F1) ** K
         Tcan.iterThreshold  = e
-        Tcan.progressChecker   = self.progressChecker
+        Tcan.progress_checker   = self.progress_checker
         return Tcan(s_init)

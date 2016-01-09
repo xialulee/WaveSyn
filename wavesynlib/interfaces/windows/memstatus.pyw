@@ -56,7 +56,7 @@ def main():
         tbIcon.state = state
 
     timer = TkTimer(widget=root) # No Config Dialog
-    timer.addObserver(showMemUsage)
+    timer.add_observer(showMemUsage)
     timer.interval = 2000 #ms
     timer.active = True
     root.mainloop()

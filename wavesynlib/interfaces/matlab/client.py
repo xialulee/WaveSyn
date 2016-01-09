@@ -11,12 +11,15 @@ from comtypes.automation import VARIANT
 
 from numpy import array, ndarray, isrealobj
 
-from wavesynlib.languagecenter.utils import autoSubs, evalFmt
+from wavesynlib.languagecenter.utils import auto_subs, eval_format
 
 from os.path import abspath, dirname
 
 import inspect
-def selfDir():
+
+
+
+def get_my_dir():
     return abspath(dirname(inspect.getfile(inspect.currentframe())))
     
 
@@ -27,11 +30,11 @@ from mupad                import SymConverter
 
 class MatlabCOMServer(object): # To Do: an instance attribute. For some functions, if they found instance is not None, then they will not create a new instance of this class.
     class NameSpace(object):
-        def __init__(self, matlabObj, nameSpace): 
-            self.__matlabObj    = matlabObj
-            self.__nameSpace    = nameSpace
+        def __init__(self, matlabObj, name_space): 
+            self.__matlab_object    = matlabObj
+            self.__name_space    = name_space
             
-        def __getAvailableName(self):
+        def __get_available_name(self):
             for k in range(1048576): # Try to find an available name not used in the workspace. Or execute global name before continuing.
                 try:
                     name        = 'wavesyn_temp_variable' + str(k) 
@@ -43,33 +46,33 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
             
             
         def __getitem__(self, name): # To Do: Remove global workspace support
-            if self.__matlabObj.call('eval', 1, autoSubs('isnumeric($name)'))[0]:
-                if self.__matlabObj.call('eval', 1, autoSubs('isreal($name)'))[0]:
+            if self.__matlab_object.call('eval', 1, auto_subs('isnumeric($name)'))[0]:
+                if self.__matlab_object.call('eval', 1, auto_subs('isreal($name)'))[0]:
                     with safearray_as_ndarray:
-                        retval  = self.__matlabObj.handle.GetVariable(name, self.__nameSpace)
+                        retval  = self.__matlab_object.handle.GetVariable(name, self.__name_space)
                 else:
-                    tempReal    = self.__getAvailableName() 
+                    tempReal    = self.__get_available_name() 
                     try:
-                        self.__matlabObj.execute(autoSubs('$tempReal = real($name);'))
+                        self.__matlab_object.execute(auto_subs('$tempReal = real($name);'))
                         with safearray_as_ndarray:
-                            realPart    = self.__matlabObj.handle.GetVariable(tempReal, self.__nameSpace)
+                            realPart    = self.__matlab_object.handle.GetVariable(tempReal, self.__name_space)
                     finally:
-                        self.__matlabObj.execute(autoSubs('clear $tempReal'))
+                        self.__matlab_object.execute(auto_subs('clear $tempReal'))
                     
-                    tempImag    = self.__getAvailableName()  
+                    tempImag    = self.__get_available_name()  
                     try:
-                        self.__matlabObj.execute(autoSubs('$tempImag = imag($name);'))
+                        self.__matlab_object.execute(auto_subs('$tempImag = imag($name);'))
                         with safearray_as_ndarray:
-                            imagPart    = self.__matlabObj.handle.GetVariable(tempImag, self.__nameSpace)                    
+                            imagPart    = self.__matlab_object.handle.GetVariable(tempImag, self.__name_space)                    
                     finally:
-                        self.__matlabObj.execute(autoSubs('clear $tempImag'))
+                        self.__matlab_object.execute(auto_subs('clear $tempImag'))
 
                     retval  = realPart + 1j * imagPart
             else:
-                mtype   = str(self.__matlabObj.call('eval', 1, autoSubs('class($name)'))[0]) # The result is unicode. Convert to str.
-                converter   = self.__matlabObj.getTypeConverter(mtype)
+                mtype   = str(self.__matlab_object.call('eval', 1, auto_subs('class($name)'))[0]) # The result is unicode. Convert to str.
+                converter   = self.__matlab_object.get_type_converter(mtype)
                 if not converter:
-                    raise TypeError(autoSubs('Matlab type "$mtype" is not supported.'))
+                    raise TypeError(auto_subs('Matlab type "$mtype" is not supported.'))
                 retval      = converter(name)
             return retval
             
@@ -77,9 +80,9 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
             if not isinstance(value, ndarray):
                 value   = array(value)
             if not isrealobj(value):                
-                self.__matlabObj.handle.PutFullMatrix(name, self.__nameSpace, value.real, value.imag)                
+                self.__matlab_object.handle.PutFullMatrix(name, self.__name_space, value.real, value.imag)                
             else:
-                self.__matlabObj.handle.PutWorkspaceData(name, self.__nameSpace, value)
+                self.__matlab_object.handle.PutWorkspaceData(name, self.__name_space, value)
     
     progID  = 'matlab.application'
     
@@ -87,10 +90,10 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
         self.__handle               = client.CreateObject(self.progID)
         self.__base                 = self.NameSpace(self, 'base')
         self.__global               = self.NameSpace(self, 'global')
-        self.__typeConverter        = {}
-        self.addTypeConverter(DateTimeConverter())
-        self.addTypeConverter(SymConverter())
-        self.execute(evalFmt('addpath {selfDir()}'))
+        self.__type_converter        = {}
+        self.add_type_converter(DateTimeConverter())
+        self.add_type_converter(SymConverter())
+        self.execute(eval_format('addpath {get_my_dir()}'))
         
         
     def release(self):
@@ -109,18 +112,18 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
             retval  = self.__handle.Execute(command)
         return retval
         
-    def getMuPadExprTree(self, symName):
-        return self.call('eval', 2, autoSubs('wavesyn_matlab.getMuPadExprTree($symName)'))
+    def get_mupad_exprtree(self, symName):
+        return self.call('eval', 2, auto_subs('wavesyn_matlab.get_mupad_exprtree($symName)'))
         
-    def addTypeConverter(self, converter):
+    def add_type_converter(self, converter):
         if not isinstance(converter, BaseConverter):
             raise TypeError('The given converter does not support BaseConverter protocol.')
         converter.server    = self
-        self.__typeConverter[converter.matlabTypeName]  = converter.convert
+        self.__type_converter[converter.matlabTypeName]  = converter.convert
         
-    def getTypeConverter(self, typeName):
+    def get_type_converter(self, typeName):
         try:
-            return self.__typeConverter[typeName]
+            return self.__type_converter[typeName]
         except KeyError:
             return None
         
@@ -129,13 +132,13 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
         return self.__handle   
         
     @property
-    def processId(self):
-        return self.call('wavesyn_matlab.getProcessId', 1)[0]
+    def process_id(self):
+        return self.call('wavesyn_matlab.get_process_id', 1)[0]
         
     @property
-    def nsBase(self):
+    def base_namespace(self):
         return self.__base
         
     @property # Remove global workspace read support
-    def nsGlobal(self):
+    def global_namespace(self):
         return self.__global

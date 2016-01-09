@@ -33,7 +33,7 @@ class RectSelCanvas(Canvas, Observable):
     
     def onButton1Release(self, event):
         self.delete(self.__boxId)
-        self.notifyObservers(self.__startX, self.__startY, event.x, event.y)
+        self.notify_observers(self.__startX, self.__startY, event.x, event.y)
         self.__startX   = None
         self.__startY   = None
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
                 cropImage.save(filename)
             root.quit()
             
-    canvas.addObserver(Observer(root, image))
+    canvas.add_observer(Observer(root, image))
     
     w, h = root.winfo_screenwidth(), root.winfo_screenheight()
     root.overrideredirect(1)

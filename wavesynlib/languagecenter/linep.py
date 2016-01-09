@@ -11,7 +11,7 @@ from string import Template
 class VPTemplate(Template): # Template for handling variable pool
     idpattern  = '[_a-z0-9]*'
     
-def makeSplitRegex():
+def make_split_regex():
     commentPattern = r'(?P<COMMENT>#[^\n]*)'
     stringPrefix   = r"(\br|u|ur|R|U|UR|Ur|uR|b|B|br|Br|bR|BR)?"
     stringPattern  = '|'.join([
@@ -24,7 +24,7 @@ def makeSplitRegex():
     regex = '|'.join([commentPattern, stringPattern])
     return re.compile(regex, re.S)
     
-reCodeSplit = makeSplitRegex()    
+reCodeSplit = make_split_regex()    
     
 def codeSplitter(code):
     pass
