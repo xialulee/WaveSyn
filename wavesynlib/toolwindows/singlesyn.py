@@ -12,21 +12,17 @@ from Tkinter import *
 from ttk import *
 
 
-from wavesynlib.guicomponents.tk                   import Group, LabeledEntry
+from wavesynlib.guicomponents.tk import Group, LabeledEntry
 from wavesynlib.interfaces.windows.shell.constants import TBPFLAG
-from wavesynlib.guicomponents.classselector        import ask_class_name
-from wavesynlib.application                        import Application
-from wavesynlib.basewindow                         import FigureWindow
-from wavesynlib.languagecenter.utils               import auto_subs, eval_format, set_attributes, Nonblocking
-from wavesynlib.languagecenter.wavesynscript       import ScriptCode, Scripting
-from wavesynlib.mathtools                          import Algorithm, AlgorithmDict, AlgorithmNode
-
+from wavesynlib.guicomponents.classselector import ask_class_name
+from wavesynlib.application import Application
+from wavesynlib.toolwindows.figurewindow import FigureWindow
+from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, Nonblocking
+from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting
+from wavesynlib.mathtools import Algorithm, AlgorithmDict, AlgorithmNode
 
 import threading
 import json
-
-
-
 
 
 class OptimizeGroup(Group):

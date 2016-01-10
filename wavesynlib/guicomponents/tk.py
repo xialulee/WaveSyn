@@ -136,11 +136,12 @@ class LabeledScale(Frame, object):
         self.__formatter = formatter
         Frame.__init__(self, *args, **kwargs)
         
-        Label(self, text=name).pack(side=LEFT)
+        if name is not None:
+            Label(self, text=name).pack(side=LEFT)
         
         self.__scale = Scale(self, from_=from_, to=to, 
                                 command=self._on_change)
-        self.__scale.pack(side=LEFT, fill=X)
+        self.__scale.pack(side=LEFT, fill=X, expand=YES)
         
         self.__value_label = value_label = Label(self)
         value_label.pack(side=LEFT)

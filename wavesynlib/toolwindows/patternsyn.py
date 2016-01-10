@@ -14,14 +14,12 @@ from PIL import ImageTk
 from numpy import *
 from scipy.io import savemat
 
-from wavesynlib.application                  import Application, get_gui_image_path, WaveSynThread
-from wavesynlib.basewindow                   import FigureWindow
-from wavesynlib.guicomponents.tk             import Group, LabeledEntry, ScrolledList
-from wavesynlib.languagecenter.utils         import auto_subs, set_attributes
+from wavesynlib.application import Application, get_gui_image_path, WaveSynThread
+from wavesynlib.toolwindows.figurewindow import FigureWindow
+from wavesynlib.guicomponents.tk import Group, LabeledEntry, ScrolledList
+from wavesynlib.languagecenter.utils import auto_subs, set_attributes
 from wavesynlib.languagecenter.wavesynscript import Scripting
-
 from wavesynlib.algorithms import pattern2corrmtx
-
 
 
 class OptimizeGroup(Group):
@@ -291,7 +289,7 @@ class PatternWindow(FigureWindow):
         
             # Export tab {
         self.make_export_tab()
-        frmExport   = self.exportFrame
+        frmExport   = self.export_frame
         grpExport = FileExportGroup(frmExport, topwin=self)
         grpExport.pack(side=LEFT, fill=Y)
             # } End Export tab

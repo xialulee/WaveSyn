@@ -7,9 +7,9 @@ import importlib
 
 import abc
 
-from wavesynlib.languagecenter.utils         import eval_format
+from wavesynlib.languagecenter.utils import eval_format
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
-from wavesynlib.basewindow                   import WindowComponent
+from wavesynlib.toolwindows.basewindow import WindowComponent
 
 ##########################Experimenting with multiprocessing###############################
 import multiprocessing as mp

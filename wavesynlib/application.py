@@ -217,11 +217,8 @@ wavesyn
                 
 #                cudaWorker      = CUDAWorker()
             )        
-        
-        
-
-        
-        from wavesynlib.basewindow import WindowDict                                  
+                        
+        from wavesynlib.toolwindows.basewindow import WindowDict                                  
         self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
         self.editors    = EditorDict()
 
