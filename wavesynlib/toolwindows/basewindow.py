@@ -5,10 +5,10 @@ Created on Sun Jan 10 16:55:14 2016
 @author: Feng-cong Li
 """
 
-from Tkinter import Toplevel
+from six.moves.tkinter import Toplevel
 
 from wavesynlib.languagecenter.wavesynscript import (
-    ModelNode, NodeDict, Scripting)
+    ModelNode, NodeDict, Scripting, code_printer)
 from wavesynlib.languagecenter.utils import eval_format, MethodDelegator
 
 class WindowNode(ModelNode):
@@ -45,8 +45,8 @@ Properties inherited from ModelNode:
         self.__tk_object.destroy() 
         
     def on_close(self):
-        printCode   = True
-        self.close()
+        with code_printer:
+            self.close()
         
     @property
     def node_path(self):

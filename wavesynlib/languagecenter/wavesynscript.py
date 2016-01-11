@@ -11,7 +11,6 @@ import sys
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodLock
 
 
-
 # Object Model of the Scripting System
 # It is a part of the scripting system.
        
@@ -179,9 +178,6 @@ class NodeList(ModelNode, List):
 # End Object Model
 
 
-
-
-
 # Scripting Sub-System
 class ScriptCode(object):
     def __init__(self, code):
@@ -190,9 +186,11 @@ class ScriptCode(object):
 class Scripting(ModelNode):
     _xmlrpcexport_  = []    
     
-    root_name    = 'wavesyn' # The name of the object model tree's root
-    root_node    = None
-    name_space   = {'locals':{}, 'globals':{}}
+    root_name = 'wavesyn' # The name of the object model tree's root
+    root_node = None
+    name_space = {'locals':{}, 'globals':{}}
+    
+    _print_code_flag = False
     
     @staticmethod
     def convert_args_to_str(*args, **kwargs):
@@ -223,22 +221,33 @@ class Scripting(ModelNode):
     @classmethod    
     def printable(cls, method):
         def func(self, *args, **kwargs):
-            callerLocals    = sys._getframe(1).f_locals
-            #####################################
-            #print(method.__name__, True if 'printCode' in callerLocals else False)
-            #####################################            
-            if 'printCode' in callerLocals and callerLocals['printCode']:
-                ret = cls.root_node.print_and_eval(
-                    eval_format(
-                        '{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})'
+            if cls._print_code_flag:
+                try:
+                    cls._print_code_flag = False # Prevent recursive.
+                    ret = cls.root_node.print_and_eval(
+                        eval_format(
+                            '{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})'
+                        )
                     )
-                )
+                finally:
+                    cls._print_code_flag = True # Restore _print_code_flag settings.
             else:                          
                 ret = method(self, *args, **kwargs)
             return ret
         func.__doc__    = method.__doc__
         func.__name__   = method.__name__
-        return func                                   
+        return func  
+
+
+class CodePrinter(object):            
+    def __enter__(self):
+        Scripting._print_code_flag = True
+        
+    def __exit__(self, *dumb):
+        Scripting._print_code_flag = False
+        
+
+code_printer = CodePrinter()                                 
 # End Scripting Sub-System
         
 

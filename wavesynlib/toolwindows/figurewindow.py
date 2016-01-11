@@ -6,12 +6,12 @@ Created on Fri May 23 15:58:34 2014
 """
 from __future__ import print_function, division, unicode_literals
 
-from tkColorChooser import askcolor
-from Tkinter import *
-from ttk import *
-from Tkinter import Frame, PanedWindow, Label
-from tkFileDialog import asksaveasfilename
-from tkSimpleDialog import askstring
+from six.moves.tkinter_colorchooser import askcolor
+from six.moves.tkinter import *
+from six.moves.tkinter_ttk import *
+from six.moves.tkinter import Frame, PanedWindow, Label
+from six.moves.tkinter_tkfiledialog import asksaveasfilename
+from six.moves.tkinter_tksimpledialog import askstring
 
 from PIL import ImageTk
 
@@ -30,7 +30,7 @@ from wavesynlib.languagecenter.wavesynscript import Scripting
 from wavesynlib.languagecenter.utils import (
     auto_subs, eval_format, set_attributes)
 from wavesynlib.languagecenter.wavesynscript import (
-    ModelNode, NodeList)
+    ModelNode, NodeList, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.guicomponents.tk import (
     Group, LabeledEntry, ScrolledList, LabeledScale)
@@ -343,7 +343,6 @@ an instance of the GridGroup class.
             self.__figure_book   = figure_book
             
         def update(self, major_grid, minor_grid, props=None):
-            printCode   = True
             if not props:
                 props   = {'major':{}, 'minor':{}}
                 
@@ -352,46 +351,46 @@ an instance of the GridGroup class.
             minor_grid = switch_name_map[minor_grid]
             
             current_figure = self.__figure_book.current_figure
-            current_figure.turn_grid(major_grid, which='major', 
-                                     **props['major'])
-            current_figure.turn_grid(minor_grid, which='minor', 
-                                     **props['minor'])                   
+            with code_printer:
+                current_figure.turn_grid(major_grid, which='major', 
+                                         **props['major'])
+                current_figure.turn_grid(minor_grid, which='minor', 
+                                         **props['minor'])                   
             
     class AxisGroupObserver(object):
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
         def update(self, xlim, ylim, major_x_tick, major_y_tick, minor_x_tick, minor_y_tick, auto_scale=False):
-            printCode   = True
-            current_figure   = self.__figure_book.current_figure
-            if auto_scale:
-                current_figure.auto_scale()
-                return
-            lim = list(xlim)
-            if current_figure.is_polar:
-                lim = list(deg2rad(lim))
-                major_x_tick  = deg2rad(major_x_tick)
-                if minor_x_tick is not None:
-                    minor_x_tick  = deg2rad(minor_x_tick)
-            lim.extend(ylim)
-            current_figure.axis(lim)
-            for XY in ('x_', 'y_'):
-                for mm in ('major_', 'minor_'):
-                    current_figure.set_tick(mm+XY+'tick', locals()[mm+XY+'tick'])
+            with code_printer:
+                current_figure   = self.__figure_book.current_figure
+                if auto_scale:
+                    current_figure.auto_scale()
+                    return
+                lim = list(xlim)
+                if current_figure.is_polar:
+                    lim = list(deg2rad(lim))
+                    major_x_tick  = deg2rad(major_x_tick)
+                    if minor_x_tick is not None:
+                        minor_x_tick  = deg2rad(minor_x_tick)
+                lim.extend(ylim)
+                current_figure.axis(lim)
+                for XY in ('x_', 'y_'):
+                    for mm in ('major_', 'minor_'):
+                        current_figure.set_tick(mm+XY+'tick', locals()[mm+XY+'tick'])
 
     class ClearGroupObserver(object):
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
-        def update(self, delType):
-            printCode   = True            
-            if delType == 'all':
-
-                self.__figure_book.clear()
-            elif delType == 'sel':
-                self.__figure_book.delete_selected_lines(index=None)
-            else:
-                return
+        def update(self, delType):           
+            with code_printer:
+                if delType == 'all':
+                    self.__figure_book.clear()
+                elif delType == 'sel':
+                    self.__figure_book.delete_selected_lines(index=None)
+                else:
+                    return
 
     class LabelGroupObserver(object):
         def __init__(self, figure_book):
@@ -399,16 +398,15 @@ an instance of the GridGroup class.
             
         def update(self, labelType, labelString):
             nameMap     = {'title':'set_title', 'xlabel':'setXLabel', 'ylabel':'setYLabel'}            
-            printCode   = True
-            current_figure   = self.__figure_book.current_figure
-            getattr(current_figure, nameMap[labelType])(labelString)
+            with code_printer:
+                current_figure   = self.__figure_book.current_figure
+                getattr(current_figure, nameMap[labelType])(labelString)
                         
     class IndicatorGroupObserver(object):
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
-        def update(self, meta):
-            printCode   = True
+        def update(self, meta):            
             if meta['type'] in ('axvspan', 'axhspan'):
                 if meta['type'] == 'axvspan':
                     the_min  = meta['xmin']
@@ -418,9 +416,10 @@ an instance of the GridGroup class.
                     the_max  = meta['ymax']
                 props   = meta['props']
 
-                getattr(self.__figure_book.current_figure.indicators, 
-                        meta['type'])(the_min, the_max, **props)
-                self.__figure_book.update_indicator_list()
+                with code_printer:
+                    getattr(self.__figure_book.current_figure.indicators, 
+                            meta['type'])(the_min, the_max, **props)
+                    self.__figure_book.update_indicator_list()
                 
     class DataFigureObserver(object):
         def __init__(self, figure_book):
@@ -989,11 +988,11 @@ class FigureExportGroup(Group): # To Do: Use observer protocol.
         self.name = 'Figure'
         
     def _on_export_matlab_script(self):
-        printCode   = True
         filename = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
         if not filename:
             return
-        self.__topwin.figure_book.export_matlab_script(filename)
+        with code_printer:
+            self.__topwin.figure_book.export_matlab_script(filename)
         self._app.print_tip(
             auto_subs(
                 '''A Matlab script file has been saved as $filename.
@@ -1033,6 +1032,9 @@ class FigureWindow(WindowNode):
     @property
     def data_pool(self):
         return self.figure_book.data_pool
+        
+    def data_pool_append(self, data):
+        self.figure_book.data_pool.append(data)
            
     def make_view_tab(self):
         tool_tabs    = self.tool_tabs

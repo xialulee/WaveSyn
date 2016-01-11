@@ -13,11 +13,11 @@ import platform
 import math
 import cmath
 
-from Tkinter import *
-from ttk import *
-from Tkinter import Frame
-import tkFont
-from tkFileDialog import askdirectory
+from six.moves.tkinter import *
+from six.moves.tkinter_ttk import *
+from six.moves.tkinter import Frame
+import six.moves.tkinter_font as tkFont
+from six.moves.tkinter_tkfiledialog import askdirectory
 
 import PIL
 from PIL import ImageTk
@@ -489,7 +489,7 @@ class DirIndicator(Frame, Observable):
                         
     def _on_key_press(self, evt):
         if evt.keycode == 13: # \n
-            path    = self._get_path()
+            path = self._get_path()
             if os.path.exists(path):
                 os.chdir(path)
             else:
@@ -501,9 +501,13 @@ class DirIndicator(Frame, Observable):
         path    = path[:-(self.__blankLen + len(self.__browseText))]            
         return path
             
-    def update(self, *args, **kwargs): # Observer protocol. For TkTimer.
-        cwd     = os.getcwd()
-        cwd     = cwd.replace(os.path.altsep, os.path.sep)
+    def update(self, *args, **kwargs): 
+        '''Method "update" is called by Observable objects. 
+Here, it is called by the timer of DirIndicator instance.
+Normally, no argument is passed.'''        
+        cwd = os.getcwd()
+        if os.path.altsep is not None: # Windows OS
+            cwd = cwd.replace(os.path.altsep, os.path.sep)
         if self.__cwd != cwd:
             self._refresh(cwd)
             self.notify_observers(cwd)

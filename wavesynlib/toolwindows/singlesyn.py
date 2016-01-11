@@ -8,8 +8,8 @@ from __future__ import print_function, division
 
 from numpy import *
 import time
-from Tkinter import *
-from ttk import *
+from six.moves.tkinter import *
+from six.moves.tkinter_ttk import *
 
 
 from wavesynlib.guicomponents.tk import Group, LabeledEntry
@@ -18,7 +18,7 @@ from wavesynlib.guicomponents.classselector import ask_class_name
 from wavesynlib.application import Application
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, Nonblocking
-from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting
+from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting, code_printer
 from wavesynlib.mathtools import Algorithm, AlgorithmDict, AlgorithmNode
 
 import threading
@@ -134,8 +134,8 @@ class OptimizeGroup(Group):
                     self.progress = progress
                     threading.Thread.__init__(self)
                 def run(self):
-                    printCode   = True
-                    self.algo.run(**params)
+                    with code_printer:
+                        self.algo.run(**params)
         
         self.__finishedwavbar['maximum'] = wavnum
 
@@ -162,9 +162,9 @@ class OptimizeGroup(Group):
                 self.__progressbar_variable.set(0)
                 if self.__stopflag:
                     break
-                printCode   = True
-                self.__topwin.plot_current_data()
-                self.__finishedwav.set(cnt+1)
+                with code_printer:
+                    self.__topwin.plot_current_data()
+                    self.__finishedwav.set(cnt+1)
         finally:
             algorithm.progress_checker.remove(progress_checker)
         self.__finishedwav.set(0)
@@ -178,10 +178,9 @@ class OptimizeGroup(Group):
                 self.num        = num
                 super(AlgoThread, self).__init__()
             def run(self):
-                printCode   = True
-                #parameters  = Scripting.convert_args_to_str(**self.parameters)
-                paramStr    = eval_format('[([], dict({Scripting.convert_args_to_str(**self.parameters)}))]*{self.num}')
-                self.algorithm.parallel_run_and_plot(ScriptCode(paramStr))
+                with code_printer:                
+                    paramStr    = eval_format('[([], dict({Scripting.convert_args_to_str(**self.parameters)}))]*{self.num}')
+                    self.algorithm.parallel_run_and_plot(ScriptCode(paramStr))
         algorithm   = self.__topwin.current_algorithm
         parameters  = self.__topwin.parameter_group.get_parameters()
         theThread   = AlgoThread(algorithm, parameters, self.__num.get_int())
@@ -273,9 +272,7 @@ class AlgoSelGroup(Group):
     def _on_algorithm_change(self, event):
         self._topwin.change_algorithm(event.widget.get())
         
-    def _on_load_algorithm(self):
-        printCode   = True
-        
+    def _on_load_algorithm(self):        
         funcObj    = Nonblocking(ask_class_name)('wavesynlib.algorithms', Algorithm)
         while funcObj.isRunning():
             Application.do_events()
@@ -286,7 +283,9 @@ class AlgoSelGroup(Group):
         if not classInfo:
             return
         module_name, class_name   = classInfo
-        self._topwin.load_algorithm(module_name=module_name, class_name=class_name)
+        
+        with code_printer:
+            self._topwin.load_algorithm(module_name=module_name, class_name=class_name)
 
 
 class SingleWindow(FigureWindow):      

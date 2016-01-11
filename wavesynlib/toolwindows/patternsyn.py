@@ -6,25 +6,26 @@ Created on Fri May 23 15:48:34 2014
 """
 from __future__ import print_function, division
 
-from Tkinter import *
-from ttk import *
-from tkFileDialog import asksaveasfilename
+from six.moves.tkinter import *
+from six.moves.tkinter_ttk import *
+from six.moves.tkinter_tkfiledialog import asksaveasfilename
+
 from PIL import ImageTk
 
 from numpy import *
 from scipy.io import savemat
 
-from wavesynlib.application import Application, get_gui_image_path, WaveSynThread
+from wavesynlib.application import get_gui_image_path, WaveSynThread
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.guicomponents.tk import Group, LabeledEntry, ScrolledList
 from wavesynlib.languagecenter.utils import auto_subs, set_attributes
-from wavesynlib.languagecenter.wavesynscript import Scripting
+from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.algorithms import pattern2corrmtx
 
 
 class OptimizeGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app = Application.instance
+        self._app = Scripting.root_node
         self.__gui_images = []
         self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
@@ -71,29 +72,28 @@ class OptimizeGroup(Group):
         self.name = 'Optimize'
                 
     def _on_solve_button_click(self):
-        printCode   = True
-        topwin = self.__topwin
-        center, width = topwin.edit_group.beam_data
-        topwin.figure_book.clear()
-        
-
-        topwin.set_ideal_pattern(center, width)
-        topwin.plot_ideal_pattern()        
+        with code_printer:
+            topwin = self.__topwin
+            center, width = topwin.edit_group.beam_data
+            topwin.figure_book.clear()        
+            topwin.set_ideal_pattern(center, width)
+            topwin.plot_ideal_pattern()        
         # Create a new thread for solving the correlation matrix.
         def solveFunc():
-            printCode   = True
-            topwin.solve(M=self.__M.get_int(), display=self.__bDisplay.get())
+            with code_printer:
+                topwin.solve(M=self.__M.get_int(), display=self.__bDisplay.get())
         WaveSynThread.start(func=solveFunc)
         # Though method "start" will not return until the solve returns, the GUI will still 
         # responding to user input because Tk.update is called by start repeatedly.
-        # While the thread is not alive, the optimization procedure is finished.                        
-        topwin.plot_current_data() 
+        # While the thread is not alive, the optimization procedure is finished.
+        with code_printer:                        
+            topwin.plot_current_data() 
         
         
 
 class EditGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app = Application.instance
+        self._app = Scripting.root_node
         self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
         frm = Frame(self)
@@ -174,10 +174,10 @@ class EditGroup(Group):
         self.__paramlist.clear()
         
     def _on_plot_ideal_pattern(self):
-        printCode   = True
-        center, width = self.beam_data
-        self.__topwin.set_ideal_pattern(center, width)
-        self.__topwin.plot_ideal_pattern()
+        with code_printer:
+            center, width = self.beam_data
+            self.__topwin.set_ideal_pattern(center, width)
+            self.__topwin.plot_ideal_pattern()
         
     @property
     def beam_data(self):
@@ -203,7 +203,7 @@ To make a valid ideal pattern, at least one beam should be specified.
 
 class FileExportGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app = Application.instance
+        self._app = Scripting.root_node
         self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
         
@@ -229,36 +229,35 @@ class FileExportGroup(Group):
         self.name = 'Corr Matrix'
         
     def _on_save_mat_file(self):
-        printCode   = True
         filename = asksaveasfilename(filetypes=[('Matlab mat files', '*.mat')])
         if not filename:
             return
             
         def linkFunc(filename):
-            printCode   = True
-            clipboard   = Application.instance.clipboard
-            clipboard.clear()
-            clipboard.write(auto_subs('load $filename'))
-
-        self.__topwin.save_mat_file(filename)
-        tip = [
-            {
-                'type':'text', 
-                'content':auto_subs('''The correlation matrix has been saved in the mat file "$filename" successully.
+            with code_printer:
+                clipboard   = Scripting.root_node.clipboard
+                clipboard.clear()
+                clipboard.write(auto_subs('load $filename'))
+        with code_printer:
+            self.__topwin.save_mat_file(filename)
+            tip = [
+                {
+                    'type':'text', 
+                    'content':auto_subs('''The correlation matrix has been saved in the mat file "$filename" successully.
 You can extract the data in Matlab using the following command:''')
-            },
-            {
-                'type':'link', 
-                'content':auto_subs('>> load $filename'),
-                'command':lambda dumb: linkFunc(filename=filename)
-            },
-            {
-                'type':'text', 
-                'content':'''and variable named "R" will appear in your Matlab workspace.
+                },
+                {
+                    'type':'link', 
+                    'content':auto_subs('>> load $filename'),
+                    'command':lambda dumb: linkFunc(filename=filename)
+                },
+                {
+                    'type':'text', 
+                    'content':'''and variable named "R" will appear in your Matlab workspace.
 (Click the underlined Matlab command and copy it to the clipboard)'''
-            }
-        ]
-        self._app.print_tip(tip)  
+                }
+            ]
+            self._app.print_tip(tip)  
 
 
 

@@ -237,7 +237,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
         return self.__algorithm.progress_checker
 
                     
-    @Scripting.printable
+    @Scripting.printable # To Do: Implement run in nonblocking mode. Add a new argument: on_finished. The callable object will be called when the procudure is finished. 
     def run(self, *args, **kwargs):
         result  = self.__algorithm(*args, **kwargs)
         self.top_window.current_data  = result    

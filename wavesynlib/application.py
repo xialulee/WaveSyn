@@ -24,12 +24,14 @@ import sys
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
 
-from Tkinter import *
-from ttk import *
+import six
 
-import Tix
-from Tkinter      import Frame
-from tkFileDialog import asksaveasfilename
+from six.moves.tkinter import *
+from six.moves.tkinter_ttk import *
+
+import six.moves.tkinter_tix as Tix
+from six.moves.tkinter import Frame
+from six.moves.tkinter_tkfiledialog import asksaveasfilename
 
 
 import matplotlib
@@ -38,8 +40,8 @@ matplotlib.use('TkAgg')
 from numpy import *
 
 
-from datetime   import datetime
-from inspect    import getsourcefile
+from datetime import datetime
+from inspect import getsourcefile
 import webbrowser
 import subprocess
 import json
@@ -54,17 +56,17 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from wavesynlib.guicomponents.tk                 import DirIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
-from wavesynlib.interfaces.clipboard.modelnode   import Clipboard
-from wavesynlib.interfaces.timer.tk              import TkTimer
+from wavesynlib.guicomponents.tk import DirIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
+from wavesynlib.interfaces.clipboard.modelnode import Clipboard
+from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
-from wavesynlib.stdstream                        import StreamManager
+from wavesynlib.stdstream import StreamManager
 #from wavesynlib.cuda                             import Worker as CUDAWorker
-from wavesynlib.languagecenter.utils             import auto_subs, eval_format, set_attributes
-from wavesynlib.languagecenter.designpatterns    import Singleton        
-from wavesynlib.languagecenter.wavesynscript     import Scripting, ModelNode
-from wavesynlib.languagecenter.modelnode         import LangCenterNode
-from wavesynlib.languagecenter                   import templates
+from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes
+from wavesynlib.languagecenter.designpatterns import Singleton        
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.modelnode import LangCenterNode
+from wavesynlib.languagecenter import templates
 
 
 def make_menu(win, menu, json=False):
@@ -79,8 +81,8 @@ def make_menu(win, menu, json=False):
         for top_item in tree:
             if 'Command' in top_item:
                 if json: # json cannot store callable objects.
-                    printCode   = top_item.get('Print', True)
-                    cmd = func_gen(top_item['Command'], printCode)
+                    print_code = top_item.get('Print', True)
+                    cmd = func_gen(top_item['Command'], print_code)
                 else:
                     # Python data object can store callable object, 
                     # and top_item['Command'] should be a callable object in this circumstance.
@@ -130,7 +132,7 @@ class WaveSynThread(object):
                 app.windows[winId].update()
 
 
-
+@six.add_metaclass(Singleton)
 class Application(ModelNode): # Create an ABC for root node to help wavesynscript.Scripting determine whether the node is root. 
     '''This class is the root of the model tree.
 In the scripting system, it is named as "wavesyn" (case sensitive).
@@ -149,7 +151,6 @@ wavesyn
     -instance of MIMOSyn
         -figure_book
 '''    
-    __metaclass__ = Singleton
     
     _xmlrpcexport_  = [
         'create_window',
@@ -199,7 +200,7 @@ wavesyn
                 exec_thread_lock        = threading.RLock(),
                 xmlrpc_command_slot     = CommandSlot(),
 
-                langCenter              = LangCenterNode(),
+                lang_center             = LangCenterNode(),
             
                 # Validation Functions
                 value_checker           = value_checker,
@@ -586,12 +587,12 @@ class ConsoleWindow(ModelNode):
         with open(filename, 'w') as f:
             f.write(self.__stdstream_text.get_text())
             
-    def on_save_as(self):
-        printCode   = True # For macro recording
+    def on_save_as(self):        
         filename    = asksaveasfilename(filetypes=[('All types of files', '*.*')])
         if not filename:
             return
-        self.save(filename)
+        with code_printer:
+            self.save(filename)
     
     @Scripting.printable    
     def clear(self):
@@ -599,8 +600,8 @@ class ConsoleWindow(ModelNode):
         print('', sep='', end='')
         
     def on_clear(self):
-        printCode   = True # For macro recording
-        self.clear()
+        with code_printer:
+            self.clear()
 
     def set_window_attributes(self, *args, **kwargs):
         return Application.instance.root.wm_attributes(*args, **kwargs)        
