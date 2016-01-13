@@ -273,16 +273,16 @@ class AlgoSelGroup(Group):
         self._topwin.change_algorithm(event.widget.get())
         
     def _on_load_algorithm(self):        
-        funcObj    = Nonblocking(ask_class_name)('wavesynlib.algorithms', Algorithm)
+        funcObj = Nonblocking(ask_class_name)('wavesynlib.algorithms', Algorithm)
         while funcObj.isRunning():
             Application.do_events()
             time.sleep(0.1)
         
-        classInfo   = funcObj.return_value        
+        class_info = funcObj.return_value        
         
-        if not classInfo:
+        if not class_info:
             return
-        module_name, class_name   = classInfo
+        module_name, class_name = class_info
         
         with code_printer:
             self._topwin.load_algorithm(module_name=module_name, class_name=class_name)
