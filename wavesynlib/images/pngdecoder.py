@@ -17,6 +17,7 @@ import math
 import numpy as np
 
 import numba
+from numba import int32
 
 
 class Decoder:
@@ -109,20 +110,20 @@ class Decoder:
             '''Type 0: No filter'''
             return 
 
-        @numba.jit
+        @numba.jit((int32, int32, int32[:, :], int32))
         def ifilter1(m, N, buf, bpp):
             '''Type 1: Inverse Sub filter'''
             for k in range(bpp, N):
                 buf[m, k] += buf[m, k-bpp]
                 buf[m, k] &= 0xff
 
-        @numba.jit
+        @numba.jit((int32, int32, int32[:, :], int32))
         def ifilter2(m, N, buf, bpp):
             '''Type 2: Inverse Up filter'''
             buf[m, :] += buf[(m-1), :]
             buf[m, :] &= 0xff
 
-        @numba.jit
+        @numba.jit((int32, int32, int32[:, :], int32))
         def ifilter3(m, N, buf, bpp):
             '''Type 3: Inverse Average filter'''
             for k in range(bpp):
@@ -132,7 +133,7 @@ class Decoder:
                 buf[m, k] += (buf[m, (k-bpp)] + buf[(m-1), k]) // 2
                 buf[m, k] &= 0xff
         
-        @numba.jit
+        @numba.jit(int32(int32, int32, int32))
         def predictor(a, b, c):
             '''Helper function for ifilter4.
 a = left, b = above, c = upper left.'''
@@ -147,7 +148,7 @@ a = left, b = above, c = upper left.'''
             else:
                 return c    
 
-        @numba.jit
+        @numba.jit((int32, int32, int32[:, :], int32))
         def ifilter4(m, N, buf, bpp):
             '''Type 4: Inverse Paeth filter'''
             for k in range(bpp):
