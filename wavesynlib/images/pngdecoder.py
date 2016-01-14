@@ -77,10 +77,10 @@ class Decoder:
             chunk_type  = read(f, 4)
             if chunk_type != 'IHDR':
                 return None
-            chunk_data          = read(f, ihdr_len)
-            self.__ihdr_info    = get_ihdr_info(chunk_data)
-            self.__bpp          = calcbpp(self.ihdr_info)
-            ihdr_crc            = read(f, 4)
+            chunk_data = read(f, ihdr_len)
+            self.__ihdr_info = get_ihdr_info(chunk_data)
+            self.__bpp = calcbpp(self.ihdr_info)
+            ihdr_crc = read(f, 4)
             while True:
                 try:
                     chunk       = {}
@@ -105,44 +105,37 @@ class Decoder:
         color_type = self.ihdr_info['color type']
         pixel_width = self.__pixel_width
         
-        def ifilter0(before, upper, bpp):
+        def ifilter0(m, N, buf, bpp):
             '''Type 0: No filter'''
-            return before
+            return 
 
         @numba.jit
-        def ifilter1(before, upper, bpp):
+        def ifilter1(m, N, buf, bpp):
             '''Type 1: Inverse Sub filter'''
-            N = len(before)
-            after = [0] * N
-            after[0:bpp] = before[0:bpp]
             for k in range(bpp, N):
-                after[k] = (before[k] + after[k-bpp]) % 0x0100
-            return after
+                buf[m, k] += buf[m, k-bpp]
+                buf[m, k] &= 0xff
 
         @numba.jit
-        def ifilter2(before, upper, bpp):
+        def ifilter2(m, N, buf, bpp):
             '''Type 2: Inverse Up filter'''
-            N = len(before)
-            after = [0] * N
-            for k in range(N):
-                after[k] = (before[k] + upper[k]) % 0x0100
-            return after
+            buf[m, :] += buf[(m-1), :]
+            buf[m, :] &= 0xff
 
         @numba.jit
-        def ifilter3(before, upper, bpp):
+        def ifilter3(m, N, buf, bpp):
             '''Type 3: Inverse Average filter'''
-            N = len(before)
-            after = [0] * N
             for k in range(bpp):
-                after[k] = (before[k] + upper[k] // 2) % 0x0100 # integer div
+                buf[m, k] += buf[(m-1), k] // 2
+                buf[m, k] &= 0xff
             for k in range(bpp, N):
-                after[k] = (before[k] + (after[k-bpp] + upper[k]) // 2) % 0x0100
-            return after
-
-        #helper function for ifilter4
+                buf[m, k] += (buf[m, (k-bpp)] + buf[(m-1), k]) // 2
+                buf[m, k] &= 0xff
+        
         @numba.jit
         def predictor(a, b, c):
-            '''a = left, b = above, c = upper left'''
+            '''Helper function for ifilter4.
+a = left, b = above, c = upper left.'''
             p = a + b -c
             pa = abs(p - a)
             pb = abs(p - b)
@@ -155,17 +148,16 @@ class Decoder:
                 return c    
 
         @numba.jit
-        def ifilter4(before, upper, bpp):
+        def ifilter4(m, N, buf, bpp):
             '''Type 4: Inverse Paeth filter'''
-            N = len(before)
-            after = [0] * N
             for k in range(bpp):
-                after[k] = (before[k] + upper[k]) % 0x0100
+                buf[m, k] += buf[(m-1), k]
+                buf[m, k] &= 0xff
             for k in range(bpp, N):
-                after[k] = (before[k] + predictor(after[k-bpp], upper[k], upper[k-bpp])) % 0x0100
-            return after
+                buf[m, k] += predictor(buf[m, (k-bpp)], buf[(m-1), k], buf[(m-1), (k-bpp)])
+                buf[m, k] &= 0xff
 
-        def ifilter(before):
+        def ifilter(byte_stream):
             '''inverse filter
                 before: decompressed data stream
                 width:  width of the image
@@ -173,16 +165,18 @@ class Decoder:
                 return value: data stream which has been inverse filtered'''
 
             bwidth = int(math.ceil(width * bit_depth * pixel_width[color_type] / 8.0))
-            after = []
-            flt_type = [0] * height
-            flt_list = [ifilter0, ifilter1, ifilter2, ifilter3, ifilter4]
-            for k in range(height):
-                after.append([ord(b) for b in before[(k*(bwidth+1)+1):((k+1)*(bwidth+1))]])
-                flt_type[k] = ord(before[k * (bwidth+1)])
-            after[0] = flt_list[flt_type[0]](after[0], [0] * bwidth, self.__bpp)
-            for k in range(1, height):
-                after[k] = flt_list[flt_type[k]](after[k], after[k-1], self.__bpp)
-            return after
+            bpp = self.__bpp
+            filter_list = [ifilter0, ifilter1, ifilter2, ifilter3, ifilter4]
+            buf = np.empty((height+1, bwidth+1), dtype=np.int)
+            buf[0, :] = 0
+            buf[1:, :] = np.reshape(np.fromstring(byte_stream, dtype=np.ubyte), (height, bwidth+1))
+            for m in range(1, height+1):
+                filter_type = buf[m, 0]
+                if filter_type == 0: continue
+                filter_list[filter_type](m, bwidth, buf[:, 1:], bpp)
+            byte_mtx = np.empty((height, bwidth), dtype=np.ubyte)
+            byte_mtx[:, :] = buf[1:, 1:]
+            return byte_mtx
 
         def split_byte(b, width):
             mask = 2**width - 1
@@ -193,21 +187,26 @@ class Decoder:
             li.reverse()
             return li
 
-        def bytes2pixels(mtx, bit_depth, img_width):
-            if bit_depth < 8:
-                for idx, line in enumerate(mtx):
-                    pixels = []
-                    for B in line:
-                        pixels.extend(split_byte(B, bit_depth))
-                    pixels = pixels[:img_width]
-                    mtx[idx] = pixels
+        def bytes_to_pixels(mtx, bit_depth, img_width):
+#            if bit_depth < 8:
+#                for idx, line in enumerate(mtx):
+#                    pixels = []
+#                    for B in line:
+#                        pixels.extend(split_byte(B, bit_depth))
+#                    pixels = pixels[:img_width]
+#                    mtx[idx] = pixels
+#            if bit_depth == 16:
+#                for idx, line in enumerate(mtx):
+#                    pixels = []
+#                    for k in range(img_width):
+#                        pixels.append(line[2*k]*2**8 + line[2*k+1])
+#                    mtx[idx] = pixels
+            if bit_depth == 8:
+                return mtx
             if bit_depth == 16:
-                for idx, line in enumerate(mtx):
-                    pixels = []
-                    for k in range(img_width):
-                        pixels.append(line[2*k]*2**8 + line[2*k+1])
-                    mtx[idx] = pixels
-            return mtx
+                return mtx.view(np.ushort) # reinterpret_cast 
+            else:
+                raise NotImplementedError
 
         com_stream = StringIO()
         with open(self.__filename, 'rb') as f:
@@ -215,9 +214,9 @@ class Decoder:
                 if chunk['type'] == 'IDAT':
                     f.seek(chunk['data pos'])
                     com_stream.write(f.read(chunk['len']))
-        decom   = zlib.decompress(com_stream.getvalue())
-        pix_mtx = ifilter(decom)
-        pix_mtx = bytes2pixels(pix_mtx, bit_depth, width)
+        byte_stream = zlib.decompress(com_stream.getvalue())
+        pix_mtx = ifilter(byte_stream)
+        pix_mtx = bytes_to_pixels(pix_mtx, bit_depth, width)
         
 
         
