@@ -129,7 +129,7 @@ class WaveSynThread(object):
         while theThread.is_alive():
             app.root.update()
             for winId in app.windows:
-                app.windows[winId].update()
+                app.windows[winId].tk_object.update()
 
 
 @six.add_metaclass(Singleton)

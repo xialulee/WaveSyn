@@ -25,7 +25,7 @@ import matplotlib.pyplot as pyplot
 from numpy import deg2rad, rad2deg
 
 from wavesynlib.application import get_gui_image_path
-from wavesynlib.toolwindows.basewindow import WindowNode
+from wavesynlib.toolwindows.basewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting
 from wavesynlib.languagecenter.utils import (
     auto_subs, eval_format, set_attributes)
@@ -1001,15 +1001,15 @@ By running this script, Matlab will literally "re-plot" the curves shown here.''
         ) 
                 
                 
-class FigureWindow(WindowNode):
+class FigureWindow(TkToolWindow):
     _xmlrpcexport_  = ['plot_current_data']    
     
     def __init__(self, *args, **kwargs):
         super(FigureWindow, self).__init__(*args, **kwargs)               
-        tool_tabs = Notebook(self.tk_object)
-        tool_tabs.pack(fill=X)       
-        with self.attribute_lock:
-            self.tool_tabs   = tool_tabs
+#        tool_tabs = Notebook(self.tk_object)
+#        tool_tabs.pack(fill=X)       
+#        with self.attribute_lock:
+#            self.tool_tabs   = tool_tabs
         
         figure_book = FigureBook(self.tk_object)
         figure_book.pack(expand=YES, fill=BOTH)                

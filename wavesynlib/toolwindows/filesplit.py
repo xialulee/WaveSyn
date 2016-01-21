@@ -6,11 +6,11 @@ Created on Sun Jan 10 16:38:55 2016
 """
 
 #from wavesynlib.guicomponents.tk import *
-from wavesynlib.toolwindows.basewindow import WindowNode
+from wavesynlib.toolwindows.basewindow import TkWindowNode
 from wavesynlib.guicomponents.tk import LabeledScale
 
 
-class FileSplitDialog(WindowNode):
+class FileSplitDialog(TkWindowNode):
     def __init__(self, *args, **kwargs):
         super(FileSplitDialog, self).__init__(*args, **kwargs)
         mib_scale = LabeledScale(self.tk_object, name=None, 
