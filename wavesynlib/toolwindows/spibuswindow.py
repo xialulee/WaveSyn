@@ -209,14 +209,37 @@ from wavesynlib.toolwindows.basewindow import TkToolWindow
 CommandSlot = namedtuple('GUICommandSlot', ['command', 'args'])
 
 
+
+# Temporarily used for a interference cancellation circuit
+class InstFields(ct.BigEndianStructure):
+    _fields_ = [('i_dac', ct.c_uint, 10),
+                ('q_dac', ct.c_uint, 10),
+                ('freq_range', ct.c_uint, 2),
+                ('gain', ct.c_uint, 1),
+                ('spare', ct.c_uint, 1)
+                ]
+                
+class Inst(ct.Union):
+    _anonymous_ = ('inst_fields', )
+    _fields_ = [('inst_bytes', ct.c_ubyte*3),
+                ('inst_fields', InstFields)]
+# End     
+
+
+
 # To Do: on_close: close device automatically.
 class USBSPIWindow(TkToolWindow, Observable):
     '''A control panel for USB to SPI converter.'''
+        
     def __init__(self, *args, **kwargs):
         TkToolWindow.__init__(self, *args, **kwargs)
         Observable.__init__(self)
         
         self.__serialmap = None
+        
+        # Temporarily
+        self.inst = Inst()
+        # End Temporarily
         
         #window = self.tk_object
         tooltab = Frame(self.tool_tabs)
