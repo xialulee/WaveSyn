@@ -67,6 +67,7 @@ from wavesynlib.languagecenter.designpatterns import Singleton
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
+from wavesynlib.languagecenter import timeutils
 
 
 def make_menu(win, menu, json=False):
@@ -191,38 +192,45 @@ wavesyn
         with self.attribute_lock:
             set_attributes(self,
                 # UI elements
-                root                    = root,        
-                balloon                 = Tix.Balloon(root),
-                taskbar_icon            = TaskbarIcon(root),
-                # End UI elements
+                root = root,
+                tk_root = root,
+                balloon = Tix.Balloon(root),
+                taskbar_icon = TaskbarIcon(root),
+                # End UI elements                
                 
-                main_thread_id          = main_thread_id,
-                exec_thread_lock        = threading.RLock(),
-                xmlrpc_command_slot     = CommandSlot(),
+                main_thread_id = main_thread_id,
+                exec_thread_lock = threading.RLock(),
+                xmlrpc_command_slot = CommandSlot(),
 
-                lang_center             = LangCenterNode(),
+                lang_center = LangCenterNode(),
             
                 # Validation Functions
-                value_checker           = value_checker,
-                check_int               = value_checker.check_int,
-                check_float             = value_checker.check_float,
-                check_positive_float    = value_checker.check_positive_float,
+                value_checker = value_checker,
+                check_int = value_checker.check_int,
+                check_float = value_checker.check_float,
+                check_positive_float = value_checker.check_positive_float,
                 # End Validation Functions
                 
-                file_path    = file_path,
-                dir_path     = dir_path,
+                file_path = file_path,
+                dir_path = dir_path,
                                 
-                stream_manager   =StreamManager(),                
+                stream_manager = StreamManager(),                
                 
-                config_file_path  = config_file_path
+                config_file_path = config_file_path
                 
 #                cudaWorker      = CUDAWorker()
             )        
+
+        # Timer utils
+        self.timer = timeutils.ActionManager()              
+        self.timer.after = timeutils.TimerActionNode(type_='after')
+        self.timer.every = timeutils.TimerActionNode(type_='every')        
+        # End Timer utils
                         
         from wavesynlib.toolwindows.basewindow import WindowDict                                  
         self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
         self.editors    = EditorDict()
-
+        
         class EditorObserver(object): # use SimpleObserver instead
             def __init__(self, wavesyn):
                 self.wavesyn    = wavesyn
@@ -386,7 +394,6 @@ wavesyn
                 self.root.after(100, self.xmlrpc_check_command)
         self.xmlrpc_check_command = check_command
         self.root.after(100, check_command) # To Do: Use TkTimer instead of after
-
         
         
 def get_gui_image_path(filename):

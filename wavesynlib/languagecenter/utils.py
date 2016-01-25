@@ -37,10 +37,6 @@ def eval_format(formatString):
     return EvalFormatter(level=2).format(formatString) 
 
 
-
-
-
-
 class MethodDelegator(object):
     def __init__(self, attribute_name, method_name):
         super(MethodDelegator, self).__init__()
@@ -104,9 +100,7 @@ class FunctionChain(object):
     def countFunction(self):
         return len(self.__functions)
     
-
-
-        
+     
 class Nonblocking(object):
     class TheThread(threading.Thread):
         def __init__(self, func, args, kwargs):

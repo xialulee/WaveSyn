@@ -4,7 +4,7 @@ Created on Thu Dec 31 16:15:12 2015
 
 @author: Feng-cong Li
 """
-from __future__                      import print_function, division, unicode_literals
+from __future__ import print_function, division, unicode_literals
 
 import sys
 
@@ -31,7 +31,7 @@ class AttributeLock(object):
         self.node.attribute_auto_lock = False
         
         
-    
+# To Do: Implement an on_bind callback which is called when a node is connecting to the tree.    
 class ModelNode(object):
     _xmlrpcexport_  = []    
     

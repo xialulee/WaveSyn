@@ -53,10 +53,11 @@ class TkTimer(BaseObservableTimer):
                 self.withdraw()
             
     
-    def __init__(self, widget=None, interval=1000, active=False):
+    def __init__(self, widget=None, interval=1000, active=False, counter=-1):
         super(TkTimer, self).__init__()
-        self.__interval   = interval
-        self.__active   = active
+        self.__interval = interval
+        self.__active = active
+        self.__counter = counter
         if widget is None:
             widget  = self.ConfigDialog(timer=self)
         self.__widget   = widget        
@@ -70,6 +71,11 @@ class TkTimer(BaseObservableTimer):
         
     def __timer_callback(self):
         if self.active:
+            if self.__counter > 0:
+                self.__counter -= 1
+            if self.__counter == 0:
+                # This is the last time executing the timer function. 
+                self.active = False
             self.notify_observers()
             self.__widget.after(self.interval, self.__timer_callback)
         
@@ -96,5 +102,14 @@ class TkTimer(BaseObservableTimer):
             self.__widget.active.set(val)
         if val and not lastVal:
             self.__timer_callback()
+            
+    @property
+    def counter(self):
+        return self.__counter
+        
+    @counter.setter
+    def counter(self, value):
+        '''set counter to -1 means infinity timer loop.'''
+        self.__counter = value
     
     

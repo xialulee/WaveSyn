@@ -85,7 +85,7 @@ class WindowDict(NodeDict):
                 
     def __setitem__(self, key, val):
         if not isinstance(val, BaseWindowNode):
-            raise TypeError, eval_format('{self.node_path} only accepts instance of WindowNode or of its subclasses.')
+            raise TypeError, eval_format("{self.node_path} only accepts instance of BaseWindowNode's subclasses.")
         if key != id(val):
             raise ValueError, 'The key should be identical to the ID of the window.'
         NodeDict.__setitem__(self, key, val)

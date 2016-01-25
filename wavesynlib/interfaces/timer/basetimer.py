@@ -6,7 +6,7 @@ Created on Mon March 30 2015
 """
 
 from wavesynlib.languagecenter.designpatterns import Observable
-from abc                                      import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractproperty
 
 class BaseObservableTimer(Observable):
     __metaclass__ = ABCMeta
@@ -27,11 +27,20 @@ class BaseObservableTimer(Observable):
         
     active = abstractproperty(active_getter, active_setter)
     
+    def counter_getter(self):
+        raise NotImplementedError
+        
+    def counter_setter(self):
+        raise NotImplementedError
+        
+    counter = abstractproperty(counter_getter, counter_setter)
+    
     @classmethod
     def __subclasshook__(cls, C):
         if cls is BaseObservableTimer:
             if hasattr(C, 'interval') \
                 and hasattr(C, 'active') \
+                and hasattr(C, 'counter') \
                 and issubclass(C, Observable):
                     return True
         return NotImplemented
