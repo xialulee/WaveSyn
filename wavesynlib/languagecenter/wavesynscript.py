@@ -39,7 +39,7 @@ class ModelNode(object):
         super(ModelNode, self).__init__()
         if '_attribute_lock' not in self.__dict__:
             object.__setattr__(self, '_attribute_lock', set())
-        self.parentNode = None
+        self.parent_node = None
         self.__is_root = is_root
         self.node_name = node_name
         #self.attribute_auto_lock   = False
@@ -81,13 +81,13 @@ then node will have a property named 'a', which cannot be re-assigned.
             object.__setattr__(self, 'attribute_auto_lock', False)
         if key in self._attribute_lock:
             raise AttributeError, auto_subs('Attribute "$key" is unchangeable.')
-        if isinstance(val, ModelNode) and not val.is_root and val.parentNode==None:
+        if isinstance(val, ModelNode) and not val.is_root and val.parent_node==None:
             val.node_name = val.node_name if val.node_name else key
-            object.__setattr__(val, 'parentNode', self)
+            object.__setattr__(val, 'parent_node', self)
             
             # The autolock mechanism will lock the node after you attach it to the model tree.
             # A child node cannot change its parent
-            val.lock_attribute('parentNode')
+            val.lock_attribute('parent_node')
             # and the parent node's child node cannot be re-assinged. 
             self.lock_attribute(key)
                     
@@ -100,7 +100,7 @@ then node will have a property named 'a', which cannot be re-assigned.
         if self.is_root:
             return self.node_name
         else:
-            return '.'.join((self.parentNode.node_path, self.node_name))
+            return '.'.join((self.parent_node.node_path, self.node_name))
             
     @property
     def child_nodes(self):
@@ -111,7 +111,7 @@ then node will have a property named 'a', which cannot be re-assigned.
     def root_node(self):
         node    = self
         while not node.is_root:
-            node    = node.parentNode
+            node    = node.parent_node
         return node
         
 
@@ -127,8 +127,8 @@ class NodeDict(ModelNode, Dict):
         super(NodeDict, self).__init__(node_name=node_name)
         
     def __setitem__(self, key, val):
-        object.__setattr__(val, 'parentNode', self)
-        val.lock_attribute('parentNode')
+        object.__setattr__(val, 'parent_node', self)
+        val.lock_attribute('parent_node')
         dict.__setitem__(self, key, val)
 
 
@@ -149,7 +149,7 @@ class NodeList(ModelNode, List):
         self.__element_lock = lock
         
     def append(self, val):
-        object.__setattr__(val, 'parentNode', self)        
+        object.__setattr__(val, 'parent_node', self)        
         list.append(self, val)
         val.index   = len(self) - 1
         val.lock_attribute('index')
@@ -188,6 +188,7 @@ class Scripting(ModelNode):
     
     root_name = 'wavesyn' # The name of the object model tree's root
     root_node = None
+    main_thread_id = None
     name_space = {'locals':{}, 'globals':{}}
     
     _print_code_flag = False
@@ -224,6 +225,11 @@ class Scripting(ModelNode):
             if cls._print_code_flag:
                 try:
                     cls._print_code_flag = False # Prevent recursive.
+                    # To Do: 
+                    # if current_thread is not main_thread:
+                    #   put the node and arguments into a command slot
+                    #   and the main thread will check the command queue periodically.
+                    # This mechanism will guarentee the thread safety of wavesyn scripting system.
                     ret = cls.root_node.print_and_eval(
                         eval_format(
                             '{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})'

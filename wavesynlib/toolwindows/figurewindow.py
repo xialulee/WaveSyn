@@ -157,8 +157,8 @@ class DataFigure(ModelNode, Observable):
 
     @property
     def node_path(self):
-        if isinstance(self.parentNode, FigureList):
-            return eval_format('{self.parentNode.node_path}[{self.index}]')
+        if isinstance(self.parent_node, FigureList):
+            return eval_format('{self.parent_node.node_path}[{self.index}]')
         else:
             return ModelNode.node_path               
         

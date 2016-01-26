@@ -76,7 +76,7 @@ class DoNode(ModelNode):
     def manager(self):
         node = self
         while True:
-            node = node.parentNode
+            node = node.parent_node
             if isinstance(node, ActionManager):
                 return node
         
@@ -143,7 +143,7 @@ class DoNode(ModelNode):
         hours = self.__hours
         minutes = self.__minutes
         seconds = self.__seconds
-        return eval_format('{self.parentNode.node_path}[{hours}:{minutes}:{seconds}]')
+        return eval_format('{self.parent_node.node_path}[{hours}:{minutes}:{seconds}]')
 
 
 class TimerActionNode(ModelNode):    
@@ -153,8 +153,8 @@ class TimerActionNode(ModelNode):
         
     def __getitem__(self, index):
         do_node = DoNode(time_args=index, type_=self.__type)
-        object.__setattr__(do_node, 'parentNode', self)
-        do_node.lock_attribute('parentNode')
+        object.__setattr__(do_node, 'parent_node', self)
+        do_node.lock_attribute('parent_node')
         do_node.manager.add_action(do_node)
         return do_node
        

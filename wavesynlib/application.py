@@ -25,7 +25,6 @@ REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
 
 import six
-
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
 
@@ -63,11 +62,13 @@ from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream import StreamManager
 #from wavesynlib.cuda                             import Worker as CUDAWorker
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes
-from wavesynlib.languagecenter.designpatterns import Singleton        
+from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver        
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter import timeutils
+from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
+from wavesynlib.status import busy_doing
 
 
 def make_menu(win, menu, json=False):
@@ -182,7 +183,9 @@ wavesyn
         # End load config file
 
         root = Tix.Tk()
-        main_thread_id    = thread.get_ident()
+        root.protocol("WM_DELETE_WINDOW", self._on_exit)
+        main_thread_id = thread.get_ident()
+        Scripting.main_thread_id = main_thread_id
         
         from wavesynlib.interfaces.xmlrpc.server import CommandSlot
         
@@ -196,6 +199,7 @@ wavesyn
                 tk_root = root,
                 balloon = Tix.Balloon(root),
                 taskbar_icon = TaskbarIcon(root),
+                interrupter = InterrupterNode(),
                 # End UI elements                
                 
                 main_thread_id = main_thread_id,
@@ -287,14 +291,19 @@ wavesyn
     def print_and_eval(self, expr):
         with self.exec_thread_lock:
             self.stream_manager.write(expr+'\n', 'HISTORY')
-            ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])
+            #ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])                
+            ret = self.eval(expr)
             if ret is not None:
                 self.stream_manager.write(str(ret)+'\n', 'RETVAL')
             return ret    
                               
     def eval(self, expr):
         with self.exec_thread_lock:
-            ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])
+            try:
+                with busy_doing:
+                    ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])
+            except KeyboardInterrupt:
+                self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
             Scripting.name_space['locals']['_']  = ret
             return ret
         
@@ -312,9 +321,14 @@ wavesyn
                 print(stderr.decode(encoding, 'ignore'), file=sys.stderr)                
                 return
             try:
-                ret = self.eval(code)
+                with busy_doing:
+                    ret = self.eval(code)
             except SyntaxError:
-                exec code in Scripting.name_space['globals'], Scripting.name_space['locals']
+                with busy_doing:
+                    try:
+                        exec code in Scripting.name_space['globals'], Scripting.name_space['locals']
+                    except KeyboardInterrupt:
+                        self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
             return ret
             
                     
@@ -368,6 +382,12 @@ wavesyn
                     
     def mainloop(self):
         return self.root.mainloop()
+        
+
+    def _on_exit(self):    
+        self.interrupter.close()
+        self.tk_root.quit()
+    
         
     @classmethod
     def do_events(cls):
@@ -529,9 +549,21 @@ class ConsoleText(ScrolledText):
     def get_cursor_pos(self, mark=INSERT): 
         return (int(i) for i in self.text.index(mark).split('.'))               
         
+
+class StatusBar(Frame):
+    def __init__(self, *args, **kwargs):
+        Frame.__init__(self, *args, **kwargs)
+        self.__busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
+        self.__busy_lamp.pack(side=RIGHT)
+        # To Do: add several customizable lamps for users.
         
-class ConsoleWindow(ModelNode):
-    
+    def set_busy(self, busy=True):
+        bg = 'red' if busy else 'forestgreen'
+        self.__busy_lamp['bg'] = bg 
+        self.update()
+        
+        
+class ConsoleWindow(ModelNode):    
     class StreamObserver(object):
         def __init__(self, console):
             self.__console  = console
@@ -550,6 +582,15 @@ class ConsoleWindow(ModelNode):
         
         self.__stdstream_text = stdstream_text = ConsoleText(root)
         stdstream_text.pack(expand=YES, fill=BOTH)
+        
+        self.__status_bar = status_bar = StatusBar(root)
+        status_bar.pack(expand=YES, fill=X)
+        
+        @SimpleObserver
+        def busy_status_observer(busy):
+            status_bar.set_busy(busy)
+            
+        busy_doing.add_observer(busy_status_observer)
 
         tag_defs = kwargs['tag_defs']
         for key in tag_defs:

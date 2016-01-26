@@ -245,8 +245,8 @@ class AlgorithmNode(ModelNode, WindowComponent):
                         
     @property
     def node_path(self):
-        if isinstance(self.parentNode, AlgorithmDict):
-            return eval_format('{self.parentNode.node_path}["{self.meta.name}"]')
+        if isinstance(self.parent_node, AlgorithmDict):
+            return eval_format('{self.parent_node.node_path}["{self.meta.name}"]')
         else:
             return ModelNode.node_path
             

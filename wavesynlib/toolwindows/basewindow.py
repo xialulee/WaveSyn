@@ -59,8 +59,8 @@ Properties inherited from ModelNode:
         
     @property
     def node_path(self):
-        if isinstance(self.parentNode, WindowDict):
-            return eval_format('{self.parentNode.node_path}[{id(self)}]')
+        if isinstance(self.parent_node, WindowDict):
+            return eval_format('{self.parent_node.node_path}[{id(self)}]')
         else:
             return ModelNode.node_path
             
@@ -103,7 +103,7 @@ class WindowComponent(object):
         else:
             node    = self
             while True:
-                node    = node.parentNode
+                node    = node.parent_node
                 if isinstance(node, TkWindowNode):
                     self._top_window    = node
                     return node 
