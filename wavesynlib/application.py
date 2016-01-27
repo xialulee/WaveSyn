@@ -67,6 +67,7 @@ from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter import timeutils
+from wavesynlib.languagecenter import datatypes
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
 from wavesynlib.status import busy_doing
 
@@ -187,9 +188,9 @@ wavesyn
         main_thread_id = thread.get_ident()
         Scripting.main_thread_id = main_thread_id
         
+        # To Do: WaveSyn will have a uniform command slot system.
         from wavesynlib.interfaces.xmlrpc.server import CommandSlot
         
-
         value_checker    = ValueChecker(root)        
         
         with self.attribute_lock:
@@ -204,6 +205,8 @@ wavesyn
                 
                 main_thread_id = main_thread_id,
                 exec_thread_lock = threading.RLock(),
+
+                # To Do: WaveSyn will have a uniform command slot system.
                 xmlrpc_command_slot = CommandSlot(),
 
                 lang_center = LangCenterNode(),
@@ -235,6 +238,32 @@ wavesyn
         self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
         self.editors    = EditorDict()
         
+        with self.attribute_lock:
+            # The below one is the core of the new command system:
+            self.command_queue = Queue.Queue()
+            # The timer shown as follows checks the command queue
+            # extracts command and execute.
+            self.command_queue_timer = self.create_timer(interval=50, active=False)
+        
+        @SimpleObserver
+        def command_queue_observer():
+            try:
+                while True:
+                    command_slot = self.command_queue.get_nowait()
+                    if command_slot.source == 'local':
+                        node = command_slot.node_list[-1]
+                        if callable(node):
+                            node(*command_slot.args, **command_slot.kwargs)
+                        elif isinstance(node, ModelNode):
+                            getattr(node, command_slot.method_name)(*command_slot.args, **command_slot.kwargs)
+                        else:
+                            raise TypeError('The given object is not a ModelNode.')
+            except Queue.Empty:
+                return
+                
+        self.command_queue_timer.add_observer(command_queue_observer)
+        self.command_queue_timer.active = True
+        
         class EditorObserver(object): # use SimpleObserver instead
             def __init__(self, wavesyn):
                 self.wavesyn    = wavesyn
@@ -252,7 +281,7 @@ wavesyn
         self.editors.manager.add_observer(EditorObserver(self))
 
         with self.attribute_lock:
-            self.monitor_timer    = self.create_timer(interval=100, active=False)
+            self.monitor_timer = self.create_timer(interval=100, active=False)
             
         # Make wavesyn.editors.manager check wavesyn.editors every 100ms
         self.monitor_timer.add_observer(self.editors.manager) 
@@ -285,7 +314,7 @@ wavesyn
         return editor_id
         
     def create_timer(self, interval=100, active=False):
-        return TkTimer(self.root, interval, active)
+        return TkTimer(self.tk_root, interval, active)
                      
         
     def print_and_eval(self, expr):

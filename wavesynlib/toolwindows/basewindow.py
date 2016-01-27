@@ -97,13 +97,13 @@ class WindowDict(NodeDict):
         
 class WindowComponent(object):
     @property        
-    def top_window(self):
-        if hasattr(self, '_top_window'):
-            return self._top_window
+    def window_node(self):
+        if hasattr(self, '__top_window'):
+            return self.__top_window
         else:
-            node    = self
+            node = self
             while True:
-                node    = node.parent_node
+                node = node.parent_node
                 if isinstance(node, TkWindowNode):
-                    self._top_window    = node
+                    self.__top_window = node
                     return node 

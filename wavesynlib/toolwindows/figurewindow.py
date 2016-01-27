@@ -1006,10 +1006,6 @@ class FigureWindow(TkToolWindow):
     
     def __init__(self, *args, **kwargs):
         super(FigureWindow, self).__init__(*args, **kwargs)               
-#        tool_tabs = Notebook(self.tk_object)
-#        tool_tabs.pack(fill=X)       
-#        with self.attribute_lock:
-#            self.tool_tabs   = tool_tabs
         
         figure_book = FigureBook(self.tk_object)
         figure_book.pack(expand=YES, fill=BOTH)                

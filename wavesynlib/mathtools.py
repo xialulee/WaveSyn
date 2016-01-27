@@ -9,8 +9,11 @@ import abc
 
 from wavesynlib.languagecenter.utils import eval_format
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
+from wavesynlib.languagecenter import datatypes
 from wavesynlib.toolwindows.basewindow import WindowComponent
 
+import thread
+import threading
 ##########################Experimenting with multiprocessing###############################
 import multiprocessing as mp
 ###########################################################################################
@@ -210,7 +213,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
         self.__meta.class_name   = class_name
         self.__meta.name    = algorithm.__name__
         self.__algorithm    = algorithm
-        self.__top_window    = None
+        #self.__top_window    = None
         
         if algorithm.__parameters__:
             for item in algorithm.__parameters__:
@@ -220,7 +223,6 @@ class AlgorithmNode(ModelNode, WindowComponent):
             for param in algorithm.__call__.func_code.co_varnames[1:paramsnum]:  
                 self.__meta.parameters[param]   = Parameter(param, type='expression')
                            
-
     def __getitem__(self, key):
         return getattr(self.__meta, key)
 
@@ -239,10 +241,48 @@ class AlgorithmNode(ModelNode, WindowComponent):
                     
     @Scripting.printable # To Do: Implement run in nonblocking mode. Add a new argument: on_finished. The callable object will be called when the procudure is finished. 
     def run(self, *args, **kwargs):
-        result  = self.__algorithm(*args, **kwargs)
-        self.top_window.current_data  = result    
+        result = self.__algorithm(*args, **kwargs)
+        self.window_node.current_data  = result  
         
-                        
+    @Scripting.printable
+    def thread_run(self, on_finished, progressbar, *args, **kwargs):
+        from wavesynlib.toolwindows.progresswindow.dialog import Dialog
+
+        def store_and_plot(result):
+            window_node = self.window_node
+            window_node.current_data = result            
+            window_node.plot_current_data()            
+        
+        on_finished_proc = {
+            'store and plot': store_and_plot
+        }        
+        
+        if not callable(on_finished):
+            on_finished = on_finished_proc[on_finished]
+
+        root_node = self.root_node            
+
+        if progressbar == 'dialog':
+            dialog = Dialog()
+            def default_progressbar(k, K, *args, **kwargs):
+                progress = k / K * 100
+                dialog.progress = progress
+            self.progress_checker.append(default_progressbar)
+        else:
+            raise NotImplementedError
+
+
+        def run():
+            try:
+                result = self.__algorithm(*args, **kwargs)
+                slot = datatypes.CommandSlot(source='local', node_list=[on_finished], args=(result,))
+                root_node.command_queue.put(slot)
+            finally:
+                if progressbar == 'dialog':
+                    self.progress_checker.remove(default_progressbar)                      
+            
+        thread.start_new_thread(run, ())
+                                
     @property
     def node_path(self):
         if isinstance(self.parent_node, AlgorithmDict):
@@ -260,8 +300,8 @@ class AlgorithmNode(ModelNode, WindowComponent):
         for args, kwargs in all_args:
             mp.Process(target=parallelFunc, args=(type(self.__algorithm), queue, args, kwargs)).start()
         for k in range(len(all_args)):
-            self.top_window.current_data  = queue.get()
-            self.top_window.plot_current_data()
+            self.window_node.current_data  = queue.get()
+            self.window_node.plot_current_data()
             
     @Scripting.printable
     def parallel_run(self, all_args):

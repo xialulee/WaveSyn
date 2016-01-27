@@ -90,7 +90,10 @@ class OptimizeGroup(Group):
         if self.__parallel_checker_variable.get():
             self.parallel_run()
         else:
-            self.serial_run()        
+#            self.serial_run()   
+            with code_printer:
+                params = self.__topwin.parameter_group.get_parameters()
+                self.__topwin.current_algorithm.thread_run(on_finished='store and plot', progressbar='dialog', **params)
         delta_t  = time.clock() - t1
         print(auto_subs('Total time consumption: $delta_t (s)'))
 
