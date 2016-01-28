@@ -7,13 +7,13 @@ import importlib
 
 import abc
 
-from wavesynlib.languagecenter.utils import eval_format
+from wavesynlib.languagecenter.utils import eval_format, auto_subs
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 from wavesynlib.languagecenter import datatypes
 from wavesynlib.toolwindows.basewindow import WindowComponent
 
+import time
 import thread
-import threading
 ##########################Experimenting with multiprocessing###############################
 import multiprocessing as mp
 ###########################################################################################
@@ -206,7 +206,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
     def __init__(self, module_name, class_name):
         super(AlgorithmNode, self).__init__()
         mod = importlib.import_module(module_name)
-        algorithm   = getattr(mod, class_name)()
+        algorithm = getattr(mod, class_name)()
         self.__cuda = True if hasattr(algorithm, '__CUDA__') and algorithm.__CUDA__ else False
         self.__meta = self.Meta()
         self.__meta.module_name  = module_name
@@ -245,7 +245,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
         self.window_node.current_data  = result  
         
     @Scripting.printable
-    def thread_run(self, on_finished, progressbar, *args, **kwargs):
+    def thread_run(self, on_finished, progress_bar, repeat_times, *args, **kwargs):
         from wavesynlib.toolwindows.progresswindow.dialog import Dialog
 
         def store_and_plot(result):
@@ -261,25 +261,31 @@ class AlgorithmNode(ModelNode, WindowComponent):
             on_finished = on_finished_proc[on_finished]
 
         root_node = self.root_node            
+        
+        algorithm_class = type(self.__algorithm)
+        algorithm = algorithm_class()
 
-        if progressbar == 'dialog':
-            dialog = Dialog()
+        if progress_bar is None:
+            pass
+        elif progress_bar == 'dialog':
+            dialog = Dialog(['Total progress:', 'Current progress:'], title=algorithm.__name__ + ' Progress')
             def default_progressbar(k, K, *args, **kwargs):
                 progress = k / K * 100
-                dialog.progress = progress
-            self.progress_checker.append(default_progressbar)
+                dialog.set_progress(index=1, progress=progress)
+            algorithm.progress_checker.append(default_progressbar)
         else:
             raise NotImplementedError
 
 
         def run():
-            try:
-                result = self.__algorithm(*args, **kwargs)
+            t1 = time.clock()
+            for n in range(repeat_times):
+                result = algorithm(*args, **kwargs)
                 slot = datatypes.CommandSlot(source='local', node_list=[on_finished], args=(result,))
                 root_node.command_queue.put(slot)
-            finally:
-                if progressbar == 'dialog':
-                    self.progress_checker.remove(default_progressbar)                      
+                dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)
+            delta_t = time.clock() - t1
+            dialog.set_text(index=0, text=auto_subs('Finished. Total time consumption: $delta_t (s)'))
             
         thread.start_new_thread(run, ())
                                 

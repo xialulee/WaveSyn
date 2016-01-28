@@ -13,20 +13,63 @@ import thread
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 
+
+class LabeledProgress(object, tk.Frame):
+    def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self, *args, **kwargs)
+        self.__label = label = ttk.Label(self)
+        label.pack(expand='yes', fill='x')
+        self.__progress = progress = tk.IntVar()
+        ttk.Progressbar(self, orient='horizontal', 
+                        variable=progress, maximum=100,
+                        length=400).pack(expand='yes', fill='x')
+        
+    @property
+    def progress(self):
+        return self.__progress.get()
+        
+    @progress.setter
+    def progress(self, value):
+        self.__progress.set(value)
+        
+    @property
+    def label_text(self):
+        return self.__label['text']
+        
+    @label_text.setter
+    def label_text(self, value):
+        self.__label['text'] = value
+
+
 class Dialog(object):
-    def __init__(self):
+    def __init__(self, text_list, title=''):
         self.__win = win = tk.Toplevel()
         win.protocol("WM_DELETE_WINDOW", self._on_close)
-        progress = tk.IntVar()
-        self.__progress = 0
-        self.__lock = thread.allocate_lock()        
-        ttk.Progressbar(win, orient='horizontal', variable=progress, maximum=100).pack()
+        win.title(title)
+        self.__lock = thread.allocate_lock() 
+                
+        number = len(text_list)        
+        self.__progressbars = progressbars = []
+        self.__text_list = text_list
+        self.__text_changed = False
+        self.__progress_list = progress_list = [0]*number                
+        for n in range(number):
+            progressbar = LabeledProgress(win)
+            progressbar.pack(expand='yes', fill='x')
+            progressbar.label_text = text_list[n]
+            progressbars.append(progressbar)
         
         self.__timer = timer = TkTimer(widget=win, interval=50)
         
         @SimpleObserver
         def on_timer():
-            progress.set(self.progress)
+            with self.__lock:
+                for n in range(number):
+                    progressbars[n].progress = progress_list[n]
+                if self.__text_changed:
+                    self.__text_changed = False
+                    for n in range(number):
+                        progressbars[n].label_text = self.__text_list[n]
             
         timer.add_observer(on_timer)
         timer.active = True        
@@ -34,17 +77,28 @@ class Dialog(object):
     def close(self):
         self._on_close()
         
-    @property
-    def progress(self):
+    def set_progress(self, index, progress):
         with self.__lock:
-            return self.__progress
+            self.__progress_list[index] = progress
             
-    @progress.setter
-    def progress(self, value):
+    def set_text(self, index, text):
         with self.__lock:
-            self.__progress = value
+            self.__text_list[index] = text
+            self.__text_changed = True
             
     def _on_close(self):
         self.__timer.active = False
         self.__win.destroy()
+            
+            
+def main(argv):
+    root = tk.Tk()
+    dialog = Dialog(['abcd', 'efgh'])
+    dialog.set_progress(index=0, progress=50)
+    dialog.set_progress(index=1, progress=80)
+    root.mainloop()
+    
+
+if __name__ == '__main__':
+    main(None)
             

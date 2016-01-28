@@ -134,7 +134,9 @@ class DataFigure(ModelNode, Observable):
         toolbar = NavigationToolbar2TkAgg(canvas, master)
         toolbar.update()
         canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=YES)
-        toolbar.pack()        
+        toolbar.pack()       
+        
+        # canvas.mpl_connect('button_press_event', lambda event:print(event)) # test mpl_connect
         
         with self.attribute_lock:
             # All the properties being set in this block will be locked automatically,
