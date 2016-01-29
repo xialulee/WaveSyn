@@ -415,6 +415,13 @@ wavesyn
 
     def _on_exit(self):    
         self.interrupter.close()
+        
+        # Here we cannot iterate the 'windows' directly,
+        # because the close method will change the size of the dict 'windows',
+        # and this will raise a runtime error.
+        keys = [key for key in self.windows]
+        for key in keys:
+            self.windows[key].close()
         self.tk_root.quit()
     
         
@@ -582,14 +589,26 @@ class ConsoleText(ScrolledText):
 class StatusBar(Frame):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
+        timer = TkTimer(widget=self, interval=200, active=False)
         self.__busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
         self.__busy_lamp.pack(side=RIGHT)
+        self.__lock = lock = thread.allocate_lock()
+        self.__busy = False
+        
+        @SimpleObserver
+        def on_timer():
+            with lock:
+                bg = 'red' if self.__busy else 'forestgreen'
+            self.__busy_lamp['bg'] = bg
+            
+        timer.add_observer(on_timer)
+        timer.active = True
         # To Do: add several customizable lamps for users.
         
     def set_busy(self, busy=True):
-        bg = 'red' if busy else 'forestgreen'
-        self.__busy_lamp['bg'] = bg 
-        self.update()
+        with self.__lock:
+            self.__busy = busy
+#        self.update()
         
         
 class ConsoleWindow(ModelNode):    

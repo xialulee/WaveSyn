@@ -7,6 +7,7 @@ Created on Sun Oct 26 21:06:35 2014
 
 from wavesynlib.languagecenter.designpatterns import  Observable
 import six.moves.queue as Queue
+import thread
 
 import sys
 REALSTDOUT  = sys.stdout
@@ -15,6 +16,7 @@ REALSTDERR  = sys.stderr
 class StreamChain(object):
     def __init__(self):
         self.__streamlist   = []
+        self.__lock = thread.allocate_lock()
 
     def __iadd__(self, stream):
         self.__streamlist.append(stream)
@@ -28,8 +30,9 @@ class StreamChain(object):
                 break
 
     def write(self, content):
-        for stream in self.__streamlist:
-            stream.write(content)
+        with self.__lock:
+            for stream in self.__streamlist:
+                stream.write(content)
             
     def flush(self):
         for stream in self.__streamlist:
@@ -60,7 +63,7 @@ class StreamManager(Observable):
     def write(self, content, stream_type='STDOUT'):
         self.queue.put((stream_type, content))
         
-    def update(self):
+    def update(self): # Usually called by a timer.
         try:
             while True:
                 stream_type, content = self.queue.get_nowait()

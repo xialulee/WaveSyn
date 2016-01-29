@@ -14,21 +14,21 @@ class PeakFinder(object):
         self.rectProps  = dict(facecolor='red', edgecolor = 'white',
                  alpha=0.5, fill=True)
         self.indicatorProps = dict(facecolor='white', edgecolor='black', alpha=0.5, fill=True)
-        self.__selector = RectangleSelector(ax, self.onSelect, drawtype='box', rectprops=self.rectProps)
+        self.__selector = RectangleSelector(ax, self._on_select, drawtype='box', rectprops=self.rectProps)
         self.__axes     = ax
         self.__canvas   = canvas
         
-    def onSelect(self, epress, erelease):
+    def _on_select(self, epress, erelease):
         start   = map(int, (epress.xdata, epress.ydata))
         stop    = map(int, (erelease.xdata, erelease.ydata))
         ###################
         ax      = self.__axes
-        dataMatrix  = ax.get_axes().get_images()[0].get_array()
-        clipMatrix  = dataMatrix[start[1]:(stop[1]+1), start[0]:(stop[0]+1)]
-        peakPos     = nonzero(clipMatrix == clipMatrix.max())
-        peakPos     = (peakPos[1][0] + start[0], peakPos[0][0] + start[1])
-        print peakPos
-        circle      = Circle(peakPos, 4, **self.indicatorProps)
+        data_matrix  = ax.get_axes().get_images()[0].get_array()
+        clip_matrix  = data_matrix[start[1]:(stop[1]+1), start[0]:(stop[0]+1)]
+        peak_pos     = nonzero(clip_matrix == clip_matrix.max())
+        peak_pos     = (peak_pos[1][0] + start[0], peak_pos[0][0] + start[1])
+        print peak_pos
+        circle      = Circle(peak_pos, 4, **self.indicatorProps)
         ax.add_patch(circle)
         self.__canvas.show()
         ###################
@@ -40,7 +40,7 @@ class PeakFinder(object):
         self.__selector.set_active(False)
         
     @property
-    def isActivate(self):
+    def is_active(self):
         return self.__selector.active
 
 
@@ -56,6 +56,8 @@ class ImageFrame(Frame, object):
         figure = Figure((5,4), dpi=100)
         self.figure = figure
         canvas = FigureCanvasTkAgg(figure, master=master)
+        canvas.mpl_connect('button_press_event', self._on_click)
+        canvas.mpl_connect('key_press_event',self._on_keypress)
         canvas.show()
         self.__canvas  = canvas
         toolbar    = NavigationToolbar2TkAgg(canvas, master)
@@ -64,6 +66,12 @@ class ImageFrame(Frame, object):
         toolbar.pack()
         self.axes   = figure.add_subplot(111)
         self.peakFinder = PeakFinder(self.axes, canvas)
+        
+    def _on_click(self, event):
+        print('Clicked')
+        
+    def _on_keypress(self, event):
+        print('Key press')
         
 
  

@@ -15,6 +15,8 @@ from PIL import ImageTk
 from numpy import *
 from scipy.io import savemat
 
+import thread
+
 from wavesynlib.application import get_gui_image_path, WaveSynThread
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.guicomponents.tk import Group, LabeledEntry, ScrolledList
@@ -79,13 +81,17 @@ class OptimizeGroup(Group):
             topwin.set_ideal_pattern(center, width)
             topwin.plot_ideal_pattern()        
         # Create a new thread for solving the correlation matrix.
+        M = self.__M.get_int()
+        display = self.__bDisplay.get()            
+            
         def solveFunc():
             with code_printer:
-                topwin.solve(M=self.__M.get_int(), display=self.__bDisplay.get())
+                topwin.solve(M=M, display=display)
         WaveSynThread.start(func=solveFunc)
-        # Though method "start" will not return until the solve returns, the GUI will still 
-        # responding to user input because Tk.update is called by start repeatedly.
-        # While the thread is not alive, the optimization procedure is finished.
+#        solveFunc()
+#         Though method "start" will not return until the solve returns, the GUI will still 
+#         responding to user input because Tk.update is called by start repeatedly.
+#         While the thread is not alive, the optimization procedure is finished.
         with code_printer:                        
             topwin.plot_current_data() 
         
@@ -343,8 +349,12 @@ class PatternWindow(FigureWindow):
         R   = self.R
         if R is None:
             pass # To do: raise a error
-        self.figure_book.plot(self.angles, pattern2corrmtx.corrmtx2pattern(R, self.angles),
-            curve_name='Synthesized Pattern', color='g')
+#        self.figure_book.plot(self.angles, pattern2corrmtx.corrmtx2pattern(R, self.angles),
+#            curve_name='Synthesized Pattern', color='g')
+        self.plot(R)
+            
+    def plot(self, data):
+        self.figure_book.plot(self.angles, pattern2corrmtx.corrmtx2pattern(data, self.angles), curve_name='Synthesized Pattern', color='g')
             
     @Scripting.printable    
     def solve(self, M, display=False):

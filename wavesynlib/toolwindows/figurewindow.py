@@ -1108,5 +1108,9 @@ class FigureWindow(TkToolWindow):
 
     @Scripting.printable    
     def plot_current_data(self):        
-        self.figure_book.plot(self.current_data)                    
+        self.plot(self.current_data)
+
+    
+    def plot(self, data):
+        self.figure_book.plot(data)                    
  

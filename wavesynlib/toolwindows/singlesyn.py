@@ -92,7 +92,7 @@ class OptimizeGroup(Group):
             with code_printer:
                 params = self.__topwin.parameter_group.get_parameters()
                 repeat_times = self.__num.get_int()
-                self.__topwin.current_algorithm.thread_run(on_finished='store and plot', progress_bar='dialog', repeat_times=repeat_times, **params)
+                self.__topwin.current_algorithm.thread_run(on_finished=['store', 'plot'], progress_indicator='progress_dialog', repeat_times=repeat_times, **params)
 
     def serial_run(self):
         app    = self._app

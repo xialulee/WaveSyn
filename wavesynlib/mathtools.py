@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from numpy import abs, isscalar, linalg, ndarray, mat, matrix, hstack
 from numpy.linalg   import matrix_rank, svd
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 import importlib
 
 import abc
@@ -245,33 +245,51 @@ class AlgorithmNode(ModelNode, WindowComponent):
         self.window_node.current_data  = result  
         
     @Scripting.printable
-    def thread_run(self, on_finished, progress_bar, repeat_times, *args, **kwargs):
+    def thread_run(self, on_finished, progress_indicator, repeat_times, *args, **kwargs):
         from wavesynlib.toolwindows.progresswindow.dialog import Dialog
 
-        def store_and_plot(result):
+        def store(result):
             window_node = self.window_node
             window_node.current_data = result            
-            window_node.plot_current_data()            
+            window_node.plot_current_data()
+
+        def plot(result):
+            window_node = self.window_node
+            window_node.plot            
         
-        on_finished_proc = {
-            'store and plot': store_and_plot
+        on_finished_namemap = {
+            'store': store,
+            'plot': plot
         }        
         
-        if not callable(on_finished):
-            on_finished = on_finished_proc[on_finished]
+        if not isinstance(on_finished, Iterable):
+            on_finished_procs = [on_finished]
+        else:
+            on_finished_procs = on_finished
+            
+        def on_finished(result):
+            for proc in on_finished_procs:
+                if not callable(proc):
+                    on_finished_namemap[proc](result)
+                else:
+                    proc(result)
+
+#        if not callable(on_finished):
+#            on_finished = on_finished_proc[on_finished]
 
         root_node = self.root_node            
         
         algorithm_class = type(self.__algorithm)
         algorithm = algorithm_class()
 
-        if progress_bar is None:
+        if progress_indicator is None:
             pass
-        elif progress_bar == 'dialog':
+        elif progress_indicator == 'progress_dialog':
             dialog = Dialog(['Total progress:', 'Current progress:'], title=algorithm.__name__ + ' Progress')
             def default_progressbar(k, K, *args, **kwargs):
                 progress = k / K * 100
                 dialog.set_progress(index=1, progress=progress)
+                
             algorithm.progress_checker.append(default_progressbar)
         else:
             raise NotImplementedError
