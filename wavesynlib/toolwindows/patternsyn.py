@@ -272,7 +272,7 @@ class PatternWindow(FigureWindow):
     def __init__(self, *args, **kwargs):
         FigureWindow.__init__(self, *args, **kwargs)
         # The toolbar {
-        tool_tabs    = self.tool_tabs
+        tool_tabs = self._tool_tabs
             # Algorithm tab {
         frmAlgo = Frame(tool_tabs)
         grpSolve = OptimizeGroup(frmAlgo, topwin=self)
@@ -285,19 +285,21 @@ class PatternWindow(FigureWindow):
             # } End Algorithm tab
             
             # View Tab {
-        self.make_view_tab()
+        self._make_view_tab()
             # } End View tab
         
             # Marker Tab {
-        self.make_marker_tab()
+        self._make_marker_tab()
             #} End Marker tab
         
             # Export tab {
-        self.make_export_tab()
+        self._make_export_tab()
         frmExport   = self.export_frame
         grpExport = FileExportGroup(frmExport, topwin=self)
         grpExport.pack(side=LEFT, fill=Y)
             # } End Export tab
+        
+        self._make_window_manager_tab()
         # } End toolbar
         
         self.idealPattern = None

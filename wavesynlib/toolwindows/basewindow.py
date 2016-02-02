@@ -5,12 +5,14 @@ Created on Sun Jan 10 16:55:14 2016
 @author: Feng-cong Li
 """
 
-from six.moves.tkinter import Toplevel
-from six.moves.tkinter_ttk import Notebook
+from six.moves.tkinter import Toplevel, Frame, IntVar
+from six.moves.tkinter_ttk import Notebook, Label, Button, Checkbutton
 
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, code_printer)
 from wavesynlib.languagecenter.utils import eval_format, MethodDelegator
+
+from wavesynlib.guicomponents.tk import Group
 
 
 class BaseWindowNode(ModelNode):
@@ -67,6 +69,64 @@ Properties inherited from ModelNode:
     @property
     def tk_object(self):
         return self.__tk_object
+        
+        
+class WindowComponent(object):
+    @property        
+    def window_node(self):
+        node = self
+        while True:
+            node = node.parent_node
+            if isinstance(node, TkWindowNode):
+                return node         
+        
+        
+class WindowManager(ModelNode, WindowComponent):
+    def __init__(self):
+        ModelNode.__init__(self)
+        
+    def _make_widgets(self):
+        tool_tabs = self.window_node._tool_tabs        
+        tab = Frame(tool_tabs)
+        
+        # Start Info Group {
+        info_group = Group(tab)
+        info_group.pack(side='left', fill='y')
+        info_group.name = 'Info'
+        Label(info_group, text=eval_format('ID: {id(self.window_node)}')).pack()
+        Button(info_group, text='Copy ID', 
+               command=self._on_copy_id_click).pack()
+        # } End Info Group 
+               
+        # Start Attributes Group {
+        attr_group = Group(tab)
+        attr_group.pack(side='left', fill='y')
+        attr_group.name = 'Attributes'
+        
+        self.__topmost = topmost = IntVar(0)
+        Checkbutton(attr_group, text='Topmost', 
+                    variable=topmost, 
+                    command=self._on_topmost_click).pack()
+        # } End Attributes Group
+        
+        tool_tabs.add(tab, text='Window Manager')
+        
+    def _on_copy_id_click(self):
+        with code_printer:
+            self.copy_id()
+            
+    def _on_topmost_click(self):
+        with code_printer:
+            topmost = True if self.__topmost.get() else False
+            self.set_topmost(topmost)
+
+    @Scripting.printable        
+    def copy_id(self):
+        self.root_node.clipboard.write(id(self.window_node))
+
+    @Scripting.printable
+    def set_topmost(self, b):
+        self.window_node.tk_object.wm_attributes('-topmost', b)                
 
  
 class TkToolWindow(TkWindowNode):
@@ -76,7 +136,12 @@ class TkToolWindow(TkWindowNode):
         tool_tabs = Notebook(self.tk_object)
         tool_tabs.pack(fill='x')
         with self.attribute_lock:
-            self.tool_tabs = tool_tabs
+            self._tool_tabs = tool_tabs
+            self.window_manager = WindowManager()
+            
+    def _make_window_manager_tab(self):
+        self.window_manager._make_widgets()
+        
             
 
 class WindowDict(NodeDict):
@@ -95,15 +160,3 @@ class WindowDict(NodeDict):
         return id(node)
          
         
-class WindowComponent(object):
-    @property        
-    def window_node(self):
-        if hasattr(self, '__top_window'):
-            return self.__top_window
-        else:
-            node = self
-            while True:
-                node = node.parent_node
-                if isinstance(node, TkWindowNode):
-                    self.__top_window = node
-                    return node 

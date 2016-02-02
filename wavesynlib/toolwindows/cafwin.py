@@ -111,7 +111,7 @@ class CAFWindow(FigureWindow):
     def __init__(self, *args, **kwargs):
         FigureWindow.__init__(self, *args, **kwargs)
         # The toolbar {
-        tool_tabs = self.tool_tabs
+        tool_tabs = self._tool_tabs
             # Data tab {
         frmCAF = Frame(tool_tabs)
         grpLoad = LoadGroup(frmCAF, topwin = self)
@@ -121,8 +121,8 @@ class CAFWindow(FigureWindow):
         tool_tabs.add(frmCAF, text='CAF')
             # } End data tab
         
-        self.make_view_tab()
-        self.make_marker_tab()
+        self._make_view_tab()
+        self._make_marker_tab()
         #} End toolbar
         
         figure_book = self.figure_book

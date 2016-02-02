@@ -1034,8 +1034,8 @@ class FigureWindow(TkToolWindow):
     def data_pool_append(self, data):
         self.figure_book.data_pool.append(data)
            
-    def make_view_tab(self):
-        tool_tabs    = self.tool_tabs
+    def _make_view_tab(self):
+        tool_tabs    = self._tool_tabs
         view_frame = Frame(tool_tabs)
         
         grid_group = GridGroup(view_frame, bd=2, relief=GROOVE, 
@@ -1069,8 +1069,8 @@ class FigureWindow(TkToolWindow):
         tool_tabs.add(view_frame, text='View')
         
         
-    def make_marker_tab(self):
-        tool_tabs    = self.tool_tabs
+    def _make_marker_tab(self):
+        tool_tabs    = self._tool_tabs
         marker_frame   = Frame(tool_tabs)
         
         label_group        = LabelGroup(marker_frame, bd=2, relief=GROOVE)
@@ -1090,8 +1090,8 @@ class FigureWindow(TkToolWindow):
         tool_tabs.add(marker_frame, text='Marker')
             
             
-    def make_export_tab(self):
-        tool_tabs = self.tool_tabs
+    def _make_export_tab(self):
+        tool_tabs = self._tool_tabs
         export_frame = Frame(tool_tabs)
         figure_export_group = FigureExportGroup(export_frame, bd=2, 
                                                 relief=GROOVE, topwin=self)

@@ -7,6 +7,7 @@
 		    {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.create_window(module_name='patternsyn', class_name='PatternWindow')"}
 		]
 	    },
+
 	    {
 		"Name":"Console", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Save As...",   "TearOff":0,    "UnderLine":0,  "Command":"wavesyn.console.onSaveAs()",	"Print":false},
@@ -14,17 +15,24 @@
 		    {"Name":"Topmost Toggle",		"UnderLine":0,	"Command":"wavesyn.console.set_window_attributes('-topmost', False) if wavesyn.console.windowAttributes('-topmost') else wavesyn.console.windowAttributes('-topmost', True)", "Print":false}
 		]
 	    },
+
 	    {
 		"Name":"Script", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Load and Run Script File", "UnderLine":0, "Command":"0"},
 		    {"Name":"Edit Script Using External Editor and Run",    "UnderLine":0,  "Command":"wavesyn.launch_editor()",	"Print":true}
 		]
 	    },
-          {
-            "Name":"Device", "TearOff":0, "UnderLine":0, "SubMenu":[
+
+        {
+        "Name":"Interfaces", "TearOff":0, "UnderLine":0, "SubMenu":[
+            {
+            "Name":"Hardware", "TearOff":0, "UnderLine":0, "SubMenu":[
                 {"Name":"SPI Bus", "UnderLine":0, "Command":"wavesyn.create_window(module_name='spibuswindow', class_name='USBSPIWindow')"}
             ]
-          },
+            }
+        ]
+        },
+
 	    {
 		"Name":"Help", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Home Page", "UnderLine":0, "Command":"wavesyn.open_home_page()"}

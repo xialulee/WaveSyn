@@ -303,8 +303,8 @@ class SingleWindow(FigureWindow):
         #        
         
         # The toolbar
-        tool_tabs    = self.tool_tabs
-        figure_book  = self.figure_book
+        tool_tabs = self._tool_tabs
+        figure_book = self.figure_book
         
         frmAlgo = Frame(tool_tabs)
         algorithm_selection_group  = AlgoSelGroup(frmAlgo, topwin=self)
@@ -319,23 +319,22 @@ class SingleWindow(FigureWindow):
         
         with self.attribute_lock:
             set_attributes(self,
-                algorithm_selection_group  = algorithm_selection_group,
-                parameter_group   = parameter_group,
-                solve_group    = solve_group                         
+                algorithm_selection_group = algorithm_selection_group,
+                parameter_group = parameter_group,
+                solve_group = solve_group                         
             )
-        
-
-        
-        self.make_view_tab()
-        self.make_marker_tab()
-        self.make_export_tab()
+                
+        self._make_view_tab()
+        self._make_marker_tab()
+        self._make_export_tab()
+        self._make_window_manager_tab()
         # End toolbar
         figure_book.make_figures(
             figure_meta  = [
-                dict(name='Envelope',           polar=False),
-                dict(name='Phase',              polar=False),
-                dict(name='AutoCorrelation',    polar=False),
-                dict(name='PSD',                polar=False)
+                dict(name='Envelope', polar=False),
+                dict(name='Phase', polar=False),
+                dict(name='AutoCorrelation', polar=False),
+                dict(name='PSD', polar=False)
             ]
         )
         
@@ -352,7 +351,7 @@ class SingleWindow(FigureWindow):
         envelope_figure.plot_function  = lambda current_data, *args, **kwargs:\
             envelope_figure.plot(abs(current_data), *args, **kwargs)
         
-        phase_figure    = figure_book[1]
+        phase_figure = figure_book[1]
         phase_figure.plot_function   = lambda current_data, *args, **kwargs:\
             phase_figure.plot(angle(current_data), *args, **kwargs)
             

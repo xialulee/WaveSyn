@@ -242,8 +242,8 @@ class USBSPIWindow(TkToolWindow, Observable):
         # End Temporarily
         
         #window = self.tk_object
-        tooltab = Frame(self.tool_tabs)
-        self.tool_tabs.add(tooltab, text='SPI')
+        tooltab = Frame(self._tool_tabs)
+        self._tool_tabs.add(tooltab, text='SPI')
         #tooltab.pack(expand='yes', fill='x')        
         
     # Group OPEN 
@@ -295,6 +295,8 @@ class USBSPIWindow(TkToolWindow, Observable):
         Entry(write_group, textvariable=writebuf).pack()
         Button(write_group, text='Write', command=self._on_write_click).pack()
     # End Write Group
+        
+        self._make_window_manager_tab()
         
         # To Do: a driver group for loading specified spi bus driver
         converter = USBSPIConverter()
