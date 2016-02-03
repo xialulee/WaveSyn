@@ -107,7 +107,7 @@ class ColormapGroup(Group):
         
         
 class CAFWindow(FigureWindow):
-    windowName = 'WaveSyn-(Cross) Ambiguity Function'
+    window_name = 'WaveSyn-(Cross) Ambiguity Function'
     def __init__(self, *args, **kwargs):
         FigureWindow.__init__(self, *args, **kwargs)
         # The toolbar {

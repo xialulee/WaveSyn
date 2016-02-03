@@ -268,7 +268,7 @@ You can extract the data in Matlab using the following command:''')
 
 
 class PatternWindow(FigureWindow):                   
-    windowName = 'WaveSyn-PatternFitting'        
+    window_name = 'WaveSyn-PatternFitting'        
     def __init__(self, *args, **kwargs):
         FigureWindow.__init__(self, *args, **kwargs)
         # The toolbar {

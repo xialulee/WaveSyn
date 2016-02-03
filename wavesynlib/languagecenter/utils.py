@@ -6,13 +6,19 @@ Created on Wed Dec 30 19:25:10 2015
 """
 from __future__ import print_function, division
 
+import os
 import sys
 import threading
 from string import Template, Formatter
 
+import inspect
+
 def auto_subs(template):
     return Template(template).substitute(sys._getframe(1).f_locals)
     
+    
+def get_caller_dir():
+    return os.path.abspath(os.path.dirname(inspect.getfile(sys._getframe(1))))    
     
 class EvalFormatter(Formatter):
     def __init__(self, level=1):

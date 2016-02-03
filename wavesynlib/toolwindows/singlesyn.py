@@ -289,7 +289,7 @@ class AlgoSelGroup(Group):
 
 
 class SingleWindow(FigureWindow):      
-    windowName  = 'WaveSyn-SingleSyn' 
+    window_name  = 'WaveSyn-SingleSyn' 
 
     _xmlrpcexport_  = ['load_algorithm']
        

@@ -15,10 +15,11 @@ import threading
 import six.moves.queue
 import hashlib
 
-from wavesynlib.guicomponents.tk import ScrolledTree, Group
+from wavesynlib.guicomponents.tk import ScrolledTree, Group, DirIndicator
 from wavesynlib.toolwindows.basewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, code_printer
+from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.interfaces.timer.tk import TkTimer
 
 
@@ -32,6 +33,7 @@ class ReplicaFinder(Observable, ModelNode):
         self.__block_size = 64 * 2**10
         self.__stop_event = threading.Event()
         self.__dead_event = threading.Event()
+        self.__is_alive = False
         self.__result_lock = thread.allocate_lock()
         self.__result = {}
         self.__queue = six.moves.queue.Queue()
@@ -46,10 +48,12 @@ class ReplicaFinder(Observable, ModelNode):
             if self.__dead_event.is_set():
                 self.notify_observers(None, None, stop=True)
                 self.__dead_event.clear()
+                self.__is_alive = False
                 break
+
             try:
                 md5, path = self.__queue.get_nowait()
-                self.notify_observers(md5, path, stop=False)
+                self.notify_observers(md5, path, stop=not self.__is_alive)
             except six.moves.queue.Empty:
                 break
         
@@ -71,12 +75,16 @@ class ReplicaFinder(Observable, ModelNode):
     def thread_run(self, path):
         self.__result = {}
         self.__timer.active = True
+        self.__is_alive = True
         thread.start_new_thread(self._thread_finder, (path,))
     
     def _thread_finder(self, path):
         try:
             flag = False
             for root, dirs, files in os.walk(path):
+                if self.__stop_event.is_set():
+                    self.__stop_event.clear()
+                    break                
                 for filename in files:
                     if self.__stop_event.is_set():
                         self.__stop_event.clear()
@@ -126,9 +134,9 @@ class ReplicaTreeview(tk.Frame):
         tree.heading('size', text='Size')
         
     def update(self, md5, path, stop):
-        if stop:
-            # The finder thread is dead.
+        if md5 is None:
             return
+            
         md5_dict = self.__md5_dict
 
         if md5 not in md5_dict:
@@ -148,6 +156,8 @@ class ReplicaTreeview(tk.Frame):
             
 
 class ReplicaFinderWindow(TkToolWindow):
+    window_name = 'WaveSyn-ReplicaFinder'    
+    
     def __init__(self):
         TkToolWindow.__init__(self)
         
@@ -157,9 +167,7 @@ class ReplicaFinderWindow(TkToolWindow):
         # Start select group {
         select_group = Group(finder_tab)
         select_group.pack(side='left', fill='y')
-        select_group.name = 'Find'
-        ttk.Button(select_group, text='Select Directory', 
-                   command=self._on_select_click).pack(fill='x')
+        select_group.name = 'Finder'
         self.__start_button = start_button = ttk.Button(select_group, 
                    text='Start', 
                    command=self._on_start_click)
@@ -172,32 +180,34 @@ class ReplicaFinderWindow(TkToolWindow):
         
         with self.attribute_lock:
             self.replica_finder = ReplicaFinder()
+            
+        self.__dir_indicator = dir_indicator = DirIndicator(self.tk_object)
+        dir_indicator.pack(fill='x')
+        cwd = os.getcwd()
+        if os.path.altsep is not None: # Windows OS
+            cwd = cwd.replace(os.path.altsep, os.path.sep)
+        dir_indicator.change_dir(cwd)        
         
         self.__treeview = treeview = ReplicaTreeview(self.tk_object)
         treeview.pack(expand='yes', fill='both')
         self.replica_finder.add_observer(treeview)
-        self.replica_finder.add_observer(self)
-                   
-        self.__dirpath = None
+        self.replica_finder.add_observer(self)                   
         
     def update(self, md5, path, stop, laststate=[None]):
         if stop != laststate[0]:
             state = 'normal' if stop else 'disabled'
             laststate[0] = stop
             self.__start_button['state'] = state
-                   
-    def _on_select_click(self):
-        dirpath = tkfiledialog.askdirectory()
-        if dirpath:
-            self.__dirpath = dirpath
-            
+                               
     def _on_start_click(self):
         self.__treeview.clear()
         self.__start_button['state'] = 'disabled'
-        self.replica_finder.thread_run(self.__dirpath)
+        with code_printer:
+            self.replica_finder.thread_run(self.__dir_indicator.directory)
         
     def _on_stop_click(self):
-        self.replica_finder.stop()
+        with code_printer:
+            self.replica_finder.stop()
 
 
 if __name__ == '__main__':

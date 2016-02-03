@@ -405,18 +405,17 @@ class ScrolledList(Frame, object):
             label = self.__list.get(index)
             if self.list_click_callback:
                 self.list_click_callback(index, label)
-                
-                                
+
 class DirIndicator(Frame, Observable):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         Observable.__init__(self)
-        self.__text = text = Text(self, wrap=NONE, height=1.2, relief=SOLID)
+        self._text = text = Text(self, wrap=NONE, height=1.2, relief=SOLID)
         text.bind('<Configure>', self._on_resize)
         text.bind('<KeyPress>', self._on_key_press)
         text.pack(fill=X, expand=YES, side=LEFT)
-        self.__defaultCursor = text['cursor']
-        self.__default_background_color = text['background']
+        self._default_cursor = text['cursor']
+        self._default_background_color = text['background']
 
 
         # Browse Button
@@ -428,39 +427,34 @@ class DirIndicator(Frame, Observable):
                       lambda *args: self._change_cursor_to_hand(False))
         # End Browse Button
                 
-        self.__blankLen     = 2
-        self.__browseText   = '...'
+        self._blankLen     = 2
+        self._browse_text   = '...'
         self.__coding       = sys.getfilesystemencoding()
-        self.__cwd          = None
-        
-        from wavesynlib.interfaces.timer.tk import TkTimer
-        self.__timer        = TkTimer(self, interval=500)
-        self.__timer.add_observer(self)
-        self.__timer.active = True
-                        
+        self._directory          = None
+                                
     def _on_button_click(self, *args):
         directory   = askdirectory()
         if directory:
-            os.chdir(directory)
+            self.change_dir(directory)
             
     def _on_resize(self, *args):
-        self.__text.see(END)
-        self.__text.mark_set(INSERT, END)
+        self._text.see(END)
+        self._text.mark_set(INSERT, END)
 
 
     def _change_cursor_to_hand(self, hand):
-        text    = self.__text
+        text    = self._text
         if hand:
             text.config(cursor='hand2')
         else:
-            text.config(cursor=self.__defaultCursor)
+            text.config(cursor=self._default_cursor)
 
     def _on_folder_name_hover(self, tagName, enter=True, 
                               background_color='pale green'):
         self._change_cursor_to_hand(enter)
         background_color     = background_color if enter else \
-            self.__default_background_color
-        self.__text.tag_config(tagName, background=background_color)        
+            self._default_background_color
+        self._text.tag_config(tagName, background=background_color)        
         
     def _on_seperator_click(self, evt, path, menu=[None]):
         items   = [item for item in os.listdir(path) if 
@@ -482,7 +476,7 @@ class DirIndicator(Frame, Observable):
                 
             def on_list_click(index, label):
                 fullPath    = os.path.join(path, label)
-                os.chdir(fullPath)
+                self.change_dir(fullPath)
                 menuWin.destroy()
                 
             itemList.list_click_callback  = on_list_click
@@ -491,35 +485,22 @@ class DirIndicator(Frame, Observable):
         if evt.keycode == 13: # \n
             path = self._get_path()
             if os.path.exists(path):
-                os.chdir(path)
+                self.change_dir(path)
             else:
-                self._refresh(self.__cwd)
+                self._refresh(self._directory)
             return 'break' # Not pass the event to the next handler.
             
     def _get_path(self):
-        path    = self.__text.get('1.0', END)
-        path    = path[:-(self.__blankLen + len(self.__browseText))]            
+        path    = self._text.get('1.0', END)
+        path    = path[:-(self._blankLen + len(self._browse_text))]            
         return path
             
-    def update(self, *args, **kwargs): 
-        '''Method "update" is called by Observable objects. 
-Here, it is called by the timer of DirIndicator instance.
-Normally, no argument is passed.'''        
-        cwd = os.getcwd()
-        if os.path.altsep is not None: # Windows OS
-            cwd = cwd.replace(os.path.altsep, os.path.sep)
-        if self.__cwd != cwd:
-            self._refresh(cwd)
-            self.notify_observers(cwd)
+    def _refresh(self):
+        text = self._text
+        directory = self._directory
 
-    def _refresh(self, cwd):
-        text        = self.__text
-        self.__cwd  = cwd
-        
-        
-        text    = self.__text
         text.delete('1.0', END)
-        folderList  = cwd.split(os.path.sep)
+        folderList  = directory.split(os.path.sep)
         cumPath     = ''
         for index, folder in enumerate(folderList):
             folder      = folder.decode(self.__coding, 'ignore')
@@ -529,7 +510,7 @@ Normally, no argument is passed.'''
             tagName     = 'folder_name_' + str(index)
             text.tag_config(tagName)
             text.tag_bind(tagName, '<Button-1>', 
-                          lambda evt, cumPath=cumPath: os.chdir(cumPath))
+                          lambda evt, cumPath=cumPath: self.change_dir(cumPath))
             text.tag_bind(tagName, '<Enter>', 
                           lambda evt, tagName=tagName: 
                               self._on_folder_name_hover(tagName, enter=True))
@@ -559,8 +540,42 @@ Normally, no argument is passed.'''
             # END Configure folder sep
         
 
-        text.insert(END, ' '*self.__blankLen)
-        text.insert(END, self.__browseText, 'browse_button')                  
+        text.insert(END, ' '*self._blankLen)
+        text.insert(END, self._browse_text, 'browse_button')      
+
+    def change_dir(self, dirname):
+        dirname = os.path.abspath(dirname)
+        self._directory = dirname
+        self._refresh()
+        self.notify_observers(dirname)
+        
+    @property
+    def directory(self):
+        return self._directory
+
+
+class CWDIndicator(DirIndicator):
+    def __init__(self, *args, **kwargs):
+        DirIndicator.__init__(self, *args, **kwargs)
+                        
+        from wavesynlib.interfaces.timer.tk import TkTimer
+        self.__timer        = TkTimer(self, interval=500)
+        self.__timer.add_observer(self)
+        self.__timer.active = True
+                                                              
+    def update(self, *args, **kwargs): 
+        '''Method "update" is called by Observable objects. 
+Here, it is called by the timer of CWDIndicator instance.
+Normally, no argument is passed.'''        
+        cwd = os.getcwd()
+        if os.path.altsep is not None: # Windows OS
+            cwd = cwd.replace(os.path.altsep, os.path.sep)
+        if self._directory != cwd:
+            self.change_dir(cwd)
+
+    def change_dir(self, dirname):
+        os.chdir(dirname)  
+        super(CWDIndicator, self).change_dir(dirname)          
                 
 
 class Group(Frame, object):

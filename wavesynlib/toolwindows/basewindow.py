@@ -30,14 +30,14 @@ Properties:
 Properties inherited from ModelNode:
     root_node: The root node of the WaveSyn Object Model Tree.
 '''
-    windowName = ''
+    window_name = ''
 
     _xmlrpcexport_  = ['close']    
     
     def __init__(self, *args, **kwargs):
         super(TkWindowNode, self).__init__(*args, **kwargs)
         self.__tk_object = Toplevel()
-        self.__tk_object.title(eval_format('{self.windowName} id={id(self)}'))        
+        self.__tk_object.title(eval_format('{self.window_name} id={id(self)}'))        
         self.__tk_object.protocol('WM_DELETE_WINDOW', self.on_close)
                 
     method_name_map   = {
@@ -96,6 +96,8 @@ class WindowManager(ModelNode, WindowComponent):
         Label(info_group, text=eval_format('ID: {id(self.window_node)}')).pack()
         Button(info_group, text='Copy ID', 
                command=self._on_copy_id_click).pack()
+        Button(info_group, text='Copy Path',
+               command=self._on_copy_path_click).pack()
         # } End Info Group 
                
         # Start Attributes Group {
@@ -115,6 +117,10 @@ class WindowManager(ModelNode, WindowComponent):
         with code_printer:
             self.copy_id()
             
+    def _on_copy_path_click(self):
+        with code_printer:
+            self.copy_window_path()
+            
     def _on_topmost_click(self):
         with code_printer:
             topmost = True if self.__topmost.get() else False
@@ -123,6 +129,10 @@ class WindowManager(ModelNode, WindowComponent):
     @Scripting.printable        
     def copy_id(self):
         self.root_node.clipboard.write(id(self.window_node))
+        
+    @Scripting.printable
+    def copy_window_path(self):
+        self.root_node.clipboard.write(self.window_node.node_path)
 
     @Scripting.printable
     def set_topmost(self, b):
