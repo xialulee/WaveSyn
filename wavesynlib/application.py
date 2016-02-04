@@ -642,7 +642,7 @@ class ConsoleWindow(ModelNode):
         stdstream_text.pack(expand=YES, fill=BOTH)
         
         self.__status_bar = status_bar = StatusBar(root)
-        status_bar.pack(expand=YES, fill=X)
+        status_bar.pack(fill=X)
         
         @SimpleObserver
         def busy_status_observer(busy):
