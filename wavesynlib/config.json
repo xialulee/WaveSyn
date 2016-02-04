@@ -29,6 +29,14 @@
               "Name":"Hardware", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"SPI Bus", "UnderLine":0, "Command":"wavesyn.create_window(module_name='spibuswindow', class_name='USBSPIWindow')"}
               ]
+              },
+              {
+              "Name":"Operating System", "TearOff":0, "UnderLine":0, "SubMenu":[
+                  {"Name":"Clipboard", "TearOff":0, "UnderLine":0, "SubMenu":[
+                      {"Name":"Convert to QR Barcode (Text only)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.to_console_qr()", "Print":true}    
+                  ]
+                  }
+              ]
               }
           ]
           },

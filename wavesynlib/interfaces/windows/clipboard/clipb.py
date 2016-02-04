@@ -136,7 +136,7 @@ See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-
         
         
 def clipboard_to_image_file(file_path):
-    image   = ImageGrab.grabclipboard()
+    image = ImageGrab.grabclipboard()
     if image:
         image.save(file_path)
         return True

@@ -46,6 +46,18 @@ if platform.system().lower() == 'windows':
             import qrcode
             string  = self.read()
             image   = qrcode.make(string)
-            self.root_node.print_tip([{'type':'pil_image', 'image':image}])
+            self.root_node.print_tip([{'type':'pil_image', 'content':image},
+                                      {'type':'text', 'content':'The QR code of the text stored by clipboard is shown above.'}])
+            
+        @Scripting.printable
+        def to_console_image(self):
+            from PIL import ImageGrab
+            image = ImageGrab.grabclipboard()
+            if image:
+                self.root_node.print_tip([{'type':'pil_image', 'content':image},
+                                          {'type':'text', 'content':'Image in clipboard is shown above.'}])
+            else:
+                raise TypeError('Data in clipboard is not an image.')
+
 else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
     Clipboard   = TkClipboard   

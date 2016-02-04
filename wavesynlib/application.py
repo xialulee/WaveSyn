@@ -61,7 +61,7 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream import StreamManager
 #from wavesynlib.cuda                             import Worker as CUDAWorker
-from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes
+from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver        
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.languagecenter.modelnode import LangCenterNode
@@ -301,6 +301,16 @@ wavesyn
 
         self.monitor_timer.active    = True
         
+        self._add_env_path()
+        
+    def _add_env_path(self):
+        path_string = os.environ['path']        
+        self_path = get_caller_dir()
+        extra_path = [os.path.join(self_path, 'interfaces/windows/cmdutils')]
+        extra_path.append(path_string)
+        path_string = os.path.pathsep.join(extra_path)
+        os.environ['path'] = path_string
+        
     def create_window(self, module_name, class_name):
         '''Create a tool window.'''
         mod = __import__(auto_subs('wavesynlib.toolwindows.$module_name'), globals(), locals(), [class_name], -1)
@@ -385,10 +395,10 @@ wavesyn
                 text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.default_cursor))
                 stream_manager.write('\n')
             elif item['type'] == 'pil_image':
-                stream_manager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
+                # stream_manager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
                 text    = self.console.text                
                 text.insert(END, '\n')
-                pil_frame    = PILImageFrame(text, pil_image=item['image'])
+                pil_frame    = PILImageFrame(text, pil_image=item['content'])
                 text.window_create(END, window=pil_frame)
                 text.insert(END, '\n')
                 stream_manager.write('\n')

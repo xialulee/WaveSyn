@@ -8,12 +8,14 @@ from __future__ import print_function, division, unicode_literals
 
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
-import six.moves.tkinter_tkfiledialog as tkfiledialog
+
 import os
 import thread
 import threading
 import six.moves.queue
 import hashlib
+
+from PIL import ImageTk
 
 from wavesynlib.guicomponents.tk import ScrolledTree, Group, DirIndicator
 from wavesynlib.toolwindows.basewindow import TkToolWindow
@@ -21,6 +23,9 @@ from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.interfaces.timer.tk import TkTimer
+
+
+_image_dir = os.path.join(get_caller_dir(), 'images')
 
 
 def md5_to_string(md5):
@@ -46,14 +51,14 @@ class ReplicaFinder(Observable, ModelNode):
     def _on_timer(self):
         while True:
             if self.__dead_event.is_set():
-                self.notify_observers(None, None, stop=True)
+                self.notify_observers(None, None, None, stop=True)
                 self.__dead_event.clear()
                 self.__is_alive = False
                 break
 
             try:
-                md5, path = self.__queue.get_nowait()
-                self.notify_observers(md5, path, stop=not self.__is_alive)
+                md5, path, current_dir = self.__queue.get_nowait()
+                self.notify_observers(md5, path, current_dir, stop=not self.__is_alive)
             except six.moves.queue.Empty:
                 break
         
@@ -82,6 +87,7 @@ class ReplicaFinder(Observable, ModelNode):
         try:
             flag = False
             for root, dirs, files in os.walk(path):
+                self.__queue.put((None, None, root))
                 if self.__stop_event.is_set():
                     self.__stop_event.clear()
                     break                
@@ -96,9 +102,9 @@ class ReplicaFinder(Observable, ModelNode):
                     with self.__result_lock:
                         if md5 in self.__result:
                             if len(self.__result[md5]) == 1:
-                                self.__queue.put((md5, self.__result[md5][0]))
+                                self.__queue.put((md5, self.__result[md5][0], None))
                             self.__result[md5].append(full_path)
-                            self.__queue.put((md5, full_path))
+                            self.__queue.put((md5, full_path, None))
                         else:
                             self.__result[md5] = [full_path]
                 if flag:
@@ -133,7 +139,7 @@ class ReplicaTreeview(tk.Frame):
         tree.heading('path', text='Path')
         tree.heading('size', text='Size')
         
-    def update(self, md5, path, stop):
+    def update(self, md5, path, current_dir, stop):
         if md5 is None:
             return
             
@@ -161,6 +167,8 @@ class ReplicaFinderWindow(TkToolWindow):
     def __init__(self):
         TkToolWindow.__init__(self)
         
+        self._gui_images = []
+        
         finder_tab = tk.Frame(self._tool_tabs)
         self._tool_tabs.add(finder_tab, text='Finder')
         
@@ -168,12 +176,21 @@ class ReplicaFinderWindow(TkToolWindow):
         select_group = Group(finder_tab)
         select_group.pack(side='left', fill='y')
         select_group.name = 'Finder'
-        self.__start_button = start_button = ttk.Button(select_group, 
-                   text='Start', 
+        
+        row = tk.Frame(select_group)
+        row.pack()
+        
+        image_start = ImageTk.PhotoImage(file=os.path.join(_image_dir, 'start_button.png'))
+        self._gui_images.append(image_start)
+        self.__start_button = start_button = ttk.Button(row, 
+                   image=image_start, 
                    command=self._on_start_click)
-        start_button.pack(fill='y')
-        ttk.Button(select_group, text='Stop',
-                   command=self._on_stop_click).pack(fill='y')
+        start_button.pack(side='left', fill='y')
+        
+        image_stop = ImageTk.PhotoImage(file=os.path.join(_image_dir, 'stop_button.png'))
+        self._gui_images.append(image_stop)
+        ttk.Button(row, image=image_stop,
+                   command=self._on_stop_click).pack(side='left', fill='y')                   
         # } End
                    
         self._make_window_manager_tab()
@@ -191,17 +208,39 @@ class ReplicaFinderWindow(TkToolWindow):
         self.__treeview = treeview = ReplicaTreeview(self.tk_object)
         treeview.pack(expand='yes', fill='both')
         self.replica_finder.add_observer(treeview)
-        self.replica_finder.add_observer(self)                   
+        self.replica_finder.add_observer(self)  
+
+        # Start Status Bar {
+        status_bar = tk.Frame(self.tk_object)
+        status_bar.pack(fill='x')
+        image_red = ImageTk.PhotoImage(file=os.path.join(_image_dir, 'red_light.png'))    
+        self.__image_red_light = image_red
+        image_green = ImageTk.PhotoImage(file=os.path.join(_image_dir, 'green_light.png'))
+        self.__image_green_light = image_green
+        self.__busy_light = ttk.Label(status_bar, image=image_green)
+        self.__busy_light.pack(side='right')     
+        self.__current_dir_label = ttk.Label(status_bar)
+        self.__current_dir_label.pack(side='right')
+        # } End                 
         
-    def update(self, md5, path, stop, laststate=[None]):
+    def update(self, md5, path, current_dir, stop, laststate=[None]):
+        if not stop: 
+            if current_dir is not None:
+                self.__current_dir_label['text'] = current_dir
+        else:
+            self.__current_dir_label['text'] = ''
+            
         if stop != laststate[0]:
+            laststate[0] = stop            
             state = 'normal' if stop else 'disabled'
-            laststate[0] = stop
+            light = self.__image_green_light if stop else self.__image_red_light
             self.__start_button['state'] = state
+            self.__busy_light['image'] = light
                                
     def _on_start_click(self):
         self.__treeview.clear()
         self.__start_button['state'] = 'disabled'
+        self.__busy_light['image'] = self.__image_red_light
         with code_printer:
             self.replica_finder.thread_run(self.__dir_indicator.directory)
         
@@ -212,21 +251,5 @@ class ReplicaFinderWindow(TkToolWindow):
 
 if __name__ == '__main__':
     window  = tk.Tk()
-#    tree_container = ScrolledTree(window)
-#    tree = tree_container.tree
-#    tree['columns'] = ['path', 'size']
-#    tree.heading('path', text='Path')
-#    tree.heading('size', text='Size')
-#    root = tree_container.insert('', 'end', text='root')
-#    node = tree_container.insert(root, 'end', text='node')
-#    
-#    finder = ReplicaFinder()
-#    finder.thread_run('C:/lab')   
-#    treeview = ReplicaTreeview(window)
-#    treeview.pack(expand='yes', fill='both')
-#    finder = ReplicaFinder()
-#    finder.add_observer(treeview)
-#    finder.thread_run('c:/lab')
-    
     window.mainloop()
   
