@@ -9,9 +9,9 @@ from Tkinter  import *
 from comtypes import *
 import ctypes as ct
 
-from wavesynlib.guicomponents                      import tk as tktools
-from wavesynlib.interfaces.timer.tk                import TkTimer
-from wavesynlib.languagecenter.designpatters       import SimpleObserver
+from wavesynlib.guicomponents import tk as tktools
+from wavesynlib.interfaces.timer.tk import TkTimer
+from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from wavesynlib.interfaces.windows.shell.constants import TBPFLAG
 
 
@@ -26,6 +26,14 @@ class MEMORYSTATUS(ct.Structure):
         ('dwTotalVirtual',  ct.c_size_t),
         ('dwAvailVirtual',  ct.c_size_t)
     ]
+    
+    
+def get_memory_usage():
+    memstat = MEMORYSTATUS()
+    memstat.dwLength = ct.sizeof(MEMORYSTATUS)    
+    ct.windll.kernel32.GlobalMemoryStatus(ct.byref(memstat))
+    memusage = memstat.dwMemoryLoad
+    return memusage      
 
 
 APPID = 'wavesyn.interfaces.windows.memstatus'
@@ -36,13 +44,10 @@ def main():
     label   = Label()
     label.pack()
     tbIcon  = tktools.TaskbarIcon(root) 
-    memstat = MEMORYSTATUS()
-    memstat.dwLength    = ct.sizeof(MEMORYSTATUS)
 
     @SimpleObserver # TkTimer is Observable
     def showMemUsage():
-        ct.windll.kernel32.GlobalMemoryStatus(ct.byref(memstat))
-        memusage    = memstat.dwMemoryLoad
+        memusage = get_memory_usage()
 
         label['text']   = 'Memory Usage: {}%'.format(memusage)
 

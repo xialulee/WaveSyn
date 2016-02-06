@@ -142,6 +142,22 @@ def clipboard_to_image_file(file_path):
         return True
     else:
         return False
+        
+        
+def get_clipboard_file_list():
+    win32clipboard.OpenClipboard()
+    try:
+        file_list = win32clipboard.GetClipboardData(win32clipboard.CF_HDROP)
+    finally:
+        win32clipboard.CloseClipboard()
+    return file_list
+        
+        
+def get_clipboard_format():
+    win32clipboard.OpenClipboard()
+    format_code = win32clipboard.EnumClipboardFormats(0)
+    win32clipboard.CloseClipboard()
+    return format_code
     
 
 

@@ -5,8 +5,8 @@ Created on Mon March 30 2015
 @author: Feng-cong Li
 """
 
-from wavesynlib.languagecenter.designpatterns import Observable
-from abc import ABCMeta, abstractproperty
+from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
+from abc import ABCMeta, abstractproperty, abstractmethod
 
 class BaseObservableTimer(Observable):
     __metaclass__ = ABCMeta
@@ -35,6 +35,10 @@ class BaseObservableTimer(Observable):
         
     counter = abstractproperty(counter_getter, counter_setter)
     
+    @abstractmethod
+    def divider(self, divide_by):
+        raise NotImplementedError
+    
     @classmethod
     def __subclasshook__(cls, C):
         if cls is BaseObservableTimer:
@@ -45,3 +49,17 @@ class BaseObservableTimer(Observable):
                     return True
         return NotImplemented
         
+
+class Divider(Observable):
+    def __init__(self, timer, divide_by):
+        Observable.__init__(self)
+        self.__counter = 0
+        
+        @SimpleObserver
+        def on_timer():
+            self.__counter += 1
+            if self.__counter == divide_by:
+                self.notify_observers()
+                self.__counter = 0
+                
+        timer.add_observer(on_timer)

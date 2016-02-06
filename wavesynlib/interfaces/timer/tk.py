@@ -5,7 +5,7 @@ Created on Mon Mar 30 10:14:20 2015
 @author: Administrator
 """
 from Tkinter import * 
-from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer
+from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer, Divider
 from wavesynlib.guicomponents.tk import LabeledEntry
 
 
@@ -58,6 +58,8 @@ class TkTimer(BaseObservableTimer):
         self.__interval = interval
         self.__active = active
         self.__counter = counter
+        self.__divider_cache = {}        
+        
         if widget is None:
             widget  = self.ConfigDialog(timer=self)
         self.__widget   = widget        
@@ -112,4 +114,7 @@ class TkTimer(BaseObservableTimer):
         '''set counter to -1 means infinity timer loop.'''
         self.__counter = value
     
-    
+    def divider(self, divide_by):
+        if divide_by not in self.__divider_cache:
+            self.__divider_cache[divide_by] = Divider(self, divide_by=divide_by)
+        return self.__divider_cache[divide_by]

@@ -373,6 +373,12 @@ wavesyn
                     
             
     def print_tip(self, contents):
+        def config_link_tag(widget, tag_name, command, original_cursor):
+            widget.tag_config(tag_name, underline=1, foreground='blue')
+            widget.tag_bind(tag_name, '<Button-1>', command)
+            widget.tag_bind(tag_name, '<Enter>', lambda dumb: text.config(cursor='hand2'))
+            widget.tag_bind(tag_name, '<Leave>', lambda dumb: text.config(cursor=original_cursor))
+        
         if self.no_tip:
             return
         stream_manager = self.stream_manager
@@ -385,14 +391,15 @@ wavesyn
                 stream_manager.write(''.join((item['content'],'\n')), 'TIP')
             elif item['type'] == 'link':
                 command = item['command']
-                tagName = 'link' + str(id(command))
-                stream_manager.write(item['content'], tagName)
-                text    = self.console.text
-                r, c = text.index(END).split('.')
-                text.tag_config(tagName, underline=1, foreground='blue')
-                text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
-                text.tag_bind(tagName, '<Enter>', lambda dumb: text.config(cursor='hand2'))
-                text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.default_cursor))
+                tag_name = 'link' + str(id(command))
+                stream_manager.write(item['content'], tag_name)
+                text = self.console.text
+                #r, c = text.index(END).split('.')
+#                text.tag_config(tagName, underline=1, foreground='blue')
+#                text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
+#                text.tag_bind(tagName, '<Enter>', lambda dumb: text.config(cursor='hand2'))
+#                text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.default_cursor))
+                config_link_tag(text, tag_name, command, self.console.default_cursor)                                
                 stream_manager.write('\n')
             elif item['type'] == 'pil_image':
                 # stream_manager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
@@ -402,7 +409,36 @@ wavesyn
                 text.window_create(END, window=pil_frame)
                 text.insert(END, '\n')
                 stream_manager.write('\n')
-                
+            elif item['type'] == 'file_list':
+                file_list = item['content']
+                def new_open_func(path):
+                    def open_func(*args):
+                        import webbrowser
+                        webbrowser.open(path)
+                    return open_func
+                    
+                def new_browse_func(path):
+                    def browse_func(*args):
+                        from wavesynlib.interfaces.windows.shell.winopen import winopen
+                        winopen(path)
+                    return browse_func
+                    
+                for file_path in file_list:
+                    text = self.console.text                    
+                    
+                    open_func = new_open_func(file_path)
+                    open_tag_name = 'link' + str(id(open_func))
+                    stream_manager.write('open', open_tag_name)
+                    config_link_tag(text, open_tag_name, open_func, self.console.default_cursor)
+                    stream_manager.write(' ')
+
+                    browse_func = new_browse_func(file_path)                    
+                    browse_tag_name = 'link' + str(id(browse_func))
+                    stream_manager.write('browse', browse_tag_name)
+                    config_link_tag(text, browse_tag_name, browse_func, self.console.default_cursor)                    
+                    stream_manager.write(' ')
+                    
+                    stream_manager.write(eval_format('{file_path}\n'))
                                             
                 
     def print_error(self, text):
@@ -602,23 +638,43 @@ class StatusBar(Frame):
         timer = TkTimer(widget=self, interval=200, active=False)
         self.__busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
         self.__busy_lamp.pack(side=RIGHT)
+
+        self.__membar = IntVar(0)
+        self._make_mem_status()        
+        
         self.__lock = lock = thread.allocate_lock()
         self.__busy = False
+                
+        from wavesynlib.interfaces.windows.memstatus import get_memory_usage
         
         @SimpleObserver
-        def on_timer():
-            with lock:
-                bg = 'red' if self.__busy else 'forestgreen'
-            self.__busy_lamp['bg'] = bg
+        def check_busy():
+            self._set_busy_light()
             
-        timer.add_observer(on_timer)
+        @SimpleObserver
+        def check_mem():
+            self.__membar.set(get_memory_usage())
+            
+        timer.add_observer(check_busy)
+        timer.divider(divide_by=10).add_observer(check_mem)
         timer.active = True
         # To Do: add several customizable lamps for users.
+        
+    def _set_busy_light(self):
+        with self.__lock:
+            bg = 'red' if self.__busy else 'forestgreen'
+            self.__busy_lamp['bg'] = bg
         
     def set_busy(self, busy=True):
         with self.__lock:
             self.__busy = busy
-#        self.update()
+        if thread.get_ident() == Scripting.main_thread_id:
+            self._set_busy_light()
+            
+    def _make_mem_status(self):      
+        progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
+        progbar.pack(side='right', fill='y')
+        Label(self, text='Mem:').pack(side='right', fill='y')
         
         
 class ConsoleWindow(ModelNode):    
