@@ -37,13 +37,13 @@ else:
 
 
 def queryByName(procName):
-    wqlStringTemplate   = 'select commandline from win32_process where name="{0}"'
-    wqlString           = wqlStringTemplate.format(procName)
+    wqlStringTemplate = 'select commandline from win32_process where name="{0}"'
+    wqlString = wqlStringTemplate.format(procName)
     return query(wqlString)
 
 def queryByPID(pid):
-    wqlStringTemplate   = 'select commandline from win32_process where processid={0}'
-    wqlString           = wqlStringTemplate.format(pid)
+    wqlStringTemplate = 'select commandline from win32_process where processid={0}'
+    wqlString = wqlStringTemplate.format(pid)
     return query(wqlString)
         
 

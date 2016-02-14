@@ -5,6 +5,7 @@ Created on Mon Jan 25 15:48:15 2016
 @author: Feng-cong Li
 """
 from __future__ import print_function, division, unicode_literals
+import itertools
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
@@ -81,7 +82,10 @@ class DoNode(ModelNode):
                 return node
         
         
-    def __do_once(self, func):
+    def __do_once(self, func, iterables=None):
+        if iterables is not None:
+            raise TypeError('"After" node does not support iterables.')
+        
         @SimpleObserver
         def callback():
             if self.__first_call:
@@ -99,17 +103,39 @@ class DoNode(ModelNode):
         timer.add_observer(callback)
         timer.active = True        
         
-    def __repeat(self, func):
-        func = SimpleObserver(func)
+    def __repeat(self, func, iterables=None):
+        if iterables is not None:
+            self.__for_each(func, iterables)
+        else:
+            func = SimpleObserver(func)
+            timer = self.__timer
+            timer.interval = self.__duration
+            timer.add_observer(func)
+            timer.active = True
+        
+    def __for_each(self, func, iterables=None):
+        if iterables is None:
+            raise TypeError('"For_each" action needs one or more iterables.')
+
+        it = itertools.product(*iterables)            
         timer = self.__timer
+        
+        @SimpleObserver
+        def callback():
+            try:
+                args = next(it)
+            except StopIteration:
+                self.manager.cancel(action_id=id(self))
+            else:
+                func(*args)
+            
         timer.interval = self.__duration
-        timer.add_observer(func)
+        timer.add_observer(callback)
         timer.active = True
                 
     @Scripting.printable
-    def do(self, func):
+    def do(self, func, iterables=None):
         self.__timer = TkTimer(widget=self.root_node.tk_root)
-        self.__do(func)
         root = self.root_node
         type_ = self.__type
         duration = self.__duration
@@ -126,6 +152,8 @@ class DoNode(ModelNode):
             {'type':'link', 'content': 'Click here to Cancel This Action.',
              'command':on_cancel_click}
         ])
+        
+        self.__do(func, iterables)        
         
     @Scripting.printable
     def printf(self, format_, *args):

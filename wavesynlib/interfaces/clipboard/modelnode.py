@@ -28,7 +28,7 @@ class TkClipboard(ModelNode):
 
 
 if platform.system().lower() == 'windows':
-    from cStringIO                               import StringIO
+    from cStringIO import StringIO
     from wavesynlib.interfaces.windows.clipboard import clipb
     class Clipboard(TkClipboard):
         @Scripting.printable
@@ -80,7 +80,7 @@ if platform.system().lower() == 'windows':
                 self.to_console_file_list()             
                 
             def for_unknown_type():
-                raise NotImplementedError
+                raise NotImplementedError("The format of the clipboard's content is not supported.")
                             
             func_map = {
                 cw.CF_TEXT: for_text,
