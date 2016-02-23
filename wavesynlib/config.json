@@ -12,7 +12,7 @@
 		"Name":"Console", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Save As...",   "TearOff":0,    "UnderLine":0,  "Command":"wavesyn.console.onSaveAs()",	"Print":false},
 		    {"Name":"Clear", "UnderLine":0, "Command":"wavesyn.console.clear()"},
-		    {"Name":"Topmost Toggle",		"UnderLine":0,	"Command":"wavesyn.console.set_window_attributes('-topmost', False) if wavesyn.console.windowAttributes('-topmost') else wavesyn.console.windowAttributes('-topmost', True)", "Print":false}
+		    {"Name":"Topmost Toggle",		"UnderLine":0,	"Command":"wavesyn.console.set_topmost('flip')", "Print":true}
 		]
 	    },
 
@@ -37,6 +37,10 @@
                       {"Name":"Convert to QR Barcode (Text only)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.to_console_qr()", "Print":true}, 
                       {"Name":"Remove Text Formatting", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.remove_text_formatting()", "Print":true},
                       {"Name":"Display Clipboard Content in Console", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.to_console()", "Print":true}   
+                  ]
+                  },
+                  {"Name":"Windows", "TearOff":0, "UnderLine":0, "SubMenu":[
+                      {"Name":"Launch CMD with ws* support", "TearOff":0, "UnderLine":0, "Command":"wavesyn.system('start cmd')", "Print":true}
                   ]
                   }
               ]

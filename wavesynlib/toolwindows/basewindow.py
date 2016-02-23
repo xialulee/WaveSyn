@@ -115,7 +115,7 @@ class WindowManager(ModelNode, WindowComponent):
         
     def _on_copy_id_click(self):
         with code_printer:
-            self.copy_id()
+            self.copy_window_id()
             
     def _on_copy_path_click(self):
         with code_printer:
@@ -127,7 +127,7 @@ class WindowManager(ModelNode, WindowComponent):
             self.set_topmost(topmost)
 
     @Scripting.printable        
-    def copy_id(self):
+    def copy_window_id(self):
         self.root_node.clipboard.write(id(self.window_node))
         
     @Scripting.printable

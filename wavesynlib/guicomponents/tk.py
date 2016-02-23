@@ -428,7 +428,7 @@ class DirIndicator(Frame, Observable):
         # End Browse Button
                 
         self._blank_len = 2
-        self._browse_text = '...'
+        self._browse_text = 'BROWSE'
         self._coding = sys.getfilesystemencoding()
         self._directory          = None
                                 
@@ -482,6 +482,14 @@ class DirIndicator(Frame, Observable):
             itemList.list_click_callback  = on_list_click
                         
     def _on_key_press(self, evt):
+        rend, cend = self._text.index('end-1c').split('.')
+        cend = int(cend)
+        r, c = self._text.index('insert').split('.')
+        c = int(c)
+        if c > cend - self._blank_len - len(self._browse_text):
+            if evt.keycode not in (37, 39):
+                return 'break'
+        
         if evt.keycode == 13: # \n
             path = self._get_path()
             if os.path.exists(path):
@@ -489,13 +497,7 @@ class DirIndicator(Frame, Observable):
             else:
                 self._refresh()
             return 'break' # Not pass the event to the next handler.
-        if evt.keycode == 8: # Backspace
-            rend, cend = self._text.index('end-1c').split('.')
-            cend = int(cend)
-            r, c = self._text.index('insert').split('.')
-            c = int(c)
-            if c > cend - self._blank_len - len(self._browse_text):
-                return 'break'
+
             
     def _get_path(self):
         path    = self._text.get('1.0', END)

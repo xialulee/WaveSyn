@@ -71,7 +71,7 @@ def main(argv):
             if wopen:
                 winopen(file_path)
     else:
-        print('which.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
+        print('wswhich.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
         return ERROR_NOTFOUND
     return ERROR_NOERROR
     

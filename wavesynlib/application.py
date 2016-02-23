@@ -503,6 +503,10 @@ wavesyn
         self.xmlrpc_check_command = check_command
         self.root.after(100, check_command) # To Do: Use TkTimer instead of after
         
+    @Scripting.printable
+    def system(self, command):
+        subprocess.call(command, shell=True)
+        
         
 def get_gui_image_path(filename):
     return os.path.join(Application.instance.dir_path, 'images', filename)        
@@ -772,9 +776,13 @@ class ConsoleWindow(ModelNode):
             self.clear()
 
     def set_window_attributes(self, *args, **kwargs):
-        return Application.instance.root.wm_attributes(*args, **kwargs)        
+        return self.root_node.tk_root.wm_attributes(*args, **kwargs)        
         
-        
+    def set_topmost(self, b):
+        tk_root = self.root_node.tk_root
+        if b == 'flip':
+            b = False if tk_root.wm_attributes('-topmost') else True
+        tk_root.wm_attributes('-topmost', b)
         
      
     
