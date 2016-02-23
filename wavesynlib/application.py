@@ -63,7 +63,7 @@ from wavesynlib.stdstream import StreamManager
 #from wavesynlib.cuda                             import Worker as CUDAWorker
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver        
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter import timeutils
@@ -203,8 +203,12 @@ wavesyn
                 interrupter = InterrupterNode(),
                 # End UI elements                
                 
+                # Thread related
                 main_thread_id = main_thread_id,
                 exec_thread_lock = threading.RLock(),
+                # End
+                
+                model_tree_monitor = model_tree_monitor,
 
                 # To Do: WaveSyn will have a uniform command slot system.
                 xmlrpc_command_slot = CommandSlot(),
@@ -351,23 +355,25 @@ wavesyn
             ret = None
             stripped_code    = code.strip()
             if stripped_code[0] == '!':
-                # To do: system(code)
-                PIPE    = subprocess.PIPE
+                PIPE = subprocess.PIPE
                 p = subprocess.Popen(stripped_code[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
-                (stdout, stderr)    = p.communicate()
-                encoding            = sys.getfilesystemencoding()
+                (stdout, stderr) = p.communicate()
+                encoding = sys.getfilesystemencoding()
                 print(stdout.decode(encoding, 'ignore'))
                 print(stderr.decode(encoding, 'ignore'), file=sys.stderr)                
                 return
             try:
-                with busy_doing:
-                    ret = self.eval(code)
-            except SyntaxError:
-                with busy_doing:
-                    try:
-                        exec code in Scripting.name_space['globals'], Scripting.name_space['locals']
-                    except KeyboardInterrupt:
-                        self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
+                try:
+                    with busy_doing:
+                        ret = self.eval(code)
+                except SyntaxError:
+                    with busy_doing:
+                        try:
+                            exec code in Scripting.name_space['globals'], Scripting.name_space['locals']
+                        except KeyboardInterrupt:
+                            self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
+            except SystemExit:
+                self._on_exit()
             return ret
             
                     
@@ -591,9 +597,9 @@ class ConsoleText(ScrolledText):
             rend, cend  = self.get_cursor_pos('end-1c')
             if r < rend:
                 return 'break'                
-            if evt.keycode == 13:
+            if evt.keycode == 13: # Return
                 app = Application.instance
-                code    = self.text.get(auto_subs('$r.4'), auto_subs('$r.end'))
+                code = self.text.get(auto_subs('$r.4'), auto_subs('$r.end'))
                 try:
                     stripped_code     = code.strip()
                     if stripped_code and stripped_code[0] == '!':
@@ -603,13 +609,13 @@ class ConsoleText(ScrolledText):
                         self.update_content(tag='', content='\n')
                         return 'break'
                     if stripped_code == '':
-                        code    = '\n'.join(code_list)
+                        code = '\n'.join(code_list)
                         del code_list[:]
-                    stripped_code    = code.strip()
+                    stripped_code = code.strip()
                     if stripped_code == '':
                         self.prompt_symbol   = '>>> '
                         self.update_content(tag='', content='\n') 
-                    elif stripped_code[-1] in (':', '\\') or code_list:
+                    elif code_list or stripped_code[-1] in (':', '\\') or stripped_code[0] in ('@',): # Threre is a bug here for decorators! To do: Solve it.
                         code_list.append(code)
                         self.prompt_symbol   = '... '
                         self.update_content(tag='', content='\n')

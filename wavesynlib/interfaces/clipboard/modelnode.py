@@ -20,11 +20,17 @@ class TkClipboard(ModelNode):
     
     @Scripting.printable
     def write(self, content):
+        self.clear()
         self.root_node.root.clipboard_append(content)
         
     @Scripting.printable
     def read(self):
-        return self.root_node.root.clipboard_get() 
+        return self.root_node.root.clipboard_get()
+        
+    @Scripting.printable
+    def remove_text_formatting(self):
+        content = self.read()
+        self.write(content)
 
 
 if platform.system().lower() == 'windows':

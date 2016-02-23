@@ -117,7 +117,7 @@ class OptimizeGroup(Group):
                     params  = self.__params[0]
                     for p in params:
                         if hasattr(params[p], 'code'): # Temp solution
-                            params[p]   = eval(params[p].code)
+                            params[p] = eval(params[p].code)
                     app.cudaWorker.messageIn.put({'command':'call', 'callable object':self.__algo.run, 'args':[], 'kwargs':params})
                     
                 def is_alive(self):

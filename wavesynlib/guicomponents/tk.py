@@ -427,9 +427,9 @@ class DirIndicator(Frame, Observable):
                       lambda *args: self._change_cursor_to_hand(False))
         # End Browse Button
                 
-        self._blankLen     = 2
-        self._browse_text   = '...'
-        self.__coding       = sys.getfilesystemencoding()
+        self._blank_len = 2
+        self._browse_text = '...'
+        self._coding = sys.getfilesystemencoding()
         self._directory          = None
                                 
     def _on_button_click(self, *args):
@@ -487,12 +487,19 @@ class DirIndicator(Frame, Observable):
             if os.path.exists(path):
                 self.change_dir(path)
             else:
-                self._refresh(self._directory)
+                self._refresh()
             return 'break' # Not pass the event to the next handler.
+        if evt.keycode == 8: # Backspace
+            rend, cend = self._text.index('end-1c').split('.')
+            cend = int(cend)
+            r, c = self._text.index('insert').split('.')
+            c = int(c)
+            if c > cend - self._blank_len - len(self._browse_text):
+                return 'break'
             
     def _get_path(self):
         path    = self._text.get('1.0', END)
-        path    = path[:-(self._blankLen + len(self._browse_text))]            
+        path    = path[:-(self._blank_len + len(self._browse_text))]            
         return path
             
     def _refresh(self):
@@ -503,7 +510,8 @@ class DirIndicator(Frame, Observable):
         folderList  = directory.split(os.path.sep)
         cumPath     = ''
         for index, folder in enumerate(folderList):
-            folder      = folder.decode(self.__coding, 'ignore')
+            if not isinstance(folder, unicode):
+                folder = folder.decode(self._coding, 'ignore')
             cumPath += folder + os.path.sep 
             
             # Configure folder name
@@ -540,7 +548,7 @@ class DirIndicator(Frame, Observable):
             # END Configure folder sep
         
 
-        text.insert(END, ' '*self._blankLen)
+        text.insert(END, ' '*self._blank_len)
         text.insert(END, self._browse_text, 'browse_button')      
 
     def change_dir(self, dirname):
@@ -568,6 +576,7 @@ class CWDIndicator(DirIndicator):
 Here, it is called by the timer of CWDIndicator instance.
 Normally, no argument is passed.'''        
         cwd = os.getcwd()
+        cwd = cwd.decode(self._coding, 'ignore')
         if os.path.altsep is not None: # Windows OS
             cwd = cwd.replace(os.path.altsep, os.path.sep)
         if self._directory != cwd:

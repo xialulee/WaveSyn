@@ -9,10 +9,24 @@ from __future__ import print_function, division, unicode_literals
 import sys
 
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodLock
+from wavesynlib.languagecenter.designpatterns import Observable
 
 
 # Object Model of the Scripting System
 # It is a part of the scripting system.
+
+class _ModelTreeMonitor(Observable):
+    def __init__(self):
+        Observable.__init__(self)
+        
+    def _on_add_node(self, node):
+        self.notify_observers(node, 'add')
+        
+    def _on_remove_node(self, node):
+        self.notify_observers(node, 'remove')
+        
+        
+model_tree_monitor = _ModelTreeMonitor()
        
 # How to implement a context manager? See:
 # http://pypix.com/python/context-managers/        
@@ -90,6 +104,7 @@ then node will have a property named 'a', which cannot be re-assigned.
             val.lock_attribute('parent_node')
             # and the parent node's child node cannot be re-assinged. 
             self.lock_attribute(key)
+            model_tree_monitor._on_add_node(val)
                     
         object.__setattr__(self, key, val)
         if self.attribute_auto_lock and key != 'attribute_auto_lock': # attribute_auto_lock cannot be locked
@@ -129,7 +144,16 @@ class NodeDict(ModelNode, Dict):
     def __setitem__(self, key, val):
         object.__setattr__(val, 'parent_node', self)
         val.lock_attribute('parent_node')
-        dict.__setitem__(self, key, val)
+        model_tree_monitor._on_add_node(val)
+        Dict.__setitem__(self, key, val)
+        
+    def __delitem__(self, key):
+        model_tree_monitor._on_remove_node(self[key])
+        Dict.__delitem__(self, key)
+        
+    def pop(self, key):
+        model_tree_monitor._on_remove_node(self[key])
+        Dict.pop(self, key)
 
 
 class List(list, object):
@@ -150,7 +174,7 @@ class NodeList(ModelNode, List):
         
     def append(self, val):
         object.__setattr__(val, 'parent_node', self)        
-        list.append(self, val)
+        List.append(self, val)
         val.index   = len(self) - 1
         val.lock_attribute('index')
 
@@ -182,6 +206,17 @@ class NodeList(ModelNode, List):
 class ScriptCode(object):
     def __init__(self, code):
         self.code = code
+     
+     
+class PrintableMethod(object):
+    def __init__(self, func):
+        self.__func = func
+        self.__doc__ = func.__doc__
+        self.__name__ = func.__name__
+        
+    def __get__(self, obj, type=None):
+        return self.__func.__get__(obj)        
+
         
 class Scripting(ModelNode):
     _xmlrpcexport_  = []    
@@ -242,7 +277,7 @@ class Scripting(ModelNode):
             return ret
         func.__doc__    = method.__doc__
         func.__name__   = method.__name__
-        return func  
+        return PrintableMethod(func)
 
 
 class CodePrinter(object):            
