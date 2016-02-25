@@ -24,6 +24,8 @@ import sys
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
 
+import platform
+
 import six
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
@@ -308,12 +310,12 @@ wavesyn
         self._add_env_path()
         
     def _add_env_path(self):
-        path_string = os.environ['path']        
+        path_string = os.environ['PATH']        
         self_path = get_caller_dir()
         extra_path = [os.path.join(self_path, 'interfaces/windows/cmdutils')]
         extra_path.append(path_string)
         path_string = os.path.pathsep.join(extra_path)
-        os.environ['path'] = path_string
+        os.environ['PATH'] = path_string
         
     def create_window(self, module_name, class_name):
         '''Create a tool window.'''
@@ -574,7 +576,7 @@ class ConsoleText(ScrolledText):
         self.text.tag_add("SYNC", "1.0", END)                                
         self.text.see(END)                        
 
-    def on_key_press(self, evt, code_list=[]):       
+    def on_key_press(self, evt, code_list=[]):     
         # Experimenting with idlelib's AutoComplete
         ##############################################################
         keysym = evt.keysym        
@@ -589,19 +591,20 @@ class ConsoleText(ScrolledText):
         if evt.keysym == 'Tab':
             return self.__auto_complete.autocomplete_event(evt)
         ##############################################################
-        if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
+        # if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
+        if evt.keysym not in ('Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R',  'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Next', 'Prior'):
             r, c    = self.get_cursor_pos()
             prompt  = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
             if prompt != '>>> ' and prompt != '... ':
                 return 'break'
-            if evt.keycode==8 and c <= 4:
+            if evt.keysym=='BackSpace' and c <= 4:
                 return 'break'
             if c < 4:
                 return 'break'
             rend, cend  = self.get_cursor_pos('end-1c')
             if r < rend:
                 return 'break'                
-            if evt.keycode == 13: # Return
+            if evt.keysym == 'Return': # Return
                 app = Application.instance
                 code = self.text.get(auto_subs('$r.4'), auto_subs('$r.end'))
                 try:
@@ -654,8 +657,14 @@ class StatusBar(Frame):
         
         self.__lock = lock = thread.allocate_lock()
         self.__busy = False
-                
-        from wavesynlib.interfaces.windows.memstatus import get_memory_usage
+             
+        sys_name = platform.system()   
+        if sys_name == 'Windows':
+	        from wavesynlib.interfaces.windows.memstatus import get_memory_usage
+        elif sys_name == 'Linux':
+            from wavesynlib.interfaces.linux.memstatus import get_memory_usage
+        else:
+            get_memory_usage = lambda: 0
         
         @SimpleObserver
         def check_busy():
