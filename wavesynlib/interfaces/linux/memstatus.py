@@ -11,5 +11,5 @@ def get_memory_usage():
         mem_total = int(f.readline().split()[1])
         mem_free = int(f.readline().split()[1])
         mem_available = int(f.readline().split()[1])
-        return int(mem_available / mem_total * 100)
+        return int((mem_total - mem_available) / mem_total * 100)
 

@@ -6,6 +6,7 @@ Created on Fri Jan 01 18:41:20 2016
 """
 
 import platform
+import re
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
 
@@ -31,6 +32,16 @@ class TkClipboard(ModelNode):
     def remove_text_formatting(self):
         content = self.read()
         self.write(content)
+        
+    @Scripting.printable
+    def remove_newlines(self, insert_blanks=True):
+        text = self.read()
+        if insert_blanks:
+            text = re.sub(r'(?<=[^- ])\n', ' \n', text)
+            text = re.sub(r'-?\n', '', text)
+        else:
+            text = text.replace('\n', '')
+        self.write(text)
 
 
 if platform.system().lower() == 'windows':
@@ -49,7 +60,10 @@ if platform.system().lower() == 'windows':
                 
         @Scripting.printable
         def to_console_qr(self):
-            import qrcode
+            try:
+                import qrcode
+            except ImportError:
+                self.root_node.print_tip([{'type':'text', 'content':'This functionality depends on qrcode. Please use "pip install qrcode" to install it.'}])
             string  = self.read()
             image   = qrcode.make(string)
             self.root_node.print_tip([{'type':'pil_image', 'content':image},
