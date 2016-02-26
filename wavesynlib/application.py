@@ -57,7 +57,7 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame, win7plus, Transparenter
+from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
 from wavesynlib.interfaces.clipboard.modelnode import Clipboard
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
