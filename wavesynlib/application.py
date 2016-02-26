@@ -57,7 +57,7 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
+from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame, win7plus, Transparenter
 from wavesynlib.interfaces.clipboard.modelnode import Clipboard
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
@@ -653,7 +653,13 @@ class StatusBar(Frame):
         self.__busy_lamp.pack(side=RIGHT)
 
         self.__membar = IntVar(0)
-        self._make_mem_status()        
+        self._make_mem_status()
+
+        if win7plus:
+            def on_scale(val):
+                val = int(float(val))
+                Scripting.root_node.console.set_transparency(val)
+            Scale(self, from_=30, to=255, orient='horizontal', value=255, command=on_scale).pack(side='right')
         
         self.__lock = lock = thread.allocate_lock()
         self.__busy = False
@@ -694,6 +700,7 @@ class StatusBar(Frame):
         progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
         progbar.pack(side='right', fill='y')
         Label(self, text='Mem:').pack(side='right', fill='y')
+
         
         
 class ConsoleWindow(ModelNode):    
@@ -741,6 +748,7 @@ class ConsoleWindow(ModelNode):
         make_menu(root, menu, json=True)
         self.__default_cursor = self.__stdstream_text.text['cursor']
         self.stream_observer = self.StreamObserver(self)
+        self.__transparenter = None
         
         
     @property
@@ -792,6 +800,13 @@ class ConsoleWindow(ModelNode):
         if b == 'flip':
             b = False if tk_root.wm_attributes('-topmost') else True
         tk_root.wm_attributes('-topmost', b)
+        
+    if win7plus:
+        @Scripting.printable
+        def set_transparency(self, transparency):
+            if self.__transparenter is None:
+                self.__transparenter = Transparenter(Scripting.root_node.tk_root)
+            self.__transparenter.set_transparency(transparency)
         
      
     

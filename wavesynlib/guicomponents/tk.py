@@ -30,8 +30,10 @@ from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer
 
 __DEBUG__ = False
     
+win = False
 win7plus = False
 if platform.system() == 'Windows':
+    win = True
     winver  = platform.version().split('.')    
     if int(winver[0])>=6 and int(winver[1])>=1:
         win7plus = True
@@ -41,7 +43,11 @@ if win7plus:
         ITaskbarList4, GUID_CTaskbarList)
     from comtypes import CoCreateInstance
     import ctypes as ct
-    GetParent   = ct.windll.user32.GetParent
+    from win32con import GWL_EXSTYLE, WS_EX_LAYERED, LWA_ALPHA
+    
+    GetParent = ct.windll.user32.GetParent
+    SetWindowLongA = ct.windll.user32.SetWindowLongA
+    SetLayeredWindowAttributes = ct.windll.user32.SetLayeredWindowAttributes
 
     class TaskbarIcon(object):
         def __init__(self, root):
@@ -68,6 +74,24 @@ if win7plus:
         def state(self, state):
             self.__tbm.SetProgressState(GetParent(self.__root.winfo_id()), 
                                         state)
+                                        
+                                        
+    class Transparenter(object):
+        def __init__(self, tk_window):
+            self._tk_object = tk_window
+            self._handle = None
+            
+        def _get_window_handle(self):
+            if self._handle is None:
+                self._handle = GetParent(self._tk_object.winfo_id())
+            SetWindowLongA(self._handle, GWL_EXSTYLE, WS_EX_LAYERED)
+            return self._handle
+            
+        def set_transparency(self, transparency):
+            transparency = ct.c_ubyte(transparency)
+            handle = self._get_window_handle()
+            SetLayeredWindowAttributes(handle, 0, transparency, LWA_ALPHA)
+            
 else:
     class TaskbarIcon(object):
         def __init__(self, root):
