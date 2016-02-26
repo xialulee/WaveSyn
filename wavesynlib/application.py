@@ -649,19 +649,40 @@ class StatusBar(Frame):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         timer = TkTimer(widget=self, interval=200, active=False)
+        
+        balloon = Scripting.root_node.balloon
+                
         self.__busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
-        self.__busy_lamp.pack(side=RIGHT)
-
+        self.__busy_lamp.pack(side=RIGHT, fill='y')
+        
         self.__membar = IntVar(0)
         self._make_mem_status()
 
-        if win7plus:
-            def on_scale(val):
-                val = int(float(val))
-                Scripting.root_node.console.set_transparency(val)
-            Scale(self, from_=30, to=255, orient='horizontal', value=255, command=on_scale).pack(side='right')
+        # Transparent Scale {
+        def on_scale(val):
+            Scripting.root_node.console.set_transparency(val)
+        trans_scale = Scale(self, from_=0.2, to=1.0, orient='horizontal', value=1, command=on_scale)
+        trans_scale.pack(side='right')
+        balloon.bind_widget(trans_scale, balloonmsg='Set the transparency of the console.')
+        # } End Transparent Scale
+
+        # Topmost Button {
+        import six.moves.tkinter as tkinter
+        topmost_button = tkinter.Button(self, text='TOP', relief='groove') 
+        topmost_button.pack(side='right')
         
-        self.__lock = lock = thread.allocate_lock()
+        def on_click():
+            tk_root = Scripting.root_node.tk_root
+            b = bool(tk_root.wm_attributes('-topmost'))
+            fg = 'black' if b else 'lime green'
+            topmost_button['fg'] = fg
+            tk_root.wm_attributes('-topmost', not b)
+            
+        topmost_button['command'] = on_click
+        balloon.bind_widget(topmost_button, balloonmsg='Set the console as a topmost window.')
+        # } End Topmost Button 
+                
+        self.__lock = thread.allocate_lock()
         self.__busy = False
              
         sys_name = platform.system()   
@@ -696,11 +717,11 @@ class StatusBar(Frame):
         if thread.get_ident() == Scripting.main_thread_id:
             self._set_busy_light()
             
-    def _make_mem_status(self):      
+    def _make_mem_status(self):
+        balloon = Scripting.root_node.balloon
         progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
         progbar.pack(side='right', fill='y')
-        Label(self, text='Mem:').pack(side='right', fill='y')
-
+        balloon.bind_widget(progbar, balloonmsg='Total memory usage.')
         
         
 class ConsoleWindow(ModelNode):    
@@ -748,7 +769,6 @@ class ConsoleWindow(ModelNode):
         make_menu(root, menu, json=True)
         self.__default_cursor = self.__stdstream_text.text['cursor']
         self.stream_observer = self.StreamObserver(self)
-        self.__transparenter = None
         
         
     @property
@@ -801,12 +821,8 @@ class ConsoleWindow(ModelNode):
             b = False if tk_root.wm_attributes('-topmost') else True
         tk_root.wm_attributes('-topmost', b)
         
-    if win7plus:
-        @Scripting.printable
-        def set_transparency(self, transparency):
-            if self.__transparenter is None:
-                self.__transparenter = Transparenter(Scripting.root_node.tk_root)
-            self.__transparenter.set_transparency(transparency)
+    def set_transparency(self, transparency):
+        self.root_node.tk_root.wm_attributes('-alpha', transparency)
         
      
     

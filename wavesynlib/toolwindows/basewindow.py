@@ -6,8 +6,6 @@ Created on Sun Jan 10 16:55:14 2016
 """
 from __future__ import print_function, division
 
-import platform
-
 from six.moves.tkinter import Toplevel, Frame, IntVar
 from six.moves.tkinter_ttk import Notebook, Label, Button, Checkbutton, Scale
 
@@ -15,16 +13,13 @@ from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, code_printer)
 from wavesynlib.languagecenter.utils import eval_format, MethodDelegator
 
-from wavesynlib.guicomponents.tk import Group, win7plus
+from wavesynlib.guicomponents.tk import Group
 
 
 class BaseWindowNode(ModelNode):
     pass
 
-# To Do: Window Manager. 
-#   Window ID Copy
-#   Window Foremost
-#   Window Info Displayer
+
 class TkWindowNode(BaseWindowNode):
     '''The base class of all the Window Node in the WaveSyn Object Model.
 Properties:
@@ -42,7 +37,6 @@ Properties inherited from ModelNode:
         self.__tk_object = Toplevel()
         self.__tk_object.title(eval_format('{self.window_name} id={id(self)}'))        
         self.__tk_object.protocol('WM_DELETE_WINDOW', self.on_close)
-        self.__transparentor = None
                 
     method_name_map   = {
         'update':'update', 
@@ -73,14 +67,6 @@ Properties inherited from ModelNode:
     @property
     def tk_object(self):
         return self.__tk_object
-        
-    if win7plus:
-        @Scripting.printable
-        def set_transparency(self, transparency):
-            from wavesynlib.guicomponents.tk import Transparenter
-            if self.__transparentor is None:
-                self.__transparentor = Transparenter(self.tk_object)
-            self.__transparentor.set_transparency(transparency)
         
         
 class WindowComponent(object):
@@ -122,13 +108,11 @@ class WindowManager(ModelNode, WindowComponent):
                     variable=topmost, 
                     command=self._on_topmost_click).pack()
                     
-        if platform.system() == 'Windows':
-            def on_scale(val):
-                val = int(float(val))
-                self.window_node.set_transparency(val)
-                
-            Scale(attr_group, from_=30, to=255, orient='horizontal', value=255, command=on_scale).pack()
-            Label(attr_group, text='Transparency').pack()
+        def on_scale(val):
+            self.set_transparency(val)
+            
+        Scale(attr_group, from_=0.2, to=1.0, orient='horizontal', value=1.0, command=on_scale).pack()
+        Label(attr_group, text='Transparency').pack()
             
         # } End Attributes Group
         
@@ -157,7 +141,11 @@ class WindowManager(ModelNode, WindowComponent):
 
     @Scripting.printable
     def set_topmost(self, b):
-        self.window_node.tk_object.wm_attributes('-topmost', b)                
+        self.window_node.tk_object.wm_attributes('-topmost', b)
+
+    @Scripting.printable
+    def set_transparency(self, transparency):
+        self.window_node.tk_object.wm_attributes('-alpha', transparency)                
 
  
 class TkToolWindow(TkWindowNode):

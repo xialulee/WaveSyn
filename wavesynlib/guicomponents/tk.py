@@ -485,14 +485,15 @@ class DirIndicator(Frame, Observable):
                    os.path.isdir(os.path.join(path, item))]
         if items: # Not Empty
             x, y    = self.winfo_pointerx(), self.winfo_pointery()
-            menuWin = menu[0]
-            if menuWin is not None:
-                menuWin.destroy()
-            menuWin     = menu[0]   = Toplevel()
-            menuWin.overrideredirect(1) # No Title bar
-            menuWin.geometry(auto_subs('200x300+$x+$y'))
-            menuWin.bind('<FocusOut>', lambda evt: menuWin.destroy())
-            itemList    = ScrolledList(menuWin)
+            menu_win = menu[0]
+            if menu_win is not None:
+                menu_win.destroy()
+            menu_win = menu[0] = Toplevel()
+            menu_win.wm_attributes('-topmost', True)
+            menu_win.overrideredirect(1) # No Title bar
+            menu_win.geometry(auto_subs('200x300+$x+$y'))
+            menu_win.bind('<FocusOut>', lambda evt: menu_win.destroy())
+            itemList = ScrolledList(menu_win)
             itemList.pack(expand=YES, fill=BOTH)
             itemList.list.focus_set()
             for item in items:
@@ -501,7 +502,7 @@ class DirIndicator(Frame, Observable):
             def on_list_click(index, label):
                 fullPath    = os.path.join(path, label)
                 self.change_dir(fullPath)
-                menuWin.destroy()
+                menu_win.destroy()
                 
             itemList.list_click_callback  = on_list_click
                         
@@ -511,10 +512,10 @@ class DirIndicator(Frame, Observable):
         r, c = self._text.index('insert').split('.')
         c = int(c)
         if c > cend - self._blank_len - len(self._browse_text):
-            if evt.keycode not in (37, 39):
+            if evt.keysym not in ('Left', 'Right', 'Up', 'Down'):
                 return 'break'
         
-        if evt.keycode == 13: # \n
+        if evt.keysym == 'Return': # \n
             path = self._get_path()
             if os.path.exists(path):
                 self.change_dir(path)
