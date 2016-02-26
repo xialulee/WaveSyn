@@ -739,13 +739,13 @@ class ConsoleWindow(ModelNode):
         root.title('WaveSyn-Console')
 
         dir_indicator = CWDIndicator()
-        dir_indicator.pack(fill=X)
+        dir_indicator.pack(fill='x')
+
+        self.__status_bar = status_bar = StatusBar(root)
+        status_bar.pack(side='bottom', fill='x')
         
         self.__stdstream_text = stdstream_text = ConsoleText(root)
-        stdstream_text.pack(expand=YES, fill=BOTH)
-        
-        self.__status_bar = status_bar = StatusBar(root)
-        status_bar.pack(fill=X)
+        stdstream_text.pack(expand='yes', fill='both')
         
         @SimpleObserver
         def busy_status_observer(busy):
