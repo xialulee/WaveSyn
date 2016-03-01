@@ -394,9 +394,13 @@ wavesyn
         if type(contents) in (str, unicode):
             stream_manager.write(contents+'\n', 'TIP')
             return
+
+        return_list = []            
+            
         for item in contents:
             if item['type'] == 'text':
                 stream_manager.write(''.join((item['content'],'\n')), 'TIP')
+                return_list.append(None)
             elif item['type'] == 'link':
                 command = item['command']
                 tag_name = 'link' + str(id(command))
@@ -409,6 +413,7 @@ wavesyn
 #                text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.default_cursor))
                 config_link_tag(text, tag_name, command, self.console.default_cursor)                                
                 stream_manager.write('\n')
+                return_list.append(None)
             elif item['type'] == 'pil_image':
                 # stream_manager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
                 text    = self.console.text                
@@ -417,6 +422,7 @@ wavesyn
                 text.window_create(END, window=pil_frame)
                 text.insert(END, '\n')
                 stream_manager.write('\n')
+                return_list.append(id(pil_frame))
             elif item['type'] == 'file_list':
                 file_list = item['content']
                 def new_open_func(path):
@@ -447,6 +453,8 @@ wavesyn
                     stream_manager.write(' ')
                     
                     stream_manager.write(eval_format('{file_path}\n'))
+                return_list.append(None)
+        return return_list
                                             
                 
     def print_error(self, text):

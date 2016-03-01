@@ -74,8 +74,9 @@ if platform.system().lower() == 'windows':
             from PIL import ImageGrab
             image = ImageGrab.grabclipboard()
             if image:
-                self.root_node.print_tip([{'type':'pil_image', 'content':image},
-                                          {'type':'text', 'content':'Image in clipboard is shown above.'}])
+                return_list = self.root_node.print_tip([{'type':'pil_image', 'content':image},
+                                                        {'type':'text', 'content':'Image in clipboard is shown above.'}])
+                return return_list[0]
             else:
                 raise TypeError('Data in clipboard is not an image.')
                 
@@ -94,7 +95,7 @@ if platform.system().lower() == 'windows':
                 self.root_node.print_tip([{'type':'text', 'content':'\n'.join(('The text in clipboard is listed as follows', self.read()))}])
                 
             def for_image():
-                self.to_console_image()
+                return self.to_console_image()
                 
             def for_file_list():
                 self.to_console_file_list()             
@@ -110,7 +111,7 @@ if platform.system().lower() == 'windows':
             }   
 
             format_code = cw.GetPriorityClipboardFormat([cw.CF_TEXT, cw.CF_UNICODETEXT, cw.CF_BITMAP, cw.CF_HDROP])
-            func_map.get(format_code, for_unknown_type)()             
+            return func_map.get(format_code, for_unknown_type)()             
 
 else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
     Clipboard   = TkClipboard   

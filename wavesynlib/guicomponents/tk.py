@@ -17,14 +17,15 @@ from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
 from six.moves.tkinter import Frame
 import six.moves.tkinter_font as tkFont
-from six.moves.tkinter_tkfiledialog import askdirectory
+from six.moves.tkinter_tkfiledialog import askdirectory, asksaveasfilename
 
 import PIL
 from PIL import ImageTk
+from PIL import Image
 
 from functools import partial
 
-from wavesynlib.languagecenter.utils import auto_subs, MethodDelegator
+from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator
 from wavesynlib.languagecenter.designpatterns import SimpleObserver, Observable
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer
 
@@ -269,10 +270,46 @@ class PILImageFrame(Frame, object):
     def __init__(self, *args, **kwargs):
         pil_image = kwargs.pop('pil_image')
         photo = ImageTk.PhotoImage(pil_image)
-        self.__photoImage = photo
+        self.__photo = photo
+        self.__origin_image = pil_image
+        self.__zoomed_image = pil_image
         Frame.__init__(self, *args, **kwargs)
+
+        frame = Frame(self)
+        frame.pack(fill='x')
+        
+        save_dlg = lambda: asksaveasfilename(filetypes=[('JPEG', '.jpg'), ('PNG', '.png')], defaultextension='.jpg')        
+                        
+        def on_save(image):
+            filename = save_dlg()
+            if filename:
+                image.save(filename)
+        
+        Label(frame, text=eval_format('id={id(self)}')).pack(side='left')
+        Button(frame, text='Save Origin', command=lambda:on_save(self.__origin_image)).pack(side='left')
+        Button(frame, text='Save Zoomed', command=lambda:on_save(self.__zoomed_image)).pack(side='left')
+
+        scale = Scale(frame, from_=0, to=100, orient='horizontal', value=100)
+        scale.pack(side='left')
+        zoomed_label = Label(frame, text='100%')
+        zoomed_label.pack(side='left')
+        
         self.__label = label = Label(self, image=photo)
         label.pack(expand=YES, fill=BOTH)
+        
+        def on_scale(val):
+            val = float(val)
+            width, height = self.__origin_image.size
+            width = int(width * val / 100)
+            height = int(height * val / 100)
+            zoomed_image = self.__origin_image.resize((width, height), 
+                                                      Image.ANTIALIAS)
+            self.__zoomed_image = zoomed_image
+            self.__photo = ImageTk.PhotoImage(zoomed_image)
+            self.__label['image'] = self.__photo
+            zoomed_label['text'] = '{}%'.format(int(val))
+            
+        scale['command'] = on_scale
         
 
 class TextWinHotkey(Text):
