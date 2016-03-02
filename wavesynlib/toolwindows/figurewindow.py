@@ -549,7 +549,8 @@ The rest parameters are passed to PanedWindow.__init__.
         if 'color' in kwargs:
             color = color_map[kwargs['color']]
         else:
-            color = color_map[self[0].line_objects[-1][0].get_color()]
+            color = self[0].line_objects[-1][0].get_color()
+            color = color_map.get(color, color)
             
         self.__list.item_config(END, fg=color)
         self.notify_observers()

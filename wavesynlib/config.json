@@ -56,6 +56,12 @@
               ]
           },
 
+          {
+          "Name":"Settings", "TearOff":0, "UnderLine":0, "SubMenu":[
+              {"Name":"Set Matplotlib Style", "UnderLine":0, "Command":"wavesyn.set_matplotlib_style(dialog=True)", "Print":true}
+              ]
+          },
+
 	    {
 		"Name":"Help", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Home Page", "UnderLine":0, "Command":"wavesyn.open_home_page()"}

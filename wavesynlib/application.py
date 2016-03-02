@@ -517,6 +517,45 @@ wavesyn
     def system(self, command):
         subprocess.call(command, shell=True)
         
+    
+    @Scripting.printable
+    def set_matplotlib_style(self, style_name='', dialog=False):
+        import matplotlib.pyplot as plt                
+
+        ret = [None]
+        if dialog:
+            win = Toplevel()
+    
+            Label(win, text='Select a style for newly-created figures.').pack()
+    
+            combo = Combobox(win, stat='readonly')
+            combo['values'] = plt.style.available
+            combo.current(0)
+            combo.pack()
+            
+            ret = [None]
+            
+            def on_ok():
+                ret[0] = combo.get()
+                win.quit()
+                
+            def on_cancel():
+                win.quit()
+                
+            frame = Frame(win)
+            frame.pack()
+            Button(win, text='Cancel', command=on_cancel).pack(side='right')            
+            Button(win, text='Ok', command=on_ok).pack(side='right')
+                
+            win.protocol('WM_DELETE_WINDOW', win.quit)
+            win.focus_set()
+            win.grab_set()
+            win.mainloop()
+            win.destroy()        
+            
+        style = ret[0] if ret[0] is not None else style_name
+        plt.style.use(style)
+        
         
 def get_gui_image_path(filename):
     return os.path.join(Application.instance.dir_path, 'images', filename)        
