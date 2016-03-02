@@ -39,7 +39,7 @@ class SPI(object):
         ret = att * 0.25
         
         addr = self._addr
-        buf = addr << 8 + att
+        buf = (addr << 8) + att
         GPIO.output(self._latch_pin, GPIO.LOW)
         
         for k in range(16):
