@@ -13,13 +13,10 @@ from time import sleep
 import RPi.GPIO as GPIO
 
 class SPI(object):
-    def __init__(self, clk_pin, data_pin, latch_pin, a0_pin, a1_pin, a2_pin, addr):
+    def __init__(self, clk_pin, data_pin, latch_pin, addr):
         self._clk_pin = clk_pin
         self._data_pin = data_pin
         self._latch_pin = latch_pin
-        self._a0_pin = a0_pin
-        self._a1_pin = a1_pin
-        self._a2_pin = a2_pin
         self._addr = addr
         GPIO.output(latch_pin, GPIO.LOW)
         
