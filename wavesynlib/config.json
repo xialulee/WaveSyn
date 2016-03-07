@@ -52,13 +52,16 @@
 
           {
           "Name":"Utils", "TearOff":0, "UnderLine":0, "SubMenu":[
-              {"Name":"Replica Finder", "UnderLine":0, "Command":"wavesyn.create_window(module_name='utils.replicafinder', class_name='ReplicaFinderWindow')"}
-              ]
+              {
+              "Name":"File System", "TearOff":0, "UnderLine":0, "SubMenu":[
+                  {"Name":"Replica Finder", "UnderLine":0, "Command":"wavesyn.create_window(module_name='utils.replicafinder', class_name='ReplicaFinderWindow')"},
+                  {"Name":"Tar Extractor", "UnderLine":0, "Command":"wavesyn.extract_tar(filename=wavesyn.constants.ASK_DIALOG, directory=wavesyn.constants.ASK_DIALOG)"}]
+              }]
           },
 
           {
           "Name":"Settings", "TearOff":0, "UnderLine":0, "SubMenu":[
-              {"Name":"Set Matplotlib Style", "UnderLine":0, "Command":"wavesyn.set_matplotlib_style(dialog=True)", "Print":true}
+              {"Name":"Set Matplotlib Style", "UnderLine":0, "Command":"wavesyn.set_matplotlib_style(style_name=wavesyn.constants.ASK_DIALOG)", "Print":true}
               ]
           },
 

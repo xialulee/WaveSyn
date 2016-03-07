@@ -20,7 +20,7 @@ the GUI components will not response anymore.
 If you want to abort this mission, you can click the button below.
 ''').pack()
         tk.Button(self, text='Abort!', command=self._on_abort, bg='red', fg='white').pack()
-        tk.Label(self).pack()
+        ttk.Label(self).pack()
         
     def _on_abort(self):
         command = {'type':'command', 'command':'interrupt_main_thread', 'args':''}
@@ -40,6 +40,8 @@ thread.start_new_thread(listener, ())
 def main(argv):
     root = tk.Tk()
     root.title('WaveSyn-Interrupter')
+    root.protocol('WM_DELETE_WINDOW', lambda:None)
+    root.wm_attributes('-topmost', True)
     MainPanel(root).pack()
     root.iconify()
     try:    

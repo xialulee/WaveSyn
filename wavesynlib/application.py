@@ -24,6 +24,8 @@ import sys
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
 
+import tarfile
+
 import platform
 
 import six
@@ -32,7 +34,7 @@ from six.moves.tkinter_ttk import *
 
 import six.moves.tkinter_tix as Tix
 from six.moves.tkinter import Frame
-from six.moves.tkinter_tkfiledialog import asksaveasfilename
+from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askdirectory
 
 
 import matplotlib
@@ -193,6 +195,18 @@ wavesyn
         # To Do: WaveSyn will have a uniform command slot system.
         from wavesynlib.interfaces.xmlrpc.server import CommandSlot
         
+        # Construct Constants        
+        from wavesynlib.languagecenter.wavesynscript import Constant        
+        
+        class Constants(object):
+            __slots__ = (
+                'ASK_DIALOG',
+            )
+            
+            for name in __slots__:
+                locals()[name] = Constant(name)
+        # End Construct Constants
+        
         value_checker    = ValueChecker(root)        
         
         with self.attribute_lock:
@@ -203,7 +217,11 @@ wavesyn
                 balloon = Tix.Balloon(root),
                 taskbar_icon = TaskbarIcon(root),
                 interrupter = InterrupterNode(),
-                # End UI elements                
+                # End UI elements
+                
+                # Constants
+                constants = Constants,
+                # End Constants
                 
                 # Thread related
                 main_thread_id = main_thread_id,
@@ -519,8 +537,13 @@ wavesyn
         
     
     @Scripting.printable
-    def set_matplotlib_style(self, style_name='', dialog=False):
-        import matplotlib.pyplot as plt                
+    def set_matplotlib_style(self, style_name=''):
+        import matplotlib.pyplot as plt
+        
+        if style_name is self.constants.ASK_DIALOG:
+            dialog = True
+        else:
+            dialog = False
 
         ret = [None]
         if dialog:
@@ -555,6 +578,22 @@ wavesyn
             
         style = ret[0] if ret[0] is not None else style_name
         plt.style.use(style)
+        
+        
+    @Scripting.printable
+    def extract_tar(self, filename, directory):
+        if filename is self.constants.ASK_DIALOG:
+            filename = askopenfilename(filetypes=[('TAR Files', ('*.tar', '*.tar.gz', '*.tgz')), ('All Files', '*.*')])
+        if not filename:
+            return
+            
+        if directory is self.constants.ASK_DIALOG:
+            directory = askdirectory(initialdir=os.getcwd())
+        if not directory:
+            return
+            
+        tar = tarfile.open(filename)
+        tar.extractall(directory)
         
         
 def get_gui_image_path(filename):

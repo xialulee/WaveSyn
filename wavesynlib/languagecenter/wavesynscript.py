@@ -200,6 +200,28 @@ class NodeList(ModelNode, List):
     for method_name in ('__delitem__', '__delslice__', '__setitem__', 'pop', 'remove', 'reverse', 'sort', 'insert'):
         locals()[method_name]    = MethodLock(method=__update_index(getattr(list, method_name)), lockName='element_lock')    
 # End Object Model
+        
+        
+# WaveSyn Script Constants
+class Constant(object):
+    __slots__ = ('__name',)
+    __cache = {}
+    
+    def __new__(cls, name):
+        if name in cls.__cache:
+            return cls.__cache[name]
+        else:
+            return object.__new__(cls, name)
+    
+    def __init__(self, name):
+        if name not in self.__cache:
+            self.__name = name
+            self.__cache[name] = self
+            
+    @property
+    def name(self):
+        return self.__name
+# End WaveSyn Script Constants
 
 
 # Scripting Sub-System
@@ -233,6 +255,8 @@ class Scripting(ModelNode):
         def paramToStr(param):
             if isinstance(param, ScriptCode):
                 return param.code
+            elif isinstance(param, Constant):
+                return eval_format('{root_name}.{constants}.{param.name}')
             else:
                 return repr(param)
                 
