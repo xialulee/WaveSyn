@@ -62,7 +62,7 @@ Properties inherited from ModelNode:
         if isinstance(self.parent_node, WindowDict):
             return eval_format('{self.parent_node.node_path}[{id(self)}]')
         else:
-            return ModelNode.node_path
+            return ModelNode.node_path.__get__(self)
             
     @property
     def tk_object(self):

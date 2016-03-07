@@ -207,7 +207,58 @@ wavesyn
                 locals()[name] = Constant(name)
         # End Construct Constants
         
-        value_checker    = ValueChecker(root)        
+        value_checker    = ValueChecker(root)
+        
+        
+        # File Utils Node        
+        from wavesynlib.interfaces.pdf.modelnode import PDFFileManager      
+        
+        class TarFileManipulator(ModelNode):
+            def __init__(self, *args, **kwargs):
+                filename = kwargs.pop('filename')
+                ModelNode.__init__(self, *args, **kwargs)
+                with self.attribute_lock:
+                    self.filename = filename
+                    
+            @property
+            def node_path(self):
+                return eval_format('{self.parent_node.node_path}["{self.filename}"]')
+                
+            @Scripting.printable
+            def extract_all(self, directory):
+                if directory is self.root_node.constants.ASK_DIALOG:
+                    directory = askdirectory(initialdir=os.getcwd())
+                if not directory:
+                    return
+                    
+                tar = tarfile.open(self.filename)
+                tar.extractall(directory)
+        
+        class TarFileManager(ModelNode):
+            def __init__(self, *args, **kwargs):
+                ModelNode.__init__(self, *args, **kwargs)
+                
+            def __getitem__(self, filename):
+                if filename is self.root_node.constants.ASK_DIALOG:
+                    filename = askopenfilename(filetypes=[('TAR Files', ('*.tar', '*.tar.gz', '*.tgz')), ('All Files', '*.*')])
+                if not filename:
+                    return
+                    
+                manipulator = TarFileManipulator(filename=filename)
+                object.__setattr__(manipulator, 'parent_node', self)
+                manipulator.lock_attribute('parent_node')
+                return manipulator
+                
+        
+        class FileUtils(ModelNode):
+            def __init__(self, *args, **kwargs):
+                ModelNode.__init__(self, *args, **kwargs)
+                self.pdf_files = PDFFileManager()
+                self.tar_files = TarFileManager()
+                
+        self.file_utils = FileUtils()
+        # End File Utils Node
+                
         
         with self.attribute_lock:
             set_attributes(self,
@@ -579,23 +630,7 @@ wavesyn
         style = ret[0] if ret[0] is not None else style_name
         plt.style.use(style)
         
-        
-    @Scripting.printable
-    def extract_tar(self, filename, directory):
-        if filename is self.constants.ASK_DIALOG:
-            filename = askopenfilename(filetypes=[('TAR Files', ('*.tar', '*.tar.gz', '*.tgz')), ('All Files', '*.*')])
-        if not filename:
-            return
-            
-        if directory is self.constants.ASK_DIALOG:
-            directory = askdirectory(initialdir=os.getcwd())
-        if not directory:
-            return
-            
-        tar = tarfile.open(filename)
-        tar.extractall(directory)
-        
-        
+                
 def get_gui_image_path(filename):
     return os.path.join(Application.instance.dir_path, 'images', filename)        
                 
