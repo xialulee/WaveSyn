@@ -13,12 +13,15 @@ from time import sleep
 
 import RPi.GPIO as GPIO
 
+from wavesynlib.interfaces.devcomm.raspberrypi import SimpleSPIWriter
+
 
 class SPI(object):
     def __init__(self, clk_pin, data_pin, le_pin):
         self._clk_pin = clk_pin
         self._data_pin = data_pin
         self._le_pin = le_pin
+        self._writer = SimpleSPIWriter(clk_pin, data_pin, le_pin)
         
     @property
     def _clock(self):
@@ -37,23 +40,9 @@ class SPI(object):
         else:
             raise NotImplementedError
             
-        bits = int(angle / 5.6) 
+        bits = int(angle / 5.6 + 0.5) 
         ret = bits * 5.6
-        mask = 0x20
-        
-        GPIO.output(self._le_pin, GPIO.LOW)        
-        
-        for k in range(6):
-            self._clock = 0
-            bit = GPIO.HIGH if bits & mask else GPIO.LOW
-            GPIO.output(self._data_pin, bit)
-            sleep(0.0005)
-            mask >>= 1
-            self._clock = 1
-            sleep(0.0005) # Hold for a while
-            
-        GPIO.output(self._le_pin, GPIO.HIGH)
-        sleep(0.001)
-        GPIO.output(self._le_pin, GPIO.LOW)
+
+        self._writer.write(bits, bit_width=6, msb_first=True)
         
         return ret

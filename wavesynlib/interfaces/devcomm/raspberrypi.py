@@ -23,7 +23,7 @@ because Python operations are rather slow compared with many modern chips' inter
         self._data = 0
         self._clk = 0
         
-    def __write_pin(pin, val):
+    def __write_pin(self, pin, val):
         bit = GPIO.HIGH if val else GPIO.LOW
         GPIO.output(pin, bit)
         
@@ -56,7 +56,7 @@ because Python operations are rather slow compared with many modern chips' inter
         
         
     def write(self, data, bit_width, msb_first):
-        buf = data & ((1 << bit_width-1) - 1)
+        buf = data & ((1 << bit_width) - 1)
         mask = 1 << bit_width-1 if msb_first else 1
         
         self._le = 0
