@@ -141,6 +141,23 @@ class Nonblocking(object):
             return None
         else:
             return self.__thread.retval
-                
+      
+        
+class property_with_args(object):
+    class Property(object):
+        def __init__(self, instance, func):
+            self.__instance = instance
+            self.__func = func
+        
+        def __getitem__(self, args):
+            return self.__func(self.__instance, args)
+    
+    def __init__(self, func):
+        self.__func = func
+        self.__doc__ = func.__doc__
+        
+        
+    def __get__(self, instance, owner):
+        return self.Property(instance, self.__func)
         
                        
