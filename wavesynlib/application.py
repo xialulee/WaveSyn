@@ -35,6 +35,8 @@ from six.moves.tkinter_ttk import *
 import six.moves.tkinter_tix as Tix
 from six.moves.tkinter import Frame
 from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askdirectory
+from six.moves.tkinter_tksimpledialog import askstring, askinteger
+from six.moves.tkinter_messagebox import showinfo
 
 
 import matplotlib
@@ -139,6 +141,62 @@ class WaveSynThread(object):
                 app.windows[winId].tk_object.update()
 
 
+class Dialogs(ModelNode):
+    def __init__(self, *args, **kwargs):
+        ModelNode.__init__(self, *args, **kwargs)
+        
+    def support_ask_file_list(self, arg, **kwargs):
+        if arg is self.root_node.constants.ASK_FILE_LIST:
+            num = askinteger('Total number of files', 'How many files do you want?')
+            if not num:
+                return
+            num = int(num)
+            file_list = []
+            for k in range(num):
+                filename = askopenfilename(**kwargs)
+                if filename:
+                    file_list.append(filename)
+                    kwargs['initialdir'] = os.path.split(filename)[0]
+            arg = file_list
+            showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
+            self._print_actual_value(self.root_node.constants.ASK_FILE_LIST, arg)
+        return arg
+        
+    def support_ask_open_filename(self, arg, **kwargs):
+        if arg is self.root_node.constants.ASK_OPEN_FILENAME:
+            filename = askopenfilename(**kwargs)
+            arg = filename
+            self._print_actual_value(self.root_node.constants.ASK_OPEN_FILENAME, arg)
+        return arg
+        
+    def support_ask_saveas_filename(self, arg, **kwargs):
+        if arg is self.root_node.constants.ASK_SAVEAS_FILENAME:
+            filename = asksaveasfilename(**kwargs)
+            arg = filename
+            self._print_actual_value(self.root_node.constants.ASK_SAVEAS_FILENAME, arg)
+        return arg
+        
+    def support_ask_slice(self, arg, *args, **kwargs):
+        if arg is self.root_node.constants.ASK_SLICE:
+            user_input = askstring('Page Range', 'Select page range using Python slice syntax "start[:stop[:step]]".\nPage number start from 1.')
+            if not user_input:
+                return
+            user_input = user_input.split(':')
+            user_input = [int(item) if item else None for item in user_input]
+            
+            if len(user_input) == 1:
+                arg = user_input[0]
+            else:
+                arg = slice(*user_input)            
+            self._print_actual_value(self.root_node.constants.ASK_SLICE, arg)
+        return arg
+        
+    def _print_actual_value(self, const, value):
+        self.root_node.print_tip([{'type':'text', 'content':'''
+The actual value of the place where {0} holds is
+  {1}'''.format(const.name, repr(value))}])
+
+
 @six.add_metaclass(Singleton)
 class Application(ModelNode): # Create an ABC for root node to help wavesynscript.Scripting determine whether the node is root. 
     '''This class is the root of the model tree.
@@ -198,9 +256,13 @@ wavesyn
         # Construct Constants        
         from wavesynlib.languagecenter.wavesynscript import Constant        
         
-        class Constants(object):
+        class Constants(object): 
             __slots__ = (
                 'ASK_DIALOG',
+                'ASK_OPEN_FILENAME',
+                'ASK_SAVEAS_FILENAME',
+                'ASK_FILE_LIST',
+                'ASK_SLICE'
             )
             
             for name in __slots__:
@@ -268,6 +330,7 @@ wavesyn
                 balloon = Tix.Balloon(root),
                 taskbar_icon = TaskbarIcon(root),
                 interrupter = InterrupterNode(),
+                dialogs = Dialogs(self),
                 # End UI elements
                 
                 # Constants

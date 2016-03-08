@@ -45,7 +45,9 @@ class SPI(object):
         ret = bits * 5.6
         self._angles[chip_index] = bits
 
-        for k in range(self._chip_num):
-            self._writer.write(self._angles[k], bit_width=6, msb_first=True)
+        # For multiple phase shifters connected via daisy chain.
+        with self._writer.latch_enable:
+            for k in range(self._chip_num):
+                self._writer.write_without_latch(self._angles[k], bit_width=6, msb_first=True)
         
         return ret

@@ -1,7 +1,7 @@
 {
 	"ConsoleMenu":[
 	    {
-		"Name":"Window", "TearOff":0, "UnderLine":0, "SubMenu":[
+		"Name":"Waveform", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.create_window(module_name='singlesyn', class_name='SingleWindow')"},
 		    {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"print('Not Implemented', file=sys.stderr)"},
 		    {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.create_window(module_name='patternsyn', class_name='PatternWindow')"}
@@ -56,7 +56,14 @@
               "Name":"File System", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"Replica Finder", "UnderLine":0, "Command":"wavesyn.create_window(module_name='utils.replicafinder', class_name='ReplicaFinderWindow')"},
                   {"Name":"Tar Extractor", "UnderLine":0, "Command":"wavesyn.extract_tar(filename=wavesyn.constants.ASK_DIALOG, directory=wavesyn.constants.ASK_DIALOG)"}]
-              }]
+              },
+              {
+              "Name":"PDF Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
+                  {"Name":"Extract Pages", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.constants.ASK_OPEN_FILENAME][wavesyn.constants.ASK_SLICE].write(wavesyn.constants.ASK_SAVEAS_FILENAME)"},
+                  {"Name":"Merge Multiple PDF Files", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.constants.ASK_FILE_LIST].merge(wavesyn.constants.ASK_SAVEAS_FILENAME)"}
+              ]
+              }
+          ]
           },
 
           {
