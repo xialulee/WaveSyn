@@ -60,7 +60,7 @@
               {
               "Name":"PDF Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"Extract Pages", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.constants.ASK_OPEN_FILENAME][wavesyn.constants.ASK_SLICE].write(wavesyn.constants.ASK_SAVEAS_FILENAME)"},
-                  {"Name":"Merge Multiple PDF Files", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.constants.ASK_FILE_LIST].merge(wavesyn.constants.ASK_SAVEAS_FILENAME)"}
+                  {"Name":"Merge Multiple PDF Files", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.constants.ASK_ORDERED_FILES].merge(wavesyn.constants.ASK_SAVEAS_FILENAME)"}
               ]
               }
           ]

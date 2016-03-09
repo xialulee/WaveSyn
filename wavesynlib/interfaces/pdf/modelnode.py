@@ -124,6 +124,8 @@ class PDFFileList(ModelNode):
             filetypes=[('PDF Files', '*.pdf'), ('All Files', '*.*')],
             defaultextension='.pdf',
             initialdir=os.path.split(self.__file_list[0])[0])
+        if not filename:
+            return
         writer = PdfFileWriter()
         for pdf_filename in self.__file_list:
             reader = PdfFileReader(pdf_filename)
@@ -140,7 +142,7 @@ class PDFFileManager(ModelNode):
     def __getitem__(self, filename):
         dialogs = self.root_node.dialogs
         filename = dialogs.support_ask_open_filename(filename, filetypes=[('PDF Files', '*.pdf'), ('All Files', '*.*')])
-        filename = dialogs.support_ask_file_list(filename, filetypes=[('PDF Files', '*.pdf'), ('All Files', '*.*')])
+        filename = dialogs.support_ask_ordered_files(filename, filetypes=[('PDF Files', '*.pdf'), ('All Files', '*.*')])
         
         if not filename:
             return

@@ -34,9 +34,9 @@ from six.moves.tkinter_ttk import *
 
 import six.moves.tkinter_tix as Tix
 from six.moves.tkinter import Frame
-from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askdirectory
-from six.moves.tkinter_tksimpledialog import askstring, askinteger
-from six.moves.tkinter_messagebox import showinfo
+from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askopenfilenames, askdirectory
+from six.moves.tkinter_tksimpledialog import askstring
+from six.moves.tkinter_messagebox import showinfo, askyesno
 
 
 import matplotlib
@@ -66,7 +66,7 @@ from wavesynlib.interfaces.clipboard.modelnode import Clipboard
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream import StreamManager
-#from wavesynlib.cuda                             import Worker as CUDAWorker
+#from wavesynlib.cuda import Worker as CUDAWorker
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver        
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor
@@ -145,22 +145,35 @@ class Dialogs(ModelNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         
-    def support_ask_file_list(self, arg, **kwargs):
-        if arg is self.root_node.constants.ASK_FILE_LIST:
-            num = askinteger('Total number of files', 'How many files do you want?')
-            if not num:
-                return
-            num = int(num)
+    def support_ask_files(self, arg, **kwargs):
+        if arg is self.root_node.constants.ASK_FILES:
             file_list = []
-            for k in range(num):
+            while True:
+                filenames = askopenfilenames(**kwargs)
+                if filenames:
+                    file_list.extend(filenames)
+                    kwargs['initialdir'] = os.path.split(filenames[-1])[0]
+                if not askyesno('Continue?', 'Continue selecting files?'):
+                    break
+            arg = file_list
+            showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
+            self._print_actual_value(self.root_node.constants.ASK_FILES, arg)
+        return arg
+        
+    def support_ask_ordered_files(self, arg, **kwargs):
+        if arg is self.root_node.constants.ASK_ORDERED_FILES:
+            file_list = []
+            while True:
                 filename = askopenfilename(**kwargs)
                 if filename:
                     file_list.append(filename)
                     kwargs['initialdir'] = os.path.split(filename)[0]
+                if not askyesno('Continue?', 'Continue selecting files?'):
+                    break
             arg = file_list
             showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
-            self._print_actual_value(self.root_node.constants.ASK_FILE_LIST, arg)
-        return arg
+            self._print_actual_value(self.root_node.constants.ASK_ORDERED_FILES, arg)
+        return arg        
         
     def support_ask_open_filename(self, arg, **kwargs):
         if arg is self.root_node.constants.ASK_OPEN_FILENAME:
@@ -261,7 +274,8 @@ wavesyn
                 'ASK_DIALOG',
                 'ASK_OPEN_FILENAME',
                 'ASK_SAVEAS_FILENAME',
-                'ASK_FILE_LIST',
+                'ASK_FILES',
+                'ASK_ORDERED_FILES',
                 'ASK_SLICE'
             )
             
