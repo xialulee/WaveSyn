@@ -49,12 +49,16 @@ class AttributeLock(object):
 class ModelNode(object):
     _xmlrpcexport_  = []    
     
-    def __init__(self, node_name='', is_root=False, **kwargs):
+    def __init__(self, node_name='', is_root=False, is_lazy=False, **kwargs):
         super(ModelNode, self).__init__()
         if '_attribute_lock' not in self.__dict__:
             object.__setattr__(self, '_attribute_lock', set())
         self.parent_node = None
         self.__is_root = is_root
+        self.__is_lazy = is_lazy
+        if is_lazy:
+            self.__module_name = kwargs.pop('module_name')
+            self.__class_name = kwargs.pop('class_name')
         self.node_name = node_name
         #self.attribute_auto_lock   = False
         
@@ -87,6 +91,17 @@ then node will have a property named 'a', which cannot be re-assigned.
     def is_root(self):
         return self.__is_root
         
+    @property
+    def is_lazy(self):
+        return self.__is_lazy
+        
+    def get_real_node(self):
+        node = self
+        if self.is_lazy:
+            mod = __import__(self.__module_name, globals(), locals(), [self.__class_name], -1)
+            node = getattr(mod, self.__class_name)()
+        return node
+        
     def __setattr__(self, key, val):
         if '_attribute_lock' not in self.__dict__:
             # This circumstance happens when __setattr__ called before __init__ being called.
@@ -108,7 +123,19 @@ then node will have a property named 'a', which cannot be re-assigned.
                     
         object.__setattr__(self, key, val)
         if self.attribute_auto_lock and key != 'attribute_auto_lock': # attribute_auto_lock cannot be locked
-            self.lock_attribute(key)        
+            self.lock_attribute(key)
+            
+    def __getattribute__(self, attribute_name):
+        attr = object.__getattribute__(self, attribute_name)
+        if isinstance(attr, ModelNode) and attr.is_lazy:
+            # Before replacing, unlock the attribute name.
+            self.lock_attribute(attribute_name, lock=False)
+            # Get the real node.
+            attr = attr.get_real_node()
+            # Replace.
+            with self.attribute_lock:
+                setattr(self, attribute_name, attr)
+        return attr
         
     @property
     def node_path(self):
@@ -129,7 +156,7 @@ then node will have a property named 'a', which cannot be re-assigned.
             node    = node.parent_node
         return node
         
-
+                
 class Dict(dict, object):
     def __init__(self, *args, **kwargs):
         super(Dict, self).__init__()

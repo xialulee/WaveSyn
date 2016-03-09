@@ -7,10 +7,11 @@ Created on Fri Nov 06 09:30:21 2015
 from __future__ import print_function
 
 import os
-import getopt
 import sys
+import getopt
 
 from itertools import product
+from collections import OrderedDict
 
 from wavesynlib.interfaces.windows.shell.winopen import winopen
 
@@ -32,11 +33,11 @@ def main(argv):
         usage()
         return ERROR_PARAM
         
-    allCmd  = False
+    all_cmd  = False
     wopen   = False
     for o, a in opts:
         if o in ('-a', '--all'):
-            allCmd = True
+            all_cmd = True
         if o == '--winopen':
             wopen   = True
     
@@ -54,15 +55,17 @@ def main(argv):
 
     paths.insert(0, '.')
     
-    file_paths = []
-    
+    file_paths = OrderedDict()
+        
     for path, ext in product(paths, exts):
         testPath = ''.join([os.path.join(path, name), ext])
         if os.path.exists(testPath):
-            absTestPath    = os.path.abspath(testPath)
-            if absTestPath not in file_paths: # Prevent redundant output
-                file_paths.append(absTestPath)
-            if not allCmd:
+            abs_test_path    = os.path.abspath(testPath)
+            #if abs_test_path not in file_paths: 
+            # Prevent redundant output
+            abs_test_path = os.path.normcase(abs_test_path) 
+            file_paths[abs_test_path] = True
+            if not all_cmd:
                 break        
             
     if file_paths:

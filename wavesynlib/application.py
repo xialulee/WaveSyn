@@ -272,8 +272,7 @@ wavesyn
         value_checker    = ValueChecker(root)
         
         
-        # File Utils Node        
-        from wavesynlib.interfaces.pdf.modelnode import PDFFileManager      
+        # File Utils Node             
         
         class TarFileManipulator(ModelNode):
             def __init__(self, *args, **kwargs):
@@ -314,8 +313,8 @@ wavesyn
         
         class FileUtils(ModelNode):
             def __init__(self, *args, **kwargs):
-                ModelNode.__init__(self, *args, **kwargs)
-                self.pdf_files = PDFFileManager()
+                ModelNode.__init__(self, *args, **kwargs)                
+                self.pdf_files = ModelNode(is_lazy=True, module_name='wavesynlib.interfaces.pdf.modelnode', class_name='PDFFileManager')
                 self.tar_files = TarFileManager()
                 
         self.file_utils = FileUtils()
