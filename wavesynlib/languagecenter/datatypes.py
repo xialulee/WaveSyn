@@ -56,8 +56,7 @@ class Table(object):
         tableStr    = dumpFunc[lang](self.__buf)
         print(tableStr, file=target)
         
-    
-
+        
 
 if __name__ == '__main__':
     lang    = sys.argv[1]

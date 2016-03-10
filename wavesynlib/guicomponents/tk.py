@@ -13,6 +13,9 @@ import platform
 import math
 import cmath
 
+import json
+
+from six import string_types
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
 from six.moves.tkinter import Frame
@@ -1064,6 +1067,46 @@ class ArrayRenderMixin(object):
         else:
             self.itemconfig(image_id, image=photoImage)
         return image_id, photoImage
+        
+        
+def json_to_tk(parent, json_code):
+    '''
+Example: [
+    {"name":"alert_button", "class":"Button", "module":"ttk", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
+]
+    '''
+    import six.moves.tkinter as tk
+    import six.moves.tkinter_ttk as ttk
+    
+    if isinstance(json_code, string_types):
+        json_obj = json.loads(json_code)
+    else:
+        json_obj = json_code
+    retval = {}
+    for item in json_obj:
+        mod = item.pop('module', None)
+        if mod:
+            mod = locals()[mod]
+            cls = getattr(mod, item.pop('class'))            
+        else:
+            cls = globals()[item.pop('class')]
+        
+        widget = cls(parent, **item.pop('config', {}))
+        widget.pack(**item.pop('pack', {}))
+        if 'childs' in item:
+            #print(widget, json_obj['childs'])
+            sub_widgets = json_to_tk(widget, item.pop('childs'))
+            for sub_widget in sub_widgets:
+                if sub_widget in retval:
+                    raise ValueError('Multiple widgets have a same name.')
+                retval[sub_widget] = sub_widgets[sub_widget]
+        if 'setattr' in item:
+            attr_map = item.pop('setattr')
+            for attr_name in attr_map:
+                setattr(widget, attr_name, attr_map[attr_name])
+        if 'name' in item:
+            retval[item.pop('name')] = widget
+    return retval
 
         
 if __name__ == '__main__':
@@ -1075,9 +1118,17 @@ if __name__ == '__main__':
     #    window = Tk()
     #    print (ask_font())
     #    window.mainloop()
-    root    = Tk()
-    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
-    iq.pack(expand='yes', fill='both')
+#    root    = Tk()
+#    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
+#    iq.pack(expand='yes', fill='both')
+#    root.mainloop()
+    root = Tk()
+    json_code = '''[
+    {"name":"alert_button", "class":"Button", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
+]
+    '''
+    widgets = json_to_tk(root, json_code)
+    widgets['alert_button']['command'] = lambda: print('Alert!')
     root.mainloop()
     
 

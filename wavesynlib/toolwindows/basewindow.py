@@ -11,9 +11,9 @@ from six.moves.tkinter_ttk import Notebook, Label, Button, Checkbutton, Scale
 
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, code_printer)
-from wavesynlib.languagecenter.utils import eval_format, MethodDelegator
+from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator
 
-from wavesynlib.guicomponents.tk import Group
+from wavesynlib.guicomponents.tk import Group, json_to_tk
 
 
 class BaseWindowNode(ModelNode):
@@ -85,37 +85,28 @@ class WindowManager(ModelNode, WindowComponent):
         
     def _make_widgets(self):
         tool_tabs = self.window_node._tool_tabs        
-        tab = Frame(tool_tabs)
-        
-        # Start Info Group {
-        info_group = Group(tab)
-        info_group.pack(side='left', fill='y')
-        info_group.name = 'Info'
-        Label(info_group, text=eval_format('ID: {id(self.window_node)}')).pack()
-        Button(info_group, text='Copy ID', 
-               command=self._on_copy_id_click).pack()
-        Button(info_group, text='Copy Path',
-               command=self._on_copy_path_click).pack()
-        # } End Info Group 
-               
-        # Start Attributes Group {
-        attr_group = Group(tab)
-        attr_group.pack(side='left', fill='y')
-        attr_group.name = 'Attributes'
         
         self.__topmost = topmost = IntVar(0)
-        Checkbutton(attr_group, text='Topmost', 
-                    variable=topmost, 
-                    command=self._on_topmost_click).pack()
-                    
-        def on_scale(val):
-            self.set_transparency(val)
-            
-        Scale(attr_group, from_=0.2, to=1.0, orient='horizontal', value=1.0, command=on_scale).pack()
-        Label(attr_group, text='Transparency').pack()
-            
-        # } End Attributes Group
         
+        def on_scale(val):
+            self.set_transparency(val)        
+            
+        widgets_desc = [
+{"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "childs":[
+    {"class":"Label", "config":{"text":eval_format("ID: {id(self.window_node)}")}},
+    {"class":"Button", "config":{"text":"Copy ID", "command":self._on_copy_id_click}},
+    {"class":"Button", "config":{"text":"Copy Path", "command":self._on_copy_path_click}}]
+},
+
+{"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Attributes"}, "childs":[
+    {"class":"Checkbutton", "config":{"text":"Topmost", "variable":topmost, "command":self._on_topmost_click}},
+    {"class":"Scale", "config":{"from_":0.2, "to":1.0, "orient":"horizontal", "value":1.0, "command":on_scale}},
+    {"class":"Label", "config":{"text":"Transparency"}}]
+}
+]
+
+        tab = Frame(tool_tabs)
+        json_to_tk(tab, widgets_desc)        
         tool_tabs.add(tab, text='Window Manager')
         
     def _on_copy_id_click(self):

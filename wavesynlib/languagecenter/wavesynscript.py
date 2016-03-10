@@ -6,7 +6,8 @@ Created on Thu Dec 31 16:15:12 2015
 """
 from __future__ import print_function, division, unicode_literals
 
-import sys
+from six import string_types
+import collections
 
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodLock
 from wavesynlib.languagecenter.designpatterns import Observable
@@ -57,8 +58,9 @@ class ModelNode(object):
         self.__is_root = is_root
         self.__is_lazy = is_lazy
         if is_lazy:
-            self.__module_name = kwargs.pop('module_name')
-            self.__class_name = kwargs.pop('class_name')
+            self.__module_name = kwargs.pop('module_name', None)
+            self.__class_name = kwargs.pop('class_name', None)
+            self.__class_object = kwargs.pop('class_object', None)
         self.node_name = node_name
         #self.attribute_auto_lock   = False
         
@@ -98,8 +100,11 @@ then node will have a property named 'a', which cannot be re-assigned.
     def get_real_node(self):
         node = self
         if self.is_lazy:
-            mod = __import__(self.__module_name, globals(), locals(), [self.__class_name], -1)
-            node = getattr(mod, self.__class_name)()
+            if self.__class_object is None:
+                mod = __import__(self.__module_name, globals(), locals(), [self.__class_name], -1)
+                node = getattr(mod, self.__class_name)()
+            else:
+                node = self.__class_object()
         return node
         
     def __setattr__(self, key, val):
@@ -228,8 +233,74 @@ class NodeList(ModelNode, List):
         locals()[method_name]    = MethodLock(method=__update_index(getattr(list, method_name)), lockName='element_lock')    
 # End Object Model
         
+
+# More Node Types
+# File Manager, Manipulator and List
+# To Do: Implement ShortLivedNode, which will not be a former member of the ModelTree
+class FileManipulator(ModelNode):
+    def __init__(self, *args, **kwargs):
+        filename = kwargs.pop('filename')
+        ModelNode.__init__(self, *args, **kwargs)
+        with self.attribute_lock:
+            self.filename = filename
+            
+    @property
+    def node_path(self):
+        return eval_format('{self.parent_node.node_path}["{self.filename}"]')
+        
+        
+class FileList(ModelNode):
+    def __init__(self, *args, **kwargs):
+        filelist = kwargs.pop('filelist')
+        ModelNode.__init__(self, *args, **kwargs)
+        with self.attribute_lock:
+            self.filelist = filelist
+            
+    @property
+    def node_path(self):
+        return eval_format('{self.parent_node.node_path}{repr(self.filelist)}')
+            
+            
+class FileManager(ModelNode):
+    def __init__(self, *args, **kwargs):
+        filetypes = kwargs.pop('filetypes')
+        self.__manipulator_class = kwargs.pop('manipulator_class', None)        
+        self.__list_class = kwargs.pop('list_class', None)
+        ModelNode.__init__(self, *args, **kwargs)
+        with self.attribute_lock:
+            self.filetypes = filetypes
+        
+    def __getitem__(self, filename):
+        dialogs = self.root_node.dialogs
+        filename = dialogs.support_ask_open_filename(filename, filetypes=self.filetypes)
+        filename = dialogs.support_ask_ordered_files(filename, filetypes=self.filetypes)
+        filename = dialogs.support_ask_files(filename, filetypes=self.filetypes)        
+        
+        if not filename:
+            return
+        if isinstance(filename, string_types):
+            if self.__manipulator_class is None:
+                raise NotImplementedError
+            else:
+                manipulator = self.__manipulator_class(filename=filename)
+                object.__setattr__(manipulator, 'parent_node', self)
+                manipulator.lock_attribute('parent_node')
+                return manipulator
+        elif isinstance(filename, collections.Iterable):
+            if self.__list_class is None:
+                raise NotImplementedError
+            else:
+                filelist = self.__list_class(filelist=filename)
+                object.__setattr__(filelist, 'parent_node', self)
+                filelist.lock_attribute('parent_node')
+                return filelist
+        else:
+            raise NotImplementedError
+# End More Node Types
+        
         
 # WaveSyn Script Constants
+# To Do: move to datatypes
 class Constant(object):
     __slots__ = ('__name',)
     __cache = {}

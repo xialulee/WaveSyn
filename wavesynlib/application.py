@@ -329,7 +329,8 @@ wavesyn
             def __init__(self, *args, **kwargs):
                 ModelNode.__init__(self, *args, **kwargs)                
                 self.pdf_files = ModelNode(is_lazy=True, module_name='wavesynlib.interfaces.pdf.modelnode', class_name='PDFFileManager')
-                self.tar_files = TarFileManager()
+                self.touchstone_files = ModelNode(is_lazy=True, module_name='wavesynlib.interfaces.devcomm.touchstone.modelnode', class_name='TouchstoneFileManager')
+                self.tar_files = ModelNode(is_lazy=True, class_object=TarFileManager)
                 
         self.file_utils = FileUtils()
         # End File Utils Node
