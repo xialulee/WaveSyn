@@ -14,10 +14,12 @@ import math
 import cmath
 
 import json
+import random
 
 from six import string_types
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
+import six.moves.tkinter_tix as tix
 from six.moves.tkinter import Frame
 import six.moves.tkinter_font as tkFont
 from six.moves.tkinter_tkfiledialog import askdirectory, asksaveasfilename
@@ -344,12 +346,88 @@ class ScrolledTree(Frame):
         self.tree   = tree
         
     for new, origin in (
+            ('bind', 'bind'),
             ('insert', 'insert'), 
             ('delete', 'delete'),
+            ('heading', 'heading'),
             ('selection', 'selection'),
             ('item', 'item')
     ):
-        locals()[new] = MethodDelegator('tree', origin)        
+        locals()[new] = MethodDelegator('tree', origin)
+
+
+
+class CheckTree(object): 
+    class TreeNode(object):
+        __slots__ = ['bind_object', 'children']
+        
+        def __init__(self, bind_object=None, children=None):
+            self.bind_object = bind_object
+            self.children = {} if children is None else children
+    
+    def __init__(self, *args, **kwargs):
+        bind_object = kwargs.pop('bind_object', None)        
+        tree_view = tix.CheckList(*args, **kwargs)
+        tree_view['browsecmd'] = self._on_select
+        self.__tree_view = tree_view
+        self.__tree_model = self.TreeNode(bind_object)
+        
+    @property
+    def tree_view(self):
+        return self.__tree_view
+        
+    @property
+    def tree_model(self):
+        return self.__tree_model
+        
+    def _get_node_dict(self, path):
+        path_list = path.split('.')
+        tree_model = self.__tree_model
+        node = tree_model
+        for node_name in path_list:
+            node = node.children[node_name]
+        return node
+        
+    def add(self, parent_node=None, node_status=False, bind_object=None, **kwargs):
+        parent_node = str(parent_node) if parent_node else None
+        node = self.__tree_model        
+        if parent_node is not None:
+            node = self._get_node_dict(parent_node)
+        
+        upper_bound = 1000000
+        for k in range(upper_bound):
+            name = str(random.randint(0, upper_bound))
+            if name not in node.children:
+                break
+
+        tree_view = self.__tree_view
+        if parent_node is not None:
+            path = '.'.join((parent_node, name))
+        else:
+            path = str(name)
+        tree_view.hlist.add(path, **kwargs)
+        status = 'on' if node_status else 'off'
+        tree_view.setstatus(path, status)
+        tree_view.autosetmode()
+        node.children[name] = self.TreeNode(bind_object)
+        return path
+        
+    def _on_select(self, path):
+        tree_view = self.__tree_view
+        
+        def set_status(path):
+            status = tree_view.getstatus(path)
+            node = self._get_node_dict(path)
+            for child in node.children:
+                full_path = '.'.join((path, child))
+                tree_view.setstatus(full_path, status)
+                set_status(full_path)
+                
+        set_status(path)
+        
+    for method_name in ['pack', 'config']:
+        locals()[method_name] = MethodDelegator('tree_view', method_name)
+        
 
 
 class ScrolledText(Frame, object):
@@ -469,6 +547,31 @@ class ScrolledList(Frame, object):
             label = self.__list.get(index)
             if self.list_click_callback:
                 self.list_click_callback(index, label)
+                
+                
+class ScrolledCanvas(Frame):
+    def __init__(self, *args, **kwargs):
+        Frame.__init__(self, *args, **kwargs)
+        canvas = Canvas(self)        
+        
+        xbar = Scrollbar(self, orient=HORIZONTAL)
+        xbar.config(command=canvas.xview)
+        canvas.config(xscrollcommand=xbar.set)
+        xbar.pack(side=BOTTOM, fill=X)
+        
+        ybar = Scrollbar(self)
+        ybar.config(command=canvas.yview)
+        canvas.config(yscrollcommand=ybar.set)
+        ybar.pack(side=RIGHT, fill=Y)
+        
+        canvas.pack(expand=YES, fill=BOTH)
+        
+        self.__canvas = canvas
+
+    @property
+    def canvas(self):
+        return self.__canvas               
+                
 
 class DirIndicator(Frame, Observable):
     def __init__(self, *args, **kwargs):
@@ -1083,19 +1186,23 @@ Example: [
     else:
         json_obj = json_code
     retval = {}
+
     for item in json_obj:
+        try:
+            class_name = item.pop('class')
+        except KeyError:
+            class_name = item.pop('class_')
         mod = item.pop('module', None)
         if mod:
             mod = locals()[mod]
-            cls = getattr(mod, item.pop('class'))            
+            cls = getattr(mod, class_name)            
         else:
-            cls = globals()[item.pop('class')]
+            cls = globals()[class_name]
         
         widget = cls(parent, **item.pop('config', {}))
         widget.pack(**item.pop('pack', {}))
-        if 'childs' in item:
-            #print(widget, json_obj['childs'])
-            sub_widgets = json_to_tk(widget, item.pop('childs'))
+        if 'children' in item:
+            sub_widgets = json_to_tk(widget, item.pop('children'))
             for sub_widget in sub_widgets:
                 if sub_widget in retval:
                     raise ValueError('Multiple widgets have a same name.')
@@ -1122,13 +1229,21 @@ if __name__ == '__main__':
 #    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
 #    iq.pack(expand='yes', fill='both')
 #    root.mainloop()
-    root = Tk()
-    json_code = '''[
-    {"name":"alert_button", "class":"Button", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
-]
-    '''
-    widgets = json_to_tk(root, json_code)
-    widgets['alert_button']['command'] = lambda: print('Alert!')
-    root.mainloop()
-    
 
+#    root = Tk()
+#    json_code = '''[
+#    {"name":"alert_button", "class":"Button", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
+#]
+#    '''
+#    widgets = json_to_tk(root, json_code)
+#    widgets['alert_button']['command'] = lambda: print('Alert!')
+#    root.mainloop()
+    
+    root = tix.Tk()
+    cl = CheckTree(root)
+    cl.pack(expand='yes', fill='both')
+    n1 = cl.add(text='root node')
+    for k in range(32):
+        child = cl.add(parent_node=n1, text='child'+str(k))
+    print(cl.tree_model)
+    root.mainloop()

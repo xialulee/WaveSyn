@@ -92,13 +92,13 @@ class WindowManager(ModelNode, WindowComponent):
             self.set_transparency(val)        
             
         widgets_desc = [
-{"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "childs":[
+{"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "children":[
     {"class":"Label", "config":{"text":eval_format("ID: {id(self.window_node)}")}},
     {"class":"Button", "config":{"text":"Copy ID", "command":self._on_copy_id_click}},
     {"class":"Button", "config":{"text":"Copy Path", "command":self._on_copy_path_click}}]
 },
 
-{"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Attributes"}, "childs":[
+{"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Attributes"}, "children":[
     {"class":"Checkbutton", "config":{"text":"Topmost", "variable":topmost, "command":self._on_topmost_click}},
     {"class":"Scale", "config":{"from_":0.2, "to":1.0, "orient":"horizontal", "value":1.0, "command":on_scale}},
     {"class":"Label", "config":{"text":"Transparency"}}]

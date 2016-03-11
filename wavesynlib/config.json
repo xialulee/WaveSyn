@@ -64,7 +64,13 @@
               ]
               },
               {
+              "Name":"PSD Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
+                  {"Name":"PSD Viewer", "UnderLine":0, "Command":"wavesyn.create_window(module_name='utils.psdviewer', class_name='PSDViewer')"}
+              ]
+              },
+              {
               "Name":"S2P Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
+                  {"Name":"S2P Viewer", "UnderLine":0, "Command":"wavesyn.create_window(module_name='utils.touchstoneviewer', class_name='TouchstoneViewer')"},
                   {"Name":"Convert to CSV", "UnderLine":0, "Command":"wavesyn.file_utils.touchstone_files[wavesyn.constants.ASK_OPEN_FILENAME].to_csv(wavesyn.constants.ASK_SAVEAS_FILENAME)"}
               ]
               }

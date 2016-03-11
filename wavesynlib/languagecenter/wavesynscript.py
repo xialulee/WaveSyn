@@ -354,7 +354,7 @@ class Scripting(ModelNode):
             if isinstance(param, ScriptCode):
                 return param.code
             elif isinstance(param, Constant):
-                return eval_format('{root_name}.constants.{param.name}')
+                return eval_format('{Scripting.root_name}.constants.{param.name}')
             else:
                 return repr(param)
                 
