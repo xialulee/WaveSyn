@@ -19,7 +19,7 @@ class TouchstoneFileManipulator(FileManipulator):
         FileManipulator.__init__(self, *args, **kwargs)
                     
     @Scripting.printable
-    def to_csv(self, csv_filename, dB=True):
+    def to_csv(self, csv_filename, dB=True, angle='rad', unwrap=False):
         csv_filename = self.root_node.dialogs.support_ask_saveas_filename(
             csv_filename, 
             filetypes=[('CSV Files', '*.csv'), ('All Files', '*.*')],
@@ -29,19 +29,40 @@ class TouchstoneFileManipulator(FileManipulator):
         
         s2p = Touchstone(str(self.filename))
         f, s = s2p.get_sparameter_arrays()
+        
+        if angle == 'rad':            
+            convert_unit = lambda x: x
+        elif angle in ('deg', 'degree'):
+            convert_unit = numpy.rad2deg
+        else:
+            raise TypeError('Angle unit not supported.')
+            
+        if dB:
+            get_mag = lambda x: 20*numpy.log10(numpy.abs(x))
+        else:
+            get_mag = numpy.abs
+            
+        if unwrap:
+            get_unwrap = numpy.unwrap
+        else:
+            get_unwrap = lambda x: x
+            
+        X, Y, Z = s.shape
+        
+        data_list = []
+        
+        for z in range(Z):
+            for y in range(Y):
+                data_list.append((get_mag(s[:, y, z]), convert_unit(get_unwrap(numpy.angle(s[:, y, z])))))
+        
         with open(csv_filename, 'wb') as csvfile:
             writer = csv.writer(csvfile)
-            num_elements = len(s[0].flatten())
-            writer.writerow(['Freq'] + ['Abs', 'Angle']*num_elements)
+            writer.writerow(['Freq'] + ['Abs', 'Angle']*len(data_list))
             for index, freq in enumerate(f):
                 row = [freq]
-                s_row = s[index].T.flatten()
-                for s_item in s_row:
-                    mag = numpy.abs(s_item)
-                    if dB:
-                        mag = 20 * numpy.log10(mag)
-                    row.append(mag)
-                    row.append(numpy.angle(s_item))
+                for item in data_list:
+                    row.append(item[0][index])
+                    row.append(item[1][index])
                 writer.writerow(row)        
 
 
