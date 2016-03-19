@@ -563,6 +563,7 @@ The rest parameters are passed to PanedWindow.__init__.
         del self.data_pool[:]
         self.current_figure.indicators.clear()
         self.update_indicator_list()
+        self.notify_observers(major_grid=False, minor_grid=False)
 
     def _on_tab_change(self, event): 
         self.notify_observers()

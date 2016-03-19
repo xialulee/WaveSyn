@@ -55,7 +55,7 @@
               {
               "Name":"File System", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"Replica Finder", "UnderLine":0, "Command":"wavesyn.create_window(module_name='utils.replicafinder', class_name='ReplicaFinderWindow')"},
-                  {"Name":"Tar Extractor", "UnderLine":0, "Command":"wavesyn.extract_tar(filename=wavesyn.constants.ASK_DIALOG, directory=wavesyn.constants.ASK_DIALOG)"}]
+                  {"Name":"Tar Extractor", "UnderLine":0, "Command":"wavesyn.file_utils.tar_files[wavesyn.constants.ASK_DIALOG].extract_all(wavesyn.constants.ASK_DIALOG)"}]
               },
               {
               "Name":"PDF Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
