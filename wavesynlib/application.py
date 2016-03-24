@@ -663,6 +663,12 @@ wavesyn
     def system(self, command):
         subprocess.call(command, shell=True)
         
+        
+    @Scripting.printable
+    def winopen(self, path):
+        from wavesynlib.interfaces.windows.shell.winopen import winopen
+        winopen(path)
+        
     
     @Scripting.printable
     def set_matplotlib_style(self, style_name=''):

@@ -138,6 +138,8 @@ class ReplicaTreeview(tk.Frame):
         tree['columns'] = ['path', 'size']
         tree.heading('path', text='Path')
         tree.heading('size', text='Size')
+        tree_container.on_item_double_click.add_function(self._on_item_doubleclick)
+        
         
     def update(self, md5, path, current_dir, stop):
         if md5 is None:
@@ -159,6 +161,15 @@ class ReplicaTreeview(tk.Frame):
         tree = self.__tree
         for row in tree.get_children():
             tree.delete(row)
+            
+            
+    def _on_item_doubleclick(self, item_id, item_properties):
+        try:
+            path = item_properties['values'][0]
+        except IndexError:
+            return
+        with code_printer:
+            Scripting.root_node.winopen(path)
             
 
 class ReplicaFinderWindow(TkToolWindow):

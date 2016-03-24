@@ -30,7 +30,7 @@ from PIL import Image
 
 from functools import partial
 
-from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator
+from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator, FunctionChain
 from wavesynlib.languagecenter.designpatterns import SimpleObserver, Observable
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer
 
@@ -334,9 +334,19 @@ class ScrolledTree(Frame):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         self.pack(expand=YES, fill=BOTH)
-        self.make_widgets()
+        self._make_widgets()
+        self.__on_item_double_click = FunctionChain()
+        def dbclick_callback(event):
+            item_id = self.tree.identify('item', event.x, event.y)
+            item_properties = self.tree.item(item_id)
+            self.__on_item_double_click(item_id, item_properties)
+        self.tree.bind('<Double-1>', dbclick_callback)
         
-    def make_widgets(self):
+    @property
+    def on_item_double_click(self):
+        return self.__on_item_double_click
+        
+    def _make_widgets(self):
         sbar    = Scrollbar(self)
         tree    = Treeview(self)
         sbar.config(command=tree.yview)
@@ -344,16 +354,16 @@ class ScrolledTree(Frame):
         sbar.pack(side=RIGHT, fill=Y)
         tree.pack(side=LEFT, expand=YES, fill=BOTH)
         self.tree   = tree
-        
-    for new, origin in (
-            ('bind', 'bind'),
-            ('insert', 'insert'), 
-            ('delete', 'delete'),
-            ('heading', 'heading'),
-            ('selection', 'selection'),
-            ('item', 'item')
+                
+    for method_name in (
+            'bind',
+            'insert', 
+            'delete',
+            'heading',
+            'selection',
+            'item'
     ):
-        locals()[new] = MethodDelegator('tree', origin)
+        locals()[method_name] = MethodDelegator('tree', method_name)
 
 
 
@@ -1217,14 +1227,16 @@ Example: [
 
         
 if __name__ == '__main__':
-    #    window  = Tk()
-    #    tree    = ScrolledTree(window)
-    #    root    = tree.insert('', END, text='root')
-    #    node    = tree.insert(root, END, text='node')
-    #    window.mainloop()
+    window  = Tk()
+    tree    = ScrolledTree(window)
+    root    = tree.insert('', END, text='root')
+    node    = tree.insert(root, END, text='node')
+    window.mainloop()
+
     #    window = Tk()
     #    print (ask_font())
     #    window.mainloop()
+
 #    root    = Tk()
 #    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
 #    iq.pack(expand='yes', fill='both')
@@ -1239,11 +1251,11 @@ if __name__ == '__main__':
 #    widgets['alert_button']['command'] = lambda: print('Alert!')
 #    root.mainloop()
     
-    root = tix.Tk()
-    cl = CheckTree(root)
-    cl.pack(expand='yes', fill='both')
-    n1 = cl.add(text='root node')
-    for k in range(32):
-        child = cl.add(parent_node=n1, text='child'+str(k))
-    print(cl.tree_model)
-    root.mainloop()
+#    root = tix.Tk()
+#    cl = CheckTree(root)
+#    cl.pack(expand='yes', fill='both')
+#    n1 = cl.add(text='root node')
+#    for k in range(32):
+#        child = cl.add(parent_node=n1, text='child'+str(k))
+#    print(cl.tree_model)
+#    root.mainloop()

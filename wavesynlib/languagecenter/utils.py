@@ -89,21 +89,21 @@ class FunctionChain(object):
         self.__functions    = []
     
     def __call__(self, *args, **kwargs):
-        retval     = None
+        retval = None
         for func in self.__functions:
-            retval     = func(*args, **kwargs)
+            retval = func(*args, **kwargs)
         return retval
     
-    def addFunction(self, func):
+    def add_function(self, func):
         self.__functions.append(func)
     
-    def deleteFunction(self, func):
+    def delete_function(self, func):
         self.__functions.remove(func)
     
-    def deleteFunctions(self):
+    def delete_functions(self):
         self.__functions    = []
     
-    def countFunction(self):
+    def count_functions(self):
         return len(self.__functions)
     
      
