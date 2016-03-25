@@ -15,6 +15,7 @@ from wavesynlib.application import get_gui_image_path
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, code_printer)
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator
+from wavesynlib.languagecenter.designpatterns import Observable
 
 from wavesynlib.guicomponents.tk import Group, json_to_tk
 
@@ -133,11 +134,11 @@ class WindowManager(ModelNode, WindowComponent):
 
     @Scripting.printable        
     def copy_window_id(self):
-        self.root_node.clipboard.write(id(self.window_node))
+        self.root_node.os.clipboard.write(id(self.window_node))
         
     @Scripting.printable
     def copy_window_path(self):
-        self.root_node.clipboard.write(self.window_node.node_path)
+        self.root_node.os.clipboard.write(self.window_node.node_path)
 
     @Scripting.printable
     def set_topmost(self, b):
@@ -163,9 +164,10 @@ class TkToolWindow(TkWindowNode):
         
             
 
-class WindowDict(NodeDict):
+class WindowDict(NodeDict, Observable):
     def __init__(self, node_name=''):
-        super(WindowDict, self).__init__(node_name=node_name)
+        NodeDict.__init__(self, node_name=node_name)
+        Observable.__init__(self)
                 
     def __setitem__(self, key, val):
         if not isinstance(val, BaseWindowNode):
@@ -173,9 +175,14 @@ class WindowDict(NodeDict):
         if key != id(val):
             raise ValueError, 'The key should be identical to the ID of the window.'
         NodeDict.__setitem__(self, key, val)
+        self.notify_observers(val, 'new')
         
     def add(self, node):
         self[id(node)] = node
         return id(node)
+        
+    def pop(self, key):
+        self.notify_observers(self[key], 'del')
+        NodeDict.pop(self, key)
          
         

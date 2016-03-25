@@ -63,14 +63,14 @@ from idlelib.ColorDelegator import ColorDelegator
 
 from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
 from wavesynlib.interfaces.os.modelnode import OperatingSystem
-from wavesynlib.interfaces.clipboard.modelnode import Clipboard
+#from wavesynlib.interfaces.clipboard.modelnode import Clipboard
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream import StreamManager
 #from wavesynlib.cuda import Worker as CUDAWorker
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver        
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter import timeutils
@@ -221,7 +221,8 @@ since the instance of Application is the first node created on the model tree.
 The model tree of the application is illustrated as follows:
 wavesyn
 -console
--clipboard
+-os
+    -clipboard
 -windows[id]
     -instance of PatternFitting
         -figure_book
@@ -452,7 +453,7 @@ wavesyn
         self.console = ConsoleWindow(menu=console_menu, tag_defs=tag_defs)
         self.stream_manager.add_observer(self.console.stream_observer) #!
              
-        self.clipboard = Clipboard()
+        #self.clipboard = Clipboard()
         self.scripting = Scripting(self)
         self.no_tip = False
 
@@ -584,7 +585,8 @@ wavesyn
                     
                 def new_browse_func(path):
                     def browse_func(*args):
-                        self.os.win_open(path)
+                        with code_printer:
+                            self.os.win_open(path)
                     return browse_func
                     
                 for file_path in file_list:
@@ -883,17 +885,44 @@ class StatusBar(Frame):
         topmost_button['command'] = on_click
         balloon.bind_widget(topmost_button, balloonmsg='Set the console as a topmost window.')
         # } End Topmost Button 
+        
+        #{ Window Combo
+        window_combo = Combobox(self, value=[], takefocus=1, stat='readonly')
+        def on_selected(event):
+            text = event.widget.get()
+            wid = int(text.split(':')[1].strip())
+            Scripting.root_node.windows[wid].tk_object.deiconify()
+        window_combo.bind('<<ComboboxSelected>>', on_selected)
+        window_combo.pack(side='right', fill='y') # deiconify a window
+        
+        @SimpleObserver
+        def on_windows_change(node, command):
+            values = window_combo['values']
+            if values == '':
+                values = []
+            if isinstance(values, tuple):
+                values = list(values)
+            node_id = id(node)
+            if command == 'new':
+                type_name = node.__class__.__name__
+                values.append(eval_format('{type_name}: {node_id}'))
+            elif command == 'del':
+                for index, value in enumerate(values):
+                    wid = int(value.split(':')[1].strip())
+                    if node_id == wid:
+                        del values[index]
+            window_combo['values'] = values
+            if len(values) > 0:
+                window_combo.current(len(values)-1)
+            else:
+                window_combo.set('')
+            
+        Scripting.root_node.windows.add_observer(on_windows_change)
+        #} End Window Combo
                 
         self.__lock = thread.allocate_lock()
         self.__busy = False
              
-#        sys_name = platform.system()   
-#        if sys_name == 'Windows':
-#	        from wavesynlib.interfaces.windows.memstatus import get_memory_usage
-#        elif sys_name == 'Linux':
-#            from wavesynlib.interfaces.linux.memstatus import get_memory_usage
-#        else:
-#            get_memory_usage = lambda: 0
         get_memory_usage = Scripting.root_node.os.get_memory_usage
         
         @SimpleObserver

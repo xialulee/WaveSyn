@@ -34,12 +34,12 @@
               {
               "Name":"Operating System", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"Clipboard", "TearOff":0, "UnderLine":0, "SubMenu":[
-                      {"Name":"Convert to QR Barcode (Text only)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.to_console_qr()", "Print":true},
-                      {"Name":"Display Clipboard Content in Console", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.to_console()", "Print":true},
-                      {"Name":"Remove Text Formatting", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.remove_text_formatting()", "Print":true},
-                      {"Name":"Remove Newlines (\\n)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.remove_newlines(insert_blanks=False)"},
-                      {"Name":"Remove Newlines (\\n) and insert blanks", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.remove_newlines(insert_blanks=True)"},
-					  {"Name":"Copy Tab(\\t)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.clipboard.write('\\t')"}
+                      {"Name":"Convert to QR Barcode (Text only)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.os.clipboard.to_console_qr()", "Print":true},
+                      {"Name":"Display Clipboard Content in Console", "TearOff":0, "UnderLine":0, "Command":"wavesyn.os.clipboard.to_console()", "Print":true},
+                      {"Name":"Remove Text Formatting", "TearOff":0, "UnderLine":0, "Command":"wavesyn.os.clipboard.remove_text_formatting()", "Print":true},
+                      {"Name":"Remove Newlines (\\n)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.os.clipboard.remove_newlines(insert_blanks=False)"},
+                      {"Name":"Remove Newlines (\\n) and insert blanks", "TearOff":0, "UnderLine":0, "Command":"wavesyn.os.clipboard.remove_newlines(insert_blanks=True)"},
+					  {"Name":"Copy Tab(\\t)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.os.clipboard.write('\\t')"}
                   ]
                   },
                   {"Name":"Windows", "TearOff":0, "UnderLine":0, "SubMenu":[
