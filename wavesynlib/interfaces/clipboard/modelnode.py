@@ -46,7 +46,7 @@ class TkClipboard(ModelNode):
 
 if platform.system().lower() == 'windows':
     from cStringIO import StringIO
-    from wavesynlib.interfaces.windows.clipboard import clipb
+    from wavesynlib.interfaces.os.windows.clipboard import clipb
     class Clipboard(TkClipboard):
         @Scripting.printable
         def write(self, content, fmt=None, code=None):

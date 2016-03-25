@@ -12,7 +12,7 @@ import ctypes as ct
 from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
-from wavesynlib.interfaces.windows.shell.constants import TBPFLAG
+from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 
 
 class MEMORYSTATUS(ct.Structure):

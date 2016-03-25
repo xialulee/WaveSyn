@@ -62,6 +62,7 @@ from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
+from wavesynlib.interfaces.os.modelnode import OperatingSystem
 from wavesynlib.interfaces.clipboard.modelnode import Clipboard
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
@@ -351,6 +352,10 @@ wavesyn
                 constants = Constants,
                 # End Constants
                 
+                # OS interfaces
+                os = OperatingSystem(),
+                # End OS interfaces
+                
                 # Thread related
                 main_thread_id = main_thread_id,
                 exec_thread_lock = threading.RLock(),
@@ -458,7 +463,7 @@ wavesyn
     def _add_env_path(self):
         path_string = os.environ['PATH']        
         self_path = get_caller_dir()
-        extra_path = [os.path.join(self_path, 'interfaces/windows/cmdutils')]
+        extra_path = [os.path.join(self_path, 'interfaces/os/cmdutils')]
         extra_path.append(path_string)
         path_string = os.path.pathsep.join(extra_path)
         os.environ['PATH'] = path_string
@@ -579,8 +584,7 @@ wavesyn
                     
                 def new_browse_func(path):
                     def browse_func(*args):
-                        from wavesynlib.interfaces.windows.shell.winopen import winopen
-                        winopen(path)
+                        self.os.win_open(path)
                     return browse_func
                     
                 for file_path in file_list:
@@ -664,12 +668,6 @@ wavesyn
         subprocess.call(command, shell=True)
         
         
-    @Scripting.printable
-    def winopen(self, path):
-        from wavesynlib.interfaces.windows.shell.winopen import winopen
-        winopen(path)
-        
-    
     @Scripting.printable
     def set_matplotlib_style(self, style_name=''):
         import matplotlib.pyplot as plt
@@ -889,13 +887,14 @@ class StatusBar(Frame):
         self.__lock = thread.allocate_lock()
         self.__busy = False
              
-        sys_name = platform.system()   
-        if sys_name == 'Windows':
-	        from wavesynlib.interfaces.windows.memstatus import get_memory_usage
-        elif sys_name == 'Linux':
-            from wavesynlib.interfaces.linux.memstatus import get_memory_usage
-        else:
-            get_memory_usage = lambda: 0
+#        sys_name = platform.system()   
+#        if sys_name == 'Windows':
+#	        from wavesynlib.interfaces.windows.memstatus import get_memory_usage
+#        elif sys_name == 'Linux':
+#            from wavesynlib.interfaces.linux.memstatus import get_memory_usage
+#        else:
+#            get_memory_usage = lambda: 0
+        get_memory_usage = Scripting.root_node.os.get_memory_usage
         
         @SimpleObserver
         def check_busy():

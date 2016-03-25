@@ -13,7 +13,7 @@ from six.moves.tkinter_ttk import *
 
 
 from wavesynlib.guicomponents.tk import Group, LabeledEntry
-from wavesynlib.interfaces.windows.shell.constants import TBPFLAG
+from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.guicomponents.classselector import ask_class_name
 from wavesynlib.application import Application
 from wavesynlib.toolwindows.figurewindow import FigureWindow

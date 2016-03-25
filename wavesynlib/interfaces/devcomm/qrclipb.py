@@ -11,7 +11,7 @@ import platform
 from cStringIO import StringIO
 
 if platform.system() == 'Windows':
-    from wavesynlib.interfaces.windows.clipb import clipboard_to_stream
+    from wavesynlib.interfaces.os.windows.clipb import clipboard_to_stream
     
 import sys    
 import getopt

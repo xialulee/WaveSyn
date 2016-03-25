@@ -15,7 +15,7 @@ import platform
 from itertools import product
 from collections import OrderedDict
 
-from wavesynlib.interfaces.windows.shell.winopen import winopen
+from wavesynlib.interfaces.os.windows.shell.winopen import winopen
 
 ERROR_NOERROR, ERROR_NOTFOUND, ERROR_PARAM = range(3)
 

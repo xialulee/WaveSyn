@@ -169,7 +169,7 @@ class ReplicaTreeview(tk.Frame):
         except IndexError:
             return
         with code_printer:
-            Scripting.root_node.winopen(path)
+            Scripting.root_node.os.win_open(path)
             
 
 class ReplicaFinderWindow(TkToolWindow):

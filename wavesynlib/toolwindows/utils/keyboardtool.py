@@ -10,7 +10,7 @@ from __future__ import print_function, division, unicode_literals
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 
-from wavesynlib.interfaces.windows import disablekeys
+from wavesynlib.interfaces.os.windows import disablekeys
 from wavesynlib.guicomponents.tk import Group
 from wavesynlib.toolwindows.basewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import code_printer, Scripting, ModelNode

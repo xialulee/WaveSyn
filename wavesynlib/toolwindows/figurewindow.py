@@ -245,7 +245,7 @@ class DataFigure(ModelNode, Observable):
 
     @Scripting.printable
     def copy_bitmap(self, dpi=300):
-        from wavesynlib.interfaces.windows.clipboard import clipb # To Do: use interfaces.clipboard instead.
+        from wavesynlib.interfaces.os.windows.clipboard import clipb # To Do: use interfaces.clipboard instead.
         from os import path, remove
         filename    = ''
         flag        = False

@@ -121,7 +121,7 @@ class Command(object):
     if platform.system().lower() == 'windows': 
         @property
         def resultObject(self):
-            from wavesynlib.interfaces.windows import powershell
+            from wavesynlib.interfaces.os.windows import powershell
             tempCom     = self.commandString + ' | ConvertTo-Json'
             stdout, stderr, errorlevel  = powershell.execute(tempCom)
             return json.loads(stdout) # To Do: Handle exceptions

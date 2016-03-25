@@ -6,7 +6,7 @@ Created on Thu Sep 10 14:01:43 2015
 """
 import sys
 from procparam import query
-from wavesynlib.interfaces.windows.shell.winopen   import winopen
+from wavesynlib.interfaces.os.windows.shell.winopen   import winopen
 
 def split(commandLine):
     commandLine += ' '
