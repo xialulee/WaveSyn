@@ -649,6 +649,8 @@ class GridGroup(Observable, Group):
         
         super(GridGroup, self).__init__(*args, **kwargs)
         
+        self.__gui_images = []
+        
         major = IntVar(0)
         minor = IntVar(0)
         self.__major = major
@@ -716,13 +718,21 @@ class GridGroup(Observable, Group):
             self.notify_observers(major_grid=major.get(), 
                                   minor_grid=minor.get(), props=props)
                                     
+        icon = ImageTk.PhotoImage(file=get_gui_image_path('GridTab_Major.png'))
+        self.__gui_images.append(icon)
         major_grid_checkbutton = Checkbutton(self, text='Grid Major', 
+                                             image=icon,
+                                             compound='left',
                                              variable=major, 
                                              command=self._on_check_click)
         major_grid_checkbutton.pack(fill=X)
         self.major_grid_checkbutton = major_grid_checkbutton
         
+        icon = ImageTk.PhotoImage(file=get_gui_image_path('GridTab_Minor.png'))
+        self.__gui_images.append(icon)
         minor_grid_checkbutton = Checkbutton(self, text='Grid Minor', 
+                                             image=icon,
+                                             compound='left',
                                              variable=minor, 
                                              command=self._on_check_click)
         minor_grid_checkbutton.pack(fill=X)

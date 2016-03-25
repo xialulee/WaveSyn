@@ -31,45 +31,44 @@ class OptimizeGroup(Group):
         self.__gui_images = []
         self.__topwin = kwargs.pop('topwin')
         Group.__init__(self, *args, **kwargs)
-        frm = Frame(self)
-        frm.pack(side=TOP)
+#        frm = Frame(self)
+#        frm.pack(side=TOP)
         
         imageMLbl = ImageTk.PhotoImage(
             file=get_gui_image_path('Pattern_M_Label.png')
         )
-        self.__gui_images.append(imageMLbl)
-        Label(frm, image=imageMLbl).pack(side=LEFT)
-        
-        self.__M = LabeledEntry(frm)
-        self.__M.label.config(text='M')
+        self.__gui_images.append(imageMLbl)        
+        self.__M = LabeledEntry(self)
+        self.__M.label.config(text='M', image=imageMLbl, compound='left')
         self.__M.entry_width = 6
         self.__M.entry_text = 10
         self.__M.entry.bind('<Return>', lambda dumb: self._on_solve_button_click())
         self.__M.checker_function = self._app.check_int
-        self.__M.pack(side=RIGHT)
+        self.__M.pack()
         
-        self._app.balloon.bind_widget(frm, balloonmsg='The number of the array elements.')
+        self._app.balloon.bind_widget(self.__M, balloonmsg='The number of the array elements.')
 
         imageSolveBtn = ImageTk.PhotoImage(
             file=get_gui_image_path('Pattern_Solve_Button.png')
         )
         self.__gui_images.append(imageSolveBtn)
 
-        self.__btnSolve = Button(self, image=imageSolveBtn, command=self._on_solve_button_click)
-        self.__btnSolve.pack(side=TOP)
+        self.__btnSolve = Button(self, text='Solve', image=imageSolveBtn, compound='left', command=self._on_solve_button_click)
+        self.__btnSolve.pack(side=TOP, fill='x')
         self._app.balloon.bind_widget(self.__btnSolve, balloonmsg='Launch the solver to synthesize the correlation matrix.')
         
-        frm = Frame(self)
-        frm.pack(side=TOP)
+#        frm = Frame(self)
+#        frm.pack(side=TOP)
         imageDisplayBtn = ImageTk.PhotoImage(
             file=get_gui_image_path('Pattern_Display_Button.png')
         )
         self.__gui_images.append(imageDisplayBtn)
-        Label(frm, image=imageDisplayBtn).pack(side=LEFT)
         self.__bDisplay = IntVar(0)
-        chkDisplay = Checkbutton(frm, text="Display", variable=self.__bDisplay)
-        chkDisplay.pack(side=TOP)
-        self._app.balloon.bind_widget(frm, balloonmsg='Display solver output.')
+        chk_display = Checkbutton(self, text="Display", image=imageDisplayBtn, compound='left', variable=self.__bDisplay)
+        chk_display.pack(side=TOP)
+        self._app.balloon.bind_widget(chk_display, balloonmsg='Display solver output.')
+        chk_display_width = chk_display.winfo_width()
+        self.__btnSolve['width'] = chk_display_width
         
         self.name = 'Optimize'
                 

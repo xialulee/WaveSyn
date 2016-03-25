@@ -9,6 +9,9 @@ from __future__ import print_function, division
 from six.moves.tkinter import Toplevel, Frame, IntVar
 from six.moves.tkinter_ttk import Notebook, Label, Button, Checkbutton, Scale
 
+from PIL import ImageTk
+from wavesynlib.application import get_gui_image_path
+
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, code_printer)
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator
@@ -82,11 +85,17 @@ class WindowComponent(object):
 class WindowManager(ModelNode, WindowComponent):
     def __init__(self):
         ModelNode.__init__(self)
+        self.__gui_images = []
         
     def _make_widgets(self):
         tool_tabs = self.window_node._tool_tabs        
         
         self.__topmost = topmost = IntVar(0)
+        
+        copy_id_icon = ImageTk.PhotoImage(file=get_gui_image_path('WindowManager_CopyID.png'))
+        self.__gui_images.append(copy_id_icon)
+        copy_path_icon = ImageTk.PhotoImage(file=get_gui_image_path('WindowManager_CopyPath.png'))
+        self.__gui_images.append(copy_path_icon)
         
         def on_scale(val):
             self.set_transparency(val)        
@@ -94,8 +103,8 @@ class WindowManager(ModelNode, WindowComponent):
         widgets_desc = [
 {"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "children":[
     {"class":"Label", "config":{"text":eval_format("ID: {id(self.window_node)}")}},
-    {"class":"Button", "config":{"text":"Copy ID", "command":self._on_copy_id_click}},
-    {"class":"Button", "config":{"text":"Copy Path", "command":self._on_copy_path_click}}]
+    {"class":"Button", "config":{"text":"Copy ID  ", "image":copy_id_icon, "compound":"left", "command":self._on_copy_id_click}},
+    {"class":"Button", "config":{"text":"Copy Path", "image":copy_path_icon, "compound":"left", "command":self._on_copy_path_click}}]
 },
 
 {"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Attributes"}, "children":[
