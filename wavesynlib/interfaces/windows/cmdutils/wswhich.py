@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Created on Fri Nov 06 09:30:21 2015
@@ -9,6 +10,7 @@ from __future__ import print_function
 import os
 import sys
 import getopt
+import platform
 
 from itertools import product
 from collections import OrderedDict
@@ -41,17 +43,24 @@ def main(argv):
         if o == '--winopen':
             wopen   = True
     
-    name        = args[0]
-    name, ext   = os.path.splitext(name)
-    paths       = os.environ['PATH'].split(os.path.pathsep)
-    exts        = os.environ['PATHEXT'].split(os.path.pathsep)
-    
-    if ext: 
-        if ext.upper() not in [e.upper() for e in exts]:
-            print('The file {} is not executable.'.format(args[0]), file=sys.stderr)        
-            return ERROR_NOTFOUND
-        else:
+    name = args[0]
+    name, ext = os.path.splitext(name)
+    paths = os.environ['PATH'].split(os.path.pathsep)
+    if platform.system() is 'Windows':
+        exts = os.environ['PATHEXT'].split(os.path.pathsep)
+        if ext: 
+            if ext.upper() not in [e.upper() for e in exts]:
+                print('The file {} is not executable.'.format(args[0]), file=sys.stderr)        
+                return ERROR_NOTFOUND
+            else:
+                exts = [ext]
+    else:
+        if ext:
             exts = [ext]
+        else:
+            exts = ['']
+    
+
 
     paths.insert(0, '.')
     
