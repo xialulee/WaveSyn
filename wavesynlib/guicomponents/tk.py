@@ -594,6 +594,18 @@ class DirIndicator(Frame, Observable):
         self._default_cursor = text['cursor']
         self._default_background_color = text['background']
 
+        # History
+        self._history = []
+        text.tag_config('back_button', foreground='grey')
+        text.tag_bind('back_button', '<Button-1>', self._on_back_click)
+        text.tag_bind('back_button', '<Button-3>', self._on_back_right_click)
+        text.tag_bind('back_button', '<Enter>',
+                      lambda *args: self._change_cursor_to_hand(True))
+        text.tag_bind('back_button', '<Leave>',
+                      lambda *args: self._change_cursor_to_hand(False))
+                      
+        text.insert('1.0', u'\u2190 ', 'back_button')
+        # End History
 
         # Browse Button
         text.tag_config('browse_button', foreground='orange')
@@ -608,11 +620,31 @@ class DirIndicator(Frame, Observable):
         self._browse_text = 'BROWSE'
         self._coding = sys.getfilesystemencoding()
         self._directory          = None
+        
+        
+    def _on_back_click(self, *args):
+        '''Triggered by clicking the BACK button.
+Go back according to the self._history list.'''
+        if len(self._history) > 1:
+            del self._history[-1]
+            self.change_dir(self._history[-1])
+    
+    
+    def _on_back_right_click(self, *args):
+        '''Triggered by right clicking the BACK button.
+A menu displaying the browse history will pop up.'''
+        if len(self._history) > 1:
+            self._show_dir_list('', self._history, history_mode=True)
+    
                                 
     def _on_button_click(self, *args):
+        '''Triggered by clicking the BROWSER button.
+A directory selector will popup.
+'''
         directory   = askdirectory()
         if directory:
             self.change_dir(directory)
+            
             
     def _on_resize(self, *args):
         self._text.see(END)
@@ -625,26 +657,40 @@ class DirIndicator(Frame, Observable):
             text.config(cursor='hand2')
         else:
             text.config(cursor=self._default_cursor)
+            
 
     def _on_folder_name_hover(self, tagName, enter=True, 
                               background_color='pale green'):
+        '''Triggered by hovering the mouse pointer on a directory name.
+Once triggered, the cursor will change to a hand icon, and the directory 
+name will be highlighted.'''
         self._change_cursor_to_hand(enter)
-        background_color     = background_color if enter else \
+        background_color = background_color if enter else \
             self._default_background_color
-        self._text.tag_config(tagName, background=background_color)        
-        
-    def _on_seperator_click(self, evt, path, menu=[None]):
-        items   = [item for item in os.listdir(path) if 
-                   os.path.isdir(os.path.join(path, item))]
+        self._text.tag_config(tagName, background=background_color) 
+ 
+
+    def _show_dir_list(self, path, dir_name_list, history_mode=False, menu=[None]):
+        '''Popup a "MENU" displaying a list of directory names.'''
+        items = dir_name_list
         if items: # Not Empty
-            x, y    = self.winfo_pointerx(), self.winfo_pointery()
+            # The position of the mouse pointer will be the position of the 
+            # left corner of the popup MENU.
+            x, y = self.winfo_pointerx(), self.winfo_pointery()
             menu_win = menu[0]
             if menu_win is not None:
                 menu_win.destroy()
+            # Utilizing a Toplevel without titlebar to mimic a popup menu
             menu_win = menu[0] = Toplevel()
             menu_win.wm_attributes('-topmost', True)
-            menu_win.overrideredirect(1) # No Title bar
-            menu_win.geometry(auto_subs('200x300+$x+$y'))
+            # No Title bar
+            menu_win.overrideredirect(1)
+            if not path: # Todo: ScrolledList with horizontal scroll
+                menu_width = 800
+            else:
+                menu_width = 200
+            menu_win.geometry(auto_subs('${menu_width}x300+$x+$y'))
+            # Once the so called MENU loses focus, it will DISAPPEAR instantly.
             menu_win.bind('<FocusOut>', lambda evt: menu_win.destroy())
             itemList = ScrolledList(menu_win)
             itemList.pack(expand=YES, fill=BOTH)
@@ -653,40 +699,67 @@ class DirIndicator(Frame, Observable):
                 itemList.insert(END, item)
                 
             def on_list_click(index, label):
-                fullPath    = os.path.join(path, label)
-                self.change_dir(fullPath)
+                if not history_mode:
+                    full_path = os.path.join(path, label)
+                else:
+                    # History mode. Triggered by right click the BACK button.
+                    # Refresh the history list.
+                    self._history = self._history[:(index+1)]
+                    full_path = self._history[-1]
+                self.change_dir(full_path)
+                # Once the user selected a directory, the MENU should disappear
+                # immediately.
                 menu_win.destroy()
                 
             itemList.list_click_callback  = on_list_click
-                        
+       
+        
+    def _on_seperator_click(self, evt, path):
+        '''Triggered by clicking the path seperator.
+A menu displaying directory names will popup. User can select a directory by 
+clicking its name.'''
+        items = [item for item in os.listdir(path) if 
+                 os.path.isdir(os.path.join(path, item))]
+        self._show_dir_list(path, items)
+        
+                                  
     def _on_key_press(self, evt):
         rend, cend = self._text.index('end-1c').split('.')
         cend = int(cend)
         r, c = self._text.index('insert').split('.')
         c = int(c)
-        if c > cend - self._blank_len - len(self._browse_text):
+        # Suppress key inputs if cursor is located at special characters which 
+        # form the BROWSE button and the BACK button
+        if c > cend - self._blank_len - len(self._browse_text) or c < 3:
             if evt.keysym not in ('Left', 'Right', 'Up', 'Down'):
                 return 'break'
         
-        if evt.keysym == 'Return': # \n
+        # \n will trigger the change dir action
+        if evt.keysym == 'Return': 
             path = self._get_path()
+            # Check the validity of the path
             if os.path.exists(path):
                 self.change_dir(path)
+            # If the path is not valid, return to the previous path
             else:
                 self._refresh()
-            return 'break' # Not pass the event to the next handler.
+            # Not pass the event to the next handler.
+            return 'break' 
 
             
     def _get_path(self):
-        path    = self._text.get('1.0', END)
-        path    = path[:-(self._blank_len + len(self._browse_text))]            
+        # 1.2 simply remove the characters forming the BACK button.
+        path = self._text.get('1.2', END)
+        # Remove the characters forming the BROWSER button.
+        path = path[:-(self._blank_len + len(self._browse_text))]            
         return path
+        
             
     def _refresh(self):
         text = self._text
         directory = self._directory
 
-        text.delete('1.0', END)
+        text.delete('1.2', END)
         folderList  = directory.split(os.path.sep)
         cumPath     = ''
         for index, folder in enumerate(folderList):
@@ -729,14 +802,27 @@ class DirIndicator(Frame, Observable):
         
 
         text.insert(END, ' '*self._blank_len)
-        text.insert(END, self._browse_text, 'browse_button')      
+        text.insert(END, self._browse_text, 'browse_button') 
+        
 
     def change_dir(self, dirname):
-        dirname = os.path.abspath(dirname)
+        dirname = os.path.abspath(dirname)        
         self._directory = dirname
         self._refresh()
         self.notify_observers(dirname)
-        
+        if len(self._history) == 0:
+            self._history.append(dirname)
+        if dirname != self._history[-1]:
+            self._history.append(dirname)
+            if len(self._history) > 16:
+                del self._history[0]
+        if len(self._history) > 1:
+            forecolor = 'forestgreen'
+        else:
+            forecolor = 'grey'
+        self._text.tag_config('back_button', foreground=forecolor)
+                
+                
     @property
     def directory(self):
         return self._directory
@@ -747,7 +833,7 @@ class CWDIndicator(DirIndicator):
         DirIndicator.__init__(self, *args, **kwargs)
                         
         from wavesynlib.interfaces.timer.tk import TkTimer
-        self.__timer        = TkTimer(self, interval=500)
+        self.__timer = TkTimer(self, interval=500)
         self.__timer.add_observer(self)
         self.__timer.active = True
                                                               
