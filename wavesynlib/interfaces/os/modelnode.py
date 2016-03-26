@@ -117,7 +117,15 @@ if platform.system().lower() == 'windows':
             return func_map.get(format_code, for_unknown_type)()             
 
 else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
-    Clipboard   = TkClipboard   
+    Clipboard   = TkClipboard  
+    
+    
+try:
+    import psutil
+    def _get_mem_percent():
+        return psutil.virtual_memory().percent
+except ImportError:
+    _get_mem_percent = None
 
 
 class OperatingSystem(ModelNode):
@@ -140,16 +148,23 @@ class OperatingSystem(ModelNode):
         ModelNode.__init__(self, *args, **kwargs)
         with self.attribute_lock:
             self.clipboard = Clipboard()
+            
     
     @Scripting.printable    
     def win_open(self, path):
         func = self._obj_map['winopen']
         return func(path)
         
-    @Scripting.printable
-    def get_memory_usage(self):
-        func = self._obj_map['get_memory_usage']
-        try:
-            return func()
-        except NotImplementedError:
-            return 0
+        
+    if _get_mem_percent is None:
+        @Scripting.printable
+        def get_memory_usage(self):
+            func = self._obj_map['get_memory_usage']
+            try:
+                return func()
+            except NotImplementedError:
+                return 0
+    else:
+        @Scripting.printable
+        def get_memory_usage(self):
+            return int(_get_mem_percent())
