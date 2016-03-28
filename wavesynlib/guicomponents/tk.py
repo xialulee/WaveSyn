@@ -615,11 +615,31 @@ class DirIndicator(Frame, Observable):
         text.tag_bind('browse_button', '<Leave>',
                       lambda *args: self._change_cursor_to_hand(False))
         # End Browse Button
+                      
+        # WinOpen Button
+        sys_name = platform.system().lower()
+        try:
+            __mod = __import__(eval_format('wavesynlib.interfaces.os.{sys_name}.shell.winopen'), globals(), locals(), ['winopen'], -1)
+            winopen_func = getattr(__mod, 'winopen')
+            def on_winopen_click(*args):
+                winopen_func(self._directory)
+        except (ImportError, AttributeError):
+            def on_winopen_click(*args):
+                pass                      
+                      
+        text.tag_config('winopen_button', foreground='orange')
+        text.tag_bind('winopen_button', '<Button-1>', on_winopen_click)
+        text.tag_bind('winopen_button', '<Enter>',
+                      lambda *args: self._change_cursor_to_hand(True))
+        text.tag_bind('winopen_button', '<Leave>',
+                      lambda *args: self._change_cursor_to_hand(False))    
+        # End WinOpen Button
                 
         self._blank_len = 2
-        self._browse_text = 'BROWSE'
+        self._browse_text = u'\u25a1'
+        self._winopen_text = u'\u25a0'
         self._coding = sys.getfilesystemencoding()
-        self._directory          = None
+        self._directory = None
         
         
     def _on_back_click(self, *args):
@@ -635,6 +655,10 @@ Go back according to the self._history list.'''
 A menu displaying the browse history will pop up.'''
         if len(self._history) > 1:
             self._show_dir_list('', self._history, history_mode=True)
+            
+            
+    def _on_winopen_click(self, *args):
+        pass
     
                                 
     def _on_button_click(self, *args):
@@ -730,7 +754,7 @@ clicking its name.'''
         c = int(c)
         # Suppress key inputs if cursor is located at special characters which 
         # form the BROWSE button and the BACK button
-        if c > cend - self._blank_len - len(self._browse_text) or c < 3:
+        if c > cend - self._blank_len - len(self._browse_text) - len(self._winopen_text) or c < 3:
             if evt.keysym not in ('Left', 'Right', 'Up', 'Down'):
                 return 'break'
         
@@ -751,7 +775,7 @@ clicking its name.'''
         # 1.2 simply remove the characters forming the BACK button.
         path = self._text.get('1.2', END)
         # Remove the characters forming the BROWSER button.
-        path = path[:-(self._blank_len + len(self._browse_text))]            
+        path = path[:-(self._blank_len + len(self._browse_text) + len(self._winopen_text))]            
         return path
         
             
@@ -803,6 +827,7 @@ clicking its name.'''
 
         text.insert(END, ' '*self._blank_len)
         text.insert(END, self._browse_text, 'browse_button') 
+        text.insert(END, self._winopen_text, 'winopen_button')
         
 
     def change_dir(self, dirname):
