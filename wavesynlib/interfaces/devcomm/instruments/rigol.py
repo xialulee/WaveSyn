@@ -12,7 +12,7 @@ import numpy as np
 from wavesynlib.interfaces.devcomm.instruments.visainterface import get_resource_manager
 
 
-class RigolDSA1030Driver(object):
+class DSA1030(object):
     def __init__(self, name=None):
         self.__name = name
         self.__instrument = None
