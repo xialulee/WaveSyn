@@ -15,7 +15,7 @@ import six.moves.tkinter as tk
 from wavesynlib.guicomponents.tk import json_to_tk
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
-from wavesynlib.interfaces.devcomm.visainstrument import get_resource_manager
+from wavesynlib.interfaces.devcomm.instruments.visainterface import get_resource_manager
 
 
 class RigolDSA1030Driver(object):
