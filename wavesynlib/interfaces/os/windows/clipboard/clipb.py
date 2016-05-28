@@ -120,7 +120,7 @@ See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-
 '''
     if is_psd:
         psd     = PSDImage.from_stream(fileObj)
-        image   =psd.as_PIL()
+        image   = psd.as_PIL()
     else:
         image   = Image.open(fileObj)
     sio     = StringIO()

@@ -7,6 +7,7 @@ Created on Fri Mar 25 19:12:09 2016
 
 from __future__ import print_function, division, unicode_literals
 
+import os
 import platform
 import re
 
@@ -115,6 +116,15 @@ if platform.system().lower() == 'windows':
 
             format_code = cw.GetPriorityClipboardFormat([cw.CF_TEXT, cw.CF_UNICODETEXT, cw.CF_BITMAP, cw.CF_HDROP])
             return func_map.get(format_code, for_unknown_type)()             
+            
+            
+        @Scripting.printable
+        def convert_file_to_image(self):
+            path = clipb.get_clipboard_file_list()[0]
+            ext = os.path.splitext(path)[-1]
+            is_psd = ext=='.psd' 
+            with open(path, 'rb') as file_obj:
+                clipb.image_file_to_clipboard(file_obj, is_psd)
 
 else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
     Clipboard   = TkClipboard  
