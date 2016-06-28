@@ -272,17 +272,27 @@ wavesyn
         from wavesynlib.languagecenter.wavesynscript import Constant        
         
         class Constants(object): 
-            __slots__ = (
-                'ASK_DIALOG',
-                'ASK_OPEN_FILENAME',
-                'ASK_SAVEAS_FILENAME',
-                'ASK_FILES',
-                'ASK_ORDERED_FILES',
-                'ASK_SLICE'
+            name_value_pairs = (
+                ('ASK_DIALOG', None),
+                ('ASK_OPEN_FILENAME', None),
+                ('ASK_SAVEAS_FILENAME', None),
+                ('ASK_FILES', None),
+                ('ASK_ORDERED_FILES', None),
+                ('ASK_SLICE', None),
+                
+                ('KEYSYM_MODIFIERS', {'Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R'}),
+                ('KEYSYM_CURSORKEYS', {
+                    'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 
+                    'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 
+                    'Left', 'Right', 'Up', 'Down', 
+                    'Home', 'End', 'Next', 'Prior'                
+                })
             )
             
-            for name in __slots__:
-                locals()[name] = Constant(name)
+            __slots__ = zip(*name_value_pairs)[0]
+            
+            for name, value in name_value_pairs:
+                locals()[name] = Constant(name, value)
         # End Construct Constants
         
         value_checker    = ValueChecker(root)
@@ -721,7 +731,7 @@ def get_gui_image_path(filename):
         
 # How to implement a thread safe console?
 # see: http://effbot.org/zone/tkinter-threads.htm              
-class ConsoleText(ScrolledText):
+class ConsoleText(ScrolledText, ModelNode):
     class StreamObserver(object):
         def __init__(self, console_text):
             self.__console_text  = console_text
@@ -729,7 +739,9 @@ class ConsoleText(ScrolledText):
             self.__console_text.write(stream_type, content)
     
     def __init__(self, *args, **kwargs):
-        super(ConsoleText, self).__init__(*args, **kwargs)
+        #super(ConsoleText, self).__init__(*args, **kwargs)
+        ScrolledText.__init__(self, *args, **kwargs)
+        ModelNode.__init__(self, *args, **kwargs)
         # The shared queue of the PRODUCER-CONSUMER model.
         self.__queue    = Queue.Queue()
         self.text['wrap']   = 'word'
@@ -742,10 +754,10 @@ class ConsoleText(ScrolledText):
         self.text.bind('<KeyPress>', self.on_key_press)
 
         
-        # Experimenting with idlelib.AutoComplete
+        # Auto complete is implemented by idlelib
         #############################################################
-        self.indent_width    = 4
-        self.tab_width       = 4
+        self.indentwidth    = 4
+        self.tabwidth       = 4
         self.context_use_ps1    = '>>> '
         self.__auto_complete = AutoComplete(self)  
         #############################################################
@@ -795,8 +807,11 @@ class ConsoleText(ScrolledText):
         if evt.keysym == 'Tab':
             return self.__auto_complete.autocomplete_event(evt)
         ##############################################################
-        # if evt.keycode not in range(16, 19) and evt.keycode not in range(33, 41):
-        if evt.keysym not in ('Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R',  'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Next', 'Prior'):
+        # Using keycode is not a good practice here, because for the same key,
+        # the keycode may change on different machines and operating systems.
+        #if evt.keysym not in ('Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R',  'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Next', 'Prior'):
+        if (evt.keysym not in self.root_node.constants.KEYSYM_MODIFIERS.value) and \
+           (evt.keysym not in self.root_node.constants.KEYSYM_CURSORKEYS.value):
             r, c    = self.get_cursor_pos()
             prompt  = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
             if prompt != '>>> ' and prompt != '... ':
@@ -976,7 +991,8 @@ class ConsoleWindow(ModelNode):
         self.__status_bar = status_bar = StatusBar(root)
         status_bar.pack(side='bottom', fill='x')
         
-        self.__stdstream_text = stdstream_text = ConsoleText(root)
+        self.console_text = ConsoleText(root)        
+        self.__stdstream_text = stdstream_text = self.console_text
         stdstream_text.pack(expand='yes', fill='both')
         
         @SimpleObserver
@@ -1003,9 +1019,9 @@ class ConsoleWindow(ModelNode):
         self.stream_observer = self.StreamObserver(self)
         
         
-    @property
-    def console_text(self):
-        return self.__stdstream_text        
+#    @property
+#    def console_text(self):
+#        return self.__stdstream_text        
         
     @property
     def prompt_symbol(self):
