@@ -146,6 +146,12 @@ class Dialogs(ModelNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         
+    def support_ask_yesno(self, arg, **kwargs):
+        if arg is self.root_node.constants.ASK_YESNO:
+            arg = askyesno(**kwargs)
+            self._print_actual_value(self.root_node.constants.ASK_YESNO, arg)
+        return arg
+        
     def support_ask_files(self, arg, **kwargs):
         if arg is self.root_node.constants.ASK_FILES:
             file_list = []
@@ -273,6 +279,7 @@ wavesyn
         
         class Constants(object): 
             name_value_pairs = (
+                ('ASK_YESNO', None),
                 ('ASK_DIALOG', None),
                 ('ASK_OPEN_FILENAME', None),
                 ('ASK_SAVEAS_FILENAME', None),
