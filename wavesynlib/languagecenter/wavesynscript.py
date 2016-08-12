@@ -53,8 +53,11 @@ class AttributeLock(object):
 class ModelNode(object):
     _xmlrpcexport_  = []    
     
-    def __init__(self, node_name='', is_root=False, is_lazy=False, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(ModelNode, self).__init__()
+        node_name = kwargs.get('node_name', '')
+        is_root = kwargs.get('is_root', False)
+        is_lazy = kwargs.get('is_lazy', False)
         if '_attribute_lock' not in self.__dict__:
             object.__setattr__(self, '_attribute_lock', set())
         self.parent_node = None
@@ -309,23 +312,35 @@ class FileManager(ModelNode):
 # WaveSyn Script Constants
 # To Do: move to datatypes
 class Constant(object):
-    __slots__ = ('__name',)
+    __slots__ = ('__name', '__value')
     __cache = {}
     
-    def __new__(cls, name):
+    def __new__(cls, name, value=None):
         if name in cls.__cache:
-            return cls.__cache[name]
+            c = cls.__cache[name]
+            if value != c.value:
+                raise ValueError('Constant has already been initialized with a different value.')
+            return c
         else:
+<<<<<<< HEAD
             return object.__new__(cls)
+=======
+            return object.__new__(cls, name, value)
+>>>>>>> origin/master
     
-    def __init__(self, name):
+    def __init__(self, name, value=None):
         if name not in self.__cache:
             self.__name = name
+            self.__value = value
             self.__cache[name] = self
             
     @property
     def name(self):
         return self.__name
+        
+    @property
+    def value(self):
+        return self.__value
 # End WaveSyn Script Constants
 
 

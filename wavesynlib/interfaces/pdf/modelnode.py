@@ -55,17 +55,28 @@ class Pages(ModelNode):
         return eval_format('{self.parent_node.node_path}[{name}]')
         
     @Scripting.printable
-    def write(self, filename):
+    def write(self, filename, reverse=False):
         filename = self.root_node.dialogs.support_ask_saveas_filename(
             filename, 
             filetypes=[('PDF Files', '*.pdf'), ('All Files', '*.*')],
             defaultextension='.pdf',
             initialdir=os.path.split(self.__filename)[0])
+        reverse = self.root_node.dialogs.support_ask_yesno(
+            reverse,
+            title='Reverse',
+            message='Reverse page order?')
         if not filename:
             return
         writer = PdfFileWriter()
         reader = self.__reader
-        for index in self.__range:
+
+        if reverse:        
+            page_range = list(self.__range)
+            page_range.reverse()
+        else:
+            page_range = self.__range
+        
+        for index in page_range:
             writer.addPage(reader.getPage(index-1))
         with open(filename, 'wb') as output:
             writer.write(output)
