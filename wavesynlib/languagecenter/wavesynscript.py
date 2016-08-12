@@ -377,8 +377,9 @@ class Scripting(ModelNode):
                 return repr(param)
                 
         strArgs = ', '.join([paramToStr(arg) for arg in args]) if args else ''
-        strKwargs = ', '.join([eval_format('{key}={paramToStr(kwargs[key])}') for key in kwargs]) \
-            if kwargs else ''        
+        #strKwargs = ', '.join([eval_format('{key}={paramToStr(kwargs[key])}') for key in kwargs]) \
+        #    if kwargs else '' 
+        strKwargs = ', '.join(['{}={}'.format(key, paramToStr(kwargs[key])) for key in kwargs]) if kwargs else ''    
        
             
         if strArgs and strKwargs:

@@ -17,8 +17,7 @@ def dependencies_for_my_program():
 import six
 from six.moves import _thread as thread
 import threading
-#import Queue
-from six.moves import queue as Queue
+from six.moves import queue
 
 import os
 import os.path
@@ -296,7 +295,7 @@ wavesyn
                 })
             )
             
-            __slots__ = zip(*name_value_pairs)[0]
+            #__slots__ = zip(*name_value_pairs)[0]
             
             for name, value in name_value_pairs:
                 locals()[name] = Constant(name, value)
@@ -415,7 +414,7 @@ wavesyn
         
         with self.attribute_lock:
             # The below one is the core of the new command system:
-            self.command_queue = Queue.Queue()
+            self.command_queue = queue.Queue()
             # The timer shown as follows checks the command queue
             # extracts command and execute.
             self.command_queue_timer = self.create_timer(interval=50, active=False)
@@ -433,7 +432,7 @@ wavesyn
                             getattr(node, command_slot.method_name)(*command_slot.args, **command_slot.kwargs)
                         else:
                             raise TypeError('The given object is not a ModelNode.')
-            except Queue.Empty:
+            except queue.Empty:
                 return
                 
         self.command_queue_timer.add_observer(command_queue_observer)
@@ -750,7 +749,7 @@ class ConsoleText(ScrolledText, ModelNode):
         ScrolledText.__init__(self, *args, **kwargs)
         ModelNode.__init__(self, *args, **kwargs)
         # The shared queue of the PRODUCER-CONSUMER model.
-        self.__queue    = Queue.Queue()
+        self.__queue    = queue.Queue()
         self.text['wrap']   = 'word'
         self.text.tag_configure('STDOUT',   foreground='black')
         self.text.tag_configure('STDERR',   foreground='red')

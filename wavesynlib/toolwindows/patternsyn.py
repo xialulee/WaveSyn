@@ -15,7 +15,7 @@ from PIL import ImageTk
 from numpy import *
 from scipy.io import savemat
 
-import thread
+import six.moves._thread as thread
 
 from wavesynlib.application import get_gui_image_path, WaveSynThread
 from wavesynlib.toolwindows.figurewindow import FigureWindow

@@ -8,13 +8,13 @@ Created on Wed Jan 27 16:47:12 2016
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 
-import thread
+import six.moves._thread as thread
 
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 
 
-class LabeledProgress(object, tk.Frame):
+class LabeledProgress(tk.Frame, object):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
         self.__label = label = ttk.Label(self)

@@ -5,8 +5,8 @@ Created on Fri Oct 09 17:15:41 2015
 @author: Feng-cong Li
 """
 
-import thread
-from Queue import Queue
+import six.moves._thread as thread
+from six.moves.queue import Queue
 
 import reikna.cluda as cluda
 from reikna.fft import FFT
