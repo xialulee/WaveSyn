@@ -7,11 +7,8 @@ Created on Fri Mar 25 19:12:09 2016
 
 from __future__ import print_function, division, unicode_literals
 
-<<<<<<< HEAD
 import six
-=======
 import os
->>>>>>> origin/master
 import platform
 import re
 from importlib import import_module

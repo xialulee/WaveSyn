@@ -278,19 +278,6 @@ wavesyn
         from wavesynlib.languagecenter.wavesynscript import Constant        
         
         class Constants(object): 
-<<<<<<< HEAD
-            name_list = (
-                'ASK_DIALOG',
-                'ASK_OPEN_FILENAME',
-                'ASK_SAVEAS_FILENAME',
-                'ASK_FILES',
-                'ASK_ORDERED_FILES',
-                'ASK_SLICE'
-            )
-            
-            for name in name_list:
-                locals()[name] = Constant(name)
-=======
             name_value_pairs = (
                 ('ASK_YESNO', None),
                 ('ASK_DIALOG', None),
@@ -313,7 +300,6 @@ wavesyn
             
             for name, value in name_value_pairs:
                 locals()[name] = Constant(name, value)
->>>>>>> origin/master
         # End Construct Constants
         
         value_checker    = ValueChecker(root)

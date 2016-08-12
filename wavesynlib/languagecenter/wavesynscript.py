@@ -322,11 +322,7 @@ class Constant(object):
                 raise ValueError('Constant has already been initialized with a different value.')
             return c
         else:
-<<<<<<< HEAD
             return object.__new__(cls)
-=======
-            return object.__new__(cls, name, value)
->>>>>>> origin/master
     
     def __init__(self, name, value=None):
         if name not in self.__cache:
