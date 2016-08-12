@@ -6,6 +6,9 @@ Created on Thu Dec 31 16:15:12 2015
 """
 from __future__ import print_function, division, unicode_literals
 
+from importlib import import_module
+
+import six
 from six import string_types
 import collections
 
@@ -35,7 +38,7 @@ class AttributeLock(object):
     def __init__(self, node):
         super(AttributeLock, self).__init__()
         if not isinstance(node, ModelNode):
-            raise TypeError, 'Only the instance of ModelNode is accepted.'
+            raise TypeError('Only the instance of ModelNode is accepted.')
         self.node   = node
             
     def __enter__(self):
@@ -101,7 +104,8 @@ then node will have a property named 'a', which cannot be re-assigned.
         node = self
         if self.is_lazy:
             if self.__class_object is None:
-                mod = __import__(self.__module_name, globals(), locals(), [self.__class_name], -1)
+                #mod = __import__(self.__module_name, globals(), locals(), [self.__class_name], -1)
+                mod = import_module(self.__module_name)
                 node = getattr(mod, self.__class_name)()
             else:
                 node = self.__class_object()
@@ -114,7 +118,7 @@ then node will have a property named 'a', which cannot be re-assigned.
         if 'attribute_auto_lock' not in self.__dict__:
             object.__setattr__(self, 'attribute_auto_lock', False)
         if key in self._attribute_lock:
-            raise AttributeError, auto_subs('Attribute "$key" is unchangeable.')
+            raise AttributeError(auto_subs('Attribute "$key" is unchangeable.'))
         if isinstance(val, ModelNode) and not val.is_root and val.parent_node==None:
             val.node_name = val.node_name if val.node_name else key
             object.__setattr__(val, 'parent_node', self)
@@ -229,7 +233,10 @@ class NodeList(ModelNode, List):
         func.__doc__    = method.__doc__
         return func
 
-    for method_name in ('__delitem__', '__delslice__', '__setitem__', 'pop', 'remove', 'reverse', 'sort', 'insert'):
+    method_names = ['__delitem__', '__setitem__', 'pop', 'remove', 'reverse', 'sort', 'insert']
+    if six.PY2:
+        method_names.append('__delslice__')
+    for method_name in method_names:
         locals()[method_name]    = MethodLock(method=__update_index(getattr(list, method_name)), lockName='element_lock')    
 # End Object Model
         
@@ -309,7 +316,7 @@ class Constant(object):
         if name in cls.__cache:
             return cls.__cache[name]
         else:
-            return object.__new__(cls, name)
+            return object.__new__(cls)
     
     def __init__(self, name):
         if name not in self.__cache:

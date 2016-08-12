@@ -14,21 +14,21 @@ def dependencies_for_my_program():
     from scipy.sparse.csgraph   import _validation 
     from scipy.special          import _ufuncs_cxx
 
-import thread
+import six
+from six.moves import _thread as thread
 import threading
-import Queue
+#import Queue
+from six.moves import queue as Queue
 
 import os
 import os.path
 import sys
+from importlib import import_module
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
 
 import tarfile
 
-import platform
-
-import six
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
 
@@ -272,7 +272,7 @@ wavesyn
         from wavesynlib.languagecenter.wavesynscript import Constant        
         
         class Constants(object): 
-            __slots__ = (
+            name_list = (
                 'ASK_DIALOG',
                 'ASK_OPEN_FILENAME',
                 'ASK_SAVEAS_FILENAME',
@@ -281,7 +281,7 @@ wavesyn
                 'ASK_SLICE'
             )
             
-            for name in __slots__:
+            for name in name_list:
                 locals()[name] = Constant(name)
         # End Construct Constants
         
@@ -471,7 +471,7 @@ wavesyn
         
     def create_window(self, module_name, class_name):
         '''Create a tool window.'''
-        mod = __import__(auto_subs('wavesynlib.toolwindows.$module_name'), globals(), locals(), [class_name], -1)
+        mod = import_module(auto_subs('wavesynlib.toolwindows.$module_name'))
         return self.windows.add(node=getattr(mod, class_name)())
 
     def launch_editor(self, editor_path=None):
@@ -523,7 +523,7 @@ wavesyn
                 except SyntaxError:
                     with busy_doing:
                         try:
-                            exec code in Scripting.name_space['globals'], Scripting.name_space['locals']
+                            six.exec_(code, Scripting.name_space['globals'], Scripting.name_space['locals'])
                         except KeyboardInterrupt:
                             self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
             except SystemExit:
@@ -744,8 +744,8 @@ class ConsoleText(ScrolledText):
         
         # Experimenting with idlelib.AutoComplete
         #############################################################
-        self.indent_width    = 4
-        self.tab_width       = 4
+        self.indentwidth    = 4
+        self.tabwidth       = 4
         self.context_use_ps1    = '>>> '
         self.__auto_complete = AutoComplete(self)  
         #############################################################

@@ -68,9 +68,9 @@ class EditorDict(NodeDict):
 
     def __setitem__(self, key, val):
         if not isinstance(val, EditorNode):
-            raise TypeError, eval_format('{self.node_path} only accepts instance of EditorNode or of its subclasses.')
+            raise TypeError(eval_format('{self.node_path} only accepts instance of EditorNode or of its subclasses.'))
         if key != id(val):
-            raise ValueError, 'The key should be identical to the ID of the editor.'
+            raise ValueError('The key should be identical to the ID of the editor.')
         super(EditorDict, self).__setitem__(key, val)
 
     def add(self, node):

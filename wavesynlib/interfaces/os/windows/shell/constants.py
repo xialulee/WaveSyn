@@ -20,13 +20,6 @@ PDTIMER_RESUME          = 3
 
 
 class TBPFLAG:
-    __slots__   = ('TBPF_NOPROGRESS',
-                   'TBPF_INDETERMINATE',
-                   'TBPF_NORMAL',
-                   'TBPF_ERROR',
-                   'TBPF_PAUSED'
-    )
-
     TBPF_NOPROGRESS     = 0
     TBPF_INDETERMINATE  = 1
     TBPF_NORMAL         = 2

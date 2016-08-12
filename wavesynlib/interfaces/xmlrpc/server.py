@@ -4,10 +4,10 @@ Created on Wed Aug 06 15:57:18 2014
 
 @author: Feng-cong Li
 """
-import thread
+import six.moves._thread as thread
 import operator
 
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from six.moves.xmlrpc_server import SimpleXMLRPCServer
 
 from wavesynlib.application                  import Application
 from wavesynlib.languagecenter.utils         import eval_format

@@ -6,11 +6,12 @@ Created on Tue Jan 26 10:18:01 2016
 """
 from __future__ import print_function, division, unicode_literals
 
+import six
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 
 import json
-import thread
+import six.moves._thread as thread
 
 class MainPanel(tk.Frame, object):
     def __init__(self, *args, **kwargs):
@@ -28,7 +29,7 @@ If you want to abort this mission, you can click the button below.
         print(command_json)
         
 def listener(*args):
-    raw_input()
+    six.moves.input()
     exit_command = {'type':'command', 'command':'exit'}
     print(json.dumps(exit_command))    
     thread.interrupt_main()

@@ -13,7 +13,7 @@ from wavesynlib.languagecenter import datatypes
 from wavesynlib.toolwindows.basewindow import WindowComponent
 
 import time
-import thread
+import six.moves._thread as thread
 ##########################Experimenting with multiprocessing###############################
 import multiprocessing as mp
 ###########################################################################################
@@ -32,7 +32,7 @@ class Operator(object):
     @func.setter
     def func(self, f):
         if not callable(f):
-            raise TypeError, 'f must be a callable object.'
+            raise TypeError('f must be a callable object.')
         self.__f    = f
         
     def __call__(self, *args):
@@ -139,7 +139,7 @@ class ProgressChecker(object):
         
     def append(self, checker):
         if not callable(checker):
-            raise TypeError, 'Checker must be callable.'
+            raise TypeError('Checker must be callable.')
         self.__checkerChain.append(checker)
         
     def remove(self, checker):
@@ -367,9 +367,9 @@ class AlgorithmDict(NodeDict, WindowComponent):
                 
     def __setitem__(self, key, val):
         if not isinstance(val, AlgorithmNode):
-            raise TypeError, eval_format('{self.node_path} only accepts instance of Algorithm or of its subclasses.')
+            raise TypeError(eval_format('{self.node_path} only accepts instance of Algorithm or of its subclasses.'))
         if key != val.meta.name:
-            raise ValueError, 'The key should be identical to the name of the algorithm.'
+            raise ValueError('The key should be identical to the name of the algorithm.')
         NodeDict.__setitem__(self, key, val)
         
     def add(self, node):

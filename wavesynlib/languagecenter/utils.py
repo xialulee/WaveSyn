@@ -63,7 +63,7 @@ class MethodLock(object):
         lock = getattr(obj, self.__lockName)
         descriptor  = self.__descriptor
         if lock:
-            raise AttributeError, eval_format('Method {descriptor.__name__} has been locked and cannot be called.')
+            raise AttributeError(eval_format('Method {descriptor.__name__} has been locked and cannot be called.'))
         else:
             return self.__descriptor.__get__(obj, type)        
         

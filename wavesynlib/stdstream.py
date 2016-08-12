@@ -7,7 +7,7 @@ Created on Sun Oct 26 21:06:35 2014
 
 from wavesynlib.languagecenter.designpatterns import  Observable
 import six.moves.queue as Queue
-import thread
+import six.moves._thread as thread
 
 import sys
 REALSTDOUT  = sys.stdout

@@ -8,7 +8,7 @@ from __future__  import print_function
 
 import sys
 import json
-from itertools   import izip
+from six.moves import zip as izip
 from collections import OrderedDict
 
 

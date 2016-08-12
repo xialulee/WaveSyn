@@ -6,7 +6,7 @@ import win32clipboard
 import getopt
 import re
 import msvcrt
-from cStringIO  import StringIO
+from six.moves  import cStringIO as StringIO
 from PIL        import Image, ImageGrab
 from psd_tools  import PSDImage
 
@@ -200,7 +200,7 @@ def main():
             'htrwTNd:e:i:', \
             ['help', 'text', 'read', 'write', 'tee', 'null', 'decode=', 'encode=', 'imagefile=', 'html'] \
         )
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         sys.stderr.write(str(err)+'\n')
         usage()
         sys.exit(ERROR_PARAM)

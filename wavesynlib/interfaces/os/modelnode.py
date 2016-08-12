@@ -7,8 +7,10 @@ Created on Fri Mar 25 19:12:09 2016
 
 from __future__ import print_function, division, unicode_literals
 
+import six
 import platform
 import re
+from importlib import import_module
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.languagecenter.utils import eval_format
@@ -48,7 +50,7 @@ class TkClipboard(ModelNode):
 
 
 if platform.system().lower() == 'windows':
-    from cStringIO import StringIO
+    from six.moves import cStringIO as StringIO
     from wavesynlib.interfaces.os.windows.clipboard import clipb
     class Clipboard(TkClipboard):
         @Scripting.printable
@@ -138,7 +140,7 @@ class OperatingSystem(ModelNode):
     
     for name in _obj_map:
         try:
-            __mod = __import__(eval_format(_obj_map[name]), globals(), locals(), [name], -1)
+            __mod = import_module(eval_format(_obj_map[name]))
             _obj_map[name] = getattr(__mod, name)
         except ImportError:
             _obj_map[name] = _not_implemented

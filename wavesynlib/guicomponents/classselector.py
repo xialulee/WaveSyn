@@ -4,6 +4,7 @@ Created on Sat Apr 04 10:03:17 2015
 
 @author: Feng-cong Li
 """
+from __future__ import print_function
 
 import os
 import sys
@@ -12,9 +13,9 @@ import subprocess as sp
 import multiprocessing as mp
 import inspect
 
-from Tkinter import *
-from ttk import *
-from Tkinter import Frame
+from six.moves.tkinter import *
+from six.moves.tkinter_ttk import *
+from six.moves.tkinter import Frame
 
 from wavesynlib.guicomponents.tk import ScrolledTree
 
@@ -132,7 +133,7 @@ if __name__ == '__main__':
     root.withdraw()
     class_selector = ClassSelector(package_name, base_class_object) 
     for s in class_selector.do_model():
-        print s
+        print(s)
     
         
     

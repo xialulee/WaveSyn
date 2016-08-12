@@ -7,7 +7,7 @@ Created on Tue Jan 26 12:50:36 2016
 
 from __future__ import print_function, unicode_literals, division
 
-import thread
+import six.moves._thread as thread
 
 from wavesynlib.languagecenter.designpatterns import Observable
 

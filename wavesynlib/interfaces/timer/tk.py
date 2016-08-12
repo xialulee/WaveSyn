@@ -4,7 +4,7 @@ Created on Mon Mar 30 10:14:20 2015
 
 @author: Administrator
 """
-from Tkinter import * 
+from six.moves.tkinter import *
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer, Divider
 from wavesynlib.guicomponents.tk import LabeledEntry
 

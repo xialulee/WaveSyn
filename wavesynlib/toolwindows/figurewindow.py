@@ -313,7 +313,7 @@ class FigureList(NodeList):
         
     def append(self, val):        
         if not isinstance(val, DataFigure):
-            raise TypeError, eval_format('{self.node_path} only accepts instance of DataFigure or of its subclasses.')
+            raise TypeError(eval_format('{self.node_path} only accepts instance of DataFigure or of its subclasses.'))
         NodeList.append(self, val)
         
 
@@ -601,7 +601,7 @@ The rest parameters are passed to PanedWindow.__init__.
             if len(index) <= 0:
                 return
             if len(index) > 1:
-                raise ValueError, 'Multi-selection is not supported.'
+                raise ValueError('Multi-selection is not supported.')
             index = int(index[0])
         for figure in self:
             figure.line_objects[index][0].remove()

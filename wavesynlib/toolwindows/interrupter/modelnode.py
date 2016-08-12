@@ -10,7 +10,7 @@ from __future__ import print_function, division, unicode_literals
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib import status
 
-import thread
+import six.moves._thread as thread
 import threading
 import subprocess as sp
 

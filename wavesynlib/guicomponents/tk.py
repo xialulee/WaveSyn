@@ -9,6 +9,7 @@ from __future__ import print_function, division, unicode_literals
 import os
 import sys
 import platform
+from importlib import import_module
 
 import math
 import cmath
@@ -16,6 +17,7 @@ import cmath
 import json
 import random
 
+import six
 from six import string_types
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
@@ -619,7 +621,7 @@ class DirIndicator(Frame, Observable):
         # WinOpen Button
         sys_name = platform.system().lower()
         try:
-            __mod = __import__(eval_format('wavesynlib.interfaces.os.{sys_name}.shell.winopen'), globals(), locals(), ['winopen'], -1)
+            __mod = import_module(eval_format('wavesynlib.interfaces.os.{sys_name}.shell.winopen'))
             winopen_func = getattr(__mod, 'winopen')
             def on_winopen_click(*args):
                 winopen_func(self._directory)
@@ -787,7 +789,7 @@ clicking its name.'''
         folderList  = directory.split(os.path.sep)
         cumPath     = ''
         for index, folder in enumerate(folderList):
-            if not isinstance(folder, unicode):
+            if not isinstance(folder, six.text_type):
                 folder = folder.decode(self._coding, 'ignore')
             cumPath += folder + os.path.sep 
             
@@ -867,7 +869,8 @@ class CWDIndicator(DirIndicator):
 Here, it is called by the timer of CWDIndicator instance.
 Normally, no argument is passed.'''        
         cwd = os.getcwd()
-        cwd = cwd.decode(self._coding, 'ignore')
+        if not isinstance(cwd, six.text_type):
+            cwd = cwd.decode(self._coding, 'ignore')
         if os.path.altsep is not None: # Windows OS
             cwd = cwd.replace(os.path.altsep, os.path.sep)
         if self._directory != cwd:
