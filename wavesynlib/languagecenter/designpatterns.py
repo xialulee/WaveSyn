@@ -4,6 +4,14 @@ Created on Thu Dec 31 18:29:15 2015
 
 @author: Feng-cong Li
 """
+class SimpleObserver(object):
+    def __init__(self, func):
+        super(SimpleObserver, self).__init__()
+        self.__func = func
+
+    def update(self, *args, **kwargs):
+        return self.__func(*args, **kwargs) 
+
 
 class Observable(object):        
     def __init__(self, *args, **kwargs):
@@ -11,7 +19,12 @@ class Observable(object):
         self.__observers    = []
 
     def add_observer(self, observer):
-        self.__observers.append(observer)
+        if not hasattr(observer, 'update'):
+            if callable(observer):
+                observer = SimpleObserver(observer)
+            else:
+                raise TypeError('Give observer is not valid.')
+        self.__observers.append(observer)        
         
     def delete_observer(self, observer):
         self.__observers.remove(observer)
@@ -27,16 +40,6 @@ class Observable(object):
             observer.update(*args, **kwargs)
             
             
-class SimpleObserver(object):
-    def __init__(self, func):
-        super(SimpleObserver, self).__init__()
-        self.__func = func
-
-    def update(self, *args, **kwargs):
-        return self.__func(*args, **kwargs)   
-
-
-
 class Singleton(type):
     '''This class is a meta class, which helps to create singleton class.'''
     def __call__(self, *args, **kwargs):

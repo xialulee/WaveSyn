@@ -36,7 +36,11 @@ class StreamChain(object):
             
     def flush(self):
         for stream in self.__streamlist:
-            stream.flush()
+            try:
+                stream.flush()
+            except AttributeError: 
+                # For Python 3, this happens when closing WaveSyn.
+                pass
 
 class StreamManager(Observable):
     class Stream(object):

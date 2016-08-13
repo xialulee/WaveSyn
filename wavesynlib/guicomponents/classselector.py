@@ -126,7 +126,7 @@ def create_process(*args, **kwargs):
 if __name__ == '__main__':
     package_name        = sys.argv[1]
     module_name         = sys.argv[2]
-    base_class_name      = sys.argv[3]
+    base_class_name     = sys.argv[3]
     mod                 = importlib.import_module(module_name)
     base_class_object   = getattr(mod, base_class_name)
     root = Tk()

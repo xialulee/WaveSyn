@@ -44,7 +44,7 @@ class InterrupterNode(ModelNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         winpath = join(get_my_dir(), 'interrupter.py')
-        p = sp.Popen(['python', '-u', winpath], stdout=sp.PIPE, stdin=sp.PIPE)
+        p = sp.Popen(['python', '-u', winpath], stdout=sp.PIPE, stdin=sp.PIPE, universal_newlines=True)
         thread.start_new_thread(listener, (p,))
         self.__proc = p
         

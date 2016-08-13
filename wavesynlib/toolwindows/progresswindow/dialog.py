@@ -61,7 +61,7 @@ class Dialog(object):
         
         self.__timer = timer = TkTimer(widget=win, interval=50)
         
-        @SimpleObserver
+        @timer.add_observer
         def on_timer():
             with self.__lock:
                 for n in range(number):
@@ -71,7 +71,6 @@ class Dialog(object):
                     for n in range(number):
                         progressbars[n].label_text = self.__text_list[n]
             
-        timer.add_observer(on_timer)
         timer.active = True        
         
     def close(self):
