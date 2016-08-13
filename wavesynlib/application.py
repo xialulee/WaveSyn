@@ -1078,6 +1078,14 @@ class ConsoleWindow(ModelNode):
     
 
 def mainloop():
-    Application().mainloop()
+    wavesyn = Application()
+    # We cannot launch the process of interrupter in Application __init__ on Windows,
+    # or a runtime error will be raised:
+    # "Attempt to start a new process before the current process
+    # has finished its bootstrapping phase..."
+    #
+    # launch.py and launchwavesyn.py will call this mainloop function in __main__.
+    wavesyn.interrupter.launch()
+    wavesyn.mainloop()
         
         

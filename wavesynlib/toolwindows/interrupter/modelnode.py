@@ -9,45 +9,52 @@ from __future__ import print_function, division, unicode_literals
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib import status
+from wavesynlib.toolwindows.interrupter import interrupter
 
 import six.moves._thread as thread
-import threading
-import subprocess as sp
+#import threading
 
-from os.path import abspath, dirname, join
-import inspect
-
-import json
+from six.moves import queue
+import multiprocessing as mp
 
 
-_is_alive = threading.Event()
+#_is_alive = threading.Event()
+_messages_from_interrupter = mp.Queue()
+_messages_to_interrupter = mp.Queue()
 
-
-def get_my_dir():
-    return abspath(dirname(inspect.getfile(inspect.currentframe())))
-
-
-def listener(p):    
+def _listener():    
     while True:
-        command_json = p.stdout.readline()
-        command = json.loads(command_json)
+        try:
+            command = _messages_from_interrupter.get_nowait()
+        except queue.Empty:
+            continue
         if command['type'] == 'command':
             if command['command'] == 'exit':
                 break
             elif command['command'] == 'interrupt_main_thread':
                 if status.is_busy():
                     thread.interrupt_main()
-    _is_alive.set()
+#    _is_alive.set()
+
+
+def _launch_interrupter(messages_from_interrupter, messages_to_interrupter):
+    interrupter.main(messages_from_interrupter, messages_to_interrupter)
 
 
 class InterrupterNode(ModelNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
-        winpath = join(get_my_dir(), 'interrupter.py')
-        p = sp.Popen(['python', '-u', winpath], stdout=sp.PIPE, stdin=sp.PIPE, universal_newlines=True)
-        thread.start_new_thread(listener, (p,))
-        self.__proc = p
+        p = mp.Process(target=_launch_interrupter, args=(_messages_from_interrupter, _messages_to_interrupter))
+        thread.start_new_thread(_listener, ())
+        self.__process = p
+
+    
+    def launch(self):
+        if not self.__process.is_alive():
+            self.__process.start()
         
+    
     def close(self):
-        if not _is_alive.is_set():
-            self.__proc.stdin.write('!\n')
+#        if not _is_alive.is_set():
+        _messages_to_interrupter.put({'type':'command', 'command':'exit'})
+#        self.__process.terminate()
