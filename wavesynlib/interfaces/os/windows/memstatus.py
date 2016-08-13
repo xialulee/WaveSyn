@@ -5,13 +5,12 @@
 # win8 python27
 # Feng-cong Li
 
-from Tkinter  import *
+from six.moves.tkinter import *
 from comtypes import *
 import ctypes as ct
 
 from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
-from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 
 
@@ -36,7 +35,7 @@ def get_memory_usage():
     return memusage      
 
 
-APPID = 'wavesyn.interfaces.windows.memstatus'
+APPID = 'wavesyn/windows/memstatus'
 
 def main():
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
@@ -44,13 +43,13 @@ def main():
     label   = Label()
     label.pack()
     tbIcon  = tktools.TaskbarIcon(root) 
-
-    @SimpleObserver # TkTimer is Observable
-    def showMemUsage():
+    
+    timer = TkTimer(widget=root, interval=2000) # No Config Dialog
+    
+    @timer.add_observer   
+    def show_memory_usage():
         memusage = get_memory_usage()
-
         label['text']   = 'Memory Usage: {}%'.format(memusage)
-
         tbIcon.progress = memusage        
         if memusage <= 60:
             state = TBPFLAG.TBPF_NORMAL
@@ -60,9 +59,6 @@ def main():
             state = TBPFLAG.TBPF_ERROR
         tbIcon.state = state
 
-    timer = TkTimer(widget=root) # No Config Dialog
-    timer.add_observer(showMemUsage)
-    timer.interval = 2000 #ms
     timer.active = True
     root.mainloop()
 

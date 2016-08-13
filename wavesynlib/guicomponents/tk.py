@@ -43,7 +43,7 @@ win7plus = False
 if platform.system() == 'Windows':
     win = True
     winver  = platform.version().split('.')    
-    if int(winver[0])>=6 and int(winver[1])>=1:
+    if float('.'.join(winver[0:1])) >= 6.1:
         win7plus = True
 
 if win7plus:

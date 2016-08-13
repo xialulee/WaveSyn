@@ -8,7 +8,6 @@ from __future__ import print_function, division, unicode_literals
 import itertools
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
-from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from wavesynlib.languagecenter.utils import eval_format
 from wavesynlib.interfaces.timer.tk import TkTimer
 
@@ -86,7 +85,11 @@ class DoNode(ModelNode):
         if iterables is not None:
             raise TypeError('"After" node does not support iterables.')
         
-        @SimpleObserver
+        timer = self.__timer
+        timer.counter = 2
+        timer.interval = self.__duration
+        
+        @timer.add_observer
         def callback():
             if self.__first_call:
                 self.__first_call = False
@@ -97,17 +100,12 @@ class DoNode(ModelNode):
                 finally:
                     self.manager.cancel(action_id=id(self))
             
-        timer = self.__timer
-        timer.counter = 2
-        timer.interval = self.__duration
-        timer.add_observer(callback)
         timer.active = True        
         
     def __repeat(self, func, iterables=None):
         if iterables is not None:
             self.__for_each(func, iterables)
         else:
-            func = SimpleObserver(func)
             timer = self.__timer
             timer.interval = self.__duration
             timer.add_observer(func)
@@ -119,8 +117,9 @@ class DoNode(ModelNode):
 
         it = itertools.product(*iterables)            
         timer = self.__timer
+        timer.interval = self.__duration
         
-        @SimpleObserver
+        @timer.add_observer
         def callback():
             try:
                 args = next(it)
@@ -129,8 +128,6 @@ class DoNode(ModelNode):
             else:
                 func(*args)
             
-        timer.interval = self.__duration
-        timer.add_observer(callback)
         timer.active = True
                 
     @Scripting.printable

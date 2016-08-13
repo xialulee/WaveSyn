@@ -55,11 +55,10 @@ class Divider(Observable):
         Observable.__init__(self)
         self.__counter = 0
         
-        @SimpleObserver
+        @timer.add_observer
         def on_timer():
             self.__counter += 1
             if self.__counter == divide_by:
                 self.notify_observers()
                 self.__counter = 0
                 
-        timer.add_observer(on_timer)

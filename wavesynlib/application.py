@@ -62,11 +62,9 @@ from idlelib.ColorDelegator import ColorDelegator
 
 from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
 from wavesynlib.interfaces.os.modelnode import OperatingSystem
-#from wavesynlib.interfaces.clipboard.modelnode import Clipboard
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream import StreamManager
-#from wavesynlib.cuda import Worker as CUDAWorker
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver        
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
@@ -916,7 +914,7 @@ class StatusBar(Frame):
         window_combo.bind('<<ComboboxSelected>>', on_selected)
         window_combo.pack(side='right', fill='y') # deiconify a window
         
-        @SimpleObserver
+        @Scripting.root_node.windows.add_observer
         def on_windows_change(node, command):
             values = window_combo['values']
             if values == '':
@@ -937,8 +935,6 @@ class StatusBar(Frame):
                 window_combo.current(len(values)-1)
             else:
                 window_combo.set('')
-            
-        Scripting.root_node.windows.add_observer(on_windows_change)
         #} End Window Combo
                 
         self.__lock = thread.allocate_lock()
@@ -954,20 +950,20 @@ class StatusBar(Frame):
         def check_mem():
             self.__membar.set(get_memory_usage())
             
-        timer.add_observer(check_busy)
         timer.divider(divide_by=10).add_observer(check_mem)
         timer.active = True
         # To Do: add several customizable lamps for users.
         
     def _set_busy_light(self):
-        with self.__lock:
-            bg = 'red' if self.__busy else 'forestgreen'
-            self.__busy_lamp['bg'] = bg
+        bg = 'red' if self.__busy else 'forestgreen'
+        self.__busy_lamp['bg'] = bg
+        self.update()
         
     def set_busy(self, busy=True):
         with self.__lock:
             self.__busy = busy
         if thread.get_ident() == Scripting.main_thread_id:
+            # Only main thread can set busy light
             self._set_busy_light()
             
     def _make_mem_status(self):

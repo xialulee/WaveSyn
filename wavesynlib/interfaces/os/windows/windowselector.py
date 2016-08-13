@@ -19,10 +19,9 @@ GetWindowRect               = windll.user32.GetWindowRect
 GetWindowThreadProcessId    = windll.user32.GetWindowThreadProcessId
 
 
-from Tkinter import *
+from six.moves.tkinter import *
 
 from wavesynlib.interfaces.timer.tk           import TkTimer
-from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from wavesynlib.languagecenter.utils          import eval_format
 
 class WindowSelector(object):
@@ -47,7 +46,9 @@ class WindowSelector(object):
         selfHandle = self.__root.winfo_id()
         selfRect   = RECT()        
         
-        @SimpleObserver
+        timer      = self.__timer
+        
+        @timer.add_observer
         def getWindow(*args, **kwargs):
             GetCursorPos(byref(cursorPos))
             handle = WindowFromPoint(cursorPos)            
@@ -57,8 +58,6 @@ class WindowSelector(object):
                 GetWindowRect(handle, byref(windowRect))
                 self.__root.geometry(eval_format('+{max(0, windowRect.left)}+{max(0, windowRect.top)}'))                
 
-        timer          = self.__timer
-        timer.add_observer(getWindow)
         timer.interval = 500
         timer.active = True
         self.__root.mainloop()

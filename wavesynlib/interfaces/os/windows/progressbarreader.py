@@ -27,7 +27,6 @@ class ProgressBarReader(object):
 from Tkinter                                  import Tk
 from wavesynlib.guicomponents                 import tk as tktools
 from wavesynlib.interfaces.timer.tk           import TkTimer
-from wavesynlib.languagecenter.designpatterns import SimpleObserver
 import sys
 
 
@@ -47,12 +46,11 @@ if __name__ == '__main__':
     pbReader = ProgressBarReader(handle)
 
     timer    = TkTimer()
-    
-    @SimpleObserver
+
+    @timer.add_observer    
     def observer(*args, **kwargs):
         tbIcon.progress = pbReader.position
         
-    timer.add_observer(observer)
     timer.active = True
     
     root.mainloop()
