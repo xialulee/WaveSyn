@@ -12,29 +12,21 @@ from wavesynlib import status
 from wavesynlib.toolwindows.interrupter import interrupter
 
 import six.moves._thread as thread
-#import threading
-
-from six.moves import queue
 import multiprocessing as mp
 
 
-#_is_alive = threading.Event()
 _messages_from_interrupter = mp.Queue()
 _messages_to_interrupter = mp.Queue()
 
 def _listener():    
     while True:
-        try:
-            command = _messages_from_interrupter.get_nowait()
-        except queue.Empty:
-            continue
+        command = _messages_from_interrupter.get()
         if command['type'] == 'command':
             if command['command'] == 'exit':
                 break
             elif command['command'] == 'interrupt_main_thread':
                 if status.is_busy():
                     thread.interrupt_main()
-#    _is_alive.set()
 
 
 def _launch_interrupter(messages_from_interrupter, messages_to_interrupter):
@@ -55,6 +47,7 @@ class InterrupterNode(ModelNode):
         
     
     def close(self):
-#        if not _is_alive.is_set():
-        _messages_to_interrupter.put({'type':'command', 'command':'exit'})
-#        self.__process.terminate()
+        message = {'type':'command', 'command':'exit'}
+        _messages_from_interrupter.put(message) # Terminate _listener thread. 
+        _messages_to_interrupter.put(message) # Terminate interrupter process.
+

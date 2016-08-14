@@ -163,7 +163,6 @@ class TkToolWindow(TkWindowNode):
         self.window_manager._make_widgets()
         
             
-
 class WindowDict(NodeDict, Observable):
     def __init__(self, node_name=''):
         NodeDict.__init__(self, node_name=node_name)

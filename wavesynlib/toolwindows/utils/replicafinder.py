@@ -10,7 +10,7 @@ import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 
 import os
-import thread
+import six.moves._thread as thread
 import threading
 import six.moves.queue
 import hashlib

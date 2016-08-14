@@ -129,15 +129,19 @@ if platform.system().lower() == 'windows':
                 clipb.image_file_to_clipboard(file_obj, is_psd)
 
 else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
-    Clipboard   = TkClipboard  
+    Clipboard = TkClipboard  
     
     
 try:
     import psutil
     def _get_mem_percent():
         return psutil.virtual_memory().percent
+        
+    def _get_cpu_percent():
+        return psutil.cpu_percent()
 except ImportError:
     _get_mem_percent = None
+    _get_cpu_percent = None
 
 
 class OperatingSystem(ModelNode):
@@ -180,3 +184,13 @@ class OperatingSystem(ModelNode):
         @Scripting.printable
         def get_memory_usage(self):
             return int(_get_mem_percent())
+            
+            
+    if _get_cpu_percent is None:
+        @Scripting.printable
+        def get_cpu_usage(self):
+            return 0
+    else:
+        @Scripting.printable
+        def get_cpu_usage(self):
+            return int(_get_cpu_percent())            

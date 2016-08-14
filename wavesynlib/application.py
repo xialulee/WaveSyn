@@ -66,12 +66,11 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
-from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver        
+from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver      
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter import timeutils
-from wavesynlib.languagecenter import datatypes
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
 from wavesynlib.status import busy_doing
 
@@ -291,9 +290,7 @@ wavesyn
                     'Left', 'Right', 'Up', 'Down', 
                     'Home', 'End', 'Next', 'Prior'                
                 })
-            )
-            
-            #__slots__ = zip(*name_value_pairs)[0]
+            )            
             
             for name, value in name_value_pairs:
                 locals()[name] = Constant(name, value)
@@ -417,7 +414,7 @@ wavesyn
             # extracts command and execute.
             self.command_queue_timer = self.create_timer(interval=50, active=False)
         
-        @SimpleObserver
+        @self.command_queue_timer.add_observer
         def command_queue_observer():
             try:
                 while True:
@@ -433,7 +430,6 @@ wavesyn
             except queue.Empty:
                 return
                 
-        self.command_queue_timer.add_observer(command_queue_observer)
         self.command_queue_timer.active = True
         
         class EditorObserver(object): # use SimpleObserver instead
@@ -875,11 +871,16 @@ class StatusBar(Frame):
         
         balloon = Scripting.root_node.balloon
                 
-        self.__busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
-        self.__busy_lamp.pack(side=RIGHT, fill='y')
+        busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
+        busy_lamp.pack(side=RIGHT, fill='y')
+        balloon.bind_widget(busy_lamp, balloonmsg='''Main-thread status.
+Green: main-thread is available;
+Red:   main-thread is busy.''')
+        self.__busy_lamp = busy_lamp
         
         self.__membar = IntVar(0)
-        self._make_mem_status()
+        self.__cpubar = IntVar(0)
+        self._make_cpu_mem_status()
 
         # Transparent Scale {
         def on_scale(val):
@@ -941,16 +942,14 @@ class StatusBar(Frame):
         self.__busy = False
              
         get_memory_usage = Scripting.root_node.os.get_memory_usage
-        
+        get_cpu_usage    = Scripting.root_node.os.get_cpu_usage
+                    
         @SimpleObserver
-        def check_busy():
-            self._set_busy_light()
-            
-        @SimpleObserver
-        def check_mem():
+        def check_cpu_mem():
             self.__membar.set(get_memory_usage())
+            self.__cpubar.set(get_cpu_usage())
             
-        timer.divider(divide_by=10).add_observer(check_mem)
+        timer.divider(divide_by=10).add_observer(check_cpu_mem)
         timer.active = True
         # To Do: add several customizable lamps for users.
         
@@ -966,11 +965,16 @@ class StatusBar(Frame):
             # Only main thread can set busy light
             self._set_busy_light()
             
-    def _make_mem_status(self):
+    def _make_cpu_mem_status(self):
         balloon = Scripting.root_node.balloon
-        progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
-        progbar.pack(side='right', fill='y')
-        balloon.bind_widget(progbar, balloonmsg='Total memory usage.')
+        
+        mem_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
+        mem_progbar.pack(side='right', fill='y')
+        balloon.bind_widget(mem_progbar, balloonmsg='Total memory usage.')
+        
+        cpu_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__cpubar)
+        cpu_progbar.pack(side='right', fill='y')
+        balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage.')        
         
         
 class ConsoleWindow(ModelNode):    
@@ -996,12 +1000,10 @@ class ConsoleWindow(ModelNode):
         self.console_text = ConsoleText(root)        
         self.__stdstream_text = stdstream_text = self.console_text
         stdstream_text.pack(expand='yes', fill='both')
-        
-        @SimpleObserver
+                    
+        @busy_doing.add_observer
         def busy_status_observer(busy):
-            status_bar.set_busy(busy)
-            
-        busy_doing.add_observer(busy_status_observer)
+            status_bar.set_busy(busy)        
 
         tag_defs = kwargs['tag_defs']
         for key in tag_defs:
