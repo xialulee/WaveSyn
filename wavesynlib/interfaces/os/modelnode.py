@@ -48,6 +48,19 @@ class TkClipboard(ModelNode):
         else:
             text = text.replace('\n', '')
         self.write(text)
+        
+        
+class TkMouse(ModelNode):
+    def __init__(self, *args, **kwargs):
+        super(TkMouse, self).__init__(*args, **kwargs)
+        
+    @Scripting.printable
+    def get_x(self):
+        return self.root_node.tk_root.winfo_pointerx()
+        
+    @Scripting.printable
+    def get_y(self):
+        return self.root_node.tk_root.winfo_pointery()
 
 
 if platform.system().lower() == 'windows':
@@ -127,9 +140,14 @@ if platform.system().lower() == 'windows':
             is_psd = ext=='.psd' 
             with open(path, 'rb') as file_obj:
                 clipb.image_file_to_clipboard(file_obj, is_psd)
+                
+                
+    class Mouse(TkMouse):
+        pass
 
 else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
     Clipboard = TkClipboard  
+    Mouse = TkMouse
     
     
 try:
@@ -164,6 +182,7 @@ class OperatingSystem(ModelNode):
         ModelNode.__init__(self, *args, **kwargs)
         with self.attribute_lock:
             self.clipboard = Clipboard()
+            self.mouse = Mouse()
             
     
     @Scripting.printable    
