@@ -23,16 +23,16 @@ class TkClipboard(ModelNode):
        
     @Scripting.printable
     def clear(self):
-        self.root_node.root.clipboard_clear()
+        self.root_node.tk_root.clipboard_clear()
     
     @Scripting.printable
     def write(self, content):
         self.clear()
-        self.root_node.root.clipboard_append(content)
+        self.root_node.tk_root.clipboard_append(content)
         
     @Scripting.printable
     def read(self):
-        return self.root_node.root.clipboard_get()
+        return self.root_node.tk_root.clipboard_get()
         
     @Scripting.printable
     def remove_text_formatting(self):

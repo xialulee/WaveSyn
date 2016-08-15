@@ -60,7 +60,7 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
+from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame, ask_list_item
 from wavesynlib.interfaces.os.modelnode import OperatingSystem
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
@@ -133,23 +133,41 @@ class WaveSynThread(object):
         theThread  = WaveSynThread.Thread(func)
         theThread.start()
         while theThread.is_alive():
-            app.root.update()
+            app.tk_root.update()
             for winId in app.windows:
                 app.windows[winId].tk_object.update()
 
 
-class Dialogs(ModelNode):
+def _arg_handling(constant):
+    def dec(func):
+        def f(arg):
+            if arg is constant:
+                arg = func(arg)
+                Scripting.root_node.dialogs._print_actual_value(constant, arg)
+            return arg
+        return f
+    return dec
+
+
+class Dialogs(ModelNode):    
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         
     def support_ask_yesno(self, arg, **kwargs):
-        if arg is self.root_node.constants.ASK_YESNO:
-            arg = askyesno(**kwargs)
-            self._print_actual_value(self.root_node.constants.ASK_YESNO, arg)
-        return arg
+        @_arg_handling(self.root_node.constants.ASK_YESNO)
+        def do(arg):
+            return askyesno(**kwargs)            
+        return do(arg)
+        
+    def support_ask_list_item(self, arg, **kwargs):
+        @_arg_handling(self.root_node.constants.ASK_LIST_ITEM)
+        def do(arg):
+            return ask_list_item(**kwargs)
+        return do(arg)
         
     def support_ask_files(self, arg, **kwargs):
-        if arg is self.root_node.constants.ASK_FILES:
+        @_arg_handling(self.root_node.constants.ASK_FILES)
+        def do(arg):
             file_list = []
             while True:
                 filenames = askopenfilenames(**kwargs)
@@ -160,11 +178,12 @@ class Dialogs(ModelNode):
                     break
             arg = file_list
             showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
-            self._print_actual_value(self.root_node.constants.ASK_FILES, arg)
-        return arg
+            return arg
+        return do(arg)
         
     def support_ask_ordered_files(self, arg, **kwargs):
-        if arg is self.root_node.constants.ASK_ORDERED_FILES:
+        @_arg_handling(self.root_node.constants.ASK_ORDERED_FILES)
+        def do(arg):
             file_list = []
             while True:
                 filename = askopenfilename(**kwargs)
@@ -175,26 +194,27 @@ class Dialogs(ModelNode):
                     break
             arg = file_list
             showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
-            self._print_actual_value(self.root_node.constants.ASK_ORDERED_FILES, arg)
-        return arg        
+            return arg
+        return do(arg)    
         
     def support_ask_open_filename(self, arg, **kwargs):
-        if arg is self.root_node.constants.ASK_OPEN_FILENAME:
-            filename = askopenfilename(**kwargs)
-            arg = filename
-            self._print_actual_value(self.root_node.constants.ASK_OPEN_FILENAME, arg)
-        return arg
+        @_arg_handling(self.root_node.constants.ASK_OPEN_FILENAME)
+        def do(arg):
+            return askopenfilename(**kwargs)
+        return do(arg)
         
     def support_ask_saveas_filename(self, arg, **kwargs):
-        if arg is self.root_node.constants.ASK_SAVEAS_FILENAME:
-            filename = asksaveasfilename(**kwargs)
-            arg = filename
-            self._print_actual_value(self.root_node.constants.ASK_SAVEAS_FILENAME, arg)
-        return arg
+        @_arg_handling(self.root_node.constants.ASK_SAVEAS_FILENAME)
+        def do(arg):
+            return asksaveasfilename(**kwargs)
+        return do(arg)
         
     def support_ask_slice(self, arg, *args, **kwargs):
-        if arg is self.root_node.constants.ASK_SLICE:
-            user_input = askstring('Page Range', 'Select page range using Python slice syntax "start[:stop[:step]]".\nPage number start from 1.')
+        @_arg_handling(self.root_node.constants.ASK_SLICE)
+        def do(arg):
+            title = kwargs.get('title', 'Ask Slice')
+            message = kwargs.get('message', 'Input a slice using Python slice syntax.')
+            user_input = askstring(title, message)
             if not user_input:
                 return
             user_input = user_input.split(':')
@@ -204,8 +224,8 @@ class Dialogs(ModelNode):
                 arg = user_input[0]
             else:
                 arg = slice(*user_input)            
-            self._print_actual_value(self.root_node.constants.ASK_SLICE, arg)
-        return arg
+            return arg
+        return do(arg)
         
     def _print_actual_value(self, const, value):
         self.root_node.print_tip([{'type':'text', 'content':'''
@@ -276,6 +296,7 @@ wavesyn
         class Constants(object): 
             name_value_pairs = (
                 ('ASK_YESNO', None),
+                ('ASK_LIST_ITEM', None),
                 ('ASK_DIALOG', None),
                 ('ASK_OPEN_FILENAME', None),
                 ('ASK_SAVEAS_FILENAME', None),
@@ -352,7 +373,6 @@ wavesyn
         with self.attribute_lock:
             set_attributes(self,
                 # UI elements
-                root = root,
                 tk_root = root,
                 balloon = Tix.Balloon(root),
                 taskbar_icon = TaskbarIcon(root),
@@ -634,7 +654,7 @@ wavesyn
              
                     
     def mainloop(self):
-        return self.root.mainloop()
+        return self.tk_root.mainloop()
         
 
     def _on_exit(self):    
@@ -651,7 +671,7 @@ wavesyn
         
     @classmethod
     def do_events(cls):
-        cls.instance.root.update()
+        cls.instance.tk_root.update()
         
     def start_xmlrpc_server(self, addr='localhost', port=8000):
         from wavesynlib.interfaces.xmlrpc.server    import start_xmlrpc_server
@@ -671,9 +691,9 @@ wavesyn
                     self.xmlrpc_command_slot.return_value    = (ret, err)
             finally:
                 # Make sure that at any circumstance the check_command will be called repeatedly.
-                self.root.after(100, self.xmlrpc_check_command)
+                self.tk_root.after(100, self.xmlrpc_check_command)
         self.xmlrpc_check_command = check_command
-        self.root.after(100, check_command) # To Do: Use TkTimer instead of after
+        self.tk_root.after(100, check_command) # To Do: Use TkTimer instead of after
         
     @Scripting.printable
     def system(self, command):
@@ -684,44 +704,12 @@ wavesyn
     def set_matplotlib_style(self, style_name=''):
         import matplotlib.pyplot as plt
         
-        if style_name is self.constants.ASK_DIALOG:
-            dialog = True
-        else:
-            dialog = False
+        style_name = self.root_node.dialogs.support_ask_list_item(
+            style_name,
+            the_list=plt.style.available,
+            message='Select a style for newly-created figures.')
 
-        ret = [None]
-        if dialog:
-            win = Toplevel()
-    
-            Label(win, text='Select a style for newly-created figures.').pack()
-    
-            combo = Combobox(win, stat='readonly')
-            combo['values'] = plt.style.available
-            combo.current(0)
-            combo.pack()
-            
-            ret = [None]
-            
-            def on_ok():
-                ret[0] = combo.get()
-                win.quit()
-                
-            def on_cancel():
-                win.quit()
-                
-            frame = Frame(win)
-            frame.pack()
-            Button(win, text='Cancel', command=on_cancel).pack(side='right')            
-            Button(win, text='Ok', command=on_ok).pack(side='right')
-                
-            win.protocol('WM_DELETE_WINDOW', win.quit)
-            win.focus_set()
-            win.grab_set()
-            win.mainloop()
-            win.destroy()        
-            
-        style = ret[0] if ret[0] is not None else style_name
-        plt.style.use(style)
+        plt.style.use(style_name)
         
                 
 def get_gui_image_path(filename):
@@ -988,7 +976,7 @@ class ConsoleWindow(ModelNode):
     def __init__(self, *args, **kwargs):
         super(ConsoleWindow, self).__init__(*args, **kwargs)
         app = Application.instance
-        root = app.root
+        root = app.tk_root
         root.title('WaveSyn-Console')
 
         dir_indicator = CWDIndicator()

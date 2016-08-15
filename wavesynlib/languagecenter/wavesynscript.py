@@ -427,7 +427,7 @@ class CodePrinter(object):
         
     def __exit__(self, *dumb):
         Scripting._print_code_flag = False
-        
+
 
 code_printer = CodePrinter()                                 
 # End Scripting Sub-System

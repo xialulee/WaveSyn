@@ -87,7 +87,7 @@
 
           {
           "Name":"Settings", "TearOff":0, "UnderLine":0, "SubMenu":[
-              {"Name":"Set Matplotlib Style", "UnderLine":0, "Command":"wavesyn.set_matplotlib_style(style_name=wavesyn.constants.ASK_DIALOG)", "Print":true}
+              {"Name":"Set Matplotlib Style", "UnderLine":0, "Command":"wavesyn.set_matplotlib_style(style_name=wavesyn.constants.ASK_LIST_ITEM)", "Print":true}
               ]
           },
 

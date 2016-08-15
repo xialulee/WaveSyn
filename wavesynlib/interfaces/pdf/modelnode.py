@@ -93,7 +93,7 @@ class PDFFileManipulator(FileManipulator):
             
     # To Do: This kind of node is short-lived, and need not to notify model_tree_monitor
     def __getitem__(self, page_index):
-        page_index = self.root_node.dialogs.support_ask_slice(page_index, 'Page Range', 'Select page range using Python slice syntax "start[:stop[:step]]".\nPage number start from 1.')
+        page_index = self.root_node.dialogs.support_ask_slice(page_index, title='Page Range', message='Select page range using Python slice syntax "start[:stop[:step]]".\nPage number start from 1.')
         if not page_index:
             return
             
