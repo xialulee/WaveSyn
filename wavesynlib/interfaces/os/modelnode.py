@@ -7,9 +7,9 @@ Created on Fri Mar 25 19:12:09 2016
 
 from __future__ import print_function, division, unicode_literals
 
-import six
 import os
 import platform
+import ctypes
 import re
 from importlib import import_module
 
@@ -66,6 +66,9 @@ class TkMouse(ModelNode):
 if platform.system().lower() == 'windows':
     from six.moves import cStringIO as StringIO
     from wavesynlib.interfaces.os.windows.clipboard import clipb
+    import win32clipboard as cw  
+    import win32con
+    
     class Clipboard(TkClipboard):
         @Scripting.printable
         def write(self, content, fmt=None, code=None):
@@ -107,9 +110,7 @@ if platform.system().lower() == 'windows':
                 
                 
         @Scripting.printable
-        def to_console(self):
-            import win32clipboard as cw
-            
+        def to_console(self):            
             def for_text():
                 self.root_node.print_tip([{'type':'text', 'content':'\n'.join(('The text in clipboard is listed as follows', self.read()))}])
                 
@@ -142,10 +143,38 @@ if platform.system().lower() == 'windows':
                 clipb.image_file_to_clipboard(file_obj, is_psd)
                 
                 
-    class Mouse(TkMouse):
-        pass
-
-else: # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.
+    class Mouse(TkMouse): 
+        _const_map = {
+            'left_button_down':     win32con.MOUSEEVENTF_LEFTDOWN,
+            'left_button_up':       win32con.MOUSEEVENTF_LEFTUP,
+            'right_button_down':    win32con.MOUSEEVENTF_RIGHTDOWN,
+            'right_button_up':      win32con.MOUSEEVENTF_RIGHTUP,
+            'middle_button_down':   win32con.MOUSEEVENTF_MIDDLEDOWN,
+            'middle_button_up':     win32con.MOUSEEVENTF_MIDDLEUP
+        }
+              
+        @Scripting.printable
+        def set_x(self, x):
+            y = self.get_y()
+            ctypes.windll.user32.SetCursorPos(x, y)
+            
+        @Scripting.printable
+        def set_y(self, y):
+            x = self.get_x()
+            ctypes.windll.user32.SetCursorPos(x, y)
+            
+        @Scripting.printable
+        def click(self, button='left'):
+            button = button.upper()
+            for action in ('DOWN', 'UP'):
+                const = getattr(win32con, 'MOUSEEVENTF_{}{}'.format(button, action))
+                ctypes.windll.user32.mouse_event(const, 0, 0, 0, 0)
+                
+                
+        #To Do: Keyboard class. Use keybd_event.
+            
+else: 
+# Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.    
     Clipboard = TkClipboard  
     Mouse = TkMouse
     

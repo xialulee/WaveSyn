@@ -67,7 +67,7 @@ from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver      
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer, Constant
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter import timeutils
@@ -140,10 +140,10 @@ class WaveSynThread(object):
 
 def _arg_handling(constant):
     def dec(func):
-        def f(arg):
+        def f(self, arg, **kwargs):
             if arg is constant:
-                arg = func(arg)
-                Scripting.root_node.dialogs._print_actual_value(constant, arg)
+                arg = func(self, arg, **kwargs)
+                self._print_actual_value(constant, arg)
             return arg
         return f
     return dec
@@ -153,79 +153,66 @@ class Dialogs(ModelNode):
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
         
+    @_arg_handling(Constant('ASK_YESNO'))
     def support_ask_yesno(self, arg, **kwargs):
-        @_arg_handling(self.root_node.constants.ASK_YESNO)
-        def do(arg):
-            return askyesno(**kwargs)            
-        return do(arg)
-        
+        return askyesno(**kwargs)            
+                
+    @_arg_handling(Constant('ASK_LIST_ITEM'))
     def support_ask_list_item(self, arg, **kwargs):
-        @_arg_handling(self.root_node.constants.ASK_LIST_ITEM)
-        def do(arg):
-            return ask_list_item(**kwargs)
-        return do(arg)
-        
+        return ask_list_item(**kwargs)
+    
+    @_arg_handling(Constant('ASK_FILES'))    
     def support_ask_files(self, arg, **kwargs):
-        @_arg_handling(self.root_node.constants.ASK_FILES)
-        def do(arg):
-            file_list = []
-            while True:
-                filenames = askopenfilenames(**kwargs)
-                if filenames:
-                    file_list.extend(filenames)
-                    kwargs['initialdir'] = os.path.split(filenames[-1])[0]
-                if not askyesno('Continue?', 'Continue selecting files?'):
-                    break
-            arg = file_list
-            showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
-            return arg
-        return do(arg)
-        
+        file_list = []
+        while True:
+            filenames = askopenfilenames(**kwargs)
+            if filenames:
+                file_list.extend(filenames)
+                kwargs['initialdir'] = os.path.split(filenames[-1])[0]
+            if not askyesno('Continue?', 'Continue selecting files?'):
+                break
+        arg = file_list
+        showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
+        return arg
+    
+    @_arg_handling(Constant('ASK_ORDERED_FILES'))    
     def support_ask_ordered_files(self, arg, **kwargs):
-        @_arg_handling(self.root_node.constants.ASK_ORDERED_FILES)
-        def do(arg):
-            file_list = []
-            while True:
-                filename = askopenfilename(**kwargs)
-                if filename:
-                    file_list.append(filename)
-                    kwargs['initialdir'] = os.path.split(filename)[0]
-                if not askyesno('Continue?', 'Continue selecting files?'):
-                    break
-            arg = file_list
-            showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
-            return arg
-        return do(arg)    
+        file_list = []
+        while True:
+            filename = askopenfilename(**kwargs)
+            if filename:
+                file_list.append(filename)
+                kwargs['initialdir'] = os.path.split(filename)[0]
+            if not askyesno('Continue?', 'Continue selecting files?'):
+                break
+        arg = file_list
+        showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
+        return arg    
         
+    @_arg_handling(Constant('ASK_OPEN_FILENAME'))
     def support_ask_open_filename(self, arg, **kwargs):
-        @_arg_handling(self.root_node.constants.ASK_OPEN_FILENAME)
-        def do(arg):
-            return askopenfilename(**kwargs)
-        return do(arg)
+        return askopenfilename(**kwargs)
         
+    @_arg_handling(Constant('ASK_SAVEAS_FILENAME'))
     def support_ask_saveas_filename(self, arg, **kwargs):
-        @_arg_handling(self.root_node.constants.ASK_SAVEAS_FILENAME)
-        def do(arg):
-            return asksaveasfilename(**kwargs)
-        return do(arg)
+        return asksaveasfilename(**kwargs)
         
-    def support_ask_slice(self, arg, *args, **kwargs):
-        @_arg_handling(self.root_node.constants.ASK_SLICE)
-        def do(arg):
-            title = kwargs.get('title', 'Ask Slice')
-            message = kwargs.get('message', 'Input a slice using Python slice syntax.')
-            user_input = askstring(title, message)
-            if not user_input:
-                return
-            user_input = user_input.split(':')
-            user_input = [int(item) if item else None for item in user_input]
-            
-            if len(user_input) == 1:
-                arg = user_input[0]
-            else:
-                arg = slice(*user_input)            
-            return arg
-        return do(arg)
+    @_arg_handling(Constant('ASK_SLICE'))
+    def support_ask_slice(self, arg, **kwargs):
+        title = kwargs.get('title', 'Ask Slice')
+        message = kwargs.get('message', 'Input a slice using Python slice syntax.')
+        user_input = askstring(title, message)
+        if not user_input:
+            return
+        user_input = user_input.split(':')
+        user_input = [int(item) if item else None for item in user_input]
+        
+        if len(user_input) == 1:
+            arg = user_input[0]
+        else:
+            arg = slice(*user_input)            
+        return arg
+
         
     def _print_actual_value(self, const, value):
         self.root_node.print_tip([{'type':'text', 'content':'''
@@ -290,9 +277,7 @@ wavesyn
         # To Do: WaveSyn will have a uniform command slot system.
         from wavesynlib.interfaces.xmlrpc.server import CommandSlot
         
-        # Construct Constants        
-        from wavesynlib.languagecenter.wavesynscript import Constant        
-        
+        # Construct Constants                
         class Constants(object): 
             name_value_pairs = (
                 ('ASK_YESNO', None),
