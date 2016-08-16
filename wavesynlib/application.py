@@ -34,7 +34,7 @@ from six.moves.tkinter_ttk import *
 import six.moves.tkinter_tix as Tix
 from six.moves.tkinter import Frame
 from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askopenfilenames, askdirectory
-from six.moves.tkinter_tksimpledialog import askstring
+from six.moves.tkinter_tksimpledialog import askstring, askinteger
 from six.moves.tkinter_messagebox import showinfo, askyesno
 
 
@@ -81,7 +81,15 @@ def make_menu(win, menu, json=False):
             f   = Application.instance.print_and_eval
         else:
             f   = Application.instance.eval
-        return lambda: f(code)
+            
+        if isinstance(code, list):
+            def func():
+                for cmd in code:
+                    retval = f(cmd)
+                return retval
+            return func
+        else:
+            return lambda: f(code)
         
     def make(top, tree):
         for top_item in tree:
@@ -156,6 +164,10 @@ class Dialogs(ModelNode):
     @_arg_handling(Constant('ASK_YESNO'))
     def support_ask_yesno(self, arg, **kwargs):
         return askyesno(**kwargs)            
+        
+    @_arg_handling(Constant('ASK_INTEGER'))
+    def support_ask_integer(self, arg, **kwargs):
+        return askinteger(**kwargs)
                 
     @_arg_handling(Constant('ASK_LIST_ITEM'))
     def support_ask_list_item(self, arg, **kwargs):
@@ -281,6 +293,7 @@ wavesyn
         class Constants(object): 
             name_value_pairs = (
                 ('ASK_YESNO', None),
+                ('ASK_INTEGER', None),
                 ('ASK_LIST_ITEM', None),
                 ('ASK_DIALOG', None),
                 ('ASK_OPEN_FILENAME', None),

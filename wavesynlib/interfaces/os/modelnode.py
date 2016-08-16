@@ -155,12 +155,20 @@ if platform.system().lower() == 'windows':
               
         @Scripting.printable
         def set_x(self, x):
+            x = self.root_node.dialogs.support_ask_integer(
+                x, 
+                title='Set Mouse Cursor Position', 
+                prompt='Please input x-coordinate:')
             y = self.get_y()
             ctypes.windll.user32.SetCursorPos(x, y)
             
         @Scripting.printable
         def set_y(self, y):
             x = self.get_x()
+            y = self.root_node.dialogs.support_ask_integer(
+                y, 
+                title='Set Mouse Cursor Position',
+                prompt='Please input y-coordinate:')
             ctypes.windll.user32.SetCursorPos(x, y)
             
         @Scripting.printable
