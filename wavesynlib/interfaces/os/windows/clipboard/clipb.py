@@ -6,6 +6,7 @@ import win32clipboard
 import getopt
 import re
 import msvcrt
+import six
 from six.moves  import cStringIO as StringIO
 from PIL        import Image, ImageGrab
 from psd_tools  import PSDImage
@@ -46,21 +47,30 @@ NEWLINE = re.compile(r'(?<!\r)\n')
 CF_HTML = win32clipboard.RegisterClipboardFormat('HTML Format')
 
 def clipboard_to_stream(stream, mode, code, null, html=False):
+    if not six.PY2:
+        if not code:
+            code = '@' # Automatic mode.
     exitcode = ERROR_NOERROR
     win32clipboard.OpenClipboard(0)
     try:
-        if html:
-            s = win32clipboard.GetClipboardData(CF_HTML)
-        else:
-            s = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
+        clipboard_format = CF_HTML if html else win32clipboard.CF_UNICODETEXT
+        s = win32clipboard.GetClipboardData(clipboard_format)
     except TypeError:
         sys.stderr.write('Clipb-Error: Data in clipboard is not TEXT FORMAT!\n')
         exitcode = ERROR_CLIPB
     else:
         if code:
-            if code == '@': # Automatical encoding using sys.getfilesystemencoding().
-                code = sys.getfilesystemencoding()
-            s = s.encode(code, 'ignore')
+            if code == '@': # Automatical encoding.
+                if html: # Since most html sources are UTF-8 coded.
+                    code = 'utf-8'
+                else: # using sys.getfilesystemencoding().
+                    code = sys.getfilesystemencoding()            
+            if six.PY2:                
+                s = s.encode(code, 'ignore')
+            else:
+                # For Python 3, we cannot put bytes object to streams. 
+                if not isinstance(s, six.text_type):
+                    s = s.decode(code, 'ignore')
         if null:
             s = s[:s.index('\x00')]
         if mode == 't':
@@ -95,18 +105,26 @@ StartFragment:{2: 13d}
 EndFragment:{3: 13d}
 <HTML>
 <BODY>'''
-        template_tail    = '</BODY></HTML>'
-        template_length     = 125
-        s   = s.encode('utf-8')
+        template_tail = b'</BODY></HTML>'
+        template_length = 125
+        s = s.encode('utf-8')
         if len(s) >  9999999999860:
             raise Exception('content too long.')
-        template_head    = template_head.format(
+        template_head = template_head.format(
                 template_length-13,
                 template_length+len(s)+14,
                 template_length,
                 template_length+len(s)
         )
-        html_string         = ''.join((template_head, s, template_tail))
+        if not six.PY2:
+            # On Python 3, bytes object does not have format method.
+            # Hence, template_head is str type.
+            # Here we have to convert it to bytes object.
+            template_head = template_head.encode('utf-8')
+        html_string = b''.join((template_head, s, template_tail))
+#        if not six.PY2:
+#            # 
+#            html_string = html_string.encode('utf-8')
         win32clipboard.SetClipboardData(CF_HTML, html_string)
     else: # not html
         if code:
