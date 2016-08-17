@@ -45,11 +45,14 @@ ERROR_NOERROR, ERROR_PARAM, ERROR_CLIPB, ERROR_IMAGE = range(4)
 NEWLINE = re.compile(r'(?<!\r)\n')
 CF_HTML = win32clipboard.RegisterClipboardFormat('HTML Format')
 
-def clipboard_to_stream(stream, mode, code, null):
+def clipboard_to_stream(stream, mode, code, null, html=False):
     exitcode = ERROR_NOERROR
     win32clipboard.OpenClipboard(0)
     try:
-        s = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
+        if html:
+            s = win32clipboard.GetClipboardData(CF_HTML)
+        else:
+            s = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
     except TypeError:
         sys.stderr.write('Clipb-Error: Data in clipboard is not TEXT FORMAT!\n')
         exitcode = ERROR_CLIPB
@@ -66,7 +69,7 @@ def clipboard_to_stream(stream, mode, code, null):
     win32clipboard.CloseClipboard()
     return exitcode
 
-def stream_to_clipboard(stream, mode, code, tee, null):
+def stream_to_clipboard(stream, mode, code, tee, null, html=False):
     exitcode = ERROR_NOERROR
     #s = sys.stdin.read()
     s = stream.read()
@@ -84,7 +87,7 @@ def stream_to_clipboard(stream, mode, code, tee, null):
     
     win32clipboard.OpenClipboard(0)
     win32clipboard.EmptyClipboard()        
-    if mode == 'html':
+    if html:
         template_head    = '''Version:0.9
 StartHTML:{0: 13d}
 EndHTML:{1: 13d}
@@ -170,14 +173,16 @@ def usage():
     perr(' -w, --write\t\tcopy stdin to clipboard\n')
     perr(
 ''' -i,
- --imagefile=FILENAME'\tread an image file specified by FILENAME
+ --imagefile=FILENAME\tread an image file specified by FILENAME
 \t\t\tand put it into clipboard if "-w" is specified.\n'''
 )
     perr(
 ''' -t, --text\t\ttranslate \\r\\n into \\n when copy clipboard to stdout
 \t\t\tand \\n to \\r\\n when copy stdin to clipboard\n'''
 )
-    perr(' --html\t\t\tput string to clipboard in HTML format \n\t\t\tif -w is specified\n')
+    perr(''' --html\t\t\tput string to clipboard in HTML format \n\t\t\tif -w is specified
+\t\t\tcopy string from clipboard to stdout in HTML format 
+\t\t\tif -r is specified\n''')
     perr(' -T, --tee\t\twhen -w is specifed, copy stdin to clipboard and stdout\n')
     perr(' -N, --null\t\tdiscard the bytes behind the null character\n')
     perr(
@@ -211,6 +216,7 @@ def main():
     rw      = ''
     im      = False
     mode    = None
+    html    = False
     code    = ''
     tee     = None
     null    = False
@@ -222,7 +228,7 @@ def main():
         if o in ('-t', '--text'):
             mode    = 't'
         if o in ('--html'):
-            mode    = 'html'
+            html    = 'html'
         if o in ('-d', '--decode'):
             code    = a
         if o in ('-e', '--encode'):
@@ -246,7 +252,7 @@ def main():
             else:
                 exitcode = ERROR_NOERROR
         else:
-            exitcode    = clipboard_to_stream(sys.stdout, mode, code, null)
+            exitcode    = clipboard_to_stream(sys.stdout, mode, code, null, html)
         sys.exit(exitcode)
     elif rw == 'w':
         if im:
@@ -255,7 +261,7 @@ def main():
                 image_file_to_clipboard(f, is_psd)
             exitcode    = ERROR_NOERROR
         else:
-            exitcode    = stream_to_clipboard(sys.stdin, mode, code, tee, null)
+            exitcode    = stream_to_clipboard(sys.stdin, mode, code, tee, null, html)
         sys.exit(exitcode)
     else:
         sys.stderr.write('Clipb-Error: Error parameter\n')
