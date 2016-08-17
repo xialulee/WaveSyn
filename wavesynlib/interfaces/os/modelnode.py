@@ -71,14 +71,24 @@ if platform.system().lower() == 'windows':
     
     class Clipboard(TkClipboard):
         @Scripting.printable
-        def write(self, content, fmt=None, code=None):
-            if (not fmt) and (not code) :
+        def write(self, content, html=None, code=None):
+            if (not html) and (not code) :
                 super(Clipboard, self).write(content)
             else:
-                stream  = StringIO()
+                stream = StringIO()
                 stream.write(content)
                 stream.seek(0)
-                clipb.stream_to_clipboard(stream, fmt, code, None, None)
+                clipb.stream_to_clipboard(stream, mode=None, code=code, tee=None, null=None, html=html)
+                
+        @Scripting.printable
+        def read(self, html=None, code=None):
+            if (not html) and (not code):
+                return super(Clipboard, self).read()
+            else:
+                stream = StringIO()
+                clipb.clipboard_to_stream(stream, mode=None, code=code, null=None, html=html)
+                stream.seek(0)
+                return stream.read()
                 
         @Scripting.printable
         def to_console_qr(self):
