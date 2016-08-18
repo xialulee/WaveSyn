@@ -47,6 +47,7 @@ import webbrowser
 import subprocess
 import json
 import traceback
+import platform
 
 # Some console functionalities are implemented by idlelib
 ##########################
@@ -319,7 +320,13 @@ wavesyn
                 config_file_path = config_file_path
                 
 #                cudaWorker      = CUDAWorker()
-            )        
+            )  
+            
+        # MSOffice Node
+        if platform.system().lower() == 'windows':
+            from wavesynlib.interfaces.msoffice.modelnode import MSOffice
+            self.msoffice = MSOffice()
+        # End MSOffice Node
 
         # Timer utils
         self.timer = timeutils.ActionManager()              
@@ -405,6 +412,7 @@ wavesyn
         
     def create_window(self, module_name, class_name):
         '''Create a tool window.'''
+        # To Do: Move this method to window node
         mod = import_module(auto_subs('wavesynlib.toolwindows.$module_name'))
         return self.windows.add(node=getattr(mod, class_name)())
 

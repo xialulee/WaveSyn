@@ -82,11 +82,11 @@ class Dialogs(ModelNode):
     def support_ask_open_filename(self, arg, **kwargs):
         return askopenfilename(**kwargs)
         
-    @_arg_handling#(Constant('ASK_SAVEAS_FILENAME'))
+    @_arg_handling
     def support_ask_saveas_filename(self, arg, **kwargs):
         return asksaveasfilename(**kwargs)
         
-    @_arg_handling#(Constant('ASK_SLICE'))
+    @_arg_handling
     def support_ask_slice(self, arg, **kwargs):
         title = kwargs.get('title', 'Ask Slice')
         message = kwargs.get('message', 'Input a slice using Python slice syntax.')
