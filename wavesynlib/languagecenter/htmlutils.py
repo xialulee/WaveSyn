@@ -8,6 +8,7 @@ from __future__ import print_function, division, unicode_literals
 
 import xml
 from six.moves import html_parser
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 
 
 # See http://stackoverflow.com/a/9662410
@@ -53,3 +54,30 @@ def get_table_text(html_code):
     extractor = _TableTextExtractor(retval)
     extractor.feed(html_code)
     return retval
+    
+
+class HTMLUtils(ModelNode):
+    def __init__(self, *args, **kwargs):
+        super(HTMLUtils, self).__init__(*args, **kwargs)
+        
+    @staticmethod
+    def _get_html_code(html_code=None, stream=None, file_path=None, encoding=None):
+        if html_code:
+            pass
+        elif stream:
+            html_code = stream.read()
+        elif file_path:
+            kwargs = {}
+            if encoding:
+                kwargs['encoding'] = encoding
+            with open(file_path, 'r', **kwargs) as f:
+                html_code = f.read()
+        else:
+            pass # Raise some exception.
+        return html_code
+        
+    @Scripting.printable
+    def get_table_text(self, html_code=None, stream=None, file_path=None, encoding=None):
+        html_code = self._get_html_code(html_code, stream, file_path, encoding)
+        return get_table_text(html_code)    
+    
