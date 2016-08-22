@@ -123,9 +123,6 @@ EndFragment:{3: 13d}
             # Here we have to convert it to bytes object.
             template_head = template_head.encode('utf-8')
         html_string = b''.join((template_head, s, template_tail))
-#        if not six.PY2:
-#            # 
-#            html_string = html_string.encode('utf-8')
         win32clipboard.SetClipboardData(CF_HTML, html_string)
     else: # not html
         if code:

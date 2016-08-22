@@ -12,6 +12,56 @@ from comtypes import client
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 
 
+from ctypes import POINTER, byref, sizeof, memmove
+from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
+from comtypes import _safearray
+
+
+def _set_variant_matrix(variant, value):
+    num_row = num_col = None
+
+    if isinstance(value, (list, tuple)) and \
+        len(value)>0 and \
+        isinstance(value[0], (list, tuple)):
+        num_col = len(value[0])
+        num_row = len(value)
+        for m in range(1, num_row):
+            if len(value[m]) != num_col:
+                raise TypeError('Input data is not a matrix')
+        num_row = len(value)
+    
+    _VariantClear(variant) # Clear the original data
+    rgsa = (_safearray.SAFEARRAYBOUND * 2)()
+    rgsa[0].cElements = num_row
+    rgsa[0].lBound = 0
+    rgsa[1].cElements = num_col
+    rgsa[1].lBound = 0
+                                            
+    pa = _safearray.SafeArrayCreateEx(VT_VARIANT,
+                                      2,
+                                      rgsa,  # rgsaBound
+                                      None)  # pvExtra
+                                            
+                                            
+    if not pa:
+        raise MemoryError()
+
+    ptr = POINTER(VARIANT)()  # container for the values
+    _safearray.SafeArrayAccessData(pa, byref(ptr))
+    try:
+        # I have no idea why 2D safearray is column-major.                
+        index = 0
+        for n in range(num_col):            
+            for m in range(num_row):            
+                ptr[index] = value[m][n]
+                index += 1
+    finally:
+        _safearray.SafeArrayUnaccessData(pa)
+    
+    memmove(byref(variant._), byref(pa), sizeof(pa))  
+    variant.vt = VT_ARRAY | VT_VARIANT
+
+
 class ExcelCOMObject(ModelNode):
     def __init__(self, *args, **kwargs):
         excel_handle = kwargs.pop('excel_handle')
@@ -40,7 +90,7 @@ class ExcelCOMObject(ModelNode):
         return addr_x_str + addr_y_str
         
     @property
-    def excel_handle(self):
+    def object_handle(self):
         return self.__excel_handle
         
     @Scripting.printable
@@ -54,9 +104,23 @@ class ExcelCOMObject(ModelNode):
         
         up_left_x, up_left_y = self._get_xy(up_left)
         
-        for m, row in enumerate(data):
-            for n, d in enumerate(row):
-                sheet.Range(self._get_addr(n+up_left_x, m+up_left_y)).Value[()] = d
+        if isinstance(data, (list, tuple)):
+            if isinstance(data[0], (list, tuple)): # Nested list or tuple
+                row_num = len(data)
+                col_num = len(data[0])
+                variant = VARIANT()
+                try: # Matrix in the form of nested list or tuple
+                    _set_variant_matrix(variant, data)
+                    sheet.Range(self._get_addr(up_left_x, up_left_y),
+                                self._get_addr(up_left_x+col_num-1, up_left_y+row_num-1)).Value[:] = variant
+                except TypeError: # Ragged Array
+                    for m, row in enumerate(data):
+                        sheet.Range(self._get_addr(up_left_x, up_left_y+m),
+                                    self._get_addr(up_left_x+len(row)-1, up_left_y+m)).Value[:] = row
+            else: # 1D data
+                list_len = len(data)
+                sheet.Range(self._get_addr(up_left_x, up_left_y), 
+                            self._get_addr(up_left_x+list_len-1, up_left_y)).Value[:] = data
 
 
 class Excel(NodeDict):
