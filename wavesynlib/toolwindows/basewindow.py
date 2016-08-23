@@ -134,11 +134,11 @@ class WindowManager(ModelNode, WindowComponent):
 
     @Scripting.printable        
     def copy_window_id(self):
-        self.root_node.os.clipboard.write(id(self.window_node))
+        self.root_node.interfaces.os.clipboard.write(id(self.window_node))
         
     @Scripting.printable
     def copy_window_path(self):
-        self.root_node.os.clipboard.write(self.window_node.node_path)
+        self.root_node.interfaces.os.clipboard.write(self.window_node.node_path)
 
     @Scripting.printable
     def set_topmost(self, b):

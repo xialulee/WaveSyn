@@ -47,7 +47,6 @@ import webbrowser
 import subprocess
 import json
 import traceback
-import platform
 
 # Some console functionalities are implemented by idlelib
 ##########################
@@ -59,9 +58,9 @@ from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from wavesynlib.guicomponents.tk import CWDIndicator, TaskbarIcon, ScrolledText, ValueChecker, PILImageFrame
-from wavesynlib.interfaces.os.modelnode import OperatingSystem
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
+from wavesynlib.interfaces.modelnode import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver      
@@ -288,10 +287,10 @@ wavesyn
                 # Constants
                 constants = Constants,
                 # End Constants
-                
-                # OS interfaces
-                os = OperatingSystem(),
-                # End OS interfaces
+                                
+                # Interfaces node
+                interfaces = Interfaces(),
+                # End Interfaces node
                 
                 # Thread related
                 main_thread_id = main_thread_id,
@@ -322,12 +321,6 @@ wavesyn
 #                cudaWorker      = CUDAWorker()
             )  
             
-        # MSOffice Node
-        if platform.system().lower() == 'windows':
-            from wavesynlib.interfaces.msoffice.modelnode import MSOffice
-            self.msoffice = MSOffice()
-        # End MSOffice Node
-
         # Timer utils
         self.timer = timeutils.ActionManager()              
         self.timer.after = timeutils.TimerActionNode(type_='after')
@@ -394,7 +387,6 @@ wavesyn
         self.console = ConsoleWindow(menu=console_menu, tag_defs=tag_defs)
         self.stream_manager.add_observer(self.console.stream_observer) #!
              
-        #self.clipboard = Clipboard()
         self.scripting = Scripting(self)
         self.no_tip = False
 
@@ -528,7 +520,7 @@ wavesyn
                 def new_browse_func(path):
                     def browse_func(*args):
                         with code_printer:
-                            self.os.win_open(path)
+                            self.interfaces.os.win_open(path)
                     return browse_func
                     
                 for file_path in file_list:
@@ -841,8 +833,8 @@ Red:   main-thread is busy.''')
         self.__lock = thread.allocate_lock()
         self.__busy = False
              
-        get_memory_usage = Scripting.root_node.os.get_memory_usage
-        get_cpu_usage    = Scripting.root_node.os.get_cpu_usage
+        get_memory_usage = Scripting.root_node.interfaces.os.get_memory_usage
+        get_cpu_usage    = Scripting.root_node.interfaces.os.get_cpu_usage
                     
         @SimpleObserver
         def check_cpu_mem():

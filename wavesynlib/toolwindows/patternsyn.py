@@ -240,7 +240,7 @@ class FileExportGroup(Group):
             
         def linkFunc(filename):
             with code_printer:
-                clipboard   = Scripting.root_node.os.clipboard
+                clipboard   = Scripting.root_node.interfaces.os.clipboard
                 clipboard.clear()
                 clipboard.write(auto_subs('load $filename'))
         with code_printer:

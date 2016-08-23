@@ -11,55 +11,120 @@ from comtypes import client
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 
-
+import copy
 from ctypes import POINTER, byref, sizeof, memmove
 from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
 from comtypes import _safearray
 
 
-def _set_variant_matrix(variant, value):
-    num_row = num_col = None
+class ExcelUtils(ModelNode):
+    def __init__(self, *args, **kwargs):
+        super(ExcelUtils, self).__init__(*args, **kwargs)
 
-    if isinstance(value, (list, tuple)) and \
-        len(value)>0 and \
-        isinstance(value[0], (list, tuple)):
-        num_col = len(value[0])
-        num_row = len(value)
+    @Scripting.printable
+    def is_nested_iterable(self, data):
+        if isinstance(data, (list, tuple)) and \
+            len(data)>0 and \
+            isinstance(data[0], (list, tuple)):
+            return True
+        else:
+            return False
+            
+    @Scripting.printable
+    def is_ragged(self, data):
+        if not self.is_nested_iterable(data):
+            raise TypeError('Input data is not a nested list/tuple.')
+            
+        num_col = len(data[0])
+        num_row = len(data)
         for m in range(1, num_row):
-            if len(value[m]) != num_col:
-                raise TypeError('Input data is not a matrix')
-        num_row = len(value)
-    
-    _VariantClear(variant) # Clear the original data
-    rgsa = (_safearray.SAFEARRAYBOUND * 2)()
-    rgsa[0].cElements = num_row
-    rgsa[0].lBound = 0
-    rgsa[1].cElements = num_col
-    rgsa[1].lBound = 0
-                                            
-    pa = _safearray.SafeArrayCreateEx(VT_VARIANT,
-                                      2,
-                                      rgsa,  # rgsaBound
-                                      None)  # pvExtra
-                                            
-                                            
-    if not pa:
-        raise MemoryError()
+            if len(data[m]) != num_col:
+                return True        
+        return False
 
-    ptr = POINTER(VARIANT)()  # container for the values
-    _safearray.SafeArrayAccessData(pa, byref(ptr))
-    try:
-        # I have no idea why 2D safearray is column-major.                
-        index = 0
-        for n in range(num_col):            
-            for m in range(num_row):            
-                ptr[index] = value[m][n]
-                index += 1
-    finally:
-        _safearray.SafeArrayUnaccessData(pa)
+    @Scripting.printable
+    def set_variant_matrix(self, value):
+        if not self.is_nested_iterable(value):
+            raise TypeError('Input data is not nested list/tuple.')
+            
+        if self.is_ragged(value):
+            raise TypeError('Input data should not be a ragged array.')
+            
+        num_row = len(value)
+        num_col = len(value[0])
+        
+        variant = VARIANT()
+        _VariantClear(variant) # Clear the original data
+        rgsa = (_safearray.SAFEARRAYBOUND * 2)()
+        rgsa[0].cElements = num_row
+        rgsa[0].lBound = 0
+        rgsa[1].cElements = num_col
+        rgsa[1].lBound = 0
+                                                
+        pa = _safearray.SafeArrayCreateEx(VT_VARIANT,
+                                          2,
+                                          rgsa,  # rgsaBound
+                                          None)  # pvExtra
+                                                
+                                                
+        if not pa:
+            raise MemoryError()
     
-    memmove(byref(variant._), byref(pa), sizeof(pa))  
-    variant.vt = VT_ARRAY | VT_VARIANT
+        ptr = POINTER(VARIANT)()  # container for the values
+        _safearray.SafeArrayAccessData(pa, byref(ptr))
+        try:
+            # I have no idea why 2D safearray is column-major.                
+            index = 0
+            for n in range(num_col):            
+                for m in range(num_row):            
+                    ptr[index] = value[m][n]
+                    index += 1
+        finally:
+            _safearray.SafeArrayUnaccessData(pa)
+        
+        memmove(byref(variant._), byref(pa), sizeof(pa))  
+        variant.vt = VT_ARRAY | VT_VARIANT
+        return variant
+       
+    @Scripting.printable
+    def transpose(self, data):
+        if not self.is_nested_iterable(data):
+            if isinstance(data, (list, tuple)): # 1D data
+                return [[c] for c in data]
+            else:
+                raise TypeError('Input data is not nested list/tuple.')
+            
+        if self.is_ragged(data):
+            raise TypeError('Ragged array is not supported.')
+            
+        num_row = len(data)
+        num_col = len(data[0])
+        
+        return [[data[m][n] for m in range(num_row)] for n in range(num_col)]
+        
+    @Scripting.printable
+    def fliplr(self, data):
+        if self.is_nested_iterable(data): # 2D data
+            retval = copy.deepcopy(data)
+            for row in retval:
+                row.reverse()
+            return retval
+        else: 
+            if isinstance(data, (list, tuple)): # 1D data
+                retval = copy.deepcopy(data)
+                retval.reverse()
+                return retval
+            else:
+                raise TypeError('Incompatible data type. ')
+                
+    @Scripting.printable
+    def flipud(self, data):
+        if self.is_nested_iterable(data):
+            retval = copy.deepcopy(data)
+            retval.reverse()
+            return retval
+        else: # 1D list/tuple is a row vector.
+            raise TypeError('Incompatible data type.')
 
 
 class ExcelCOMObject(ModelNode):
@@ -68,6 +133,7 @@ class ExcelCOMObject(ModelNode):
         super(ExcelCOMObject, self).__init__(*args, **kwargs)
         self.__excel_handle = excel_handle
         self.__regex_for_addr = re.compile('([A-Z]+)([0-9]+)')
+        self.__utils = Scripting.root_node.interfaces.msoffice.excel.utils
         
     def _get_xy(self, addr):
         x_str, y_str = re.match(self.__regex_for_addr, addr).groups()
@@ -94,50 +160,74 @@ class ExcelCOMObject(ModelNode):
         return self.__excel_handle
         
     @Scripting.printable
-    def write_range(self, workbook, sheet, up_left, data):
-        if workbook.lower() == 'active':
+    def show_window(self, show=True):
+        self.object_handle.Visible = show
+        
+    @Scripting.printable
+    def write_range(self, data, top_left, workbook=None, sheet=None):
+        if workbook is None:
             workbook = self.__excel_handle.ActiveWorkbook
         else:
-            workbook = None # To Do: Raise some exception
+            workbook = self.__excel_handle.Workbooks[workbook]
             
-        sheet = workbook.Sheets(sheet)
+        if sheet is None:
+            sheet = workbook.ActiveSheet
+        else:
+            sheet = workbook.Sheets(sheet)
         
-        up_left_x, up_left_y = self._get_xy(up_left)
+        top_left_x, top_left_y = self._get_xy(top_left)
         
-        if isinstance(data, (list, tuple)):
-            if isinstance(data[0], (list, tuple)): # Nested list or tuple
-                row_num = len(data)
-                col_num = len(data[0])
-                variant = VARIANT()
-                try: # Matrix in the form of nested list or tuple
-                    _set_variant_matrix(variant, data)
-                    sheet.Range(self._get_addr(up_left_x, up_left_y),
-                                self._get_addr(up_left_x+col_num-1, up_left_y+row_num-1)).Value[:] = variant
-                except TypeError: # Ragged Array
-                    for m, row in enumerate(data):
-                        sheet.Range(self._get_addr(up_left_x, up_left_y+m),
-                                    self._get_addr(up_left_x+len(row)-1, up_left_y+m)).Value[:] = row
-            else: # 1D data
+        if not self.__utils.is_nested_iterable(data): # 1D data or incompatible data type.
+            if isinstance(data, (list, tuple)): # 1D data
                 list_len = len(data)
-                sheet.Range(self._get_addr(up_left_x, up_left_y), 
-                            self._get_addr(up_left_x+list_len-1, up_left_y)).Value[:] = data
+                sheet.Range(self._get_addr(top_left_x, top_left_y), 
+                            self._get_addr(top_left_x+list_len-1, top_left_y)).Value[:] = data
+                return
+            else: # Incomplete data types. 
+                raise TypeError('Input data is not nested list/tuple.')
+            
+        if self.__utils.is_ragged(data):
+            for m, row in enumerate(data):
+                sheet.Range(self._get_addr(top_left_x, top_left_y+m),
+                            self._get_addr(top_left_x+len(row)-1, top_left_y+m)).Value[:] = row
+            return
+        else: # Regular matrix
+            row_num = len(data)
+            col_num = len(data[0])
+            variant = self.__utils.set_variant_matrix(data)
+            sheet.Range(self._get_addr(top_left_x, top_left_y),
+                        self._get_addr(top_left_x+col_num-1, top_left_y+row_num-1)).Value[:] = variant
+            return
+        
 
 
-class Excel(NodeDict):
+class Excel(NodeDict): 
+    '''A hub/dict for accessing all the ExcelCOMObject.'''
+
     progid = 'Excel.Application'    
     
     def __init__(self, *args, **kwargs):
         super(Excel, self).__init__(*args, **kwargs)
         
-    @Scripting.printable
-    def get_active_object(self):
-        excel_handle = client.GetActiveObject(self.progid)
+        with self.attribute_lock:
+            self.utils = ExcelUtils()
+        
+    def _generate_object(self, func):
+        excel_handle = func(self.progid)
         wrapper = ExcelCOMObject(excel_handle=excel_handle)
         object_id = id(wrapper)
         self[object_id] = wrapper
-        return object_id
+        return object_id        
+                
+    @Scripting.printable
+    def get_active_object(self):
+        return self._generate_object(client.GetActiveObject)
         
-    
+    @Scripting.printable
+    def create_object(self):
+        return self._generate_object(client.CreateObject)
+        
+        
 class MSOffice(ModelNode):
     def __init__(self, *args, **kwargs):
         super(MSOffice, self).__init__(*args, **kwargs)
