@@ -687,7 +687,8 @@ class ConsoleText(ScrolledText, ModelNode):
     def on_key_press(self, evt, code_list=[]):     
         # Experimenting with idlelib's AutoComplete
         ##############################################################
-        keysym = evt.keysym        
+        keysym = evt.keysym  
+        #REALSTDOUT.write(keysym+'\n')
         if self.__auto_complete.autocompletewindow and \
                 self.__auto_complete.autocompletewindow.is_active():
             if self.__auto_complete.autocompletewindow.keypress_event(evt) == 'break':
@@ -698,6 +699,16 @@ class ConsoleText(ScrolledText, ModelNode):
             
         if evt.keysym == 'Tab':
             return self.__auto_complete.autocomplete_event(evt)
+            
+        if evt.keysym in ('KP_Home', 'Home'):
+            r, c = self.get_cursor_pos()
+            leading = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
+            if leading in ('... ', '>>> '):
+                self.text.mark_set('insert', auto_subs('$r.4'))
+            else:
+                self.text.mark_set('insert', auto_subs('$r.0'))
+            return 'break'
+            
         ##############################################################
         # Using keycode is not a good practice here, because for the same key,
         # the keycode may change on different machines and operating systems.
