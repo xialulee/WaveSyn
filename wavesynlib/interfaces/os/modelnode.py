@@ -13,7 +13,7 @@ import ctypes
 import re
 from importlib import import_module
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, constant_handler
 from wavesynlib.languagecenter.utils import eval_format
 
 
@@ -70,6 +70,10 @@ if platform.system().lower() == 'windows':
     import win32con
     
     class Clipboard(TkClipboard):
+        @constant_handler(print_replacement=False)
+        def support_clipboard_html(self, arg, **kwargs):
+            return self.read(html=True)
+        
         @Scripting.printable
         def write(self, content, html=None, code=None):
             if (not html) and (not code) :

@@ -16,6 +16,8 @@ from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodLock
 from wavesynlib.languagecenter.designpatterns import Observable
 
 
+# To Do: make a wavesyn.lang_center.wavesynscript node. 
+
 # Object Model of the Scripting System
 # It is a part of the scripting system.
 
@@ -429,7 +431,37 @@ class CodePrinter(object):
         Scripting._print_code_flag = False
 
 
-code_printer = CodePrinter()                                 
+code_printer = CodePrinter()
+
+
+    # Constant Support
+# To Do: replace this simple list with an observable object.
+# Notify the constants node while new constants is included. 
+constant_names = []
+
+
+def _print_replacement_of_constant(const, value):
+    Scripting.root_node.print_tip([{'type':'text', 'content':'''
+The actual value of the place where {0} holds is
+  {1}'''.format(const.name, repr(value))}])
+
+    
+def constant_handler(print_replacement=True):    
+    def _constant_handler(func):
+        # Automatic constants generation based on method names. 
+        constant_name = func.__name__.replace('support_', '').upper()
+        constant_names.append(constant_name)
+        constant = Constant(constant_name)
+        #Wrapper function
+        def f(self, arg, **kwargs):
+            if arg is constant:
+                arg = func(self, arg, **kwargs)
+                if print_replacement:
+                    _print_replacement_of_constant(constant, arg)
+            return arg
+        return f    
+    return _constant_handler
+    # End Constant Support
 # End Scripting Sub-System
         
 

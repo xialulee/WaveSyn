@@ -49,6 +49,7 @@
                       {"Name":"Convert text to QR Barcode", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.to_console_qr()", "Print":true},
                       {"Name":"Convert file to image", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.convert_file_to_image()", "Print":true},
                       {"Name":"Display Clipboard Content in Console", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.to_console()", "Print":true},
+                      {"Name":"Get Clipboard Tables", "TearOff":0, "UnderLine":0, "Command":"wavesyn.lang_center.html_utils.get_tables(html_code=wavesyn.constants.CLIPBOARD_HTML)", "Print":true},
                       {"Name":"Remove Text Formatting", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_text_formatting()", "Print":true},
                       {"Name":"Remove Newlines (\\n)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=False)"},
                       {"Name":"Remove Newlines (\\n) and insert blanks", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=True)"},

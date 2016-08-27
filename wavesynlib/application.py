@@ -64,6 +64,7 @@ from wavesynlib.interfaces.modelnode import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver      
+from wavesynlib.languagecenter import wavesynscript
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer, Constant
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
@@ -204,7 +205,9 @@ wavesyn
         # To Do: WaveSyn will have a uniform command slot system.
         from wavesynlib.interfaces.xmlrpc.server import CommandSlot
         
-        # Construct Constants                
+        # Construct Constants   
+        # To Do: move this constants node to 
+        # wavesyn.lang_center.wavesynscript node.             
         class Constants(object): 
             name_value_pairs = (                
                 ('KEYSYM_MODIFIERS', {'Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R'}),
@@ -219,8 +222,12 @@ wavesyn
             for name, value in name_value_pairs:
                 locals()[name] = Constant(name, value)            
             
-            for name in simpledialogs.constant_names:
+            for name in wavesynscript.constant_names:
                 locals()[name] = Constant(name, None)
+                
+            # Clipboard Constants
+            CLIPBOARD_HTML = Constant('CLIPBOARD_HTML', None)
+            # End Clipboard Constants
         # End Construct Constants
         
         value_checker    = ValueChecker(root)

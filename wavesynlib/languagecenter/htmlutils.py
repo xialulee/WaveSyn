@@ -60,8 +60,9 @@ class HTMLUtils(ModelNode):
     def __init__(self, *args, **kwargs):
         super(HTMLUtils, self).__init__(*args, **kwargs)
         
-    @staticmethod
-    def _get_html_code(html_code=None, stream=None, file_path=None, encoding=None):
+    def _get_html_code(self, html_code=None, stream=None, file_path=None, encoding=None):
+        if hasattr(self.root_node.interfaces.os.clipboard, 'support_clipboard_html'):
+            html_code = self.root_node.interfaces.os.clipboard.support_clipboard_html(html_code)
         if html_code:
             pass
         elif stream:
@@ -77,7 +78,7 @@ class HTMLUtils(ModelNode):
         return html_code
         
     @Scripting.printable
-    def get_table_text(self, html_code=None, stream=None, file_path=None, encoding=None):
+    def get_tables(self, html_code=None, stream=None, file_path=None, encoding=None):
         html_code = self._get_html_code(html_code, stream, file_path, encoding)
         return get_table_text(html_code)    
     
