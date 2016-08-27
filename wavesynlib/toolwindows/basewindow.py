@@ -54,7 +54,9 @@ Properties inherited from ModelNode:
         
     @Scripting.printable
     def close(self):
-        Scripting.root_node.on_window_quit(self)
+        #Scripting.root_node.on_window_quit(self)
+        if hasattr(self.parent_node, 'on_window_close'):
+            self.parent_node.on_window_close(self)
         # For Toplevel objects, use destroy rather than quit.
         self.__tk_object.destroy() 
         
@@ -189,5 +191,9 @@ class WindowDict(NodeDict, Observable):
     def pop(self, key):
         self.notify_observers(self[key], 'del')
         NodeDict.pop(self, key)
-         
         
+    def on_window_close(self, window):
+        self.root_node.print_tip(
+            eval_format(
+                '{window.node_path} is closed, and its ID becomes defunct for scripting system hereafter.'))
+        self.pop(id(window))
