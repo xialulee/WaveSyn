@@ -115,7 +115,7 @@ class ExcelUtils(ModelNode):
                 retval.reverse()
                 return retval
             else:
-                raise TypeError('Incompatible data type. ')
+                raise TypeError('Incompatible data type.')
                 
     @Scripting.printable
     def flipud(self, data):
@@ -125,6 +125,19 @@ class ExcelUtils(ModelNode):
             return retval
         else: # 1D list/tuple is a row vector.
             raise TypeError('Incompatible data type.')
+            
+    @Scripting.printable
+    def replace_string(self, data, old, new):
+        if self.is_nested_iterable(data): # 2D Data
+            for row in data:
+                for index, cell in enumerate(row):
+                    row[index] = cell.replace(old, new)
+        else:
+            if isinstance(data, (list, tuple)): # 1D data
+                for index, cell in enumerate(data):
+                    data[index] = cell.replace(old, new)
+            else:
+                raise TypeError('Incompatible data type.')
 
 
 class ExcelCOMObject(ModelNode):
