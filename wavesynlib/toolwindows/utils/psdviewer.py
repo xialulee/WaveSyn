@@ -144,7 +144,7 @@ class PSDViewer(TkToolWindow):
         
     def _on_load_psd(self):
         with code_printer:
-            self.load(self.root_node.constants.ASK_OPEN_FILENAME)
+            self.load(self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
     
     def _on_export_all(self):
         pass

@@ -12,7 +12,7 @@
 		"Name":"Instrument", "TearOff":0, "UnderLine":0, "SubMenu":[	    
 		    {"Name":"Newwork Analyzer", "TearOff":0, "UnderLine":0, "SubMenu":[
                         {"Name":"S2P Viewer", "UnderLine":0, "Command":"wavesyn.create_window(module_name='instrument.networkanalyzer', class_name='TouchstoneViewer')"},
-                        {"Name":"Convert to CSV", "UnderLine":0, "Command":"wavesyn.file_utils.touchstone_files[wavesyn.constants.ASK_OPEN_FILENAME].to_csv(wavesyn.constants.ASK_SAVEAS_FILENAME)"}
+                        {"Name":"Convert to CSV", "UnderLine":0, "Command":"wavesyn.file_utils.touchstone_files[wavesyn.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME].to_csv(wavesyn.lang_center.wavesynscript.constants.ASK_SAVEAS_FILENAME)"}
                     ]
                     },
 
@@ -49,7 +49,7 @@
                       {"Name":"Convert text to QR Barcode", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.to_console_qr()", "Print":true},
                       {"Name":"Convert file to image", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.convert_file_to_image()", "Print":true},
                       {"Name":"Display Clipboard Content in Console", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.to_console()", "Print":true},
-                      {"Name":"Get Clipboard Tables", "TearOff":0, "UnderLine":0, "Command":"wavesyn.lang_center.html_utils.get_tables(html_code=wavesyn.constants.CLIPBOARD_HTML)", "Print":true},
+                      {"Name":"Get Clipboard Tables", "TearOff":0, "UnderLine":0, "Command":"wavesyn.lang_center.html_utils.get_tables(html_code=wavesyn.lang_center.wavesynscript.constants.CLIPBOARD_HTML)", "Print":true},
                       {"Name":"Remove Text Formatting", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_text_formatting()", "Print":true},
                       {"Name":"Remove Newlines (\\n)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=False)"},
                       {"Name":"Remove Newlines (\\n) and insert blanks", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=True)"},
@@ -57,7 +57,7 @@
                   ]
                   },
                   {"Name":"Mouse", "TearOff":0, "UnderLine":0, "SubMenu":[
-                      {"Name":"Set Mouse Cursor Position", "TearOff":0, "UnderLine":0, "Command":["wavesyn.interfaces.os.mouse.set_x(wavesyn.constants.ASK_INTEGER)", "wavesyn.interfaces.os.mouse.set_y(wavesyn.constants.ASK_INTEGER)"]}
+                      {"Name":"Set Mouse Cursor Position", "TearOff":0, "UnderLine":0, "Command":["wavesyn.interfaces.os.mouse.set_x(wavesyn.lang_center.wavesynscript.constants.ASK_INTEGER)", "wavesyn.interfaces.os.mouse.set_y(wavesyn.lang_center.wavesynscript.constants.ASK_INTEGER)"]}
                   ]
                   },
                   {"Name":"Windows", "TearOff":0, "UnderLine":0, "SubMenu":[
@@ -74,12 +74,12 @@
               {
               "Name":"File System", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"Replica Finder", "UnderLine":0, "Command":"wavesyn.create_window(module_name='utils.replicafinder', class_name='ReplicaFinderWindow')"},
-                  {"Name":"Tar Extractor", "UnderLine":0, "Command":"wavesyn.file_utils.tar_files[wavesyn.constants.ASK_DIALOG].extract_all(wavesyn.constants.ASK_DIALOG)"}]
+                  {"Name":"Tar Extractor", "UnderLine":0, "Command":"wavesyn.file_utils.tar_files[wavesyn.lang_center.wavesynscript.constants.ASK_DIALOG].extract_all(wavesyn.lang_center.wavesynscript.constants.ASK_DIALOG)"}]
               },
               {
               "Name":"PDF Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"Extract Pages", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.constants.ASK_OPEN_FILENAME][wavesyn.constants.ASK_SLICE].write(wavesyn.constants.ASK_SAVEAS_FILENAME, wavesyn.constants.ASK_YESNO)"},
-                  {"Name":"Merge Multiple PDF Files", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.constants.ASK_ORDERED_FILES].merge(wavesyn.constants.ASK_SAVEAS_FILENAME)"}
+                  {"Name":"Extract Pages", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME][wavesyn.lang_center.wavesynscript.constants.ASK_SLICE].write(wavesyn.lang_center.wavesynscript.constants.ASK_SAVEAS_FILENAME, wavesyn.lang_center.wavesynscript.constants.ASK_YESNO)"},
+                  {"Name":"Merge Multiple PDF Files", "UnderLine":0, "Command":"wavesyn.file_utils.pdf_files[wavesyn.lang_center.wavesynscript.constants.ASK_ORDERED_FILES].merge(wavesyn.lang_center.wavesynscript.constants.ASK_SAVEAS_FILENAME)"}
               ]
               },
               {
@@ -92,7 +92,7 @@
 
           {
           "Name":"Settings", "TearOff":0, "UnderLine":0, "SubMenu":[
-              {"Name":"Set Matplotlib Style", "UnderLine":0, "Command":"wavesyn.set_matplotlib_style(style_name=wavesyn.constants.ASK_LIST_ITEM)", "Print":true}
+              {"Name":"Set Matplotlib Style", "UnderLine":0, "Command":"wavesyn.set_matplotlib_style(style_name=wavesyn.lang_center.wavesynscript.constants.ASK_LIST_ITEM)", "Print":true}
               ]
           },
 

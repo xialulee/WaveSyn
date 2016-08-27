@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Dec 31 16:15:12 2015
+Created on Sat Aug 27 23:07:59 2016
 
 @author: Feng-cong Li
 """
+
 from __future__ import print_function, division, unicode_literals
 
 from importlib import import_module
@@ -339,6 +340,56 @@ class Constant(object):
     @property
     def value(self):
         return self.__value
+        
+        
+constant_names = []
+
+             
+class Constants(object): 
+    name_value_pairs = (                
+        ('KEYSYM_MODIFIERS', {'Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R'}),
+        ('KEYSYM_CURSORKEYS', {
+            'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 
+            'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 
+            'Left', 'Right', 'Up', 'Down', 
+            'Home', 'End', 'Next', 'Prior'                
+        })
+    )
+    
+    for name, value in name_value_pairs:
+        locals()[name] = Constant(name, value)            
+    
+    @classmethod
+    def append_new_constant(cls, name, value=None):
+        setattr(cls, name, Constant(name, value))
+    # End Clipboard Constants
+
+
+def _print_replacement_of_constant(const, value):
+    Scripting.root_node.print_tip([{'type':'text', 'content':'''
+The actual value of the place where {0} holds is
+  {1}'''.format(const.name, repr(value))}])
+
+    
+def constant_handler(print_replacement=True):
+    '''This is a decorator with an argument.
+It functionality is help methods handling constants by fill in the actual value
+hold by a constant.
+'''    
+    def _constant_handler(func):
+        # Automatic constants generation based on method names. 
+        constant_name = func.__name__.replace('support_', '').upper()
+        Constants.append_new_constant(constant_name)
+        constant = Constant(constant_name)
+        #Wrapper function
+        def f(self, arg, **kwargs):
+            if arg is constant:
+                arg = func(self, arg, **kwargs)
+                if print_replacement:
+                    _print_replacement_of_constant(constant, arg)
+            return arg
+        return f    
+    return _constant_handler        
 # End WaveSyn Script Constants
 
 
@@ -374,7 +425,7 @@ class Scripting(ModelNode):
             if isinstance(param, ScriptCode):
                 return param.code
             elif isinstance(param, Constant):
-                return eval_format('{Scripting.root_name}.constants.{param.name}')
+                return eval_format('{Scripting.root_name}.lang_center.wavesynscript.constants.{param.name}')
             else:
                 return repr(param)
                 
@@ -434,34 +485,6 @@ class CodePrinter(object):
 code_printer = CodePrinter()
 
 
-    # Constant Support
-# To Do: replace this simple list with an observable object.
-# Notify the constants node while new constants is included. 
-constant_names = []
 
-
-def _print_replacement_of_constant(const, value):
-    Scripting.root_node.print_tip([{'type':'text', 'content':'''
-The actual value of the place where {0} holds is
-  {1}'''.format(const.name, repr(value))}])
-
-    
-def constant_handler(print_replacement=True):    
-    def _constant_handler(func):
-        # Automatic constants generation based on method names. 
-        constant_name = func.__name__.replace('support_', '').upper()
-        constant_names.append(constant_name)
-        constant = Constant(constant_name)
-        #Wrapper function
-        def f(self, arg, **kwargs):
-            if arg is constant:
-                arg = func(self, arg, **kwargs)
-                if print_replacement:
-                    _print_replacement_of_constant(constant, arg)
-            return arg
-        return f    
-    return _constant_handler
-    # End Constant Support
 # End Scripting Sub-System
         
-

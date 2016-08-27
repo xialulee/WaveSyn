@@ -76,7 +76,7 @@ dict(
             
     def _on_load(self):
         with code_printer:
-            self.load(self.root_node.constants.ASK_OPEN_FILENAME)
+            self.load(self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
     
     @Scripting.printable
     def load(self, filename):

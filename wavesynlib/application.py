@@ -204,35 +204,11 @@ wavesyn
         
         # To Do: WaveSyn will have a uniform command slot system.
         from wavesynlib.interfaces.xmlrpc.server import CommandSlot
-        
-        # Construct Constants   
-        # To Do: move this constants node to 
-        # wavesyn.lang_center.wavesynscript node.             
-        class Constants(object): 
-            name_value_pairs = (                
-                ('KEYSYM_MODIFIERS', {'Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R'}),
-                ('KEYSYM_CURSORKEYS', {
-                    'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 
-                    'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 
-                    'Left', 'Right', 'Up', 'Down', 
-                    'Home', 'End', 'Next', 'Prior'                
-                })
-            )
-            
-            for name, value in name_value_pairs:
-                locals()[name] = Constant(name, value)            
-            
-            for name in wavesynscript.constant_names:
-                locals()[name] = Constant(name, None)
                 
-            # Clipboard Constants
-            CLIPBOARD_HTML = Constant('CLIPBOARD_HTML', None)
-            # End Clipboard Constants
-        # End Construct Constants
-        
         value_checker    = ValueChecker(root)
                 
-        # File Utils Node                     
+        # File Utils Node      
+        # To Do: use simpledialog ASK_* constants
         class TarFileManipulator(ModelNode):
             def __init__(self, *args, **kwargs):
                 filename = kwargs.pop('filename')
@@ -246,7 +222,7 @@ wavesyn
                 
             @Scripting.printable
             def extract_all(self, directory):
-                if directory is self.root_node.constants.ASK_DIALOG:
+                if directory is self.root_node.lang_center.wavesynscript.constants.ASK_DIALOG:
                     directory = askdirectory(initialdir=os.getcwd())
                 if not directory:
                     return
@@ -259,7 +235,7 @@ wavesyn
                 ModelNode.__init__(self, *args, **kwargs)
                 
             def __getitem__(self, filename):
-                if filename is self.root_node.constants.ASK_DIALOG:
+                if filename is self.root_node.lang_center.wavesynscript.constants.ASK_DIALOG:
                     filename = askopenfilename(filetypes=[('TAR Files', ('*.tar', '*.tar.gz', '*.tgz')), ('All Files', '*.*')])
                 if not filename:
                     return
@@ -290,11 +266,7 @@ wavesyn
                 interrupter = InterrupterNode(),
                 dialogs = simpledialogs.Dialogs(self),
                 # End UI elements
-                
-                # Constants
-                constants = Constants,
-                # End Constants
-                                
+                                                
                 # Interfaces node
                 interfaces = Interfaces(),
                 # End Interfaces node
@@ -720,8 +692,8 @@ class ConsoleText(ScrolledText, ModelNode):
         # Using keycode is not a good practice here, because for the same key,
         # the keycode may change on different machines and operating systems.
         #if evt.keysym not in ('Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R',  'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Next', 'Prior'):
-        if (evt.keysym not in self.root_node.constants.KEYSYM_MODIFIERS.value) and \
-           (evt.keysym not in self.root_node.constants.KEYSYM_CURSORKEYS.value):
+        if (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
+           (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
             r, c    = self.get_cursor_pos()
             prompt  = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
             if prompt != '>>> ' and prompt != '... ':

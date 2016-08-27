@@ -6,14 +6,17 @@ Created on Thu Dec 31 16:59:26 2015
 """
 #import platform
 from wavesynlib.languagecenter import htmlutils
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import ModelNode
+from wavesynlib.languagecenter.wavesynscript.modelnode import WaveSynScriptNode
 
     
 class LangCenterNode(ModelNode):
     def __init__(self, *args, **kwargs):
         super(LangCenterNode, self).__init__(*args, **kwargs)
         with self.attribute_lock:
+            self.wavesynscript = WaveSynScriptNode()
             self.html_utils = htmlutils.HTMLUtils()
+            
                  
 #    @Scripting.printable
 #    def connectMatlab(self):
