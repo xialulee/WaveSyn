@@ -24,13 +24,12 @@ import matplotlib.pyplot as pyplot
 
 from numpy import deg2rad, rad2deg
 
-from wavesynlib.application import get_gui_image_path
 from wavesynlib.toolwindows.basewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting
 from wavesynlib.languagecenter.utils import (
     auto_subs, eval_format, set_attributes)
 from wavesynlib.languagecenter.wavesynscript import (
-    ModelNode, NodeList, code_printer)
+    Scripting, ModelNode, NodeList, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.guicomponents.tk import (
     Group, LabeledEntry, ScrolledList, LabeledScale)
@@ -718,7 +717,7 @@ class GridGroup(Observable, Group):
             self.notify_observers(major_grid=major.get(), 
                                   minor_grid=minor.get(), props=props)
                                     
-        icon = ImageTk.PhotoImage(file=get_gui_image_path('GridTab_Major.png'))
+        icon = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path('GridTab_Major.png'))
         self.__gui_images.append(icon)
         major_grid_checkbutton = Checkbutton(self, text='Grid Major', 
                                              image=icon,
@@ -728,7 +727,7 @@ class GridGroup(Observable, Group):
         major_grid_checkbutton.pack(fill=X)
         self.major_grid_checkbutton = major_grid_checkbutton
         
-        icon = ImageTk.PhotoImage(file=get_gui_image_path('GridTab_Minor.png'))
+        icon = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path('GridTab_Minor.png'))
         self.__gui_images.append(icon)
         minor_grid_checkbutton = Checkbutton(self, text='Grid Minor', 
                                              image=icon,
@@ -826,7 +825,7 @@ class AxisGroup(Observable, Group):
         for c in range(4):
             for r in range(2):
                 temp = LabeledEntry(paramfrm)
-                image   = ImageTk.PhotoImage(file=get_gui_image_path(images[c*2+r]))
+                image   = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path(images[c*2+r]))
                 set_attributes(temp,
                     checker_function   = check_float,
                     #label_text   = names[c*2+r],
@@ -992,7 +991,7 @@ class FigureExportGroup(Group): # To Do: Use observer protocol.
         super(FigureExportGroup, self).__init__(*args, **kwargs)
         self.__gui_images = []
         imageFigureExportBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_ExportFigure_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_ExportFigure_Button.png')
         )
         self.__gui_images.append(imageFigureExportBtn)
         frm = Frame(self); frm.pack(side=LEFT)

@@ -67,7 +67,7 @@ from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter import timeutils
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
 from wavesynlib.toolwindows import simpledialogs
-from wavesynlib.fileutils import FileUtils
+from wavesynlib.toolwindows.basewindow import WindowDict
 from wavesynlib.status import busy_doing
 
 
@@ -210,14 +210,17 @@ wavesyn
                 taskbar_icon = TaskbarIcon(root),
                 interrupter = InterrupterNode(),
                 dialogs = simpledialogs.Dialogs(self),
+                windows = WindowDict(),
                 # End UI elements
                                                 
                 # Interfaces node
                 interfaces = Interfaces(),
                 # End Interfaces node
                 
-                # File utils
-                file_utils = FileUtils(),
+                file_utils = ModelNode(
+                    is_lazy=True,
+                    module_name='wavesynlib.fileutils', 
+                    class_name='FileUtils'),
                 
                 # Thread related
                 main_thread_id = main_thread_id,
@@ -244,8 +247,6 @@ wavesyn
                 stream_manager = StreamManager(),                
                 
                 config_file_path = config_file_path
-                
-#                cudaWorker      = CUDAWorker()
             )  
             
         # Timer utils
@@ -254,8 +255,8 @@ wavesyn
         self.timer.every = timeutils.TimerActionNode(type_='every')        
         # End Timer utils
                         
-        from wavesynlib.toolwindows.basewindow import WindowDict                                  
-        self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
+#        from wavesynlib.toolwindows.basewindow import WindowDict                                  
+#        self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
         self.editors    = EditorDict()
         
         with self.attribute_lock:
@@ -535,10 +536,9 @@ wavesyn
         plt.style.use(style_name)
         
                 
-def get_gui_image_path(filename):
-    return os.path.join(Application.instance.dir_path, 'images', filename)        
+    def get_gui_image_path(self, filename):
+        return os.path.join(self.dir_path, 'images', filename)        
                 
-
         
 # How to implement a thread safe console?
 # see: http://effbot.org/zone/tkinter-threads.htm              

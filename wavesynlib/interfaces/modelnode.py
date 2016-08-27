@@ -18,8 +18,7 @@ class Interfaces(ModelNode):
     def __init__(self, *args, **kwargs):
         super(Interfaces, self).__init__(*args, **kwargs)
         
-        with self.attribute_lock:
-            self.os = OperatingSystem()
+        self.os = OperatingSystem()
             
-            if platform.system().lower() == 'windows':
-                self.msoffice = MSOffice()
+        if platform.system().lower() == 'windows':
+            self.msoffice = MSOffice()

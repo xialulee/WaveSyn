@@ -17,7 +17,7 @@ from scipy.io import savemat
 
 import six.moves._thread as thread
 
-from wavesynlib.application import get_gui_image_path, WaveSynThread
+from wavesynlib.application import WaveSynThread
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.guicomponents.tk import Group, LabeledEntry, ScrolledList
 from wavesynlib.languagecenter.utils import auto_subs, set_attributes
@@ -35,7 +35,7 @@ class OptimizeGroup(Group):
 #        frm.pack(side=TOP)
         
         imageMLbl = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_M_Label.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_M_Label.png')
         )
         self.__gui_images.append(imageMLbl)        
         self.__M = LabeledEntry(self)
@@ -49,7 +49,7 @@ class OptimizeGroup(Group):
         self._app.balloon.bind_widget(self.__M, balloonmsg='The number of the array elements.')
 
         imageSolveBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_Solve_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_Solve_Button.png')
         )
         self.__gui_images.append(imageSolveBtn)
 
@@ -60,7 +60,7 @@ class OptimizeGroup(Group):
 #        frm = Frame(self)
 #        frm.pack(side=TOP)
         imageDisplayBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_Display_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_Display_Button.png')
         )
         self.__gui_images.append(imageDisplayBtn)
         self.__bDisplay = IntVar(0)
@@ -129,7 +129,7 @@ class EditGroup(Group):
                 
                 
         imageAddBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_Add_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_Add_Button.png')
         )
         self.__gui_images.append(imageAddBtn)
         btn = Button(frm, image=imageAddBtn, command=self._on_add_button_click)
@@ -137,7 +137,7 @@ class EditGroup(Group):
         self._app.balloon.bind_widget(btn, balloonmsg='Add new beam to the ideal pattern.')
         
         imageDelBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_Del_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_Del_Button.png')
         )
         self.__gui_images.append(imageDelBtn)
         btn = Button(frm, image=imageDelBtn, command=self._on_delete_button_click)
@@ -145,7 +145,7 @@ class EditGroup(Group):
         self._app.balloon.bind_widget(btn, balloonmsg='Remove the selected beam in the listbox.')
         
         imageClrBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_Clear_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_Clear_Button.png')
         )
         self.__gui_images.append(imageClrBtn)
         btn = Button(frm, image=imageClrBtn, command=self._on_clear_button_click)
@@ -153,7 +153,7 @@ class EditGroup(Group):
         self._app.balloon.bind_widget(btn, balloonmsg='Clear the listbox of the beam parameters.')
         
         imagePlotBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_Plot_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_Plot_Button.png')
         )
         self.__gui_images.append(imagePlotBtn)
         btn = Button(frm, image=imagePlotBtn, command=self._on_plot_ideal_pattern)
@@ -215,7 +215,7 @@ class FileExportGroup(Group):
         frm = Frame(self)
         self.__gui_images = []
         imageMatFileBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_SaveMat_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_SaveMat_Button.png')
         )
         self.__gui_images.append(imageMatFileBtn)
         Button(frm, image=imageMatFileBtn, command=self._on_save_mat_file).pack(side=TOP)
@@ -224,7 +224,7 @@ class FileExportGroup(Group):
         
         frm = Frame(self)
         imageExcelFileBtn = ImageTk.PhotoImage(
-            file=get_gui_image_path('Pattern_SaveExcel_Button.png')
+            file=Scripting.root_node.get_gui_image_path('Pattern_SaveExcel_Button.png')
         )
         self.__gui_images.append(imageExcelFileBtn)
         Button(frm, image=imageExcelFileBtn).pack(side=TOP)

@@ -166,9 +166,9 @@ then node will have a property named 'a', which cannot be re-assigned.
             
     @property
     def root_node(self):
-        node    = self
+        node = self
         while not node.is_root:
-            node    = node.parent_node
+            node = node.parent_node
         return node
         
                 

@@ -220,10 +220,8 @@ class Excel(NodeDict):
     progid = 'Excel.Application'    
     
     def __init__(self, *args, **kwargs):
-        super(Excel, self).__init__(*args, **kwargs)
-        
-        with self.attribute_lock:
-            self.utils = ExcelUtils()
+        super(Excel, self).__init__(*args, **kwargs)        
+        self.utils = ExcelUtils()
         
     def _generate_object(self, func):
         excel_handle = func(self.progid)
@@ -244,6 +242,5 @@ class Excel(NodeDict):
 class MSOffice(ModelNode):
     def __init__(self, *args, **kwargs):
         super(MSOffice, self).__init__(*args, **kwargs)
-        with self.attribute_lock:
-            self.excel = Excel()
+        self.excel = Excel()
         

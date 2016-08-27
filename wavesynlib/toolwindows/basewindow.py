@@ -12,7 +12,6 @@ from six.moves.tkinter import Toplevel, Frame, IntVar
 from six.moves.tkinter_ttk import Notebook, Label, Button, Checkbutton, Scale
 
 from PIL import ImageTk
-from wavesynlib.application import get_gui_image_path
 
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, code_printer)
@@ -95,9 +94,9 @@ class WindowManager(ModelNode, WindowComponent):
         
         self.__topmost = topmost = IntVar(0)
         
-        copy_id_icon = ImageTk.PhotoImage(file=get_gui_image_path('WindowManager_CopyID.png'))
+        copy_id_icon = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path('WindowManager_CopyID.png'))
         self.__gui_images.append(copy_id_icon)
-        copy_path_icon = ImageTk.PhotoImage(file=get_gui_image_path('WindowManager_CopyPath.png'))
+        copy_path_icon = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path('WindowManager_CopyPath.png'))
         self.__gui_images.append(copy_path_icon)
         
         def on_scale(val):
@@ -159,7 +158,7 @@ class TkToolWindow(TkWindowNode):
         tool_tabs.pack(fill='x')
         with self.attribute_lock:
             self._tool_tabs = tool_tabs
-            self.window_manager = WindowManager()
+        self.window_manager = WindowManager()
             
     def _make_window_manager_tab(self):
         self.window_manager._make_widgets()

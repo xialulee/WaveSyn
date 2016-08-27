@@ -231,9 +231,8 @@ class OperatingSystem(ModelNode):
     
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
-        with self.attribute_lock:
-            self.clipboard = Clipboard()
-            self.mouse = Mouse()
+        self.clipboard = Clipboard()
+        self.mouse = Mouse()
             
     
     @Scripting.printable    

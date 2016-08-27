@@ -205,9 +205,8 @@ class ReplicaFinderWindow(TkToolWindow):
         # } End
                    
         self._make_window_manager_tab()
-        
-        with self.attribute_lock:
-            self.replica_finder = ReplicaFinder()
+
+        self.replica_finder = ReplicaFinder()
             
         self.__dir_indicator = dir_indicator = DirIndicator(self.tk_object)
         dir_indicator.pack(fill='x')
