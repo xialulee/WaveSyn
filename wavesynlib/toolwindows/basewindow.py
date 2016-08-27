@@ -6,6 +6,8 @@ Created on Sun Jan 10 16:55:14 2016
 """
 from __future__ import print_function, division
 
+from importlib import import_module
+
 from six.moves.tkinter import Toplevel, Frame, IntVar
 from six.moves.tkinter_ttk import Notebook, Label, Button, Checkbutton, Scale
 
@@ -175,6 +177,11 @@ class WindowDict(NodeDict, Observable):
             raise ValueError('The key should be identical to the ID of the window.')
         NodeDict.__setitem__(self, key, val)
         self.notify_observers(val, 'new')
+        
+    @Scripting.printable
+    def create(self, module_name, class_name):
+        mod = import_module(module_name)
+        return self.add(node=getattr(mod, class_name)())        
         
     def add(self, node):
         self[id(node)] = node

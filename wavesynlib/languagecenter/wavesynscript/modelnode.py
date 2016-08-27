@@ -18,3 +18,4 @@ class WaveSynScriptNode(ModelNode):
         
         with self.attribute_lock:
             self.constants = Constants
+            

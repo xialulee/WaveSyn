@@ -10,7 +10,7 @@ import os
 
 from six.moves.tkinter_tksimpledialog import askstring, askinteger
 from six.moves.tkinter_messagebox import showinfo, askyesno
-from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askopenfilenames
+from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askopenfilenames, askdirectory
 
 from wavesynlib.guicomponents.tk import ask_list_item
 
@@ -60,6 +60,10 @@ class Dialogs(ModelNode):
         arg = file_list
         showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
         return arg    
+        
+    @constant_handler()
+    def support_ask_directory(self, arg, **kwargs):
+        return askdirectory(**kwargs)
         
     @constant_handler()
     def support_ask_open_filename(self, arg, **kwargs):

@@ -22,24 +22,21 @@ from six.moves import queue
 import os
 import os.path
 import sys
-from importlib import import_module
+
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
-
-import tarfile
 
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
 
 import six.moves.tkinter_tix as Tix
 from six.moves.tkinter import Frame
-from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askdirectory
+from six.moves.tkinter_tkfiledialog import asksaveasfilename
 
 import matplotlib
 matplotlib.use('TkAgg')
 
 from numpy import *
-
 
 from datetime import datetime
 from inspect import getsourcefile
@@ -64,13 +61,13 @@ from wavesynlib.interfaces.modelnode import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton, SimpleObserver      
-from wavesynlib.languagecenter import wavesynscript
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer, Constant
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter import timeutils
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
 from wavesynlib.toolwindows import simpledialogs
+from wavesynlib.fileutils import FileUtils
 from wavesynlib.status import busy_doing
 
 
@@ -145,9 +142,6 @@ class WaveSynThread(object):
                 app.windows[winId].tk_object.update()
 
 
-
-
-
 @six.add_metaclass(Singleton)
 class Application(ModelNode): # Create an ABC for root node to help wavesynscript.Scripting determine whether the node is root. 
     '''This class is the root of the model tree.
@@ -158,8 +152,9 @@ since the instance of Application is the first node created on the model tree.
 The model tree of the application is illustrated as follows:
 wavesyn
 -console
--os
-    -clipboard
+-interfaces
+    -os
+        -clipboard
 -windows[id]
     -instance of PatternFitting
         -figure_book
@@ -207,56 +202,6 @@ wavesyn
                 
         value_checker    = ValueChecker(root)
                 
-        # File Utils Node      
-        # To Do: use simpledialog ASK_* constants
-        class TarFileManipulator(ModelNode):
-            def __init__(self, *args, **kwargs):
-                filename = kwargs.pop('filename')
-                ModelNode.__init__(self, *args, **kwargs)
-                with self.attribute_lock:
-                    self.filename = filename
-                    
-            @property
-            def node_path(self):
-                return eval_format('{self.parent_node.node_path}["{self.filename}"]')
-                
-            @Scripting.printable
-            def extract_all(self, directory):
-                if directory is self.root_node.lang_center.wavesynscript.constants.ASK_DIALOG:
-                    directory = askdirectory(initialdir=os.getcwd())
-                if not directory:
-                    return
-                    
-                tar = tarfile.open(self.filename)
-                tar.extractall(directory)
-        
-        class TarFileManager(ModelNode):
-            def __init__(self, *args, **kwargs):
-                ModelNode.__init__(self, *args, **kwargs)
-                
-            def __getitem__(self, filename):
-                if filename is self.root_node.lang_center.wavesynscript.constants.ASK_DIALOG:
-                    filename = askopenfilename(filetypes=[('TAR Files', ('*.tar', '*.tar.gz', '*.tgz')), ('All Files', '*.*')])
-                if not filename:
-                    return
-                    
-                manipulator = TarFileManipulator(filename=filename)
-                object.__setattr__(manipulator, 'parent_node', self)
-                manipulator.lock_attribute('parent_node')
-                return manipulator
-                
-        
-        class FileUtils(ModelNode):
-            def __init__(self, *args, **kwargs):
-                ModelNode.__init__(self, *args, **kwargs)                
-                self.pdf_files = ModelNode(is_lazy=True, module_name='wavesynlib.interfaces.pdf.modelnode', class_name='PDFFileManager')
-                self.touchstone_files = ModelNode(is_lazy=True, module_name='wavesynlib.interfaces.devcomm.touchstone.modelnode', class_name='TouchstoneFileManager')
-                self.tar_files = ModelNode(is_lazy=True, class_object=TarFileManager)
-                
-        self.file_utils = FileUtils()
-        # End File Utils Node
-                
-        
         with self.attribute_lock:
             set_attributes(self,
                 # UI elements
@@ -270,6 +215,9 @@ wavesyn
                 # Interfaces node
                 interfaces = Interfaces(),
                 # End Interfaces node
+                
+                # File utils
+                file_utils = FileUtils(),
                 
                 # Thread related
                 main_thread_id = main_thread_id,
@@ -381,12 +329,6 @@ wavesyn
         path_string = os.path.pathsep.join(extra_path)
         os.environ['PATH'] = path_string
         
-    def create_window(self, module_name, class_name):
-        '''Create a tool window.'''
-        # To Do: Move this method to window node
-        mod = import_module(auto_subs('wavesynlib.toolwindows.$module_name'))
-        return self.windows.add(node=getattr(mod, class_name)())
-
     def launch_editor(self, editor_path=None):
         if editor_path is None:
             editor_path  = self.editor_info['Path']
@@ -442,8 +384,6 @@ wavesyn
             except SystemExit:
                 self._on_exit()
             return ret
-            
-                    
             
     def print_tip(self, contents):
         def config_link_tag(widget, tag_name, command, original_cursor):
