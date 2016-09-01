@@ -184,32 +184,33 @@ class ConsoleText(ScrolledText, ModelNode):
                 code = self.text.get(auto_subs('$r.4'), auto_subs('$r.end'))
                 try:
                     stripped_code     = code.strip()
-                    if stripped_code and stripped_code[0] == '!':
-                        # Execute a system command
-                        app.execute(code)
+
+                    try: # Code is in one mode of WaveSynScript
+                        self.root_node.lang_center.wavesynscript.modes.run(stripped_code)
                         self.prompt_symbol   = '>>> '
                         self.update_content(tag='', content='\n')
                         return 'break'
-                    if stripped_code == '':
-                        code = '\n'.join(code_list)
-                        del code_list[:]
-                    stripped_code = code.strip()
-                    if stripped_code == '':
-                        self.prompt_symbol   = '>>> '
-                        self.update_content(tag='', content='\n') 
-                    elif code_list or stripped_code[-1] in (':', '\\') or stripped_code[0] in ('@',): # Threre is a bug here for decorators! To do: Solve it.
-                        code_list.append(code)
-                        self.prompt_symbol   = '... '
-                        self.update_content(tag='', content='\n')
-                    else:
-                        self.prompt_symbol   = '>>> '
-                        self.update_content(tag='', content='\n')
-                        try:
-                            ret = app.execute(code)
-                        except:
-                            traceback.print_exc()
-                        if ret is not None:
-                            self.update_content(tag='RETVAL', content=repr(ret)+'\n')
+                    except TypeError: # Code is normal Python code.
+                        if stripped_code == '':
+                            code = '\n'.join(code_list)
+                            del code_list[:]
+                        stripped_code = code.strip()
+                        if stripped_code == '':
+                            self.prompt_symbol   = '>>> '
+                            self.update_content(tag='', content='\n') 
+                        elif code_list or stripped_code[-1] in (':', '\\') or stripped_code[0] in ('@',): # Threre is a bug here for decorators! To do: Solve it.
+                            code_list.append(code)
+                            self.prompt_symbol   = '... '
+                            self.update_content(tag='', content='\n')
+                        else:
+                            self.prompt_symbol   = '>>> '
+                            self.update_content(tag='', content='\n')
+                            try:
+                                ret = app.execute(code)
+                            except:
+                                traceback.print_exc()
+                            if ret is not None:
+                                self.update_content(tag='RETVAL', content=repr(ret)+'\n')
     
                 finally:
                     self.text.mark_set('insert', 'end')
