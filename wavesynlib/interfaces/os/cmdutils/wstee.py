@@ -10,7 +10,7 @@ ERROR_NOERROR, ERROR_PARAM, ERROR_FILE = range(3)
 
 def print_usage(file = sys.stdout):
     helpstr = r'''
-COMMAND | python tee.py [OPTION]... [FILE]...
+COMMAND | python wstee.py [OPTION]... [FILE]...
 
 Copies standard input to each FILE, and also to standard output
 
