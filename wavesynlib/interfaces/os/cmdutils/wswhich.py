@@ -28,20 +28,23 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], \
             'a',\
-            ['all', 'winopen']\
+            ['all', 'winopen', 'jsonoutput']\
         ) # TODO
     except getopt.GetoptError, err:
         print(str(err), file=sys.stderr)
         usage()
         return ERROR_PARAM
         
-    all_cmd  = False
-    wopen   = False
+    all_cmd = False
+    wopen = False
+    json_output = False
     for o, a in opts:
         if o in ('-a', '--all'):
             all_cmd = True
         if o == '--winopen':
             wopen   = True
+        if o == '--jsonoutput':
+            json_output = True
     
     name = args[0]
     name, ext = os.path.splitext(name)
@@ -78,10 +81,18 @@ def main(argv):
                 break        
             
     if file_paths:
+        sep = '['
         for file_path in file_paths:
-            print(file_path)
+            if not json_output:
+                print(file_path)
+            else:
+                print(sep)
+                sep = ','
+                print('{{"path":"{}"}}'.format(file_path), end='')
             if wopen:
                 winopen(file_path)
+        if json_output:
+            print(']')
     else:
         print('wswhich.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
         return ERROR_NOTFOUND
