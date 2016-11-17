@@ -15,6 +15,10 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
+#####################
+from wavesynlib.stdstream import REALSTDOUT
+#####################
+
 import six
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
@@ -73,6 +77,32 @@ def make_menu(win, menu, json=False):
     make(top, menu)
     win.config(menu=top)
     
+    
+class History(object):
+    def __init__(self, max_records=50):
+        self.__max_records = max_records
+        self.__history_list = ['']
+        self.__cursor = -1
+        
+    def get(self, direction):
+        direction = 1 if direction > 0 else -1
+        new_cursor = self.__cursor + direction
+        if new_cursor < 0:
+            return ''
+        elif new_cursor >= len(self.__history_list):
+            return self.__history_list[-1]
+        else:
+            self.__cursor = new_cursor
+            return self.__history_list[self.__cursor]
+            
+    def put(self, code):
+        self.__history_list.insert(0, code)
+        if len(self.__history_list) > self.__max_records + 1:
+            del self.__history_list[-2]
+            
+    def reset_cursor(self):
+        self.__cursor = -1
+    
 
 # How to implement a thread safe console?
 # see: http://effbot.org/zone/tkinter-threads.htm              
@@ -113,7 +143,9 @@ class ConsoleText(ScrolledText, ModelNode):
         self.color_delegator = ColorDelegator()
         self.percolator.insertfilter(self.color_delegator)   
         #############################################################                        
-        self.prompt_symbol = '>>> '    
+        self.prompt_symbol = '>>> '  
+        
+        self.__history = History()
         
         
     def update_content(self, tag, content):
@@ -141,7 +173,6 @@ class ConsoleText(ScrolledText, ModelNode):
         # Experimenting with idlelib's AutoComplete
         ##############################################################
         keysym = evt.keysym  
-        #REALSTDOUT.write(keysym+'\n')
         if self.__auto_complete.autocompletewindow and \
                 self.__auto_complete.autocompletewindow.is_active():
             if self.__auto_complete.autocompletewindow.keypress_event(evt) == 'break':
@@ -149,6 +180,14 @@ class ConsoleText(ScrolledText, ModelNode):
             else:
                 if keysym == 'Tab':
                     return 'break'
+                    
+        if evt.keysym not in ('Up', 'Down'):
+            self.__history.reset_cursor()
+        else:
+            REALSTDOUT.write('triggered\n')
+            code = self.__history.get(1)
+            self.text.insert('end', code)
+            return 'break'            
             
         if evt.keysym == 'Tab':
             return self.__auto_complete.autocomplete_event(evt)
@@ -182,8 +221,9 @@ class ConsoleText(ScrolledText, ModelNode):
             if evt.keysym == 'Return': # Return
                 app = Scripting.root_node
                 code = self.text.get(auto_subs('$r.4'), auto_subs('$r.end'))
+                self.__history.put(code)
                 try:
-                    stripped_code     = code.strip()
+                    stripped_code = code.strip()
 
                     try: # Code is in one mode of WaveSynScript
                         self.root_node.lang_center.wavesynscript.modes.run(stripped_code)
@@ -216,6 +256,7 @@ class ConsoleText(ScrolledText, ModelNode):
                     self.text.mark_set('insert', 'end')
                     self.text.see('end')
                     return 'break'            
+
                 
     def get_cursor_pos(self, mark='insert'): 
         return (int(i) for i in self.text.index(mark).split('.'))               
