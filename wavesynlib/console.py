@@ -82,26 +82,28 @@ class History(object):
     def __init__(self, max_records=50):
         self.__max_records = max_records
         self.__history_list = ['']
-        self.__cursor = -1
+        self.__cursor = 0
         
     def get(self, direction):
         direction = 1 if direction > 0 else -1
         new_cursor = self.__cursor + direction
+
+        # Always return a string for this function
         if new_cursor < 0:
             return ''
-        elif new_cursor >= len(self.__history_list):
-            return self.__history_list[-1]
+        elif new_cursor > len(self.__history_list):
+            return self.__history_list[0]
         else:
             self.__cursor = new_cursor
-            return self.__history_list[self.__cursor]
+            return self.__history_list[-new_cursor]
             
     def put(self, code):
-        self.__history_list.insert(0, code)
+        self.__history_list.append(code)
         if len(self.__history_list) > self.__max_records + 1:
-            del self.__history_list[-2]
+            del self.__history_list[1]
             
     def reset_cursor(self):
-        self.__cursor = -1
+        self.__cursor = 0
     
 
 # How to implement a thread safe console?
@@ -181,25 +183,41 @@ class ConsoleText(ScrolledText, ModelNode):
                 if keysym == 'Tab':
                     return 'break'
                     
+                    
+        # Begin Support History
         if evt.keysym not in ('Up', 'Down'):
             self.__history.reset_cursor()
         else:
-            REALSTDOUT.write('triggered\n')
-            code = self.__history.get(1)
-            self.text.insert('end', code)
-            return 'break'            
+            r_end, c_end = self.get_cursor_pos(mark='end')
+            r, c = self.get_cursor_pos()
+            if r == r_end-1:
+                self.text.delete(auto_subs('$r.4'), 'end')
+                code = self.__history.get(
+                    1 if evt.keysym in ('Up', 'KP_Up') 
+                    else -1)
+                self.text.insert('end', code)
+                return 'break'     
+        # End Support History
             
+            
+        # Begin: Tab key for auto complete
         if evt.keysym == 'Tab':
             return self.__auto_complete.autocomplete_event(evt)
+        # End
             
+            
+        # Begin control the cursor when HOME key pressed.
         if evt.keysym in ('KP_Home', 'Home'):
             r, c = self.get_cursor_pos()
             leading = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
             if leading in ('... ', '>>> '):
+                # The head position of a line is after the prompt. 
                 self.text.mark_set('insert', auto_subs('$r.4'))
             else:
                 self.text.mark_set('insert', auto_subs('$r.0'))
             return 'break'
+        # End
+            
             
         ##############################################################
         # Using keycode is not a good practice here, because for the same key,
@@ -255,7 +273,9 @@ class ConsoleText(ScrolledText, ModelNode):
                 finally:
                     self.text.mark_set('insert', 'end')
                     self.text.see('end')
-                    return 'break'            
+                    return 'break'
+                    # Do Not append anything below this line in this function, 
+                    # because the return command is already executed. 
 
                 
     def get_cursor_pos(self, mark='insert'): 
