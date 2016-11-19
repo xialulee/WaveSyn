@@ -8,13 +8,15 @@ from __future__ import print_function, division, unicode_literals
 
 import os
 
+from six.moves import tkinter
 from six.moves.tkinter_tksimpledialog import askstring, askinteger
 from six.moves.tkinter_messagebox import showinfo, askyesno
 from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askopenfilenames, askdirectory
 
 from wavesynlib.guicomponents.tk import ask_list_item
 
-from wavesynlib.languagecenter.wavesynscript import ModelNode, constant_handler
+from wavesynlib.languagecenter.wavesynscript import ModelNode, constant_handler, code_printer
+from wavesynlib.languagecenter.utils import eval_format
 
 
 class Dialogs(ModelNode):    
@@ -88,4 +90,31 @@ class Dialogs(ModelNode):
         else:
             arg = slice(*user_input)            
         return arg
+        
+    def copy_link_text(self):
+        win = tkinter.Toplevel()
+        
+        tkinter.Label(win, text='Please input link text:').pack()
+        text = tkinter.Entry(win)
+        text.pack()
+
+        tkinter.Label(win, text='Please input link address:').pack()
+        link = tkinter.Entry(win)
+        link.pack()
+
+        blank = tkinter.IntVar()
+        tkinter.Checkbutton(win, text='target=_blank', var=blank).pack()
+        
+        def on_ok():
+            link_str = link.get()
+            text_str = text.get()
+            target = '' if not blank.get() else 'target="_blank"'
+            with code_printer:
+                self.root_node.interfaces.os.clipboard.write(eval_format('<a href="{link_str}" {target}>{text_str}</a>'), html=True)
+            win.destroy()
+        tkinter.Button(win, text='Ok', command=on_ok).pack()
+        
+        win.focus_set()
+        win.grab_set()
+        win.wait_window()
         

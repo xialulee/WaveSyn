@@ -53,7 +53,8 @@
                       {"Name":"Remove Text Formatting", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_text_formatting()", "Print":true},
                       {"Name":"Remove Newlines (\\n)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=False)"},
                       {"Name":"Remove Newlines (\\n) and insert blanks", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=True)"},
-			     {"Name":"Copy Tab(\\t)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.write('\\t')"}
+			     {"Name":"Copy Tab(\\t)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.write('\\t')"},
+                      {"Name":"Copy Link", "TearOff":0, "UnderLine":0, "Command":"wavesyn.dialogs.copy_link_text()"}
                   ]
                   },
                   {"Name":"Mouse", "TearOff":0, "UnderLine":0, "SubMenu":[
