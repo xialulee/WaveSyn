@@ -79,30 +79,42 @@ def make_menu(win, menu, json=False):
     
     
 class History(object):
+    '''Class for supporting console history.'''
     def __init__(self, max_records=50):
         self.__max_records = max_records
         self.__history_list = ['']
+        self.__search_list = None
         self.__cursor = 0
         
     def get(self, direction):
+        '''direction...'''
         direction = 1 if direction > 0 else -1
         new_cursor = self.__cursor + direction
 
         # Always return a string for this function
-        if new_cursor < 0:
-            return ''
-        elif new_cursor > len(self.__history_list):
-            return self.__history_list[0]
+        if new_cursor > len(self.__search_list) or new_cursor < 0:
+            return self.__search_list[0]
         else:
             self.__cursor = new_cursor
-            return self.__history_list[-new_cursor]
+            return self.__search_list[-new_cursor]
             
     def put(self, code):
+        '''Append a line of code to the history list.'''
         self.__history_list.append(code)
         if len(self.__history_list) > self.__max_records + 1:
             del self.__history_list[1]
             
+    def search(self, code):
+        if code:
+            self.__search_list = [code]
+            for line in self.__history_list:
+                if code == line[:len(code)]:
+                    self.__search_list.append(line)
+        else:
+            self.__search_list = self.__history_list            
+            
     def reset_cursor(self):
+        self.__search_list = None
         self.__cursor = 0
     
 
@@ -171,7 +183,7 @@ class ConsoleText(ScrolledText, ModelNode):
         self.text.tag_add("SYNC", "1.0", 'end')                                
         self.text.see('end')     
 
-    def on_key_press(self, evt, code_list=[]):     
+    def on_key_press(self, evt, code_list=[], init_history=[True]):     
         # Experimenting with idlelib's AutoComplete
         ##############################################################
         keysym = evt.keysym  
@@ -186,17 +198,26 @@ class ConsoleText(ScrolledText, ModelNode):
                     
         # Begin Support History
         if evt.keysym not in ('Up', 'Down'):
-            self.__history.reset_cursor()
+            init_history[0] = True
         else:
             r_end, c_end = self.get_cursor_pos(mark='end')
             r, c = self.get_cursor_pos()
-            if r == r_end-1:
-                self.text.delete(auto_subs('$r.4'), 'end')
-                code = self.__history.get(
-                    1 if evt.keysym in ('Up', 'KP_Up') 
-                    else -1)
-                self.text.insert('end', code)
-                return 'break'     
+            
+            if r != r_end-1:
+                return
+            
+            if init_history[0]:
+                self.__history.reset_cursor()
+                current_input = self.text.get(auto_subs('$r.4'), 'end-1c')
+                self.__history.search(current_input)
+                init_history[0] = False
+
+            self.text.delete(auto_subs('$r.4'), 'end')
+            code = self.__history.get(
+                1 if evt.keysym in ('Up', 'KP_Up') 
+                else -1)
+            self.text.insert('end', code)
+            return 'break'     
         # End Support History
             
             
@@ -229,8 +250,10 @@ class ConsoleText(ScrolledText, ModelNode):
             prompt  = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
             if prompt != '>>> ' and prompt != '... ':
                 return 'break'
-            if evt.keysym=='BackSpace' and c <= 4:
+            if evt.keysym == 'BackSpace' and c <= 4:
                 return 'break'
+            if evt.keysym == 'Escape':
+                self.text.delete(auto_subs('$r.4'), 'end')
             if c < 4:
                 return 'break'
             rend, cend  = self.get_cursor_pos('end-1c')
