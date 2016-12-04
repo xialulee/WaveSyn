@@ -1069,8 +1069,9 @@ class ComplexCanvas(Canvas, object):
     def center(self, val):
         self.__center   = val
     
-    def complex_create_circle(self, radius, **options):
-        center  = self.__center
+    def complex_create_circle(self, radius, center=None, **options):
+        if center is None:
+            center  = self.__center
         bbox    = (center.real-radius, center.imag-radius, center.real+radius, center.imag+radius)
         return self.create_oval(*bbox, **options)
         
@@ -1374,20 +1375,20 @@ Example: [
 
         
 if __name__ == '__main__':
-    window  = Tk()
-    tree    = ScrolledTree(window)
-    root    = tree.insert('', END, text='root')
-    node    = tree.insert(root, END, text='node')
-    window.mainloop()
+#    window  = Tk()
+#    tree    = ScrolledTree(window)
+#    root    = tree.insert('', END, text='root')
+#    node    = tree.insert(root, END, text='node')
+#    window.mainloop()
 
     #    window = Tk()
     #    print (ask_font())
     #    window.mainloop()
 
-#    root    = Tk()
-#    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
-#    iq.pack(expand='yes', fill='both')
-#    root.mainloop()
+    root    = Tk()
+    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
+    iq.pack(expand='yes', fill='both')
+    root.mainloop()
 
 #    root = Tk()
 #    json_code = '''[
