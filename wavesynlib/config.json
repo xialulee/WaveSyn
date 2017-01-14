@@ -66,6 +66,11 @@
                   ]
                   }
               ]
+              },
+              {
+              "Name":"Android", "TearOff":0, "UnderLine":0, "SubMenu":[
+                  {"Name":"Data Transfer", "TearOff":0, "UnderLine":0, "Command":"wavesyn.windows.create(module_name='wavesynlib.toolwindows.mobiledevice.android', class_name='DataTransferWindow')", "Print":true}
+              ]
               }
           ]
           },
