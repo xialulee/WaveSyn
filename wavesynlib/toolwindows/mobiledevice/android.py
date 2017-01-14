@@ -10,7 +10,7 @@ import socket
 import random
 import struct
 import json
-import thread
+import six.moves._thread as thread
 import threading
 
 import qrcode
@@ -47,7 +47,7 @@ data_type: text / image
         tool_tabs.add(tab, text='Data')
         
         tk_object = self.tk_object        
-        data_book = ttk.Notebook(tk_object)
+        self.__data_book = data_book = ttk.Notebook(tk_object)
         
         self.__qr_canvas = qr_canvas = ScrolledCanvas(data_book) 
         self.__qr_image = None
@@ -83,6 +83,7 @@ data_type: text / image
                 if self.__on_finish:
                     self.__on_finish(self.device_data['data'])
                     self.__on_finish = None
+                self.__data_book.select(1)
         
         
     @property
@@ -114,7 +115,8 @@ data_type: text / image
         if self.__qr_id is None:
             self.__qr_id = self.__qr_canvas.canvas.create_image((0, 0), image=self.__qr_image, anchor='nw')
         else:
-            self.__qr_canvas.canvas.itemconfig(self.__qr_id, image=self.__qr_image)  
+            self.__qr_canvas.canvas.itemconfig(self.__qr_id, image=self.__qr_image) 
+        self.__data_book.select(0)
             
         thread.start_new_thread(self._server_thread, (sockobj, command))
         self.__busy.set()
