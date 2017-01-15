@@ -10,6 +10,7 @@ import socket
 import random
 import struct
 import json
+import datetime
 import six.moves._thread as thread
 
 import qrcode
@@ -144,7 +145,12 @@ data_type: text / image
                     scrolled_text.append_text('[COPY] ', tag_name)
                     # End Generate Copy Link
                     
-                    scrolled_text.append_text('\n'+'='*12+'\n')
+                    scrolled_text.append_text('\n{}{}{}\n\n\n'.format(
+                        '='*12, 
+                        datetime.datetime.now().isoformat(), 
+                        '='*12
+                    ))
+                    
                     
             @self.root_node.main_thread_do(block=False)
             def on_finish():
