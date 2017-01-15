@@ -11,13 +11,14 @@ from importlib import import_module
 from six.moves.tkinter import Toplevel, Frame, IntVar
 from six.moves.tkinter_ttk import Notebook, Label, Button, Checkbutton, Scale
 
+
 from PIL import ImageTk
 
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, code_printer)
 from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator
 from wavesynlib.languagecenter.designpatterns import Observable
-
+from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.guicomponents.tk import Group, json_to_tk
 
 
@@ -74,6 +75,9 @@ Properties inherited from ModelNode:
     @property
     def tk_object(self):
         return self.__tk_object
+        
+    def create_timer(self, interval=100, active=False):
+        return TkTimer(self.__tk_object, interval, active)
         
         
 class WindowComponent(object):

@@ -60,6 +60,7 @@ from wavesynlib.toolwindows import simpledialogs
 from wavesynlib.toolwindows.basewindow import WindowDict
 from wavesynlib.status import busy_doing
 from wavesynlib.console import ConsoleWindow
+from wavesynlib.languagecenter import datatypes
 
 
 def call_and_print_doc(func):
@@ -91,8 +92,9 @@ class WaveSynThread(object):
             app.tk_root.update()
             for winId in app.windows:
                 app.windows[winId].tk_object.update()
-
-
+                
+                
+            
 @six.add_metaclass(Singleton)
 class Application(ModelNode): # Create an ABC for root node to help wavesynscript.Scripting determine whether the node is root. 
     '''This class is the root of the model tree.
@@ -282,6 +284,25 @@ wavesyn
         
         self._add_env_path()
         
+
+    def main_thread_do(self, block=True):
+        def put_queue(func):
+            slot = datatypes.CommandSlot(source='local', node_list=[func])
+            self.command_queue.put(slot)
+        
+        if block:
+            def block_do(func):
+                event = threading.Event()
+                def wrapper():
+                    func()
+                    event.set()
+                put_queue(wrapper)
+                event.wait()
+            return block_do
+        else:
+            return put_queue
+        
+        
     def _add_env_path(self):
         path_string = os.environ['PATH']        
         self_path = get_caller_dir()
@@ -290,12 +311,14 @@ wavesyn
         path_string = os.path.pathsep.join(extra_path)
         os.environ['PATH'] = path_string
         
+        
     def launch_editor(self, editor_path=None):
         if editor_path is None:
             editor_path  = self.editor_info['Path']
         editor_id    = self.editors.add(EditorNode(editor_path=editor_path))
         self.editors[editor_id].launch()
         return editor_id
+        
         
     def create_timer(self, interval=100, active=False):
         return TkTimer(self.tk_root, interval, active)
@@ -309,6 +332,7 @@ wavesyn
             if ret is not None:
                 self.stream_manager.write(str(ret)+'\n', 'RETVAL')
             return ret    
+            
                               
     def eval(self, expr):
         with self.exec_thread_lock:
@@ -319,6 +343,7 @@ wavesyn
                 self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
             Scripting.name_space['locals']['_']  = ret
             return ret
+            
         
     def execute(self, code):
         with self.exec_thread_lock:
@@ -346,7 +371,9 @@ wavesyn
                 self._on_exit()
             return ret
             
+            
     def print_tip(self, contents):
+        # To Do: Use the new create_link_tag method of ScrolledText
         def config_link_tag(widget, tag_name, command, original_cursor):
             widget.tag_config(tag_name, underline=1, foreground='blue')
             widget.tag_bind(tag_name, '<Button-1>', command)
@@ -373,10 +400,6 @@ wavesyn
                 stream_manager.write(item['content'], tag_name)
                 text = self.console.text
                 #r, c = text.index(END).split('.')
-#                text.tag_config(tagName, underline=1, foreground='blue')
-#                text.tag_bind(tagName, '<Button-1>', command) # href implementation shold be added.
-#                text.tag_bind(tagName, '<Enter>', lambda dumb: text.config(cursor='hand2'))
-#                text.tag_bind(tagName, '<Leave>', lambda dumb: text.config(cursor=self.console.default_cursor))
                 config_link_tag(text, tag_name, command, self.console.default_cursor)                                
                 stream_manager.write('\n')
                 return_list.append(None)
@@ -452,6 +475,7 @@ wavesyn
     def do_events(cls):
         cls.instance.tk_root.update()
         
+        
     def start_xmlrpc_server(self, addr='localhost', port=8000):
         from wavesynlib.interfaces.xmlrpc.server    import start_xmlrpc_server
         start_xmlrpc_server(addr, port)        
@@ -473,6 +497,7 @@ wavesyn
                 self.tk_root.after(100, self.xmlrpc_check_command)
         self.xmlrpc_check_command = check_command
         self.tk_root.after(100, check_command) # To Do: Use TkTimer instead of after
+        
         
     @Scripting.printable
     def system(self, command):

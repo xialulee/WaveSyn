@@ -449,6 +449,10 @@ class ScrolledText(Frame, object):
         self.pack(expand=YES, fill=BOTH)
         self.make_widgets()
         self.set_text(text, file)
+        self.__link_tag_functions = {}
+        self.__disable_keys = False
+        self.text_widget.bind('<KeyPress>', self._on_key_press)
+        
         
     def make_widgets(self):
         sbar    = Scrollbar(self)
@@ -457,28 +461,57 @@ class ScrolledText(Frame, object):
         text.config(yscrollcommand=sbar.set)
         sbar.pack(side=RIGHT, fill=Y)
         text.pack(side=LEFT, expand=YES, fill=BOTH)
-        self.text   = text
+        self.text   = text # To Do: change the attribute name. 
+        
+        
+    @property
+    def disable_keys(self):
+        return self.__disable_keys
+        
+    @disable_keys.setter
+    def disable_keys(self, val):
+        self.__disable_keys = val
+        
+        
+    def _on_key_press(self, evt):
+        if self.__disable_keys:
+            return 'break'
+        
+        
+    @property
+    def text_widget(self):
+        return self.text        
+        
 
-    def set_text(self, text='', file=None):
+    def set_text(self, text='', file=None, *tags):
         if file:
             with open(file, 'r') as f:
                 text = f.read().decode('gbk')
         self.text.delete('1.0', END)
-        self.text.insert('1.0', text)
+        self.text.insert('1.0', text, *tags)
         self.text.mark_set(INSERT, '1.0')
         self.text.focus()
         
+        
     def clear(self):
         self.set_text()
+        widget = self.text_widget
+        for key in self.__link_tag_functions:
+            widget.tag_delete(widget)
+        self.__link_tag_functions.clear()
 
-    def append_text(self, text=''):
-        self.text.insert(END, text)
+
+    def append_text(self, text='', *tags):
+        self.text.insert(END, text, *tags)
+        
 
     def get_text(self):
         return self.text.get('1.0', END+'-1c')
+        
 
     def select_all(self):
         return self.text.select_all()
+        
 
     def find_text(self, target):
         if target:
@@ -498,6 +531,17 @@ class ScrolledText(Frame, object):
                 return False
         else:
             return False
+            
+            
+    def create_link_tag(self, command, original_cursor='xterm'):
+        tag_name = 'link' + str(id(command))
+        widget = self.text_widget
+        widget.tag_config(tag_name, underline=1, foreground='blue')
+        widget.tag_bind(tag_name, '<Button-1>', command)
+        widget.tag_bind(tag_name, '<Enter>', lambda dumb: widget.config(cursor='hand2'))
+        widget.tag_bind(tag_name, '<Leave>', lambda dumb: widget.config(cursor=original_cursor))
+        self.__link_tag_functions[tag_name] = command
+        return tag_name
 
 
 class ScrolledList(Frame, object):

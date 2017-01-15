@@ -11,7 +11,6 @@ import random
 import struct
 import json
 import six.moves._thread as thread
-import threading
 
 import qrcode
 from PIL import ImageTk
@@ -20,11 +19,12 @@ import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 from wavesynlib.toolwindows.basewindow import TkToolWindow
 from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText
-from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 
 class DataTransferWindow(TkToolWindow):
     window_name = 'WaveSyn-DataTransfer'
+    _qr_tab = 0
+    _data_tab = 1
     
     def __init__(self):
         '''Structure of command:
@@ -54,36 +54,17 @@ data_type: text / image
         self.__qr_id = None
         self.__password = None
         self.__data = None
-        self.__busy = threading.Event()
-        self.__conn = threading.Event()
         self.__on_finish = None
 
         data_book.add(qr_canvas, text='QR Code')
         
         self.__scrolled_text = scrolled_text = ScrolledText(data_book)
+        scrolled_text.disable_keys = True
         data_book.add(scrolled_text, text='Text')
         
         data_book.pack(expand='yes', fill='both')
         
         self._make_window_manager_tab()
-        
-        self.__timer = TkTimer(tk_object, interval=100)
-        self.__timer.active = False
-        @self.__timer.add_observer
-        def observer():
-            if self.__conn.is_set():
-                self.__conn.clear()
-                self.__qr_canvas.canvas.delete(self.__qr_id)
-                self.__qr_id = None
-            
-            if not self.__busy.is_set(): # Finished
-                self.__timer.active = False
-                if self.device_data['type'] == 'text':
-                    scrolled_text.set_text(self.device_data['data'].encode('utf-8'))
-                if self.__on_finish:
-                    self.__on_finish(self.device_data['data'])
-                    self.__on_finish = None
-                self.__data_book.select(1)
         
         
     @property
@@ -116,17 +97,19 @@ data_type: text / image
             self.__qr_id = self.__qr_canvas.canvas.create_image((0, 0), image=self.__qr_image, anchor='nw')
         else:
             self.__qr_canvas.canvas.itemconfig(self.__qr_id, image=self.__qr_image) 
-        self.__data_book.select(0)
+        self.__data_book.select(self._qr_tab)
             
         thread.start_new_thread(self._server_thread, (sockobj, command))
-        self.__busy.set()
-        self.__timer.active = True
     
     
     def _server_thread(self, sockobj, command):
         sockobj.listen(2)
         conn, addr = sockobj.accept()
-        self.__conn.set()
+        
+        @self.root_node.main_thread_do(block=False)
+        def clear_qr_image():
+            self.__qr_canvas.canvas.delete(self.__qr_id)
+            self.__qr_id = None
 
         exit_flag = conn.recv(1)
         if exit_flag != b'\x00':
@@ -144,8 +127,32 @@ data_type: text / image
                 data_list.append(data)
             data = b''.join(data_list)
             if command['data_type'] == 'text':
-                self.__data = {'data':data.decode('utf-8'), 'type':'text'}
-            self.__busy.clear()
+                text = data.decode('utf-8')
+                self.__data = {'data':text, 'type':'text'}
+                
+                @self.root_node.main_thread_do(block=False)
+                def show_text():
+                    scrolled_text = self.__scrolled_text
+                    scrolled_text.append_text(text)
+                    scrolled_text.append_text('\n\n')
+                    
+                    # Generate Copy Link
+                    def copy_link_action(dumb):
+                        self.root_node.interfaces.os.clipboard.write(text)
+                        
+                    tag_name = scrolled_text.create_link_tag(copy_link_action)
+                    scrolled_text.append_text('[COPY] ', tag_name)
+                    # End Generate Copy Link
+                    
+                    scrolled_text.append_text('\n'+'='*12+'\n')
+                    
+            @self.root_node.main_thread_do(block=False)
+            def on_finish():
+                self.__data_book.select(self._data_tab)
+                if self.__on_finish:
+                    self.__on_finish(self.device_data['data'])
+                    self.__on_finish = None
+                    
         
     
     @Scripting.printable
