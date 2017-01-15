@@ -17,7 +17,7 @@ from scipy.io import savemat
 
 import six.moves._thread as thread
 
-from wavesynlib.application import WaveSynThread
+
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.guicomponents.tk import Group, LabeledEntry, ScrolledList
 from wavesynlib.languagecenter.utils import auto_subs, set_attributes
@@ -79,22 +79,22 @@ class OptimizeGroup(Group):
             topwin.figure_book.clear()        
             topwin.set_ideal_pattern(center, width)
             topwin.plot_ideal_pattern()        
-        # Create a new thread for solving the correlation matrix.
+
         M = self.__M.get_int()
         display = self.__bDisplay.get()            
-            
-        def solveFunc():
+
+        # Create a new thread for solving the correlation matrix.            
+        def solve_func():
             with code_printer:
                 topwin.solve(M=M, display=display)
-        WaveSynThread.start(func=solveFunc)
-#        solveFunc()
-#         Though method "start" will not return until the solve returns, the GUI will still 
-#         responding to user input because Tk.update is called by start repeatedly.
-#         While the thread is not alive, the optimization procedure is finished.
-        with code_printer:                        
-            topwin.plot_current_data() 
-        
-        
+                
+            @self._app.main_thread_do(block=False)
+            def on_finish_solving():
+                with code_printer:
+                    topwin.plot_current_data()
+
+        thread.start_new_thread(solve_func, ())
+                
 
 class EditGroup(Group):
     def __init__(self, *args, **kwargs):

@@ -74,27 +74,7 @@ def call_and_print_doc(func):
     return f
 
 
-class WaveSynThread(object):
-    class Thread(threading.Thread):
-        def __init__(self, func):
-            self.func   = func
-            threading.Thread.__init__(self)
-            
-        def run(self):
-            self.func()
-            
-    @staticmethod
-    def start(func):
-        app = Application.instance
-        theThread  = WaveSynThread.Thread(func)
-        theThread.start()
-        while theThread.is_alive():
-            app.tk_root.update()
-            for winId in app.windows:
-                app.windows[winId].tk_object.update()
-                
-                
-            
+
 @six.add_metaclass(Singleton)
 class Application(ModelNode): # Create an ABC for root node to help wavesynscript.Scripting determine whether the node is root. 
     '''This class is the root of the model tree.
