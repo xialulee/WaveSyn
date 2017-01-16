@@ -7,6 +7,10 @@ Created on Fri Mar 11 13:01:11 2016
 
 from __future__ import print_function, division, unicode_literals
 
+
+import os
+import tempfile
+import time
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 import psd_tools
@@ -68,6 +72,7 @@ class LayerTree(object):
                     
 class PSDViewer(TkToolWindow):
     window_name = 'WaveSyn-PSDViewer'    
+
     
     def __init__(self):
         TkToolWindow.__init__(self)
@@ -87,13 +92,20 @@ class PSDViewer(TkToolWindow):
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Resize'}, 'children':[
     {'class':'Scale', 'name':'image_scale', 'config':{'from_':5, 'to':100, 'orient':'horizontal', 'value':100, 'command':self._on_scale}},
     {'class':'Label', 'name':'scale_label', 'config':{'text':'100%'}}]
+},
+
+{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Wallpaper'}, 'children':[
+    {'class':'Button', 'config':{'text':'Set', 'command':self._on_set_wallpaper}},
+    {'class':'Combobox', 'name':'wallpaper_position', 'config':{'stat':'readonly', 'values':['Center', 'Tile', 'Stretch', 'Fit', 'Fill', 'Span']}}]
 }
 ]
 
         tab = tk.Frame(tool_tabs)
         widgets = json_to_tk(tab, widgets_desc)
         self.__scale_label = widgets['scale_label']
-        self.__image_scale = widgets['image_scale']        
+        self.__image_scale = widgets['image_scale']
+        self.__wallpaper_position = widgets['wallpaper_position']        
+        self.__wallpaper_position.current(0)
         tool_tabs.add(tab, text='PSD Files')
         
         tk_object = self.tk_object
@@ -120,6 +132,7 @@ class PSDViewer(TkToolWindow):
         self.__image_id = None
         self.__psd_path = ''
         self.__all_canvas = all_canvas
+
         
     @Scripting.printable
     def load(self, filename):
@@ -142,15 +155,19 @@ class PSDViewer(TkToolWindow):
         self.__all_canvas.canvas.config(scrollregion=(0, 0, width, height))
         self.__image_scale['value'] = 100
         
+
     def _on_load_psd(self):
         with code_printer:
             self.load(self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
+
     
     def _on_export_all(self):
         pass
+
     
     def _on_export_selected(self):
         pass
+    
     
     def _on_scale(self, val):
         if self.__pil_image is None:
@@ -166,6 +183,19 @@ class PSDViewer(TkToolWindow):
         new_tk_image = ImageTk.PhotoImage(new_tk_image)
         self.__tk_image = new_tk_image
         self.__all_canvas.canvas.itemconfig(self.__image_id, image=self.__tk_image)
+        
+        
+    def _on_set_wallpaper(self):
+        if self.__pil_image is None:
+            return
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tfile:
+            self.__pil_image.save(tfile, 'jpeg')
+        desktop_wallpaper = self.root_node.interfaces.os.desktop_wallpaper
+        desktop_wallpaper.set(tfile.name)
+        desktop_wallpaper.position = self.__wallpaper_position.current()
+        time.sleep(1) # OS need time to set the wallpaper.
+        os.remove(tfile.name)
+        
         
         
                     

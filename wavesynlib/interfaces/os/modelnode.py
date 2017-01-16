@@ -61,8 +61,8 @@ class TkMouse(ModelNode):
     @Scripting.printable
     def get_y(self):
         return self.root_node.tk_root.winfo_pointery()
-
-
+        
+        
 if platform.system().lower() == 'windows':
     from six.moves import cStringIO as StringIO
     from wavesynlib.interfaces.os.windows.clipboard import clipb
@@ -194,11 +194,45 @@ if platform.system().lower() == 'windows':
                 
                 
         #To Do: Keyboard class. Use keybd_event.
+                
+           
+    from comtypes import CoCreateInstance
+    from wavesynlib.interfaces.os.windows.shell import desktopwallpaper           
+           
+    class DesktopWallpaper(ModelNode):
+        def __init__(self, *args, **kwargs):
+            super(DesktopWallpaper, self).__init__(*args, **kwargs)
+            self.__idw = CoCreateInstance(
+                desktopwallpaper.CLSID_DesktopWallpaper,
+                interface=desktopwallpaper.IDesktopWallpaper
+            )
+            
+            
+        def set(self, path, monitor_id=None):
+            self.__idw.SetWallpaper(monitor_id, path)
+            
+            
+        def get(self, monitor_id=None):
+            return self.__idw.GetWallpaper(monitor_id)
+            
+        
+        @property
+        def position(self):
+            return self.__idw.GetPosition()
+            
+            
+        @position.setter
+        def position(self, val):
+            self.__idw.SetPosition(val)
+            
             
 else: 
 # Use Tk clipboard. TkClipboard is inferior to Clipboard. However, it is cross-platform.    
     Clipboard = TkClipboard  
     Mouse = TkMouse
+    
+    class DesktopWallpaper(ModelNode):
+        pass    
     
     
 try:
@@ -231,8 +265,9 @@ class OperatingSystem(ModelNode):
     
     def __init__(self, *args, **kwargs):
         ModelNode.__init__(self, *args, **kwargs)
-        self.clipboard = Clipboard()
-        self.mouse = Mouse()
+        self.clipboard = ModelNode(is_lazy=True, class_object=Clipboard)
+        self.mouse = ModelNode(is_lazy=True, class_object=Mouse)
+        self.desktop_wallpaper = ModelNode(is_lazy=True, class_object=DesktopWallpaper)
             
     
     @Scripting.printable    
