@@ -9,6 +9,7 @@ from __future__ import print_function, division, unicode_literals
 import os
 import sys
 import platform
+import webbrowser
 from importlib import import_module
 
 import math
@@ -451,6 +452,7 @@ class ScrolledText(Frame, object):
         self.set_text(text, file)
         self.__link_tag_functions = {}
         self.__disable_keys = False
+        self.auto_url_link = False
         self.text_widget.bind('<KeyPress>', self._on_key_press)
         
         
@@ -484,6 +486,7 @@ class ScrolledText(Frame, object):
         
 
     def set_text(self, text='', file=None, *tags):
+        # To Do: support auto url link
         if file:
             with open(file, 'r') as f:
                 text = f.read().decode('gbk')
@@ -502,11 +505,15 @@ class ScrolledText(Frame, object):
 
 
     def append_text(self, text='', *tags):
-        self.text.insert(END, text, *tags)
+        start = self.text_widget.index('end')
+        self.text.insert('end', text, *tags)
+        stop = self.text_widget.index('end')
+        if self.auto_url_link:
+            self.__create_link_for_url(start, stop)
         
 
     def get_text(self):
-        return self.text.get('1.0', END+'-1c')
+        return self.text.get('1.0', 'end'+'-1c')
         
 
     def select_all(self):
@@ -542,6 +549,29 @@ class ScrolledText(Frame, object):
         widget.tag_bind(tag_name, '<Leave>', lambda dumb: widget.config(cursor=original_cursor))
         self.__link_tag_functions[tag_name] = command
         return tag_name
+        
+        
+    def __create_link_for_url(self, start, stop):        
+        c = IntVar()
+        target = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+        while True:
+            where = self.text_widget.search(
+                target, 
+                start,
+                stop,
+                count=c,
+                regexp=True
+            )
+            if not where:
+                break
+            pastit = where + ('+%dc' % c.get())
+            urlstr = self.text_widget.get(where, pastit)
+            def on_link_click(*args):
+                webbrowser.open(urlstr)
+            tag_name = self.create_link_tag(on_link_click)
+            self.text_widget.tag_add(tag_name, where, pastit)
+            if self.text_widget.compare(pastit, '<', stop):
+                start = pastit
 
 
 class ScrolledList(Frame, object):

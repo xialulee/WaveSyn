@@ -61,6 +61,7 @@ data_type: text / image
         
         self.__scrolled_text = scrolled_text = ScrolledText(data_book)
         scrolled_text.disable_keys = True
+        scrolled_text.auto_url_link = True
         data_book.add(scrolled_text, text='Text')
         
         data_book.pack(expand='yes', fill='both')
