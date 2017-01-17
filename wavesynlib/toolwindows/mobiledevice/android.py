@@ -108,7 +108,7 @@ data_type: text / image
         sockobj.listen(2)
         conn, addr = sockobj.accept()
         
-        @self.root_node.main_thread_do(block=False)
+        @self.root_node.thread_manager.main_thread_do(block=False)
         def clear_qr_image():
             self.__qr_canvas.canvas.delete(self.__qr_id)
             self.__qr_id = None
@@ -132,7 +132,7 @@ data_type: text / image
                 text = data.decode('utf-8')
                 self.__data = {'data':text, 'type':'text'}
                 
-                @self.root_node.main_thread_do(block=False)
+                @self.root_node.thread_manager.main_thread_do(block=False)
                 def show_text():
                     scrolled_text = self.__scrolled_text
                     scrolled_text.append_text(text)
@@ -153,7 +153,7 @@ data_type: text / image
                     ))
                     
                     
-            @self.root_node.main_thread_do(block=False)
+            @self.root_node.thread_manager.main_thread_do(block=False)
             def on_finish():
                 self.__data_book.select(self._data_tab)
                 if self.__on_finish:

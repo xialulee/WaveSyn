@@ -310,6 +310,9 @@ class StatusBar(Frame):
         Frame.__init__(self, *args, **kwargs)
         timer = TkTimer(widget=self, interval=200, active=False)
         
+        from wavesynlib.application import Application
+        self.__root_node = Application.instance
+        
         balloon = Scripting.root_node.balloon
                 
         busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
@@ -402,7 +405,7 @@ Red:   main-thread is busy.''')
     def set_busy(self, busy=True):
         with self.__lock:
             self.__busy = busy
-        if thread.get_ident() == Scripting.main_thread_id:
+        if self.__root_node.thread_manager.in_main_thread:
             # Only main thread can set busy light
             self._set_busy_light()
             

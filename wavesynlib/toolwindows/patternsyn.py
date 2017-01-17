@@ -88,7 +88,7 @@ class OptimizeGroup(Group):
             with code_printer:
                 topwin.solve(M=M, display=display)
                 
-            @self._app.main_thread_do(block=False)
+            @self._app.thread_manager.main_thread_do(block=False)
             def on_finish_solving():
                 with code_printer:
                     topwin.plot_current_data()

@@ -50,6 +50,7 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.interfaces.modelnode import Interfaces
 from wavesynlib.stdstream import StreamManager
+from wavesynlib.threadtools import ThreadManager
 from wavesynlib.languagecenter.utils import eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton      
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
@@ -135,9 +136,6 @@ wavesyn
         tag_defs = config['TagDefs']
         # End load config file
 
-
-        main_thread_id = thread.get_ident()
-        Scripting.main_thread_id = main_thread_id
         
         # To Do: WaveSyn will have a uniform command slot system.
         from wavesynlib.interfaces.xmlrpc.server import CommandSlot
@@ -165,7 +163,7 @@ wavesyn
                     class_name='FileUtils'),
                 
                 # Thread related
-                main_thread_id = main_thread_id,
+                thread_manager = ThreadManager(),
                 exec_thread_lock = threading.RLock(),
                 # End
                 
@@ -197,8 +195,6 @@ wavesyn
         self.timer.every = timeutils.TimerActionNode(type_='every')        
         # End Timer utils
                         
-#        from wavesynlib.toolwindows.basewindow import WindowDict                                  
-#        self.windows    = WindowDict() # Instance of ModelNode can be locked automatically.
         self.editors    = EditorDict()
         
         with self.attribute_lock:
@@ -265,24 +261,6 @@ wavesyn
         self._add_env_path()
         
 
-    def main_thread_do(self, block=True):
-        def put_queue(func):
-            slot = datatypes.CommandSlot(source='local', node_list=[func])
-            self.command_queue.put(slot)
-        
-        if block:
-            def block_do(func):
-                event = threading.Event()
-                def wrapper():
-                    func()
-                    event.set()
-                put_queue(wrapper)
-                event.wait()
-            return block_do
-        else:
-            return put_queue
-        
-        
     def _add_env_path(self):
         path_string = os.environ['PATH']        
         self_path = get_caller_dir()

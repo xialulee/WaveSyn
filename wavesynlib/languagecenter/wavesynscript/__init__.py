@@ -414,7 +414,6 @@ class Scripting(ModelNode):
     
     root_name = 'wavesyn' # The name of the object model tree's root
     root_node = None
-    main_thread_id = None
     name_space = {'locals':{}, 'globals':{}}
     
     _print_code_flag = False
