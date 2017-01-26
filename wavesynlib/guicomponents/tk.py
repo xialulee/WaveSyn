@@ -505,7 +505,7 @@ class ScrolledText(Frame, object):
 
 
     def append_text(self, text='', *tags):
-        start = self.text_widget.index('end')
+        start = self.text_widget.index('end-1c')
         self.text.insert('end', text, *tags)
         stop = self.text_widget.index('end')
         if self.auto_url_link:
