@@ -463,6 +463,11 @@ wavesyn
         
         
     @Scripting.printable
+    def webbrowser_open(self, url):
+        webbrowser.open(url)
+        
+        
+    @Scripting.printable
     def set_matplotlib_style(self, style_name=''):
         import matplotlib.pyplot as plt
         

@@ -9,7 +9,6 @@ from __future__ import print_function, division, unicode_literals
 import os
 import sys
 import platform
-import webbrowser
 from importlib import import_module
 
 import math
@@ -454,6 +453,7 @@ class ScrolledText(Frame, object):
         self.__disable_keys = False
         self.auto_url_link = False
         self.text_widget.bind('<KeyPress>', self._on_key_press)
+        self.on_url_link_click = lambda dumb: None
         
         
     def make_widgets(self):
@@ -567,7 +567,7 @@ class ScrolledText(Frame, object):
             pastit = where + ('+%dc' % c.get())
             urlstr = self.text_widget.get(where, pastit)
             def on_link_click(*args):
-                webbrowser.open(urlstr)
+                self.on_url_link_click(urlstr)
             tag_name = self.create_link_tag(on_link_click)
             self.text_widget.tag_add(tag_name, where, pastit)
             if self.text_widget.compare(pastit, '<', stop):
