@@ -73,6 +73,12 @@ class ModelNode(object):
         self.node_name = node_name
         #self.attribute_auto_lock   = False
         
+        
+    def _on_parent_connected(self):
+        # This method will be trigged if this node is connected to its parent. 
+        pass
+    
+        
     def lock_attribute(self, attribute_name, lock=True):
         '''Lock a specified attribute, i.e. the attribute cannot be re-assigned.
 For example:        
@@ -87,6 +93,7 @@ then an AttributeError will be raised.
         else:
             if attribute_name in self._attribute_lock:
                 self._attribute_lock.remove(attribute_name)
+
         
     @property
     def attribute_lock(self):
@@ -97,14 +104,17 @@ with node.attribute_lock:
 then node will have a property named 'a', which cannot be re-assigned.
 '''
         return AttributeLock(self)        
+
         
     @property
     def is_root(self):
         return self.__is_root
+
         
     @property
     def is_lazy(self):
         return self.__is_lazy
+
         
     def get_real_node(self):
         node = self
@@ -116,6 +126,7 @@ then node will have a property named 'a', which cannot be re-assigned.
             else:
                 node = self.__class_object()
         return node
+
         
     def __setattr__(self, key, val):
         if '_attribute_lock' not in self.__dict__:
@@ -134,11 +145,13 @@ then node will have a property named 'a', which cannot be re-assigned.
             val.lock_attribute('parent_node')
             # and the parent node's child node cannot be re-assinged. 
             self.lock_attribute(key)
+            val._on_parent_connected() #!!!!
             model_tree_monitor._on_add_node(val)
                     
         object.__setattr__(self, key, val)
         if self.attribute_auto_lock and key != 'attribute_auto_lock': # attribute_auto_lock cannot be locked
             self.lock_attribute(key)
+
             
     def __getattribute__(self, attribute_name):
         attr = object.__getattribute__(self, attribute_name)
@@ -151,6 +164,7 @@ then node will have a property named 'a', which cannot be re-assigned.
             with self.attribute_lock:
                 setattr(self, attribute_name, attr)
         return attr
+
         
     @property
     def node_path(self):
@@ -158,11 +172,13 @@ then node will have a property named 'a', which cannot be re-assigned.
             return self.node_name
         else:
             return '.'.join((self.parent_node.node_path, self.node_name))
+
             
     @property
     def child_nodes(self):
         return {attribute_name:self.__dict__[attribute_name].node_path for attribute_name in self.__dict__ 
             if isinstance(self.__dict__[attribute_name], ModelNode)} 
+
             
     @property
     def root_node(self):
@@ -171,6 +187,7 @@ then node will have a property named 'a', which cannot be re-assigned.
             node = node.parent_node
         return node
         
+
                 
 class Dict(dict, object):
     def __init__(self, *args, **kwargs):

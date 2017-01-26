@@ -19,7 +19,7 @@ from PIL import ImageTk
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 from wavesynlib.toolwindows.basewindow import TkToolWindow
-from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText
+from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.utils import eval_format
 
@@ -51,17 +51,17 @@ if action == "read":
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'QR Code'}, 'children':[
-    {'class':'Entry', 'name':'qr_size'},
+    {'class':'LabeledEntry', 'name':'qr_size', 'setattr':{'lable_text':'Size', 'label_width':5, 'entry_width':8}},
     {'class':'Button', 'config':{'text':'Ok'}}
 ]}
 ]
 
         tab = tk.Frame(tool_tabs)
-        widgets = json_to_tk(tab, widgets_desc)
+        self.__widgets = widgets = json_to_tk(tab, widgets_desc)
         tool_tabs.add(tab, text='Data')
         
-        default_qr_size = 400
-        widgets['qr_size'].insert(0, str(default_qr_size))
+        default_qr_size = 200
+        widgets['qr_size'].entry_text = str(default_qr_size)
         
         tk_object = self.tk_object        
         self.__data_book = data_book = ttk.Notebook(tk_object)
@@ -92,6 +92,16 @@ if action == "read":
         self._make_window_manager_tab()
         
         
+    def _on_parent_connected(self):
+        self.__widgets['qr_size'].checker_function = self.root_node.value_checker.check_int
+        super(DataTransferWindow, self)._on_parent_connected()
+        
+        
+    @property
+    def qr_size(self):
+        return int(self.__widgets['qr_size'].entry_text)
+        
+        
     @property
     def device_data(self):
         return self.__data
@@ -115,9 +125,9 @@ if action == "read":
         self_port = port
         self.__password = password = random.randint(0, 65535)
         qr_string = json.dumps({'ip':self_ip, 'port':self_port, 'password':password, 'command':command})
-        image = qrcode.make(qr_string)  
+        image = qrcode.make(qr_string).resize((self.qr_size, self.qr_size))        
         self.__qr_image = ImageTk.PhotoImage(image=image) 
-        #self.__qr_canvas.canvas.config(scrollregion=(0, 0, width, height))   
+ 
         if self.__qr_id is None:
             self.__qr_id = self.__qr_canvas.canvas.create_image((0, 0), image=self.__qr_image, anchor='nw')
         else:
@@ -175,7 +185,8 @@ if action == "read":
                         self.root_node.interfaces.os.clipboard.write(text)
                         
                     tag_name = scrolled_text.create_link_tag(copy_link_action)
-                    scrolled_text.append_text('[COPY] ', tag_name)
+                    scrolled_text.append_text('[COPY]', tag_name)
+                    scrolled_text.append_text(' ')
                     # End Generate Copy Link
                     
                     # Generate Map Link
@@ -184,7 +195,8 @@ if action == "read":
                             self.root_node.interfaces.os.map_open(latitude=pos['latitude'], longitude=pos['longitude'])
                             
                         tag_name = scrolled_text.create_link_tag(map_link_action)
-                        scrolled_text.append_text('[MAP] ', tag_name)
+                        scrolled_text.append_text('[MAP]', tag_name)
+                        scrolled_text.append_text(' ')
                     # End Generate Map Link
                     
                     scrolled_text.append_text('\n{}{}{}\n\n\n'.format(
