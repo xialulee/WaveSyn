@@ -12,6 +12,7 @@ import platform
 import ctypes
 import re
 from importlib import import_module
+import webbrowser
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, constant_handler
 from wavesynlib.languagecenter.utils import eval_format
@@ -274,6 +275,12 @@ class OperatingSystem(ModelNode):
     def win_open(self, path):
         func = self._obj_map['winopen']
         return func(path)
+        
+        
+    @Scripting.printable
+    def map_open(self, latitude, longitude):
+        uri = eval_format('bingmaps:?cp={latitude}~{longitude}')
+        webbrowser.open(uri)
         
         
     if _get_mem_percent is None:

@@ -21,6 +21,8 @@ import six.moves.tkinter_ttk as ttk
 from wavesynlib.toolwindows.basewindow import TkToolWindow
 from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.utils import eval_format
+
 
 class DataTransferWindow(TkToolWindow):
     window_name = 'WaveSyn-DataTransfer'
@@ -29,8 +31,10 @@ class DataTransferWindow(TkToolWindow):
     
     def __init__(self):
         '''Structure of command:
-direction: from device / to device
-data_type: text / image
+action: read / write
+
+if action == "read":
+    source = clipboard / location_sensor / album
 '''
         TkToolWindow.__init__(self)
         self._gui_images = []
@@ -39,13 +43,25 @@ data_type: text / image
         widgets_desc = [
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Clipboard'}, 'children':[
     {'class':'Button', 'config':{'text':'Read', 'command':self.__on_read_device_clipboard}},
-    {'class':'Button', 'config':{'text':'Write', 'command':lambda:self._launch_server({'direction':'to device', 'data_type':'text', 'clipboard':True})}}
+    {'class':'Button', 'config':{'text':'Write', 'command':lambda:self._launch_server({'direction':'to device', 'data_type':'text', 'clipboard':True})}} # To Do: Change it. 
+]},
+
+{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
+    {'class':'Button', 'config':{'text':'Location', 'command':self.__on_read_device_location}}
+]},
+
+{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'QR Code'}, 'children':[
+    {'class':'Entry', 'name':'qr_size'},
+    {'class':'Button', 'config':{'text':'Ok'}}
 ]}
 ]
 
         tab = tk.Frame(tool_tabs)
         widgets = json_to_tk(tab, widgets_desc)
         tool_tabs.add(tab, text='Data')
+        
+        default_qr_size = 400
+        widgets['qr_size'].insert(0, str(default_qr_size))
         
         tk_object = self.tk_object        
         self.__data_book = data_book = ttk.Notebook(tk_object)
@@ -127,7 +143,8 @@ data_type: text / image
         if password != self.__password:
             return
             
-        if command['direction'] == 'from device':
+        if command['action'] == 'read':
+            # Loop receiving data
             data_list = []
             while True:
                 data = conn.recv(8192)
@@ -135,9 +152,17 @@ data_type: text / image
                     break
                 data_list.append(data)
             data = b''.join(data_list)
-            if command['data_type'] == 'text':
+            # End receiving data            
+            
+            if command['source'] in ('clipboard', 'location_sensor'):
+                # Store received data
                 text = data.decode('utf-8')
                 self.__data = {'data':text, 'type':'text'}
+                # End store received data
+                
+                if command['source'] == 'location_sensor':
+                    pos = json.loads(text)                    
+                    text = eval_format('latitude={pos["latitude"]}, longitude={pos["longitude"]}')
                 
                 @self.root_node.thread_manager.main_thread_do(block=False)
                 def show_text():
@@ -152,6 +177,15 @@ data_type: text / image
                     tag_name = scrolled_text.create_link_tag(copy_link_action)
                     scrolled_text.append_text('[COPY] ', tag_name)
                     # End Generate Copy Link
+                    
+                    # Generate Map Link
+                    if command['source'] == 'location_sensor':
+                        def map_link_action(dumb):
+                            self.root_node.interfaces.os.map_open(latitude=pos['latitude'], longitude=pos['longitude'])
+                            
+                        tag_name = scrolled_text.create_link_tag(map_link_action)
+                        scrolled_text.append_text('[MAP] ', tag_name)
+                    # End Generate Map Link
                     
                     scrolled_text.append_text('\n{}{}{}\n\n\n'.format(
                         '='*12, 
@@ -171,13 +205,24 @@ data_type: text / image
     
     @Scripting.printable
     def read_device_clipboard(self, on_finish):
-        self._launch_server({'direction':'from device', 'data_type':'text', 'clipboard':True})
+        self._launch_server(command={'action':'read', 'source':'clipboard'})
+        self.__on_finish = on_finish
+        
+        
+    @Scripting.printable
+    def read_device_location(self, on_finish):
+        self._launch_server(command={'action':'read', 'source':'location_sensor'})
         self.__on_finish = on_finish
         
         
     def __on_read_device_clipboard(self, on_finish=None):
         with code_printer:
             self.read_device_clipboard(on_finish=on_finish)
+            
+            
+    def __on_read_device_location(self, on_finish=None):
+        with code_printer:
+            self.read_device_location(on_finish=on_finish)
     
     
     def _clipb_to_dev(self):

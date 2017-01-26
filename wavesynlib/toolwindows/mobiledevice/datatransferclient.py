@@ -62,8 +62,7 @@ def send_location_json(ip, port, password, interval=3):
 
 if __name__ == '__main__':
     ip, port, password, command = read_qr()
-    if command[u'direction'] == u'from device':
-        if 'clipboard' in command and command[u'clipboard'] is True:
-            send_clipb_text(ip, port, password)
-        elif 'location' in command and command[u'location'] is True:
-            location = get_location()
+    if command[u'action'] == u'read':
+        {'clipboard':       send_clipb_text,
+         'location_sensor': send_location_json
+        }[command['source']](ip, port, password)
