@@ -62,6 +62,7 @@ if action == "read":
         
         default_qr_size = 200
         widgets['qr_size'].entry_text = str(default_qr_size)
+        widgets['qr_size'].checker_function = self.root_node.value_checker.check_int        
         
         tk_object = self.tk_object        
         self.__data_book = data_book = ttk.Notebook(tk_object)
@@ -90,11 +91,6 @@ if action == "read":
         data_book.pack(expand='yes', fill='both')
         
         self._make_window_manager_tab()
-        
-        
-    def _on_parent_connected(self):
-        self.__widgets['qr_size'].checker_function = self.root_node.value_checker.check_int
-        super(DataTransferWindow, self)._on_parent_connected()
         
         
     @property
@@ -192,7 +188,8 @@ if action == "read":
                     # Generate Map Link
                     if command['source'] == 'location_sensor':
                         def map_link_action(dumb):
-                            self.root_node.interfaces.os.map_open(latitude=pos['latitude'], longitude=pos['longitude'])
+                            with code_printer:
+                                self.root_node.interfaces.os.map_open(latitude=pos['latitude'], longitude=pos['longitude'])
                             
                         tag_name = scrolled_text.create_link_tag(map_link_action)
                         scrolled_text.append_text('[MAP]', tag_name)

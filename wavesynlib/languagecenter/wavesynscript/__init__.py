@@ -73,12 +73,7 @@ class ModelNode(object):
         self.node_name = node_name
         #self.attribute_auto_lock   = False
         
-        
-    def _on_parent_connected(self):
-        # This method will be trigged if this node is connected to its parent. 
-        pass
-    
-        
+                
     def lock_attribute(self, attribute_name, lock=True):
         '''Lock a specified attribute, i.e. the attribute cannot be re-assigned.
 For example:        
@@ -145,7 +140,6 @@ then node will have a property named 'a', which cannot be re-assigned.
             val.lock_attribute('parent_node')
             # and the parent node's child node cannot be re-assinged. 
             self.lock_attribute(key)
-            val._on_parent_connected() #!!!!
             model_tree_monitor._on_add_node(val)
                     
         object.__setattr__(self, key, val)
@@ -183,6 +177,11 @@ then node will have a property named 'a', which cannot be re-assigned.
     @property
     def root_node(self):
         node = self
+        
+        if node.parent_node is None: # Not connected to the tree yet. 
+            from wavesynlib.application import Application
+            return Application.instance
+            
         while not node.is_root:
             node = node.parent_node
         return node
