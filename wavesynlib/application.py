@@ -59,6 +59,7 @@ from wavesynlib.languagecenter import timeutils
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
 from wavesynlib.toolwindows import simpledialogs
 from wavesynlib.toolwindows.basewindow import WindowDict
+from wavesynlib.toolwindows.imagedisplay.modelnode import DisplayLauncher
 from wavesynlib.status import busy_doing
 from wavesynlib.console import ConsoleWindow
 from wavesynlib.languagecenter import datatypes
@@ -186,7 +187,9 @@ wavesyn
                                 
                 stream_manager = StreamManager(),                
                 
-                config_file_path = config_file_path
+                config_file_path = config_file_path,
+                
+                image_display = DisplayLauncher()
             )  
             
         # Timer utils

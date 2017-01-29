@@ -10,10 +10,10 @@ __DEBUG__ = False
 
 from sys import argv
 import socket
-import six.moves.cStringIO as StringIO
+from six.moves import cStringIO as StringIO
 
 import numpy as np
-from scipy.ndimage import imread
+#from scipy.ndimage import imread
 from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
@@ -50,7 +50,7 @@ void main(){
 
 class Canvas(app.Canvas):
     def __init__(self, image):
-        app.Canvas.__init__(self, size=(512, 512),
+        app.Canvas.__init__(self, title='WaveSyn-ImageViewer', size=(512, 512),
                             keys='interactive')
                             
         #image = imread(r"C:\Users\xialulee\Pictures\1-4.jpg", mode='RGBA').astype('float32') / 255.0
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     width = int(argv[2])
     height = int(argv[3])
     data = recv_data(port)
-    mat = np.fromstring(data)
+    mat = np.fromstring(data, dtype=np.float32)
     mat.shape = (height, width, 4)
     canvas = Canvas(image=mat)
     app.run()

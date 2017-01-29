@@ -8,10 +8,13 @@ Created on Sun Jan 29 21:26:31 2017
 from __future__ import print_function, division, unicode_literals
 
 import six.moves._thread as thread
+import os
 import socket
+from subprocess import Popen
 import numpy as np
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
+from wavesynlib.languagecenter.utils import get_caller_dir
 
 
 class DisplayLauncher(ModelNode):
@@ -27,6 +30,8 @@ class DisplayLauncher(ModelNode):
             mat[:, :, :depth] = rgba_matrix[:, :, :]
         else:
             mat[:, :, :] = rgba_matrix[:, :, :4]
+        if rgba_matrix.dtype == np.uint8:
+            mat /= 255.0
         
         sockobj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -47,3 +52,6 @@ class DisplayLauncher(ModelNode):
             conn.send(mat.tostring())
             
         thread.start_new_thread(send_data, ())
+        
+        display_path = os.path.join(get_caller_dir(), 'display.py')
+        Popen(['python', display_path, str(port), str(width), str(height)])

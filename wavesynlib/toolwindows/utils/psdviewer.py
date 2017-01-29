@@ -15,7 +15,8 @@ import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 import psd_tools
 
-#import PIL
+import numpy as np
+
 from PIL import Image
 from PIL import ImageTk
 
@@ -94,6 +95,10 @@ class PSDViewer(TkToolWindow):
     {'class':'Label', 'name':'scale_label', 'config':{'text':'100%'}}]
 },
 
+{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Viewer'}, 'children':[
+    {'class':'Button', 'config':{'text':'Launch', 'command':self._on_launch_viewer}}]
+},
+
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Wallpaper'}, 'children':[
     {'class':'Button', 'config':{'text':'Set', 'command':self._on_set_wallpaper}},
     {'class':'Combobox', 'name':'wallpaper_position', 'config':{'stat':'readonly', 'values':['Center', 'Tile', 'Stretch', 'Fit', 'Fill', 'Span']}}]
@@ -155,6 +160,12 @@ class PSDViewer(TkToolWindow):
         self.__all_canvas.canvas.config(scrollregion=(0, 0, width, height))
         self.__image_scale['value'] = 100
         
+        
+    @Scripting.printable
+    def launch_viewer(self):
+        rgb_matrix = np.array(self.__pil_image)
+        self.root_node.image_display.launch(rgb_matrix)
+        
 
     def _on_load_psd(self):
         with code_printer:
@@ -183,6 +194,11 @@ class PSDViewer(TkToolWindow):
         new_tk_image = ImageTk.PhotoImage(new_tk_image)
         self.__tk_image = new_tk_image
         self.__all_canvas.canvas.itemconfig(self.__image_id, image=self.__tk_image)
+        
+        
+    def _on_launch_viewer(self):
+        with code_printer:
+            self.launch_viewer()
         
         
     def _on_set_wallpaper(self):
