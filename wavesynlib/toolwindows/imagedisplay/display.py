@@ -19,11 +19,11 @@ from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
 
 vertex = """
-#version 130
+#version 420
 
 attribute vec2 position;
 attribute vec2 texcoord;
-varying vec2 v_texcoord;
+out vec2 v_texcoord;
 
 
 void main(){
@@ -34,10 +34,10 @@ void main(){
 
 
 fragment = """
-#version 130
+#version 420
 
 uniform sampler2D image;
-varying vec2 v_texcoord;
+in vec2 v_texcoord;
 
 out vec4 frag_color;
 
@@ -68,7 +68,6 @@ class Canvas(app.Canvas):
 
         set_clear_color('black')
         self.__scale = 1
-        self.__center = self.size[0]/2.0 + 1j*self.size[1]
         self.__last_pos = 0+1j*0
         self.__offset = 0+1j*0
 
@@ -92,9 +91,17 @@ class Canvas(app.Canvas):
         
         
     def on_mouse_wheel(self, event):
-        self.scale += 0.1*event.delta[1] 
+        original_scale = self.scale
+        delta_scale = 0.1*event.delta[1]
+        self.scale += delta_scale 
+        
         if self.scale <= 1:
             self.__offset = 0+1j*0
+        else:
+            mouse_pos = event.pos[0] + 1j*(self.size[1]-event.pos[1])
+            mouse_pos -= self.__offset
+            mouse_pos /= original_scale
+            self.__offset -= mouse_pos * delta_scale
         self._set_viewport()
         self.update()
         
@@ -132,8 +139,7 @@ class Canvas(app.Canvas):
             si = sc.real * (1 + 1j/ri)
             
         si *= scale
-        LL = sc/2 + offset - si/2
-        set_viewport(LL.real, LL.imag, si.real, si.imag)
+        set_viewport(offset.real, offset.imag, si.real, si.imag)
         
 
 def recv_data(port):
