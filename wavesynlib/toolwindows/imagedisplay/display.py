@@ -95,13 +95,10 @@ class Canvas(app.Canvas):
         delta_scale = 0.1*event.delta[1]
         self.scale += delta_scale 
         
-        if self.scale <= 1:
-            self.__offset = 0+1j*0
-        else:
-            mouse_pos = event.pos[0] + 1j*(self.size[1]-event.pos[1])
-            mouse_pos -= self.__offset
-            mouse_pos /= original_scale
-            self.__offset -= mouse_pos * delta_scale
+        mouse_pos = event.pos[0] + 1j*(self.size[1]-event.pos[1])
+        mouse_pos -= self.__offset
+        mouse_pos /= original_scale
+        self.__offset -= mouse_pos * delta_scale
         self._set_viewport()
         self.update()
         
