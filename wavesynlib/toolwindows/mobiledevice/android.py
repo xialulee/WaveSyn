@@ -40,29 +40,41 @@ if action == "read":
         self._gui_images = []
         tool_tabs = self._tool_tabs
         
+        default_qr_size = 200
+        
         widgets_desc = [
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Clipboard'}, 'children':[
-    {'class':'Button', 'config':{'text':'Read', 'command':self.__on_read_device_clipboard}},
-    {'class':'Button', 'config':{'text':'Write', 'command':lambda:self._launch_server({'direction':'to device', 'data_type':'text', 'clipboard':True})}} # To Do: Change it. 
+    {'class':'Button', 'name':'read_clipb', 
+         'balloonmsg':'Read the clipboard of an Android device.',
+         'config':{'text':'Read', 'command':self.__on_read_device_clipboard}},
+    {'class':'Button', 'name':'write_clipb', 
+         'balloonmsg':'Write the clipboard of an Android device.',
+         'config':{'text':'Write', 'command':lambda:self._launch_server({'direction':'to device', 'data_type':'text', 'clipboard':True})}} # To Do: Change it. 
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
-    {'class':'Button', 'config':{'text':'Location', 'command':self.__on_read_device_location}}
+    {'class':'Button', 
+         'balloonmsg':'Read the AGPS sensor of an Android device.',
+         'config':{'text':'Location', 'command':self.__on_read_device_location}}
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'QR Code'}, 'children':[
-    {'class':'LabeledEntry', 'name':'qr_size', 'setattr':{'lable_text':'Size', 'label_width':5, 'entry_width':8}},
+    {'class':'LabeledEntry', 'name':'qr_size', 
+         'balloonmsg':'Size (pixels) of the generated QR code.',
+         'setattr':{
+             'label_text':'Size', 
+             'label_width':5, 
+             'entry_width':8,
+             'entry_text':str(default_qr_size),
+             'checker_function':self.root_node.value_checker.check_int}},
     {'class':'Button', 'config':{'text':'Ok'}}
 ]}
 ]
 
+        balloon = self.root_node.balloon
         tab = tk.Frame(tool_tabs)
-        self.__widgets = widgets = json_to_tk(tab, widgets_desc)
+        self.__widgets = widgets = json_to_tk(tab, widgets_desc, balloon=balloon)
         tool_tabs.add(tab, text='Data')
-        
-        default_qr_size = 200
-        widgets['qr_size'].entry_text = str(default_qr_size)
-        widgets['qr_size'].checker_function = self.root_node.value_checker.check_int        
         
         tk_object = self.tk_object        
         self.__data_book = data_book = ttk.Notebook(tk_object)

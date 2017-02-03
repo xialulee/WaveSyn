@@ -1404,7 +1404,7 @@ class ArrayRenderMixin(object):
         return image_id, photoImage
         
         
-def json_to_tk(parent, json_code):
+def json_to_tk(parent, json_code, balloon=None):
     '''
 Example: [
     {"name":"alert_button", "class":"Button", "module":"ttk", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
@@ -1416,6 +1416,7 @@ Example: [
     if isinstance(json_code, string_types):
         json_obj = json.loads(json_code)
     else:
+        # To Do: copy the object, since json_to_tk will change the input. 
         json_obj = json_code
     retval = {}
 
@@ -1433,8 +1434,12 @@ Example: [
         
         widget = cls(parent, **item.pop('config', {}))
         widget.pack(**item.pop('pack', {}))
+        
+        if 'balloonmsg' in item and balloon is not None:
+            balloon.bind_widget(widget, balloonmsg=item.pop('balloonmsg'))
+        
         if 'children' in item:
-            sub_widgets = json_to_tk(widget, item.pop('children'))
+            sub_widgets = json_to_tk(widget, item.pop('children'), balloon=balloon)
             for sub_widget in sub_widgets:
                 if sub_widget in retval:
                     raise ValueError('Multiple widgets have a same name.')
