@@ -22,7 +22,7 @@ from wavesynlib.languagecenter import datatypes
 @six.add_metaclass(Singleton)
 class ThreadManager(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(ThreadManager, self).__init__()
+        super(ThreadManager, self).__init__(*args, **kwargs)
         
         # Instance of ThreadManager must be intitialized in the main thread. 
         with self.attribute_lock:
@@ -70,6 +70,8 @@ the rest code will not be executed util do_something() returned.
                 return put_queue        
                 
                 
-    def new_thread_do(self, func):
-        raise NotImplementedError
+    def new_thread_do(self, func, args=None, kwargs=None):
+        args = () if not args else args
+        kwargs = {} if not kwargs else kwargs
+        return thread.start_new_thread(func, args, kwargs)
         

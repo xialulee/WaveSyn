@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 class CommandSlot(object):
     __slots__ = [
-        'source', # Where the command come from. For security considerations, e.g., if a command is received by xmlrpcserver, the source will be set to something indicating that the source may be malicious.
+        'source', # Where the command come from. For security considerations, e.g., if a command is received by xmlrpcserver, the source will be set to something indicating that the source may be malicious. {'native', 'local', 'remote'}
         'node_list', # The nodes comprise the path. For security considerations, e.g., we can forbid a node being obtained by commands from other machines.
         'method_name', # The name of the method being called.
         'args', # The arguments.

@@ -14,6 +14,7 @@ from wavesynlib.languagecenter.utils import eval_format
 from wavesynlib.languagecenter.designpatterns import Observable
 
 
+
 class BaseWindowNode(ModelNode):
     pass
 
