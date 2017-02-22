@@ -7,7 +7,7 @@ Created on Sun Dec 04 17:33:29 2016
 from __future__ import print_function, division, unicode_literals
 
 from wavesynlib.guicomponents.tk import ComplexCanvas
-from wavesynlib.toolwindows.basewindow import TkToolWindow
+from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 
 class PolarWindow(TkToolWindow):
     def __init__(self):

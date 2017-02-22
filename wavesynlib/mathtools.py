@@ -10,7 +10,7 @@ import abc
 from wavesynlib.languagecenter.utils import eval_format, auto_subs
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 from wavesynlib.languagecenter import datatypes
-from wavesynlib.toolwindows.basewindow import WindowComponent
+from wavesynlib.toolwindows.tkbasewindow import WindowComponent
 
 import time
 import six.moves._thread as thread

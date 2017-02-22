@@ -21,7 +21,7 @@ from PIL import Image
 from PIL import ImageTk
 
 from wavesynlib.guicomponents.tk import ScrolledTree, ScrolledCanvas, json_to_tk
-from wavesynlib.toolwindows.basewindow import TkToolWindow
+from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.utils import MethodDelegator
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 

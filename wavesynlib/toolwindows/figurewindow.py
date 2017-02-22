@@ -24,7 +24,7 @@ import matplotlib.pyplot as pyplot
 
 from numpy import deg2rad, rad2deg
 
-from wavesynlib.toolwindows.basewindow import TkToolWindow
+from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting
 from wavesynlib.languagecenter.utils import (
     auto_subs, eval_format, set_attributes)

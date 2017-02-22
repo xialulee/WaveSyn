@@ -12,7 +12,7 @@ import six.moves.tkinter_ttk as ttk
 
 from wavesynlib.interfaces.os.windows import disablekeys
 from wavesynlib.guicomponents.tk import Group
-from wavesynlib.toolwindows.basewindow import TkToolWindow
+from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import code_printer, Scripting, ModelNode
 
 

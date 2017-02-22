@@ -18,7 +18,7 @@ from PIL import ImageTk
 
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
-from wavesynlib.toolwindows.basewindow import TkToolWindow
+from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.utils import eval_format
