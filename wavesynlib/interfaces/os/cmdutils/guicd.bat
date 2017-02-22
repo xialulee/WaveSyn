@@ -1,5 +1,5 @@
 @rem The directory of this bat file:
-@rem   wavesynlib\interfaces\windows\cmdutils
+@rem   wavesynlib\interfaces\os\cmdutils
 @rem The directory of pathselector.py:
 @rem   wavesynlib\guicomponents\
 

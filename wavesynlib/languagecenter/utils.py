@@ -39,8 +39,8 @@ class EvalFormatter(Formatter):
         return Formatter.format(self, format_string, *args, **kwargs)
                 
 
-def eval_format(formatString):
-    return EvalFormatter(level=2).format(formatString) 
+def eval_format(format_string):
+    return EvalFormatter(level=2).format(format_string) 
 
 
 class MethodDelegator(object):
