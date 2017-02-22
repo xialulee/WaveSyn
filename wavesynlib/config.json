@@ -62,7 +62,8 @@
                   ]
                   },
                   {"Name":"Windows", "TearOff":0, "UnderLine":0, "SubMenu":[
-                      {"Name":"Launch CMD with ws* support", "TearOff":0, "UnderLine":0, "Command":"wavesyn.system('start cmd')", "Print":true}
+                      {"Name":"Launch CMD with ws* support", "TearOff":0, "UnderLine":0, "Command":"wavesyn.system('start cmd')", "Print":true},
+                      {"Name":"Launch RAM meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.system('start winmemstatus.bat')", "Print":true}
                   ]
                   }
               ]
