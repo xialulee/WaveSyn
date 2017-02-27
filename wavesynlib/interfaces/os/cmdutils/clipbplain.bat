@@ -8,5 +8,5 @@ rem   wavesynlib\interfaces\windows\clipboard
 if "%1"=="--help" (
   echo Convert formatted text in clipboard into plain text.
 ) else (
-  %~dp0\..\clipboard\clipb.py -r -e@ | %~dp0\..\clipboard\clipb.py -w -d@
+  %~dp0\wsclipb.bat -r -e@ | %~dp0\wsclipb.bat -w -d@
 )
