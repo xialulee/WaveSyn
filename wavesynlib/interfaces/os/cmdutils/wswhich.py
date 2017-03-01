@@ -12,7 +12,6 @@ import sys
 import getopt
 import platform
 
-import json
 from itertools import product
 from collections import OrderedDict
 
@@ -30,7 +29,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], \
             'a',\
-            ['all', 'winopen', 'jsontable']\
+            ['all', 'winopen', 'jsontable', 'order=']\
         ) # TODO
     except getopt.GetoptError, err:
         print(str(err), file=sys.stderr)
@@ -40,6 +39,7 @@ def main(argv):
     all_cmd = False
     wopen = False
     json_output = False
+    cmd_order = -1
     for o, a in opts:
         if o in ('-a', '--all'):
             all_cmd = True
@@ -47,6 +47,9 @@ def main(argv):
             wopen   = True
         if o == '--jsontable':
             json_output = True
+        if o == '--order':
+            cmd_order = int(a)
+            all_cmd = True
     
     name = args[0]
     name, ext = os.path.splitext(name)
@@ -85,12 +88,13 @@ def main(argv):
     if file_paths:
         table = Table(['order', 'path'])
         for order, file_path in enumerate(file_paths):
-            if not json_output:
-                print(file_path)
-            else:
-                table.print_row((order, file_path))
-            if wopen:
-                winopen(file_path)
+            if (cmd_order<0) or (cmd_order==order):
+                if not json_output:
+                    print(file_path)
+                else:
+                    table.print_row((order, file_path))
+                if wopen:
+                    winopen(file_path)
     else:
         print('wswhich.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
         return ERROR_NOTFOUND
