@@ -35,25 +35,25 @@ class Table(object):
         self.__head     = head
         self.__buf      = []
         
-    def __generateRow(self, row):
+    def generate_row(self, row):
         d   = OrderedDict()
         for key, value in izip(self.__head, row):
             d[key]  = value
         return d
         
-    def bufferAppend(self, row):
-        row         = self.__generateRow(row)
+    def buffer_append(self, row):
+        row         = self.generate_row(row)
         self.__buf.append(row)
         
-    def printRow(self, row, lang='json', target=sys.stdout):
-        dumpFunc    = {'json':json.dumps}
-        row         = self.__generateRow(row)
-        rowString   = dumpFunc[lang](row)
+    def print_row(self, row, lang='json', target=sys.stdout):
+        dump_func   = {'json':json.dumps}
+        row         = self.generate_row(row)
+        rowString   = dump_func[lang](row)
         print(rowString, file=target)
         
-    def printBuffer(self, lang='json', target=sys.stdout):
-        dumpFunc    = {'json':json.dumps}
-        tableStr    = dumpFunc[lang](self.__buf)
+    def print_buffer(self, lang='json', target=sys.stdout):
+        dump_func    = {'json':json.dumps}
+        tableStr    = dump_func[lang](self.__buf)
         print(tableStr, file=target)
         
         

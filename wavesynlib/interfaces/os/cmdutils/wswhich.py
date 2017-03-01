@@ -12,10 +12,12 @@ import sys
 import getopt
 import platform
 
+import json
 from itertools import product
 from collections import OrderedDict
 
 from wavesynlib.interfaces.os.windows.shell.winopen import winopen
+from wavesynlib.languagecenter.datatypes import Table
 
 ERROR_NOERROR, ERROR_NOTFOUND, ERROR_PARAM = range(3)
 
@@ -28,7 +30,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], \
             'a',\
-            ['all', 'winopen', 'jsonoutput']\
+            ['all', 'winopen', 'jsontable']\
         ) # TODO
     except getopt.GetoptError, err:
         print(str(err), file=sys.stderr)
@@ -43,7 +45,7 @@ def main(argv):
             all_cmd = True
         if o == '--winopen':
             wopen   = True
-        if o == '--jsonoutput':
+        if o == '--jsontable':
             json_output = True
     
     name = args[0]
@@ -81,18 +83,14 @@ def main(argv):
                 break        
             
     if file_paths:
-        sep = '['
-        for file_path in file_paths:
+        table = Table(['order', 'path'])
+        for order, file_path in enumerate(file_paths):
             if not json_output:
                 print(file_path)
             else:
-                print(sep)
-                sep = ','
-                print('{{"path":"{}"}}'.format(file_path), end='')
+                table.print_row((order, file_path))
             if wopen:
                 winopen(file_path)
-        if json_output:
-            print(']')
     else:
         print('wswhich.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
         return ERROR_NOTFOUND
