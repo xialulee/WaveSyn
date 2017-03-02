@@ -269,6 +269,10 @@ class OperatingSystem(ModelNode):
         self.clipboard = ModelNode(is_lazy=True, class_object=Clipboard)
         self.mouse = ModelNode(is_lazy=True, class_object=Mouse)
         self.desktop_wallpaper = ModelNode(is_lazy=True, class_object=DesktopWallpaper)
+        
+        if platform.system().lower() == 'windows':
+            from wavesynlib.interfaces.os.windows.modelnode import Windows
+            self.windows = ModelNode(is_lazy=True, class_object=Windows)
             
     
     @Scripting.printable    

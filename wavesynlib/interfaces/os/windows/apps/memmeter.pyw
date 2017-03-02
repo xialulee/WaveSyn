@@ -5,6 +5,8 @@
 # win8 python27
 # Feng-cong Li
 
+import os
+
 from six.moves.tkinter import *
 from comtypes import *
 import ctypes as ct
@@ -12,6 +14,7 @@ import ctypes as ct
 from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
+from wavesynlib.languagecenter.utils import get_caller_dir
 
 
 class MEMORYSTATUS(ct.Structure):
@@ -40,6 +43,7 @@ APPID = 'wavesyn/windows/memstatus'
 def main():
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
+    root.iconbitmap(default=os.path.join(get_caller_dir(), 'memmeter.ico'))
     label   = Label()
     label.pack()
     tbIcon  = tktools.TaskbarIcon(root) 
