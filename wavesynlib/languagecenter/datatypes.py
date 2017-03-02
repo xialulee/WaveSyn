@@ -35,26 +35,48 @@ class Table(object):
         self.__head     = head
         self.__buf      = []
         
+        
+    @property
+    def head(self):
+        return self.__head
+        
+        
+    @head.setter
+    def head(self, value):
+        self.__head = value
+        
+        
     def generate_row(self, row):
         d   = OrderedDict()
         for key, value in izip(self.__head, row):
             d[key]  = value
         return d
         
+        
     def buffer_append(self, row):
         row         = self.generate_row(row)
         self.__buf.append(row)
         
+        
+    def __plain_row(self, row):
+        return '\t'.join([str(v) for v in row.values()])
+        
+        
     def print_row(self, row, lang='json', target=sys.stdout):
-        dump_func   = {'json':json.dumps}
+        dump_func   = {'json':json.dumps, 'plain':self.__plain_row}
         row         = self.generate_row(row)
         rowString   = dump_func[lang](row)
         print(rowString, file=target)
+        
         
     def print_buffer(self, lang='json', target=sys.stdout):
         dump_func    = {'json':json.dumps}
         tableStr    = dump_func[lang](self.__buf)
         print(tableStr, file=target)
+        
+        
+    def print_head(self):
+        print(*self.head, sep='\t')
         
         
 
