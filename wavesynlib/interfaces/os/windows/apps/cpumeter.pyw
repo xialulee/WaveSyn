@@ -37,7 +37,7 @@ def main():
     timer = TkTimer(widget=root, interval=2000) # No Config Dialog
     
     @timer.add_observer   
-    def show_memory_usage():
+    def show_cpu_usage():
         cpu_usage = get_cpu_usage()
         label['text']   = 'CPU Usage: {}%'.format(cpu_usage)
         tb_icon.progress = cpu_usage        
