@@ -15,11 +15,8 @@ platformName    = platform.python_implementation().lower()
 
 if platformName == 'cpython':
     def query(wqlString):
-        from win32com.client import Dispatch
-        computerName    = '.'
-        locator         = Dispatch('WbemScripting.SWbemLocator')
-        server          = locator.ConnectServer(computerName, r'root\cimv2')
-        q               = server.ExecQuery(wqlString)    
+        from wavesynlib.interfaces.os.windows.wmi import WQL
+        q = WQL().query(wqlString)
         return [i.commandline for i in q]        
 elif platformName == 'ironpython':
     def query(wqlString):
