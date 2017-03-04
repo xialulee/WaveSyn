@@ -32,7 +32,7 @@ from datetime import datetime
 import traceback
 
 from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText
-from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
+from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.languagecenter.utils import auto_subs, eval_format
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
@@ -411,13 +411,19 @@ Red:   main-thread is busy.''')
             
     def _make_cpu_mem_status(self):
         balloon = Scripting.root_node.balloon
+
+        def on_progbar_dbclick(app):
+            with code_printer:
+                self.__root_node.interfaces.os.windows.launch(app)
         
         mem_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
         mem_progbar.pack(side='right', fill='y')
+        mem_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('memmeter.pyw'))
         balloon.bind_widget(mem_progbar, balloonmsg='Total memory usage.')
         
         cpu_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__cpubar)
         cpu_progbar.pack(side='right', fill='y')
+        cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('cpumeter.pyw'))
         balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage.')        
         
         
