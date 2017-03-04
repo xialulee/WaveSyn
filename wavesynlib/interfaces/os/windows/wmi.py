@@ -16,7 +16,7 @@ import json
 class WQL(object):
     def __init__(self):
         loc = client.CreateObject('WbemScripting.SWbemLocator')
-        self.__server = loc.ConnectServer('.', r'root\cimv2')
+        self.__server = loc.ConnectServer('.')
         
         
     def query(self, wql_str, output_format='original'):
