@@ -23,7 +23,7 @@ def main(argv):
             'd',\
             ['dir', 'filetype=', 'typename=']\
         )
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
         usage()
         return ERROR_PARAM

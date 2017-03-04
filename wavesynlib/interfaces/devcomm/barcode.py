@@ -22,7 +22,7 @@ def main(argv):
             'd:e:s:f:',\
             ['nodisplay', 'stdin', 'size=', 'decode=', 'encode=', 'file=', 'wintitle=']
         )
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
         sys.exit(ERROR_PARAM)
         

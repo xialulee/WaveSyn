@@ -9,7 +9,8 @@ from __future__ import print_function, division, unicode_literals
 
 import sys
 import getopt
-from comtypes import client
+#from comtypes import client
+from wavesynlib.interfaces.os.windows.wmi import WQL
 
 from wavesynlib.languagecenter.datatypes import Table
 
@@ -20,7 +21,7 @@ def main(argv):
             '',\
             ['jsontable']\
         ) # TODO
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
         #usage()
         return 1
@@ -32,9 +33,11 @@ def main(argv):
         
     
     wql_str = args[0]
-    loc = client.CreateObject('WbemScripting.SWbemLocator')
-    svc = loc.ConnectServer('.', 'root\\cimv2')
-    items = svc.ExecQuery(wql_str)
+#    loc = client.CreateObject('WbemScripting.SWbemLocator')
+#    svc = loc.ConnectServer('.', 'root\\cimv2')
+#    items = svc.ExecQuery(wql_str)
+    wql = WQL()
+    items = wql.query(wql_str)
     flag = True
 
     head = []    

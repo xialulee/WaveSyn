@@ -21,7 +21,7 @@ def selectSheet(workBook, ignoreBlankSheet=True, label_text='Select a sheet'):
         sheetNames_backup   = copy(sheetNames)
         for name in sheetNames_backup:
             sheet   = workBook.getSheetByName(name)
-            print 'rows:', sheet.get_highest_row()
+            print ('rows:', sheet.get_highest_row())
             if sheet.get_highest_row() == 0:
                 sheetNames.remove(name)
                 

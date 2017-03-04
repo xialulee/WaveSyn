@@ -27,7 +27,7 @@ class PeakFinder(object):
         clip_matrix  = data_matrix[start[1]:(stop[1]+1), start[0]:(stop[0]+1)]
         peak_pos     = nonzero(clip_matrix == clip_matrix.max())
         peak_pos     = (peak_pos[1][0] + start[0], peak_pos[0][0] + start[1])
-        print peak_pos
+        print(peak_pos)
         circle      = Circle(peak_pos, 4, **self.indicatorProps)
         ax.add_patch(circle)
         self.__canvas.show()

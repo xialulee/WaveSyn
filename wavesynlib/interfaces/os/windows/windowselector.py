@@ -83,7 +83,7 @@ class WindowSelector(object):
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], 'hp', ['hwnd', 'pid'])
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
         return 1
         

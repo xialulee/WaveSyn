@@ -32,7 +32,7 @@ elif platformName == 'ironpython':
         
         return [i['commandline'] for i in s.Get()]   
 else:
-    raise NotImplementedError, 'This Python implementation is not supported.'
+    raise NotImplementedError('This Python implementation is not supported.')
 
 
 
@@ -51,7 +51,7 @@ def queryByPID(pid):
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], '', ['name=', 'pid='])
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
         return 1
         

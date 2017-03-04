@@ -15,13 +15,13 @@ def winopen(path):
     elif os.path.isfile(path):
         os.system('nautilus --select ' + path)
     else:
-        raise ValueError, 'Invalid path.'
+        raise ValueError('Invalid path.')
         
 if __name__ == '__main__':
     path = sys.argv[1]
     try:
         winopen(path)
         sys.exit(0)
-    except ValueError, e:
+    except ValueError as e:
         print(e, file=sys.stderr)
         sys.exit(1)

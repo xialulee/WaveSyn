@@ -12,6 +12,7 @@ import webbrowser
 
 from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.interfaces.os.windows.wmi import WQL
 
 
 app_paths = {
@@ -19,9 +20,23 @@ app_paths = {
 }
 
 
+class WMI(ModelNode):
+    def __init__(self, *args, **kwargs):
+        super(WMI, self).__init__(*args, **kwargs)
+        self.__wql = None
+       
+    @Scripting.printable
+    def query(self, wql, output_format='original'):
+        if self.__wql is None:
+            # Lazy init.
+            self.__wql = WQL()
+        return self.__wql.query(wql, output_format)
+
+
 class Windows(ModelNode):
     def __init__(self, *args, **kwargs):
         super(Windows, self).__init__(*args, **kwargs)
+        self.wmi = WMI()
         
     
     @Scripting.printable
@@ -32,3 +47,5 @@ class Windows(ModelNode):
             self_dir = get_caller_dir()
             app_path = os.path.join(self_dir, 'apps', app_name)
         webbrowser.open(app_path)
+        
+        

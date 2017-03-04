@@ -9,13 +9,12 @@ from __future__ import division, print_function, unicode_literals
 import os
 
 from six.moves.tkinter import *
-#from comtypes import *
-from comtypes import client
 import ctypes as ct
 
 from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
+from wavesynlib.interfaces.os.windows.wmi import WQL
 from wavesynlib.languagecenter.utils import get_caller_dir
 
     
@@ -26,13 +25,12 @@ def get_io_time_percent():
     
 class DiskTime(object):
     def __init__(self):
-        loc = client.CreateObject('WbemScripting.SWbemLocator')
-        self.__server = loc.ConnectServer('.', r'root\cimv2')
+        self.__wql = WQL()
         
     
     @property
     def percent(self):
-        items = self.__server.ExecQuery("SELECT PercentDiskTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name='_Total'")
+        items = self.__wql.query("SELECT PercentDiskTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name='_Total'")
         val = 0
         for item in items:
             val = item.Properties_['PercentDiskTime'].Value
