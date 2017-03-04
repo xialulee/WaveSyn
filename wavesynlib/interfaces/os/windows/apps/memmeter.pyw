@@ -38,7 +38,7 @@ def get_memory_usage():
     return memusage      
 
 
-APPID = 'wavesyn/windows/memstatus'
+APPID = 'wavesyn/windows_apps/memstatus'
 
 def main():
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
