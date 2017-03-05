@@ -16,6 +16,7 @@ import psutil
 from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
+from wavesynlib.interfaces.os.windows.process import singleton
 from wavesynlib.languagecenter.utils import get_caller_dir
 
     
@@ -24,9 +25,12 @@ def get_cpu_usage():
     return psutil.cpu_percent()
 
 
-APPID = 'wavesyn/windows_apps/cpustatus'
+APPID = '02519AC0-8DF8-4BE7-9A3E-56BFF162C7F7'
 
 def main():
+    if not singleton(APPID):
+        return
+    
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
     root.iconbitmap(default=os.path.join(get_caller_dir(), 'cpumeter.ico'))

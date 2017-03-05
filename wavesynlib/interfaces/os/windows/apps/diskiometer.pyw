@@ -15,6 +15,7 @@ from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.wmi import WQL
+from wavesynlib.interfaces.os.windows.process import singleton
 from wavesynlib.languagecenter.utils import get_caller_dir
 
     
@@ -38,9 +39,12 @@ class DiskTime(object):
         
 
 
-APPID = 'wavesyn/windows_apps/diskiometer'
+APPID = u'A3840BF2-D761-4BEB-AF96-2DF97CCCF225'
 
-def main():
+def main(): 
+    if not singleton(APPID):
+        return
+    
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
     root.iconbitmap(default=os.path.join(get_caller_dir(), 'disktimemeter.ico'))
@@ -66,6 +70,7 @@ def main():
 
     timer.active = True
     root.mainloop()
+
 
 
 if __name__ == '__main__':

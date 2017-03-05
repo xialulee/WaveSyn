@@ -14,6 +14,7 @@ import ctypes as ct
 from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
+from wavesynlib.interfaces.os.windows.process import singleton
 from wavesynlib.languagecenter.utils import get_caller_dir
 
 
@@ -38,9 +39,12 @@ def get_memory_usage():
     return memusage      
 
 
-APPID = 'wavesyn/windows_apps/memstatus'
+APPID = '129832A8-AA09-4416-8C6A-9945FAB4CDFA'
 
 def main():
+    if not singleton(APPID):
+        return 
+    
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
     root.iconbitmap(default=os.path.join(get_caller_dir(), 'memmeter.ico'))
