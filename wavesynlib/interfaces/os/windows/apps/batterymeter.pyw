@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Mar 04 17:05:02 2017
+Created on Tue Mar 14 16:34:07 2017
 
 @author: Feng-cong Li
 """
+
 from __future__ import division, print_function, unicode_literals
 
 import os
@@ -20,22 +21,22 @@ from wavesynlib.languagecenter.utils import get_caller_dir
 
     
     
-class DiskTime(object):
+class Battery(object):
     def __init__(self):
         self.__wql = WQL()
         
     
     @property
     def percent(self):
-        items = self.__wql.query("SELECT PercentDiskTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name='_Total'")
+        items = self.__wql.query("SELECT EstimatedChargeRemaining FROM Win32_Battery")
         val = 0
         for item in items:
-            val = item.Properties_['PercentDiskTime'].Value
+            val = item.Properties_['EstimatedChargeRemaining'].Value
         return int(val)
         
 
 
-APPID = u'A3840BF2-D761-4BEB-AF96-2DF97CCCF225'
+APPID = u'BCE44D5F-8274-432F-9164-3406EDFF8900'
 
 def main(): 
     if not singleton(APPID):
@@ -43,25 +44,25 @@ def main():
     
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
-    root.iconbitmap(default=os.path.join(get_caller_dir(), 'disktimemeter.ico'))
+    root.iconbitmap(default=os.path.join(get_caller_dir(), 'batterymeter.ico'))
     label   = Label()
     label.pack()
     tb_icon  = tktools.TaskbarIcon(root) 
-    disk_time = DiskTime()
+    battery = Battery()
     
     timer = TkTimer(widget=root, interval=2000) # No Config Dialog
     
     @timer.add_observer   
-    def show_disk_io():
-        percent = disk_time.percent
-        label['text']   = 'Disk IO time percent: {}%'.format(percent)
+    def show_percent():
+        percent = battery.percent
+        label['text']   = 'Battery: {}%'.format(percent)
         tb_icon.progress = percent        
-        if percent <= 60:
-            state = TBPFLAG.TBPF_NORMAL
-        elif 60 <= percent < 80:
+        if 10 <= percent <= 30:
             state = TBPFLAG.TBPF_PAUSED
-        else:
+        elif percent < 10:
             state = TBPFLAG.TBPF_ERROR
+        else:
+            state = TBPFLAG.TBPF_NORMAL
         tb_icon.state = state
 
     timer.active = True
