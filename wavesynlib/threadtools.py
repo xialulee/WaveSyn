@@ -12,10 +12,22 @@ from __future__ import unicode_literals
 import six
 import six.moves._thread as thread
 import threading
+import functools
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib.languagecenter.designpatterns import Singleton
 from wavesynlib.languagecenter import datatypes
+
+
+
+class _ThreadObj(threading.Thread):
+    def __init__(self, func):
+        self.__func = func
+        threading.Thread.__init__(self)
+    
+    
+    def run(self):
+        self.__func()
 
 
 # Only one thread manager for a process. 
@@ -32,6 +44,10 @@ class ThreadManager(ModelNode):
     @property
     def in_main_thread(self):
         return thread.get_ident() == self.main_thread_id
+        
+        
+    def only_main_thread(self, block=True):
+        pass
         
         
     def main_thread_do(self, block=True):
@@ -52,6 +68,7 @@ the rest code will not be executed util do_something() returned.
         if self.in_main_thread:
             def run(func):
                 func()
+            return run
         else:
             def put_queue(func):
                 slot = datatypes.CommandSlot(source='local', node_list=[func])
@@ -70,8 +87,10 @@ the rest code will not be executed util do_something() returned.
                 return put_queue        
                 
                 
-    def new_thread_do(self, func, args=None, kwargs=None):
-        args = () if not args else args
-        kwargs = {} if not kwargs else kwargs
-        return thread.start_new_thread(func, args, kwargs)
+    def new_thread_do(self, func):
+        return thread.start_new_thread(func, (), {})
+        
+        
+    def create_thread_object(self, func):
+        return _ThreadObj(func)
         

@@ -1,20 +1,13 @@
 from wavesynlib.languagecenter.wavesynscript  import ModelNode, NodeDict
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.languagecenter.utils          import eval_format
-import threading
+
 import subprocess
 import tempfile
 import os
 
-class EditorThread(threading.Thread):
-    def __init__(self, editor_path, filename):
-        self.editor_path = editor_path
-        self.filename   = filename
-        threading.Thread.__init__(self)
 
-    def run(self):
-        subprocess.call([self.editor_path, self.filename])
-
+        
 class EditorNode(ModelNode):
     def __init__(self, node_name='', editor_path=''):
         ModelNode.__init__(self, node_name=node_name)
@@ -32,8 +25,14 @@ class EditorNode(ModelNode):
             pass
         with self.attribute_lock:
             self.filename   = filename
-        self.__thread   = EditorThread(self.editor_path, self.filename)
+
+        @self.root_node.thread_manager.create_thread_object
+        def editor_thread():
+            subprocess.call([self.editor_path, self.filename])
+            
+        self.__thread = editor_thread
         self.__thread.start()
+        
 
     def is_alive(self):
         alive   = self.__thread.is_alive()

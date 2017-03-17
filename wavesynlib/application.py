@@ -15,7 +15,6 @@ def dependencies_for_my_program():
     from scipy.special          import _ufuncs_cxx
 
 import six
-from six.moves import _thread as thread
 import threading
 from six.moves import queue
 
@@ -225,21 +224,17 @@ wavesyn
                 
         self.command_queue_timer.active = True
         
-        class EditorObserver(object): # use SimpleObserver instead
-            def __init__(self, wavesyn):
-                self.wavesyn    = wavesyn
-
-            def update(self, editor):
-                wavesyn = self.wavesyn                
-                code    = editor.code
-                if not code:
-                    return
-                wavesyn.stream_manager.write('WaveSyn: executing code from editor {0} listed as follows:\n'.format(id(editor)), 'TIP')
-                wavesyn.stream_manager.write(code, 'HISTORY')
-                wavesyn.stream_manager.write('\n')
-                wavesyn.execute(code)
-
-        self.editors.manager.add_observer(EditorObserver(self))
+        
+        @self.editors.manager.add_observer
+        def editor_observer(editor):
+            code = editor.code
+            if not code:
+                return
+            self.stream_manager.write('WaveSyn: executing code from editor {0} listed as follows:\n'.format(id(editor)), 'TIP')
+            self.stream_manager.write(code, 'HISTORY')
+            self.stream_manager.write('\n')
+            self.execute(code)            
+        
 
         with self.attribute_lock:
             self.monitor_timer = self.create_timer(interval=100, active=False)
