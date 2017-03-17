@@ -65,7 +65,8 @@
                       {"Name":"Launch CMD with ws* support", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('cmd')", "Print":true},
                       {"Name":"Launch RAM meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('memmeter.pyw')", "Print":true},
                       {"Name":"Launch CPU meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('cpumeter.pyw')", "Print":true},
-                      {"Name":"Launch disk IO meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('diskiometer.pyw')", "Print":true}
+                      {"Name":"Launch disk IO meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('diskiometer.pyw')", "Print":true},
+                      {"Name":"Launch battery meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('batterymeter.pyw')"}
                   ]
                   }
               ]
