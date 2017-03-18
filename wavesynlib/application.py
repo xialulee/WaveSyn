@@ -50,6 +50,7 @@ from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.interfaces.modelnode import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.threadtools import ThreadManager
+from wavesynlib.processtools import ProcessDict
 from wavesynlib.languagecenter.utils import eval_format, set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton      
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
@@ -151,6 +152,7 @@ wavesyn
                 interrupter = InterrupterNode(),
                 dialogs = simpledialogs.Dialogs(self),
                 windows = WindowDict(),
+                processes = ProcessDict(),
                 # End UI elements
                                                 
                 # Interfaces node
