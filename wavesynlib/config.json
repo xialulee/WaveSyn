@@ -75,6 +75,10 @@
               "Name":"Android", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"Data Transfer", "TearOff":0, "UnderLine":0, "Command":"wavesyn.windows.create(module_name='wavesynlib.toolwindows.mobiledevice.android', class_name='DataTransferWindow')", "Print":true}
               ]
+              },
+              {"Name":"MS Office", "TearOff":0, "UnderLine":0, "SubMenu":[
+                  {"Name":"Manager Window", "TearOff":0, "UnderLine":0, "Command":"wavesyn.windows.create(module_name='wavesynlib.toolwindows.msoffice.managerwindow', class_name='OfficeManager')"}
+              ]
               }
           ]
           },

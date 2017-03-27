@@ -18,24 +18,6 @@ from comtypes import _safearray
 
 
 
-class BaseObject(ModelNode):
-    def __init__(self, *args, **kwargs):
-        com_handle = kwargs.pop('com_handle')
-        super(BaseObject, self).__init__(self, *args, **kwargs)
-        self.__com_handle = com_handle
-        
-    
-    @property
-    def com_handle(self):
-        return self.__com_handle
-        
-        
-    @Scripting.printable
-    def show_window(self, show=True):
-        self.com_handle.Visible = show
-
-
-
 class ExcelUtils(ModelNode):
     def __init__(self, *args, **kwargs):
         self.__com_handle = kwargs.pop('com_handle')
@@ -225,36 +207,54 @@ class ExcelUtils(ModelNode):
             sheet.Range(self._get_addr(top_left_x, top_left_y),
                         self._get_addr(top_left_x+col_num-1, top_left_y+row_num-1)).Value[:] = variant
             return                
-
-
-
-class ExcelObject(BaseObject):
-    def __init__(self, *args, **kwargs):
-        super(ExcelObject, self).__init__(*args, **kwargs)
-        self.utils = ExcelUtils(com_handle=self.com_handle)        
         
 
-
-class WordObject(BaseObject):
+        
+class AppObject(ModelNode):
+    _prog_info = {
+        'word': {'utils': None},
+        'excel': {'utils': ExcelUtils}
+    }    
+    
     def __init__(self, *args, **kwargs):
-        super(WordObject, self).__init__(self, *args, **kwargs)
+        com_handle = kwargs.pop('com_handle')
+        app_name = kwargs.pop('app_name').lower()
+        super(AppObject, self).__init__(self, *args, **kwargs)
+        self.__com_handle = com_handle
+        self.__app_name = app_name
+        self.utils = self._prog_info[app_name]['utils'](com_handle=com_handle)
+        
+        
+    @property
+    def app_name(self):
+        return self.__app_name
+        
+    
+    @property
+    def com_handle(self):
+        return self.__com_handle
+        
+        
+    @Scripting.printable
+    def show_window(self, show=True):
+        self.com_handle.Visible = show        
       
 
 
 class MSOffice(NodeDict):
     _prog_info = {
-        'word':  {'id':'Word.Application', 'class': WordObject},
-        'excel': {'id':'Excel.Application', 'class': ExcelObject}
+        'word':  {'id':'Word.Application'},
+        'excel': {'id':'Excel.Application'}
     }
     
     def __init__(self, *args, **kwargs):
         super(MSOffice, self).__init__(*args, **kwargs)
         
         
-    def _generate_object(self, prog_name, func):
-        prog_name = prog_name.lower()
-        com_handle = func(self._prog_info[prog_name]['id'])
-        wrapper = self._prog_info[prog_name]['class'](com_handle=com_handle)
+    def _generate_object(self, app_name, func):
+        app_name = app_name.lower()
+        com_handle = func(self._prog_info[app_name]['id'])
+        wrapper = AppObject(app_name=app_name, com_handle=com_handle)
         wrapper.show_window()
         object_id = id(wrapper)
         self[object_id] = wrapper
