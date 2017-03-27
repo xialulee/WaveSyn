@@ -17,9 +17,31 @@ from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
 from comtypes import _safearray
 
 
+
+class BaseObject(ModelNode):
+    def __init__(self, *args, **kwargs):
+        com_handle = kwargs.pop('com_handle')
+        super(BaseObject, self).__init__(self, *args, **kwargs)
+        self.__com_handle = com_handle
+        
+    
+    @property
+    def com_handle(self):
+        return self.__com_handle
+        
+        
+    @Scripting.printable
+    def show_window(self, show=True):
+        self.com_handle.Visible = show
+
+
+
 class ExcelUtils(ModelNode):
     def __init__(self, *args, **kwargs):
+        self.__com_handle = kwargs.pop('com_handle')
         super(ExcelUtils, self).__init__(*args, **kwargs)
+        self.__regex_for_addr = re.compile('([A-Z]+)([0-9]+)')
+        
 
     @Scripting.printable
     def is_nested_iterable(self, data):
@@ -29,6 +51,7 @@ class ExcelUtils(ModelNode):
             return True
         else:
             return False
+            
             
     @Scripting.printable
     def is_ragged(self, data):
@@ -41,6 +64,7 @@ class ExcelUtils(ModelNode):
             if len(data[m]) != num_col:
                 return True        
         return False
+        
 
     @Scripting.printable
     def set_variant_matrix(self, value):
@@ -85,6 +109,7 @@ class ExcelUtils(ModelNode):
         memmove(byref(variant._), byref(pa), sizeof(pa))  
         variant.vt = VT_ARRAY | VT_VARIANT
         return variant
+        
        
     @Scripting.printable
     def transpose(self, data):
@@ -102,6 +127,7 @@ class ExcelUtils(ModelNode):
         
         return [[data[m][n] for m in range(num_row)] for n in range(num_col)]
         
+        
     @Scripting.printable
     def fliplr(self, data):
         if self.is_nested_iterable(data): # 2D data
@@ -117,6 +143,7 @@ class ExcelUtils(ModelNode):
             else:
                 raise TypeError('Incompatible data type.')
                 
+                
     @Scripting.printable
     def flipud(self, data):
         if self.is_nested_iterable(data):
@@ -125,6 +152,7 @@ class ExcelUtils(ModelNode):
             return retval
         else: # 1D list/tuple is a row vector.
             raise TypeError('Incompatible data type.')
+            
             
     @Scripting.printable
     def replace_string(self, data, old, new):
@@ -138,17 +166,9 @@ class ExcelUtils(ModelNode):
                     data[index] = cell.replace(old, new)
             else:
                 raise TypeError('Incompatible data type.')
-
-
-class ExcelCOMObject(ModelNode):
-    def __init__(self, *args, **kwargs):
-        excel_handle = kwargs.pop('excel_handle')
-        super(ExcelCOMObject, self).__init__(*args, **kwargs)
-        self.__excel_handle = excel_handle
-        self.__regex_for_addr = re.compile('([A-Z]+)([0-9]+)')
-        self.__utils = Scripting.root_node.interfaces.msoffice.excel.utils
-        
-    def _get_xy(self, addr):
+                
+                
+    def _get_xy(self, addr): 
         x_str, y_str = re.match(self.__regex_for_addr, addr).groups()
         y = int(y_str) - 1
         x = 0
@@ -156,6 +176,7 @@ class ExcelCOMObject(ModelNode):
             x *= 26
             x += ord(c)-64
         return x-1, y
+        
         
     def _get_addr(self, x, y):
         addr_x = []
@@ -166,22 +187,15 @@ class ExcelCOMObject(ModelNode):
         addr_x[-1] += 1
         addr_x_str = ''.join([chr(i+65) for i in addr_x])
         addr_y_str = str(y+1)
-        return addr_x_str + addr_y_str
-        
-    @property
-    def object_handle(self):
-        return self.__excel_handle
-        
-    @Scripting.printable
-    def show_window(self, show=True):
-        self.object_handle.Visible = show
-        
-    @Scripting.printable
+        return addr_x_str + addr_y_str                
+                
+                
+    @Scripting.printable 
     def write_range(self, data, top_left, workbook=None, sheet=None):
         if workbook is None:
-            workbook = self.__excel_handle.ActiveWorkbook
+            workbook = self.__com_handle.ActiveWorkbook
         else:
-            workbook = self.__excel_handle.Workbooks[workbook]
+            workbook = self.__com_handle.Workbooks[workbook]
             
         if sheet is None:
             sheet = workbook.ActiveSheet
@@ -190,7 +204,7 @@ class ExcelCOMObject(ModelNode):
         
         top_left_x, top_left_y = self._get_xy(top_left)
         
-        if not self.__utils.is_nested_iterable(data): # 1D data or incompatible data type.
+        if not self.is_nested_iterable(data): # 1D data or incompatible data type.
             if isinstance(data, (list, tuple)): # 1D data
                 list_len = len(data)
                 sheet.Range(self._get_addr(top_left_x, top_left_y), 
@@ -199,7 +213,7 @@ class ExcelCOMObject(ModelNode):
             else: # Incomplete data types. 
                 raise TypeError('Input data is not nested list/tuple.')
             
-        if self.__utils.is_ragged(data):
+        if self.is_ragged(data):
             for m, row in enumerate(data):
                 sheet.Range(self._get_addr(top_left_x, top_left_y+m),
                             self._get_addr(top_left_x+len(row)-1, top_left_y+m)).Value[:] = row
@@ -207,40 +221,56 @@ class ExcelCOMObject(ModelNode):
         else: # Regular matrix
             row_num = len(data)
             col_num = len(data[0])
-            variant = self.__utils.set_variant_matrix(data)
+            variant = self.set_variant_matrix(data)
             sheet.Range(self._get_addr(top_left_x, top_left_y),
                         self._get_addr(top_left_x+col_num-1, top_left_y+row_num-1)).Value[:] = variant
-            return
+            return                
+
+
+
+class ExcelObject(BaseObject):
+    def __init__(self, *args, **kwargs):
+        super(ExcelObject, self).__init__(*args, **kwargs)
+        self.utils = ExcelUtils(com_handle=self.com_handle)        
         
 
 
-class Excel(NodeDict): 
-    '''A hub/dict for accessing all the ExcelCOMObject.'''
+class WordObject(BaseObject):
+    def __init__(self, *args, **kwargs):
+        super(WordObject, self).__init__(self, *args, **kwargs)
+      
 
-    progid = 'Excel.Application'    
+
+class MSOffice(NodeDict):
+    _prog_info = {
+        'word':  {'id':'Word.Application', 'class': WordObject},
+        'excel': {'id':'Excel.Application', 'class': ExcelObject}
+    }
     
     def __init__(self, *args, **kwargs):
-        super(Excel, self).__init__(*args, **kwargs)        
-        self.utils = ExcelUtils()
+        super(MSOffice, self).__init__(*args, **kwargs)
         
-    def _generate_object(self, func):
-        excel_handle = func(self.progid)
-        wrapper = ExcelCOMObject(excel_handle=excel_handle)
+        
+    def _generate_object(self, prog_name, func):
+        prog_name = prog_name.lower()
+        com_handle = func(self._prog_info[prog_name]['id'])
+        wrapper = self._prog_info[prog_name]['class'](com_handle=com_handle)
+        wrapper.show_window()
         object_id = id(wrapper)
         self[object_id] = wrapper
-        return object_id        
-                
+        return object_id
+        
+
+    @Scripting.printable        
+    def get_active(self, name):
+        return self._generate_object(name, client.GetActiveObject)
+        
+        
     @Scripting.printable
-    def get_active_object(self):
-        return self._generate_object(client.GetActiveObject)
-        
-    @Scripting.printable
-    def create_object(self):
-        return self._generate_object(client.CreateObject)
+    def create(self, name):
+        return self._generate_object(name, client.CreateObject)
         
         
-class MSOffice(ModelNode):
-    def __init__(self, *args, **kwargs):
-        super(MSOffice, self).__init__(*args, **kwargs)
-        self.excel = Excel()
+        
+
         
