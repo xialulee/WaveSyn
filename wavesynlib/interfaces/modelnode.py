@@ -19,6 +19,12 @@ class Interfaces(ModelNode):
         super(Interfaces, self).__init__(*args, **kwargs)
         
         self.os = OperatingSystem()
+        
+        self.dotnet = ModelNode(
+            is_lazy=True, 
+            module_name='wavesynlib.interfaces.dotnet',
+            class_name='DotNet'
+        )
             
         if platform.system().lower() == 'windows':
             self.msoffice = MSOffice()

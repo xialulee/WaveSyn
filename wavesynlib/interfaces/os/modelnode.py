@@ -74,6 +74,16 @@ if platform.system().lower() == 'windows':
         @constant_handler(print_replacement=False)
         def support_clipboard_html(self, arg, **kwargs):
             return self.read(html=True)
+            
+            
+        @constant_handler(print_replacement=False)
+        def support_clipboard_image(self, arg, **kwargs):
+            from PIL import ImageGrab
+            image = ImageGrab.grabclipboard()
+            if not image:
+                raise TypeError('The data in clipboard is not an image.')
+            return image
+            
         
         @Scripting.printable
         def write(self, content, html=None, code=None):
