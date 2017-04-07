@@ -328,7 +328,7 @@ Red:   main-thread is busy.''')
 
         # Transparent Scale {
         def on_scale(val):
-            Scripting.root_node.console.set_transparency(val)
+            Scripting.root_node.gui.console.set_transparency(val)
         trans_scale = Scale(self, from_=0.2, to=1.0, orient='horizontal', value=1, command=on_scale)
         trans_scale.pack(side='right')
         balloon.bind_widget(trans_scale, balloonmsg='Set the transparency of the console.')
@@ -428,14 +428,6 @@ Red:   main-thread is busy.''')
         
         
 class ConsoleWindow(ModelNode):    
-#    class StreamObserver(object):
-#        def __init__(self, console):
-#            self.__console  = console
-#            
-#        def update(self, stream_type, content):
-#            self.__console.console_text.update_content(tag=stream_type, content=content)
-            
-            
     def __init__(self, *args, **kwargs):
         self.__menu = kwargs.pop('menu')
         self.__tag_defs = kwargs.pop('tag_defs')
@@ -534,4 +526,4 @@ class ConsoleWindow(ModelNode):
         tk_root.wm_attributes('-topmost', b)
         
     def set_transparency(self, transparency):
-        self.root_node.tk_root.wm_attributes('-alpha', transparency)
+        self.root_node.gui.root.wm_attributes('-alpha', transparency)
