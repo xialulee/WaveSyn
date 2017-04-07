@@ -24,16 +24,16 @@ class TkClipboard(ModelNode):
        
     @Scripting.printable
     def clear(self):
-        self.root_node.tk_root.clipboard_clear()
+        self.root_node.gui.root.clipboard_clear()
     
     @Scripting.printable
     def write(self, content):
         self.clear()
-        self.root_node.tk_root.clipboard_append(content)
+        self.root_node.gui.root.clipboard_append(content)
         
     @Scripting.printable
     def read(self):
-        return self.root_node.tk_root.clipboard_get()
+        return self.root_node.gui.root.clipboard_get()
         
     @Scripting.printable
     def remove_text_formatting(self):
@@ -57,11 +57,11 @@ class TkMouse(ModelNode):
         
     @Scripting.printable
     def get_x(self):
-        return self.root_node.tk_root.winfo_pointerx()
+        return self.root_node.gui.root.winfo_pointerx()
         
     @Scripting.printable
     def get_y(self):
-        return self.root_node.tk_root.winfo_pointery()
+        return self.root_node.gui.root.winfo_pointery()
         
         
 if platform.system().lower() == 'windows':
@@ -180,7 +180,7 @@ if platform.system().lower() == 'windows':
               
         @Scripting.printable
         def set_x(self, x):
-            x = self.root_node.dialogs.support_ask_integer(
+            x = self.root_node.gui.dialogs.support_ask_integer(
                 x, 
                 title='Set Mouse Cursor Position', 
                 prompt='Please input x-coordinate:')
@@ -190,7 +190,7 @@ if platform.system().lower() == 'windows':
         @Scripting.printable
         def set_y(self, y):
             x = self.get_x()
-            y = self.root_node.dialogs.support_ask_integer(
+            y = self.root_node.gui.dialogs.support_ask_integer(
                 y, 
                 title='Set Mouse Cursor Position',
                 prompt='Please input y-coordinate:')

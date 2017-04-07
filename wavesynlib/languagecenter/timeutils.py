@@ -132,7 +132,7 @@ class DoNode(ModelNode):
                 
     @Scripting.printable
     def do(self, func, iterables=None):
-        self.__timer = TkTimer(widget=self.root_node.tk_root)
+        self.__timer = TkTimer(widget=self.root_node.gui.root)
         root = self.root_node
         type_ = self.__type
         duration = self.__duration

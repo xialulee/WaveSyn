@@ -42,7 +42,7 @@ class OptimizeGroup(Group):
             entry_text   = '1',
             label_width  = 5,
             entry_width  = 8,
-            checker_function   = self._app.check_int
+            checker_function   = self._app.gui.value_checker.check_int
         )
         self.__num.entry.bind('<Return>', lambda event: self._on_solve_click())
         self.__num.pack(side=TOP)
@@ -55,7 +55,7 @@ class OptimizeGroup(Group):
             entry_text   = '100',
             label_width  = 5,
             entry_width  = 8,
-            checker_function   = self._app.check_int
+            checker_function = self._app.gui.value_checker.check_int
         )
         self.__pci.pack(side=TOP)
         
@@ -199,7 +199,7 @@ class ParamsGroup(Group):
     def __init__(self, *args, **kwargs):
         self._app = Application.instance
         self.__topwin   = kwargs.pop('topwin')
-        self.balloon    = self._app.balloon
+        self.balloon    = self._app.gui.balloon
 
         #Group.__init__(self, *args, **kwargs)
         super(ParamsGroup, self).__init__(*args, **kwargs)
@@ -228,9 +228,9 @@ class ParamsGroup(Group):
             if self.balloon:
                 self.balloon.bind_widget(paramitem.label, balloonmsg=param.shortdesc)
             if param.type == 'int':
-                paramitem.checker_function = self._app.check_int
+                paramitem.checker_function = self._app.gui.value_checker.check_int
             elif param.type == 'float':
-                paramitem.checker_function = self._app.check_float
+                paramitem.checker_function = self._app.gui.value_checker.check_float
             paramitem.grid(row=index%self.__MAXROW, column=index//self.__MAXROW)
             #self.__params[param.name] = {'gui':paramitem, 'meta':param}
             paramInfo[param.name] = {'gui':paramitem, 'meta':param}

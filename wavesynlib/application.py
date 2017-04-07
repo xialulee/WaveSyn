@@ -28,9 +28,6 @@ REALSTDERR = sys.stderr
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *
 
-import six.moves.tkinter_tix as Tix
-from six.moves.tkinter import Frame
-
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -44,8 +41,8 @@ import subprocess
 import json
 
 
-from wavesynlib.guicomponents.tk import TaskbarIcon, ValueChecker, PILImageFrame
-from wavesynlib.interfaces.timer.tk import TkTimer
+from wavesynlib.guicomponents.tk import PILImageFrame
+#from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.interfaces.modelnode import Interfaces
 from wavesynlib.stdstream import StreamManager
@@ -55,13 +52,10 @@ from wavesynlib.languagecenter.utils import eval_format, set_attributes, get_cal
 from wavesynlib.languagecenter.designpatterns import Singleton      
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
-from wavesynlib.languagecenter import timeutils
-from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
-from wavesynlib.toolwindows import simpledialogs
-from wavesynlib.toolwindows.basewindow import WindowDict
+#from wavesynlib.languagecenter import timeutils
 from wavesynlib.toolwindows.imagedisplay.modelnode import DisplayLauncher
 from wavesynlib.status import busy_doing
-from wavesynlib.console import ConsoleWindow
+#from wavesynlib.console import ConsoleWindow
 from wavesynlib.languagecenter import datatypes
 
 
@@ -109,13 +103,6 @@ wavesyn
         super(Application, self).__init__(
             node_name=Scripting.root_name, 
             is_root=True)
-
-        # init tk root window            
-        root = Tix.Tk()
-        root.protocol("WM_DELETE_WINDOW", self._on_exit)
-        with self.attribute_lock:
-            self.tk_root = root
-        # end init tk root window            
             
         Scripting.name_space['locals'][Scripting.root_name] = self
         Scripting.name_space['globals'] = globals()
@@ -136,29 +123,23 @@ wavesyn
 
         tag_defs = config['TagDefs']
         # End load config file
+        
+        
+        self.interfaces = Interfaces()
+        self.stream_manager = StreamManager()
+        
+        from wavesynlib.gui.tk import TkNode
+        self.gui = TkNode(console_menu=console_menu, tag_defs=tag_defs)
+        self.gui.on_exit = self._on_exit         
 
         
         # To Do: WaveSyn will have a uniform command slot system.
-        from wavesynlib.interfaces.xmlrpc.server import CommandSlot
-                
-        value_checker    = ValueChecker(root)
+        from wavesynlib.interfaces.xmlrpc.server import CommandSlot                
                 
         with self.attribute_lock:
             set_attributes(self,
-                # UI elements
-                #tk_root = root,
-                balloon = Tix.Balloon(root),
-                taskbar_icon = TaskbarIcon(root),
-                interrupter = InterrupterNode(),
-                dialogs = simpledialogs.Dialogs(self),
-                windows = WindowDict(),
                 processes = ProcessDict(),
-                # End UI elements
-                                                
-                # Interfaces node
-                interfaces = Interfaces(),
-                # End Interfaces node
-                
+                                                                
                 file_utils = ModelNode(
                     is_lazy=True,
                     module_name='wavesynlib.fileutils', 
@@ -175,18 +156,11 @@ wavesyn
                 xmlrpc_command_slot = CommandSlot(),
 
                 lang_center = LangCenterNode(),
-            
-                # Validation Functions
-                value_checker = value_checker,
-                check_int = value_checker.check_int,
-                check_float = value_checker.check_float,
-                check_positive_float = value_checker.check_positive_float,
-                # End Validation Functions
-                
+                            
                 file_path = file_path,
                 dir_path = dir_path,
                                 
-                stream_manager = StreamManager(),                
+                #stream_manager = StreamManager(),                
                 
                 config_file_path = config_file_path,
                 
@@ -194,9 +168,9 @@ wavesyn
             )  
             
         # Timer utils
-        self.timer = timeutils.ActionManager()              
-        self.timer.after = timeutils.TimerActionNode(type_='after')
-        self.timer.every = timeutils.TimerActionNode(type_='every')        
+#        self.timer = timeutils.ActionManager()              
+#        self.timer.after = timeutils.TimerActionNode(type_='after')
+#        self.timer.every = timeutils.TimerActionNode(type_='every')        
         # End Timer utils
                         
         self.editors    = EditorDict()
@@ -246,13 +220,7 @@ wavesyn
         
         # Check std streams every 100ms
         self.monitor_timer.add_observer(self.stream_manager)
-        
-        frm = Frame(root)
-        frm.pack(side=TOP, fill=X)                
-
-        self.console = ConsoleWindow(menu=console_menu, tag_defs=tag_defs)
-        self.stream_manager.add_observer(self.console.stream_observer) #!
-             
+                     
         self.scripting = Scripting(self)
         self.no_tip = False
 
@@ -279,7 +247,8 @@ wavesyn
         
         
     def create_timer(self, interval=100, active=False):
-        return TkTimer(self.tk_root, interval, active)
+#        return TkTimer(self.tk_root, interval, active)
+        return self.gui.create_timer(interval, active)
                      
         
     def print_and_eval(self, expr):
@@ -330,7 +299,7 @@ wavesyn
             return ret
             
             
-    def print_tip(self, contents):
+    def print_tip(self, contents): # To Do: Move the main logic to the console.
         # To Do: Use the new create_link_tag method of ScrolledText
         def config_link_tag(widget, tag_name, command, original_cursor):
             widget.tag_config(tag_name, underline=1, foreground='blue')
@@ -414,24 +383,24 @@ wavesyn
              
                     
     def mainloop(self):
-        return self.tk_root.mainloop()
+        return self.gui.mainloop()
         
 
     def _on_exit(self):    
-        self.interrupter.close()
+        self.gui.interrupter.close()
         
         # Here we cannot iterate the 'windows' directly,
         # because the close method will change the size of the dict 'windows',
         # and this will raise a runtime error.
-        keys = [key for key in self.windows]
+        keys = [key for key in self.gui.windows]
         for key in keys:
-            self.windows[key].close()
-        self.tk_root.quit()
+            self.gui.windows[key].close()
+        self.gui.quit()
     
         
     @classmethod
     def do_events(cls):
-        cls.instance.tk_root.update()
+        cls.instance.gui.root.update()
         
         
     def start_xmlrpc_server(self, addr='localhost', port=8000):
@@ -452,9 +421,9 @@ wavesyn
                     self.xmlrpc_command_slot.return_value    = (ret, err)
             finally:
                 # Make sure that at any circumstance the check_command will be called repeatedly.
-                self.tk_root.after(100, self.xmlrpc_check_command)
+                self.gui.root.after(100, self.xmlrpc_check_command)
         self.xmlrpc_check_command = check_command
-        self.tk_root.after(100, check_command) # To Do: Use TkTimer instead of after
+        self.gui.root.after(100, check_command) # To Do: Use TkTimer instead of after
         
         
     @Scripting.printable
@@ -471,7 +440,7 @@ wavesyn
     def set_matplotlib_style(self, style_name=''):
         import matplotlib.pyplot as plt
         
-        style_name = self.root_node.dialogs.support_ask_list_item(
+        style_name = self.root_node.gui.dialogs.support_ask_list_item(
             style_name,
             the_list=plt.style.available,
             message='Select a style for newly-created figures.')
@@ -491,7 +460,7 @@ def mainloop():
     # has finished its bootstrapping phase..."
     #
     # launch.py and launchwavesyn.py will call this mainloop function in __main__.
-    wavesyn.interrupter.launch()
+    wavesyn.gui.interrupter.launch()
     wavesyn.mainloop()
         
         

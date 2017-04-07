@@ -66,12 +66,12 @@ if action == "read":
              'label_width':5, 
              'entry_width':8,
              'entry_text':str(default_qr_size),
-             'checker_function':self.root_node.value_checker.check_int}},
+             'checker_function':self.root_node.gui.value_checker.check_int}},
     {'class':'Button', 'config':{'text':'Ok'}}
 ]}
 ]
 
-        balloon = self.root_node.balloon
+        balloon = self.root_node.gui.balloon
         tab = tk.Frame(tool_tabs)
         self.__widgets = widgets = json_to_tk(tab, widgets_desc, balloon=balloon)
         tool_tabs.add(tab, text='Data')

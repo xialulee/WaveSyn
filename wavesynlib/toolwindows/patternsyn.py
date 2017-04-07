@@ -43,10 +43,10 @@ class OptimizeGroup(Group):
         self.__M.entry_width = 6
         self.__M.entry_text = 10
         self.__M.entry.bind('<Return>', lambda dumb: self._on_solve_button_click())
-        self.__M.checker_function = self._app.check_int
+        self.__M.checker_function = self._app.gui.value_checker.check_int
         self.__M.pack()
         
-        self._app.balloon.bind_widget(self.__M, balloonmsg='The number of the array elements.')
+        self._app.gui.balloon.bind_widget(self.__M, balloonmsg='The number of the array elements.')
 
         imageSolveBtn = ImageTk.PhotoImage(
             file=Scripting.root_node.get_gui_image_path('Pattern_Solve_Button.png')
@@ -55,7 +55,7 @@ class OptimizeGroup(Group):
 
         self.__btnSolve = Button(self, text='Solve', image=imageSolveBtn, compound='left', command=self._on_solve_button_click)
         self.__btnSolve.pack(side=TOP, fill='x')
-        self._app.balloon.bind_widget(self.__btnSolve, balloonmsg='Launch the solver to synthesize the correlation matrix.')
+        self._app.gui.balloon.bind_widget(self.__btnSolve, balloonmsg='Launch the solver to synthesize the correlation matrix.')
         
 #        frm = Frame(self)
 #        frm.pack(side=TOP)
@@ -66,7 +66,7 @@ class OptimizeGroup(Group):
         self.__bDisplay = IntVar(0)
         chk_display = Checkbutton(self, text="Display", image=imageDisplayBtn, compound='left', variable=self.__bDisplay)
         chk_display.pack(side=TOP)
-        self._app.balloon.bind_widget(chk_display, balloonmsg='Display solver output.')
+        self._app.gui.balloon.bind_widget(chk_display, balloonmsg='Display solver output.')
         chk_display_width = chk_display.winfo_width()
         self.__btnSolve['width'] = chk_display_width
         
@@ -107,23 +107,23 @@ class EditGroup(Group):
         set_attributes(self.__center,        
             label_text   = 'center(deg)',        
             entry_text   = 0,    
-            checker_function   = self._app.check_int,
+            checker_function   = self._app.gui.value_checker.check_int,
             entry_width  = 5,    
             label_width  = 10
         )                       
         self.__center.pack(side=TOP)        
-        self._app.balloon.bind_widget(self.__center, balloonmsg='Specify the beam center here.')
+        self._app.gui.balloon.bind_widget(self.__center, balloonmsg='Specify the beam center here.')
         
         self.__width = LabeledEntry(frm)
         set_attributes(self.__width,
             label_text   = 'width(deg)',
             entry_text   = 20,
-            checker_function   = self._app.check_int,
+            checker_function   = self._app.gui.value_checker.check_int,
             entry_width  = 5,
             label_width  = 10
         )
         self.__width.pack(side=TOP)
-        self._app.balloon.bind_widget(self.__width, balloonmsg='Specify the beam width here.')
+        self._app.gui.balloon.bind_widget(self.__width, balloonmsg='Specify the beam width here.')
         
         self.__gui_images = []
                 
@@ -134,7 +134,7 @@ class EditGroup(Group):
         self.__gui_images.append(imageAddBtn)
         btn = Button(frm, image=imageAddBtn, command=self._on_add_button_click)
         btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Add new beam to the ideal pattern.')
+        self._app.gui.balloon.bind_widget(btn, balloonmsg='Add new beam to the ideal pattern.')
         
         imageDelBtn = ImageTk.PhotoImage(
             file=Scripting.root_node.get_gui_image_path('Pattern_Del_Button.png')
@@ -142,7 +142,7 @@ class EditGroup(Group):
         self.__gui_images.append(imageDelBtn)
         btn = Button(frm, image=imageDelBtn, command=self._on_delete_button_click)
         btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Remove the selected beam in the listbox.')
+        self._app.gui.balloon.bind_widget(btn, balloonmsg='Remove the selected beam in the listbox.')
         
         imageClrBtn = ImageTk.PhotoImage(
             file=Scripting.root_node.get_gui_image_path('Pattern_Clear_Button.png')
@@ -150,7 +150,7 @@ class EditGroup(Group):
         self.__gui_images.append(imageClrBtn)
         btn = Button(frm, image=imageClrBtn, command=self._on_clear_button_click)
         btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Clear the listbox of the beam parameters.')
+        self._app.gui.balloon.bind_widget(btn, balloonmsg='Clear the listbox of the beam parameters.')
         
         imagePlotBtn = ImageTk.PhotoImage(
             file=Scripting.root_node.get_gui_image_path('Pattern_Plot_Button.png')
@@ -158,7 +158,7 @@ class EditGroup(Group):
         self.__gui_images.append(imagePlotBtn)
         btn = Button(frm, image=imagePlotBtn, command=self._on_plot_ideal_pattern)
         btn.pack(side=LEFT)
-        self._app.balloon.bind_widget(btn, balloonmsg='Plot the ideal pattern.')
+        self._app.gui.balloon.bind_widget(btn, balloonmsg='Plot the ideal pattern.')
         
         frm.pack(side=LEFT, fill=Y)
         

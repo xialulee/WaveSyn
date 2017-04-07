@@ -313,7 +313,7 @@ class StatusBar(Frame):
         from wavesynlib.application import Application
         self.__root_node = Application.instance
         
-        balloon = Scripting.root_node.balloon
+        balloon = Scripting.root_node.gui.balloon
                 
         busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
         busy_lamp.pack(side=RIGHT, fill='y')
@@ -340,7 +340,7 @@ Red:   main-thread is busy.''')
         topmost_button.pack(side='right')
         
         def on_click():
-            tk_root = Scripting.root_node.tk_root
+            tk_root = Scripting.root_node.gui.root
             b = bool(tk_root.wm_attributes('-topmost'))
             fg = 'black' if b else 'lime green'
             topmost_button['fg'] = fg
@@ -355,11 +355,11 @@ Red:   main-thread is busy.''')
         def on_selected(event):
             text = event.widget.get()
             wid = int(text.split(':')[1].strip())
-            Scripting.root_node.windows[wid].tk_object.deiconify()
+            Scripting.root_node.gui.windows[wid].tk_object.deiconify()
         window_combo.bind('<<ComboboxSelected>>', on_selected)
         window_combo.pack(side='right', fill='y') # deiconify a window
         
-        @Scripting.root_node.windows.add_observer
+        @Scripting.root_node.gui.windows.add_observer
         def on_windows_change(node, command):
             values = window_combo['values']
             if values == '':
@@ -410,7 +410,7 @@ Red:   main-thread is busy.''')
             self._set_busy_light()
             
     def _make_cpu_mem_status(self):
-        balloon = Scripting.root_node.balloon
+        balloon = Scripting.root_node.gui.balloon
 
         def on_progbar_dbclick(app):
             with code_printer:
@@ -428,17 +428,24 @@ Red:   main-thread is busy.''')
         
         
 class ConsoleWindow(ModelNode):    
-    class StreamObserver(object):
-        def __init__(self, console):
-            self.__console  = console
+#    class StreamObserver(object):
+#        def __init__(self, console):
+#            self.__console  = console
+#            
+#        def update(self, stream_type, content):
+#            self.__console.console_text.update_content(tag=stream_type, content=content)
             
-        def update(self, stream_type, content):
-            self.__console.console_text.update_content(tag=stream_type, content=content)
-
+            
     def __init__(self, *args, **kwargs):
+        self.__menu = kwargs.pop('menu')
+        self.__tag_defs = kwargs.pop('tag_defs')
         super(ConsoleWindow, self).__init__(*args, **kwargs)
-        app = Scripting.root_node
-        root = app.tk_root
+    
+
+    def on_connect(self):
+        app = self.root_node
+        root = app.gui.root
+
         root.title('WaveSyn-Console')
 
         dir_indicator = CWDIndicator()
@@ -455,7 +462,7 @@ class ConsoleWindow(ModelNode):
         def busy_status_observer(busy):
             status_bar.set_busy(busy)        
 
-        tag_defs = kwargs['tag_defs']
+        tag_defs = self.__tag_defs
         for key in tag_defs:
             self.text.tag_configure(key, **tag_defs[key])        
 
@@ -467,10 +474,13 @@ class ConsoleWindow(ModelNode):
         else:
             time = 'morning'
         app.stream_manager.write(templates.greeting.format(time), 'TIP')
-        menu = kwargs['menu']
+        menu = self.__menu
         make_menu(root, menu, json=True)
         self.__default_cursor = self.__stdstream_text.text['cursor']
-        self.stream_observer = self.StreamObserver(self)
+        #self.stream_observer = self.StreamObserver(self)
+        @self.root_node.stream_manager.add_observer
+        def observer(stream_type, content):
+            self.console_text.update_content(tag=stream_type, content=content)
         
         
 #    @property

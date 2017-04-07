@@ -1025,8 +1025,8 @@ class FigureWindow(TkToolWindow):
         self.figure_book = figure_book
         
         app = Scripting.root_node
-        self.balloon = app.balloon
-        self.value_checker = app.value_checker
+        self.balloon = app.gui.balloon
+        self.value_checker = app.gui.value_checker
                 
     @property
     def current_data(self):

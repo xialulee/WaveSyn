@@ -145,6 +145,9 @@ then node will have a property named 'a', which cannot be re-assigned.
         object.__setattr__(self, key, val)
         if self.attribute_auto_lock and key != 'attribute_auto_lock': # attribute_auto_lock cannot be locked
             self.lock_attribute(key)
+        
+        if isinstance(val, ModelNode):
+            val.on_connect()
 
             
     def __getattribute__(self, attribute_name):
@@ -158,6 +161,10 @@ then node will have a property named 'a', which cannot be re-assigned.
             with self.attribute_lock:
                 setattr(self, attribute_name, attr)
         return attr
+        
+        
+    def on_connect(self):
+        pass
 
         
     @property
@@ -300,7 +307,7 @@ class FileManager(ModelNode):
             self.filetypes = filetypes
         
     def __getitem__(self, filename):
-        dialogs = self.root_node.dialogs
+        dialogs = self.root_node.gui.dialogs
         filename = dialogs.support_ask_open_filename(filename, filetypes=self.filetypes)
         filename = dialogs.support_ask_ordered_files(filename, filetypes=self.filetypes)
         filename = dialogs.support_ask_files(filename, filetypes=self.filetypes)        
