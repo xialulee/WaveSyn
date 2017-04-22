@@ -15,10 +15,6 @@ from idlelib.Percolator import Percolator
 from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-#####################
-from wavesynlib.stdstream import REALSTDOUT
-#####################
-
 import six
 from six.moves.tkinter import *
 from six.moves.tkinter_ttk import *

@@ -5,7 +5,7 @@ Created on Fri Oct 09 14:00:27 2015
 @author: Feng-cong Li
 """
 from wavesynlib.mathtools import Algorithm
-import wavesynlib.cuda as wavesyncuda
+import wavesynlib.interfaces.gpu.cuda as wavesyncuda
 
 import numpy as np
 
@@ -64,8 +64,8 @@ class DIAC(Algorithm):
         ['K', 'int', 'Maximum iteration number.']
     )      
         
-    def __call__(self, cudaWorker, N, Qr, K):        
-        thr = cudaWorker.reiknaThread
+    def __call__(self, N, Qr, K): 
+        thr = self.cuda_worker.reikna_thread
         twoN        = 2 * N
         fft         = wavesyncuda.FFTFactory[(twoN, thr)]
         

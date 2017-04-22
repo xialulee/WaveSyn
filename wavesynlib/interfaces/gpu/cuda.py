@@ -12,8 +12,12 @@ import reikna.cluda as cluda
 from reikna.fft import FFT
 import numpy as np
 
+
+from wavesynlib.languagecenter.wavesynscript import ModelNode
+
+
 api = cluda.cuda_api()
-#thr = api.Thread.create()
+
 
 class FFTFactory(object):
     @staticmethod
@@ -31,44 +35,52 @@ class FFTFactory(object):
 FFTFactory  = FFTFactory()
 
 
-class Worker(object):
-    def __init__(self):
-        self.__messageIn    = Queue()
-        self.__messageOut   = Queue()
-        self.__thr          = None
-        self.__active       = False        
-        self.__occupied     = False
+class Worker(ModelNode):
+    def __init__(self, *args, **kwargs):
+        super(Worker, self).__init__(*args, **kwargs)
+        self.__message_in = Queue()
+        self.__message_out = Queue()
+        self.__thr = None
+        self.__active = False        
+        self.__busy = False
+        
         
     @property
-    def messageIn(self):
-        return self.__messageIn
+    def message_in(self):
+        return self.__message_in
+        
         
     @property
-    def messageOut(self):
-        return self.__messageOut
+    def message_out(self):
+        return self.__message_out
+        
         
     @property
-    def reiknaThread(self):
+    def reikna_thread(self):
         return self.__thr
         
+        
     @property
-    def isActive(self):
+    def is_active(self):
         return self.__active
         
+        
     @property 
-    def isOccupied(self):
-        return self.__occupied
+    def is_busy(self):
+        return self.__busy
+        
     
     def activate(self):
         if not self.__active:
-            thread.start_new_thread(self.threadFunc, ())
+            thread.start_new_thread(self.__thread_func, ())
             self.__active   = True
+            
     
-    def threadFunc(self):
-        self.__thr          = api.Thread.create()
+    def __thread_func(self):
+        self.__thr = api.Thread.create()
         while True:
-            msg     = self.messageIn.get()
-            self.__occupied     = True
+            msg     = self.message_in.get()
+            self.__busy = True
             try:
                 command = msg['command']
                 if command == 'exit':
@@ -77,9 +89,10 @@ class Worker(object):
                     func    = msg['callable object']
                     args    = msg['args']
                     kwargs  = msg['kwargs']
-                    ret     = func(self, *args, **kwargs)
-                    self.messageOut.put({'report':'function return', 'return value':ret})
+                    ret = func(*args, **kwargs)
+                    self.message_out.put({'report':'function return', 'return value':ret})
             finally:
-                self.__occupied     = False
+                self.__busy = False
         self.__thr.release()
         self.__active   = False
+        

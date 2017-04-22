@@ -211,6 +211,7 @@ class NodeDict(ModelNode, Dict):
         val.lock_attribute('parent_node')
         model_tree_monitor._on_add_node(val)
         Dict.__setitem__(self, key, val)
+        val.on_connect()
         
     def __delitem__(self, key):
         model_tree_monitor._on_remove_node(self[key])

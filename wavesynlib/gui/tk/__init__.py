@@ -32,6 +32,7 @@ class TkNode(ModelNode):
         
         
     def on_connect(self):
+        super(TkNode, self).on_connect()
         with self.attribute_lock:
             self.root = Tix.Tk()
             self.balloon = Tix.Balloon(self.root)

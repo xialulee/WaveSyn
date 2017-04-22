@@ -19,29 +19,35 @@ import multiprocessing as mp
 ###########################################################################################
 
 
+
 class Operator(object):
     def __init__(self, func=None):
         '''init'''
         self.__f    = func
         self.iterThreshold  = 0
 
+
     @property
     def func(self):
         return self.__f
+
         
     @func.setter
     def func(self, f):
         if not callable(f):
             raise TypeError('f must be a callable object.')
         self.__f    = f
+
         
     def __call__(self, *args):
         '''Evaluate'''
         return self.__f(*args)
 
+
     def comp(self, g):
         '''Operator composition'''
         return Operator(lambda *args: self.__f(g.func(*args)))
+
 
     def __mul__(self, g):
         '''Operator composition
@@ -49,6 +55,7 @@ Though it is not appropriate to use * to denote operator composition,
 the code can be simplified a lot.
 '''
         return self.comp(g)
+
 
     def __pow__(self, n, dist=None):
         '''The power of the operator.
@@ -82,14 +89,17 @@ the code can be simplified a lot.
 
 class SetWithProjector(object):
     __metaclass__   = abc.ABCMeta
+
     
     @abc.abstractproperty
     def projector(self):
         return NotImplemented
+
         
     @abc.abstractmethod
     def __contains__(self, x):
         return NotImplemented
+
         
     @classmethod
     def __subclasshook__(cls, C):
@@ -98,6 +108,7 @@ class SetWithProjector(object):
                 return True
         return NotImplemented    
         
+
         
 class Col(SetWithProjector):    
     '''A data structure represents the column space (range space) defined by a matrix.'''
@@ -112,11 +123,13 @@ class Col(SetWithProjector):
         B           = U[:, 0:rank]
         self.__basis    = B
         self.__proj = Operator(func=lambda x: B * B.H*x)
+
             
     @property    
     def projector(self):
         '''return the projector of the column space.'''
         return self.__proj
+
         
     @property
     def orth(self):
@@ -124,6 +137,7 @@ class Col(SetWithProjector):
 For a matrix A, "Col(A).orth" is equivalent to the matlab expression "orth(A)."
 '''
         return self.__basis
+
         
     def __contains__(self, x):
         '''If column vector x lies in Col(A), then __contains__ return True.'''
@@ -136,14 +150,17 @@ class ProgressChecker(object):
     def __init__(self, interval=1):
         self.__checkerChain = []
         self.interval=interval
+
         
     def append(self, checker):
         if not callable(checker):
             raise TypeError('Checker must be callable.')
         self.__checkerChain.append(checker)
+
         
     def remove(self, checker):
         self.__checkerChain.remove(checker)
+
         
     def __call__(self, k, K, x, *args, **kwargs):
         '''k:   the number of the current iteration;
@@ -166,6 +183,7 @@ kwargs  the extra key paramters.
         return exitIter
 
 
+
 class Parameter(object):
     def __init__(self, name='', type='', shortdesc='', longdesc=''):
         self.name   = name
@@ -177,31 +195,50 @@ class Parameter(object):
 class Algorithm(object):
     __parameters__  = None
     __name__        = None
+
     
     def __init__(self):
         self.__progress_checker    = ProgressChecker()
+        self.__cuda_worker = None
+
     
     def __call__(self, *args, **kwargs):
         pass
+
     
     def presetParams(self, params):
         pass
+
     
     @property
     def progress_checker(self):
         return self.__progress_checker
+        
+        
+    @property
+    def cuda_worker(self):
+        return self.__cuda_worker
+        
+        
+    @cuda_worker.setter
+    def cuda_worker(self, worker):
+        self.__cuda_worker = worker
+
 
 
 class AlgorithmNode(ModelNode, WindowComponent):
     _xmlrpcexport_  = ['run']    
+
     
     class Meta(object):
         def __init__(self):
             self.name   = ''
-            self.parameters      = OrderedDict()
+            self.parameters = OrderedDict()
 
-    __parameters__      = None
-    __name__            = None
+
+    __parameters__ = None
+    __name__ = None
+
 
     def __init__(self, module_name, class_name):
         super(AlgorithmNode, self).__init__()
@@ -222,17 +259,32 @@ class AlgorithmNode(ModelNode, WindowComponent):
             paramsnum   = algorithm.__call__.func_code.co_argcount
             for param in algorithm.__call__.func_code.co_varnames[1:paramsnum]:  
                 self.__meta.parameters[param]   = Parameter(param, type='expression')
+
+
+    def on_connect(self):
+        super(AlgorithmNode, self).on_connect()
+        if self.need_cuda:
+            self.__algorithm.cuda_worker = self.root_node.interfaces.gpu.cuda_worker
+
                            
     def __getitem__(self, key):
         return getattr(self.__meta, key)
+        
+        
+    @property
+    def algorithm_object(self):
+        return self.__algorithm
+
 
     @property
     def need_cuda(self):
         return self.__cuda
 
+
     @property
     def meta(self):
         return self.__meta
+
         
     @property
     def progress_checker(self):
@@ -243,6 +295,7 @@ class AlgorithmNode(ModelNode, WindowComponent):
     def run(self, *args, **kwargs):
         result = self.__algorithm(*args, **kwargs)
         self.window_node.current_data  = result  
+
         
     @Scripting.printable
     def thread_run(self, on_finished, progress_indicator, repeat_times, *args, **kwargs):
@@ -297,11 +350,22 @@ class AlgorithmNode(ModelNode, WindowComponent):
 
         def run():
             t1 = time.clock()
-            for n in range(repeat_times):
-                result = algorithm(*args, **kwargs)
-                slot = datatypes.CommandSlot(source='local', node_list=[on_finished], args=(result,))
-                root_node.command_queue.put(slot)
-                dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)
+            if self.need_cuda:
+                worker = self.root_node.interfaces.gpu.cuda_worker
+                algorithm.cuda_worker = worker
+                worker.activate()                
+                for n in range(repeat_times):
+                    worker.message_in.put({'command':'call', 'callable object':algorithm, 'args':args, 'kwargs':kwargs})
+                    result = worker.message_out.get()['return value']
+                    slot = datatypes.CommandSlot(source='local', node_list=[on_finished], args=(result,))
+                    root_node.command_queue.put(slot)
+                    dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)                    
+            else:                    
+                for n in range(repeat_times):
+                    result = algorithm(*args, **kwargs)
+                    slot = datatypes.CommandSlot(source='local', node_list=[on_finished], args=(result,))
+                    root_node.command_queue.put(slot)
+                    dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)
             delta_t = time.clock() - t1
             dialog.set_text(index=0, text=auto_subs('Finished. Total time consumption: $delta_t (s)'))
             
@@ -338,8 +402,6 @@ class AlgorithmNode(ModelNode, WindowComponent):
         return retval
             
         
-
-    
     
 def parallelFunc(algorithm_class, queue, args, kwargs):
     result  = algorithm_class()(*args, **kwargs)
@@ -364,6 +426,7 @@ def parFunc(algorithm_class, process_id, queue, args, kwargs):
 class AlgorithmDict(NodeDict, WindowComponent):
     def __init__(self, node_name=''):
         NodeDict.__init__(self, node_name=node_name)
+        
                 
     def __setitem__(self, key, val):
         if not isinstance(val, AlgorithmNode):
@@ -372,5 +435,7 @@ class AlgorithmDict(NodeDict, WindowComponent):
             raise ValueError('The key should be identical to the name of the algorithm.')
         NodeDict.__setitem__(self, key, val)
         
+        
     def add(self, node):
         self[node['name']] = node
+        

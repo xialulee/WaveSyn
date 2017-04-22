@@ -44,7 +44,7 @@ import json
 from wavesynlib.guicomponents.tk import PILImageFrame
 #from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
-from wavesynlib.interfaces.modelnode import Interfaces
+from wavesynlib.interfaces import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.threadtools import ThreadManager
 from wavesynlib.processtools import ProcessDict
@@ -55,7 +55,6 @@ from wavesynlib.languagecenter.modelnode import LangCenterNode
 #from wavesynlib.languagecenter import timeutils
 from wavesynlib.toolwindows.imagedisplay.modelnode import DisplayLauncher
 from wavesynlib.status import busy_doing
-#from wavesynlib.console import ConsoleWindow
 from wavesynlib.languagecenter import datatypes
 
 
