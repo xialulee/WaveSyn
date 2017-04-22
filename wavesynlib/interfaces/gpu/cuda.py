@@ -21,15 +21,20 @@ api = cluda.cuda_api()
 
 class FFTFactory(object):
     @staticmethod
-    def createFFTProc(N, thr):
-        return FFT(thr.array((N,), dtype=np.complex128)).compile(thr)
+    def create_fft_proc(N, thr, compile_=True):
+        fft = FFT(thr.array((N,), dtype=np.complex128))
+        if compile_:
+            fft = fft.compile(thr)
+        return fft
+        
         
     def __init__(self):
         self.__cache    = {}        
         
+        
     def __getitem__(self, key): # key = (N, thr)
         if key not in self.__cache:
-            self.__cache[key]     = self.createFFTProc(*key)
+            self.__cache[key] = self.create_fft_proc(*key)
         return self.__cache[key]
         
 FFTFactory  = FFTFactory()
