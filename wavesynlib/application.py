@@ -324,14 +324,14 @@ wavesyn
                 command = item['command']
                 tag_name = 'link' + str(id(command))
                 stream_manager.write(item['content'], tag_name)
-                text = self.console.text
+                text = self.gui.console.text
                 #r, c = text.index(END).split('.')
-                config_link_tag(text, tag_name, command, self.console.default_cursor)                                
+                config_link_tag(text, tag_name, command, self.gui.console.default_cursor)                                
                 stream_manager.write('\n')
                 return_list.append(None)
             elif item['type'] == 'pil_image':
                 # stream_manager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
-                text    = self.console.text                
+                text    = self.gui.console.text                
                 text.insert(END, '\n')
                 pil_frame    = PILImageFrame(text, pil_image=item['content'])
                 text.window_create(END, window=pil_frame)
@@ -353,18 +353,18 @@ wavesyn
                     return browse_func
                     
                 for file_path in file_list:
-                    text = self.console.text                    
+                    text = self.gui.console.text                    
                     
                     open_func = new_open_func(file_path)
                     open_tag_name = 'link' + str(id(open_func))
                     stream_manager.write('open', open_tag_name)
-                    config_link_tag(text, open_tag_name, open_func, self.console.default_cursor)
+                    config_link_tag(text, open_tag_name, open_func, self.gui.console.default_cursor)
                     stream_manager.write(' ')
 
                     browse_func = new_browse_func(file_path)                    
                     browse_tag_name = 'link' + str(id(browse_func))
                     stream_manager.write('browse', browse_tag_name)
-                    config_link_tag(text, browse_tag_name, browse_func, self.console.default_cursor)                    
+                    config_link_tag(text, browse_tag_name, browse_func, self.gui.console.default_cursor)                    
                     stream_manager.write(' ')
                     
                     stream_manager.write(eval_format('{file_path}\n'))
