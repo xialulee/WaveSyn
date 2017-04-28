@@ -107,42 +107,7 @@ class FunctionChain(object):
         return len(self.__functions)
     
      
-class Nonblocking(object):
-    class TheThread(threading.Thread):
-        def __init__(self, func, args, kwargs):
-            self.func   = func
-            self.args   = args
-            self.kwargs = kwargs
-            self.retval = None
-            threading.Thread.__init__(self)
-        def run(self):
-            ret = self.func(*self.args, **self.kwargs)
-            self.retval = ret            
-            
-    def __init__(self, func):
-        super(Nonblocking, self).__init__()
-        self.__doc__    = func.__doc__
-        self.__func     = func
-        self.__thread   = None
-        
-    def __call__(self, *args, **kwargs):
-        self.__thread   = self.TheThread(self.__func, args, kwargs)
-        self.__thread.start()
-        return self
-        
-    def isRunning(self):
-        if self.__thread is None:
-            return False
-        return self.__thread.is_alive()
-        
-    @property
-    def return_value(self):
-        if self.isRunning():
-            return None
-        else:
-            return self.__thread.retval
-      
-        
+
 class property_with_args(object):
     class Property(object):
         def __init__(self, instance, func):

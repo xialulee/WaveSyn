@@ -17,9 +17,9 @@ from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.guicomponents.classselector import ask_class_name
 from wavesynlib.application import Application
 from wavesynlib.toolwindows.figurewindow import FigureWindow
-from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes, Nonblocking
+from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes
 from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting, code_printer
-from wavesynlib.mathtools import Algorithm, AlgorithmDict, AlgorithmNode
+from wavesynlib.mathtools import Algorithm, AlgorithmDict, AlgorithmNode, DataContainer
 
 import threading
 import json
@@ -31,9 +31,7 @@ class OptimizeGroup(Group):
         self.__topwin = kwargs.pop('topwin')
 
         super(OptimizeGroup, self).__init__(*args, **kwargs)
-        
-      
-        
+                
         parameter_frame    = Frame(self)
         parameter_frame.pack(side=LEFT, expand=YES, fill=Y)
         self.__num = LabeledEntry(parameter_frame)
@@ -47,8 +45,6 @@ class OptimizeGroup(Group):
         self.__num.entry.bind('<Return>', lambda event: self._on_solve_click())
         self.__num.pack(side=TOP)
 
-     
-
         self.__pci  = LabeledEntry(parameter_frame)
         set_attributes(self.__pci,
             label_text   = 'PCI',
@@ -60,7 +56,7 @@ class OptimizeGroup(Group):
         self.__pci.pack(side=TOP)
         
         self.__parallel_checker_variable    = IntVar()
-        self.__parallel_checker  = Checkbutton(parameter_frame, text="Parallel", variable=self.__parallel_checker_variable)
+        self.__parallel_checker  = Checkbutton(parameter_frame, text="Parallel", variable=self.__parallel_checker_variable, command=self._on_parallel_checker_click)
         self.__parallel_checker.pack()
         
         progfrm = Frame(self)
@@ -79,44 +75,40 @@ class OptimizeGroup(Group):
         self.__finishedwavbar.pack(side=LEFT)
         self.__finishedwavbar.config(length=30)  
 
-
         self.name = 'Generate'
 
         self.getparams = None
         self.__stopflag = False
+
         
     def _on_solve_click(self):
+        params = self.__topwin.parameter_group.get_parameters()
+        repeat_times = self.__num.get_int()   
+        
         if self.__parallel_checker_variable.get():
-            self.parallel_run()
+            run = self.__topwin.current_algorithm.process_run
         else:
-            with code_printer:
-                params = self.__topwin.parameter_group.get_parameters()
-                repeat_times = self.__num.get_int()
-                self.__topwin.current_algorithm.thread_run(on_finished=['store', 'plot'], progress_indicator='progress_dialog', repeat_times=repeat_times, **params)
+            run = self.__topwin.current_algorithm.thread_run
+        with code_printer:
+            run(on_finished=['store', 'plot'], progress_indicator='progress_dialog', repeat_times=repeat_times, **params)
 
-    def parallel_run(self):
-        class AlgoThread(threading.Thread):
-            def __init__(self, algorithm, parameters, num):
-                self.algorithm  = algorithm
-                self.parameters = parameters
-                self.num        = num
-                super(AlgoThread, self).__init__()
-            def run(self):
-                with code_printer:                
-                    paramStr    = eval_format('[([], dict({Scripting.convert_args_to_str(**self.parameters)}))]*{self.num}')
-                    self.algorithm.parallel_run_and_plot(ScriptCode(paramStr))
-        algorithm   = self.__topwin.current_algorithm
-        parameters  = self.__topwin.parameter_group.get_parameters()
-        theThread   = AlgoThread(algorithm, parameters, self.__num.get_int())
-        theThread.start()
-        while theThread.is_alive():
-            self.__topwin.update()            
-            time.sleep(0.05)
-            
 
     def _on_stop_button_click(self):
         self.__stopflag = True
-
+        
+        
+    def _on_parallel_checker_click(self):
+        topwin = self.__topwin
+        if topwin.current_algorithm.need_cuda:
+            self.__parallel_checker_variable.set(0)
+            topwin.root_node.gui.dialogs.report(eval_format('''{topwin.node_path}:
+Current algorithm "{topwin.current_algorithm.meta.name}" need CUDA worker, which does not support multi-cpu parallel.
+            '''))
+            
+            
+    def _cancel_parallel(self):
+        self.__parallel_checker_variable.set(0)
+                
 
 
 class ParamsGroup(Group):
@@ -125,7 +117,6 @@ class ParamsGroup(Group):
         self.__topwin   = kwargs.pop('topwin')
         self.balloon    = self._app.gui.balloon
 
-        #Group.__init__(self, *args, **kwargs)
         super(ParamsGroup, self).__init__(*args, **kwargs)
         self.__algo = None
         self.__MAXROW = 3
@@ -134,6 +125,7 @@ class ParamsGroup(Group):
         self.__frameDict    = {}
           
         self.name = 'Parameters'
+        
 
     def append_algorithm(self, algorithm):
         #To do: when algo is reset, the frm should be removed
@@ -162,11 +154,13 @@ class ParamsGroup(Group):
         #self.__frameDict[algorithm.meta.name]   = frm
         self.__frameDict[algorithm['name']]   = dict(frame=frm, paramInfo=paramInfo)
         self.__params   = paramInfo
+        
 
     def get_parameters(self):
         params = self.__params
         convert = {'int':int, 'float':float, 'expression':lambda expr: ScriptCode(expr), '':lambda x: x}
         return {name: convert[params[name]['meta'].type](params[name]['gui'].entry_text) for name in params}
+        
         
     def change_algorithm(self, algorithmName):
         for algoName in self.__frameDict:
@@ -174,7 +168,8 @@ class ParamsGroup(Group):
         self.__frameDict[algorithmName]['frame'].pack()
         self.__params   = self.__frameDict[algorithmName]['paramInfo']
         
-        
+     
+     
 class AlgoSelGroup(Group):
     def __init__(self, *args, **kwargs):
         self._topwin  = kwargs.pop('topwin')
@@ -186,33 +181,43 @@ class AlgoSelGroup(Group):
         self.__algorithm_list.bind('<<ComboboxSelected>>', self._on_algorithm_change)
         
         Button(self, text='Load Algorithm', command=self._on_load_algorithm).pack()
+        Button(self, text='Reload', command=self._on_reload_algorithm).pack()
         
         self.name = 'Algorithms'          
+        
         
     @property
     def algorithm_list(self):
         return self.__algorithm_list
         
+        
     def _on_algorithm_change(self, event):
         self._topwin.change_algorithm(event.widget.get())
         
+        
     def _on_load_algorithm(self):        
-        funcObj = Nonblocking(ask_class_name)('wavesynlib.algorithms', Algorithm)
-        while funcObj.isRunning():
-            Application.do_events()
-            time.sleep(0.1)
-        
-        class_info = funcObj.return_value        
-        
-        if not class_info:
-            return
-        module_name, class_name = class_info
-        
+        new_thread_do = self._topwin.root_node.thread_manager.new_thread_do
+        main_thread_do = self._topwin.root_node.thread_manager.main_thread_do
+    
+        @new_thread_do
+        def select_and_load():
+            class_info = ask_class_name('wavesynlib.algorithms', Algorithm)
+            if not class_info:
+                return
+            module_name, class_name = class_info
+            @main_thread_do()
+            def load():
+                with code_printer:
+                    self._topwin.load_algorithm(module_name=module_name, class_name=class_name)
+            
+            
+    def _on_reload_algorithm(self):
         with code_printer:
-            self._topwin.load_algorithm(module_name=module_name, class_name=class_name)
+            self._topwin.current_algorithm.reload_algorithm()
 
 
-class SingleWindow(FigureWindow):      
+
+class SingleWindow(FigureWindow, DataContainer):      
     window_name  = 'WaveSyn-SingleSyn' 
 
     _xmlrpcexport_  = ['load_algorithm']
@@ -234,10 +239,10 @@ class SingleWindow(FigureWindow):
         algorithm_selection_group  = AlgoSelGroup(frmAlgo, topwin=self)
         algorithm_selection_group.pack(side=LEFT, fill=Y)
         
-        parameter_group   = ParamsGroup(frmAlgo, topwin=self)
+        parameter_group = ParamsGroup(frmAlgo, topwin=self)
         parameter_group.pack(side=LEFT, fill=Y)
         
-        solve_group    = OptimizeGroup(frmAlgo, topwin=self)
+        solve_group = OptimizeGroup(frmAlgo, topwin=self)
         solve_group.pack(side=LEFT, fill=Y)
         tool_tabs.add(frmAlgo, text='Algorithm')
         
@@ -299,9 +304,9 @@ class SingleWindow(FigureWindow):
     
     @Scripting.printable        
     def load_algorithm(self, module_name, class_name):
-        node    = AlgorithmNode(module_name, class_name)
+        node = AlgorithmNode(module_name, class_name)
         self.algorithms.add(node)
-        values  = self.algorithm_selection_group.algorithm_list['values']
+        values = self.algorithm_selection_group.algorithm_list['values']
         if values == '':
             values  = []
         if isinstance(values, tuple):
@@ -310,10 +315,14 @@ class SingleWindow(FigureWindow):
         self.algorithm_selection_group.algorithm_list['values']  = values
         self.algorithm_selection_group.algorithm_list.current(len(values)-1)
         self.parameter_group.append_algorithm(node)
+        self.solve_group._cancel_parallel()
+        return node.meta.name
 
         
     def change_algorithm(self, algorithmName):
-        self.parameter_group.change_algorithm(algorithmName)        
+        self.parameter_group.change_algorithm(algorithmName)
+        self.solve_group._cancel_parallel()
+
         
     @property
     def current_algorithm(self):

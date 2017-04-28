@@ -15,7 +15,7 @@ from reikna.core import Transformation, Parameter, Annotation, Type
 
 
 magSquare   = ElementwiseKernel(
-    'pycuda::complex<double> * output, pycuda::complex<double> * input',
+    'pycuda::complex<double> * output, const pycuda::complex<double> * input',
     '''
 output[i] = input[i] * pycuda::conj(input[i]);
     '''
@@ -23,34 +23,15 @@ output[i] = input[i] * pycuda::conj(input[i]);
  
 
 applyMask   = ElementwiseKernel(
-    'pycuda::complex<double> * output, pycuda::complex<double> * origin, double * mask',
+    'pycuda::complex<double> * output, const pycuda::complex<double> * origin, const double * mask',
     '''
 output[i] = origin[i] * mask[i];
     '''
 )
 
 
-#realAndSqrt = ElementwiseKernel(
-#    'pycuda::complex<double> * output, pycuda::complex<double> * input',
-#    '''
-#double r = input[i].real();
-#r = r < 0.0 ? 0.0 : sqrt(r);
-#output[i] = r;    
-#    '''
-#)   
-#
-#
-#magAndPhi  = ElementwiseKernel(
-#    'pycuda::complex<double> * output, pycuda::complex<double> * mag, pycuda::complex<double> * phi',
-#    '''
-#using namespace pycuda;
-#output[i] = polar(abs(mag[i]), arg(phi[i]));    
-#    '''
-#)
-
-
 combine_mag_phi = ElementwiseKernel(
-    'pycuda::complex<double> * output, pycuda::complex<double> * mag_square, pycuda::complex<double> * phase',
+    'pycuda::complex<double> * output, const pycuda::complex<double> * mag_square, const pycuda::complex<double> * phase',
     '''
 using namespace pycuda;
 
@@ -63,7 +44,7 @@ output[i] = polar(r, arg(phase[i]));
 
 
 unimodularize = ElementwiseKernel(
-    'pycuda::complex<double> * output, pycuda::complex<double> * input, int N', 
+    'pycuda::complex<double> * output, const pycuda::complex<double> * input, const int N', 
     '''
 using namespace pycuda;
 output[i] = i>=N ? complex<double>(0.0) : polar(1.0, arg(input[i]));    

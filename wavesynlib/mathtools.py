@@ -8,15 +8,12 @@ import importlib
 import abc
 
 from wavesynlib.languagecenter.utils import eval_format, auto_subs
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
+from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting, ModelNode, NodeDict
 from wavesynlib.languagecenter import datatypes
 from wavesynlib.toolwindows.tkbasewindow import WindowComponent
 
 import time
-import six.moves._thread as thread
-##########################Experimenting with multiprocessing###############################
 import multiprocessing as mp
-###########################################################################################
 
 
 
@@ -223,10 +220,15 @@ class Algorithm(object):
     @cuda_worker.setter
     def cuda_worker(self, worker):
         self.__cuda_worker = worker
+        
+        
+        
+class DataContainer(object):
+    pass
 
 
 
-class AlgorithmNode(ModelNode, WindowComponent):
+class AlgorithmNode(ModelNode):
     _xmlrpcexport_  = ['run']    
 
     
@@ -246,11 +248,11 @@ class AlgorithmNode(ModelNode, WindowComponent):
         algorithm = getattr(mod, class_name)()
         self.__cuda = True if hasattr(algorithm, '__CUDA__') and algorithm.__CUDA__ else False
         self.__meta = self.Meta()
-        self.__meta.module_name  = module_name
-        self.__meta.class_name   = class_name
+        self.__meta.module = mod
+        self.__meta.module_name = module_name
+        self.__meta.class_name = class_name
         self.__meta.name    = algorithm.__name__
         self.__algorithm    = algorithm
-        #self.__top_window    = None
         
         if algorithm.__parameters__:
             for item in algorithm.__parameters__:
@@ -259,12 +261,26 @@ class AlgorithmNode(ModelNode, WindowComponent):
             paramsnum   = algorithm.__call__.func_code.co_argcount
             for param in algorithm.__call__.func_code.co_varnames[1:paramsnum]:  
                 self.__meta.parameters[param]   = Parameter(param, type='expression')
+                
+                
+    @property
+    def data_container(self):
+        node = self
+        while True:
+            node = node.parent_node
+            if isinstance(node, DataContainer):
+                return node 
 
 
     def on_connect(self):
         super(AlgorithmNode, self).on_connect()
         if self.need_cuda:
             self.__algorithm.cuda_worker = self.root_node.interfaces.gpu.cuda_worker
+            
+    
+    @Scripting.printable       
+    def reload_algorithm(self):
+        reload(self.__meta.module)
 
                            
     def __getitem__(self, key):
@@ -294,42 +310,30 @@ class AlgorithmNode(ModelNode, WindowComponent):
     @Scripting.printable # To Do: Implement run in nonblocking mode. Add a new argument: on_finished. The callable object will be called when the procudure is finished. 
     def run(self, *args, **kwargs):
         result = self.__algorithm(*args, **kwargs)
-        self.window_node.current_data  = result  
+        self.data_container.current_data  = result  
+        
+        
+    def data_container_exec(self, command, **kwargs):
+        {
+            'store': lambda: setattr(self.data_container, 'current_data', kwargs['data']),
+            'plot': lambda: self.data_container.plot(kwargs['data'])
+        }[command]()
+
+
+    def _data_container_command_seq_exec(self, seq, data):
+        if not isinstance(seq, Iterable):
+            seq = [seq]
+        for command in seq:
+            if not callable(command):
+                self.data_container_exec(command, data=data)
+            else:
+                command(data)
 
         
     @Scripting.printable
     def thread_run(self, on_finished, progress_indicator, repeat_times, *args, **kwargs):
         from wavesynlib.toolwindows.progresswindow.dialog import Dialog
-
-        def store(result):
-            window_node = self.window_node
-            window_node.current_data = result            
-            window_node.plot_current_data()
-
-        def plot(result):
-            window_node = self.window_node
-            window_node.plot            
-        
-        on_finished_namemap = {
-            'store': store,
-            'plot': plot
-        }        
-        
-        if not isinstance(on_finished, Iterable):
-            on_finished_procs = [on_finished]
-        else:
-            on_finished_procs = on_finished
-            
-        def on_finished(result):
-            for proc in on_finished_procs:
-                if not callable(proc):
-                    on_finished_namemap[proc](result)
-                else:
-                    proc(result)
-
-#        if not callable(on_finished):
-#            on_finished = on_finished_proc[on_finished]
-
+                    
         root_node = self.root_node            
         
         algorithm_class = type(self.__algorithm)
@@ -346,31 +350,73 @@ class AlgorithmNode(ModelNode, WindowComponent):
             algorithm.progress_checker.append(default_progressbar)
         else:
             raise NotImplementedError
+            
+        if self.need_cuda:
+            # Get the CUDA worker ready
+            worker = root_node.interfaces.gpu.cuda_worker
+            algorithm.cuda_worker = worker
+            worker.activate()
+            
+            def run_algorithm(*args, **kwargs):
+                worker.message_in.put({'command':'call', 'callable object':algorithm, 'args':args, 'kwargs':kwargs})
+                return worker.message_out.get()['return value']
+        else:
+            run_algorithm = algorithm
 
-
+        @root_node.thread_manager.new_thread_do
         def run():
             t1 = time.clock()
-            if self.need_cuda:
-                worker = self.root_node.interfaces.gpu.cuda_worker
-                algorithm.cuda_worker = worker
-                worker.activate()                
-                for n in range(repeat_times):
-                    worker.message_in.put({'command':'call', 'callable object':algorithm, 'args':args, 'kwargs':kwargs})
-                    result = worker.message_out.get()['return value']
-                    slot = datatypes.CommandSlot(source='local', node_list=[on_finished], args=(result,))
-                    root_node.command_queue.put(slot)
-                    dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)                    
-            else:                    
-                for n in range(repeat_times):
-                    result = algorithm(*args, **kwargs)
-                    slot = datatypes.CommandSlot(source='local', node_list=[on_finished], args=(result,))
-                    root_node.command_queue.put(slot)
-                    dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)
+
+            for n in range(repeat_times):
+                result = run_algorithm(*args, **kwargs)
+                root_node.thread_manager.main_thread_do(block=False)(
+                    lambda data=result: \
+                        self._data_container_command_seq_exec(on_finished, data=data)
+                )
+                
+                dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)
+                    
             delta_t = time.clock() - t1
             dialog.set_text(index=0, text=auto_subs('Finished. Total time consumption: $delta_t (s)'))
             
-        thread.start_new_thread(run, ())
-                                
+            
+    @Scripting.printable
+    def process_run(self, on_finished, progress_indicator, repeat_times, *args, **kwargs):
+        from wavesynlib.toolwindows.progresswindow.dialog import Dialog
+        
+        root_node = self.root_node            
+        algorithm = self.__algorithm
+        algorithm_class = type(algorithm)
+        dialog = Dialog(range(repeat_times), title=algorithm.__name__ + ' Progress')
+            
+        queue = mp.Queue()
+#        all_arg = eval_format('[([], dict({Scripting.convert_args_to_str(**kwargs)}))]*{repeat_times}')
+        for k in range(repeat_times):
+            mp.Process(target=parallel_func, args=(algorithm_class, k, queue, args, kwargs)).start()        
+
+        @root_node.thread_manager.new_thread_do
+        def wait_result():
+            t1 = time.clock()
+
+            result_count = 0
+            
+            while True:
+                proc_data = queue.get()
+                if proc_data[0] == 'progress':
+                    dialog.set_progress(index=proc_data[2], progress=proc_data[1])
+                elif proc_data[0] == 'result':
+                    result_count += 1
+                    root_node.thread_manager.main_thread_do(block=False)(
+                        lambda data=proc_data[1]: \
+                            self._data_container_command_seq_exec(on_finished, data=data)
+                    )
+                if result_count == repeat_times:
+                    break
+                    
+            delta_t = time.clock() - t1
+            dialog.set_text(index=0, text=auto_subs('Finished. Total time consumption: $delta_t (s)'))
+
+                        
     @property
     def node_path(self):
         if isinstance(self.parent_node, AlgorithmDict):
@@ -381,46 +427,16 @@ class AlgorithmNode(ModelNode, WindowComponent):
     def presetParams(self, params):
         self.__algorithm.presetParams(params)
 
-##############################Experimenting with multiprocessing###################################
-    @Scripting.printable
-    def parallel_run_and_plot(self, all_args):     
-        queue   = mp.Queue()
-        for args, kwargs in all_args:
-            mp.Process(target=parallelFunc, args=(type(self.__algorithm), queue, args, kwargs)).start()
-        for k in range(len(all_args)):
-            self.window_node.current_data  = queue.get()
-            self.window_node.plot_current_data()
-            
-    @Scripting.printable
-    def parallel_run(self, all_args):
-        queue   = mp.Queue()
-        retval  = {'process':[], 'queue':queue}
-        for process_id, (args, kwargs) in enumerate(all_args):
-            p   = mp.Process(target=parFunc, args=(type(self.__algorithm), process_id, queue, args, kwargs))
-            retval['process'].append(p)
-            p.start()            
-        return retval
-            
-        
-    
-def parallelFunc(algorithm_class, queue, args, kwargs):
-    result  = algorithm_class()(*args, **kwargs)
-    queue.put(result)        
-    
-    
-########################NEW#############################
-def parFunc(algorithm_class, process_id, queue, args, kwargs):
-    PROGRESS_ID     = 1
-    RESULT_ID       = 0
-    def progress_checker(k, K, y, *args, **kwargs):                
-        queue.put((PROGRESS_ID, process_id, int(k / K * 100)))
-    algorithm   = algorithm_class()
-    algorithm.progress_checker.append(progress_checker)
-    algorithm.progress_checker.interval  = 100
-    result  = algorithm(*args, **kwargs)
-    queue.put((RESULT_ID, result))
-########################################################    
-###################################################################################################
+
+
+def parallel_func(algorithm_class, process_id, queue, args, kwargs):
+    algorithm = algorithm_class()
+    def default_progressbar(k, K, *args, **kwargs):
+        queue.put(('progress', int(k / K * 100), process_id))
+    algorithm.progress_checker.append(default_progressbar)
+    result = algorithm(*args, **kwargs)
+    queue.put(('result', result))
+
 
 
 class AlgorithmDict(NodeDict, WindowComponent):

@@ -118,3 +118,9 @@ class Dialogs(ModelNode):
         win.grab_set()
         win.wait_window()
         
+        
+    def report(self, message):
+        showinfo('Message', message)
+        self.root_node.print_tip([{'type':'text', 'content':'\n'+message}])
+        
+        
