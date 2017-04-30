@@ -7,12 +7,13 @@ Created on Thu Aug 18 23:14:19 2016
 from __future__ import print_function, division, unicode_literals
 
 import re
+import win32con
 from comtypes import client
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 
 import copy
-from ctypes import POINTER, byref, sizeof, memmove
+from ctypes import POINTER, byref, sizeof, memmove, windll
 from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
 from comtypes import _safearray
 
@@ -237,7 +238,19 @@ class AppObject(ModelNode):
         
     @Scripting.printable
     def show_window(self, show=True):
-        self.com_handle.Visible = show        
+        self.com_handle.Visible = show    
+        
+        
+    @Scripting.printable
+    def set_foreground(self):    
+        hwnd = self.com_handle.Hwnd
+        windll.user32.ShowWindow(hwnd, win32con.SW_RESTORE)
+        windll.user32.SetForegroundWindow(hwnd)
+        
+        
+    @Scripting.printable
+    def change_caption(self, new_caption):
+        self.com_handle.Caption = new_caption
       
 
 
