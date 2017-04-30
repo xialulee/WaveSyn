@@ -23,16 +23,3 @@ class DotNet(ModelNode):
             module_name='wavesynlib.interfaces.dotnet.zxing',
             class_name='ZXingNET'
         )
-        
-        
-    def pyimage_to_netbitmap(self, pyimage):
-        from System.IO import MemoryStream
-        from System.Drawing import Bitmap
-        py_stream = StringIO()
-        pyimage.save(py_stream, 'png')
-        py_stream.seek(0)
-        bytes_ = py_stream.read()
-        net_stream = MemoryStream()
-        net_stream.Write(bytes_, 0, len(bytes_))
-        net_stream.Seek(0, 0)
-        return Bitmap(net_stream)        

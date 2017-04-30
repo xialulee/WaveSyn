@@ -10,6 +10,7 @@ import os
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
 from wavesynlib.languagecenter.utils import get_caller_dir
+from wavesynlib.interfaces.dotnet.utils import pil_to_net, new_and_init
 
 import clr
 clr.AddReference(os.path.join(get_caller_dir(), 'zxing.dll'))
@@ -28,7 +29,7 @@ class ZXingNET(ModelNode):
     def read(self, image):
         image = self.root_node.interfaces.os.clipboard.support_clipboard_image(image)
         # To Do: support ask open file dialog
-        image = self.root_node.interfaces.dotnet.pyimage_to_netbitmap(image)
+        image = pil_to_net(image)
         result = BarcodeReader().Decode(image)
         if result is None:
             raise ValueError('Input image seems not contain any barcode.')
@@ -39,12 +40,11 @@ class ZXingNET(ModelNode):
     def write(self, contents, image, size=400, encode='utf-8'):
         writer = BarcodeWriter()
         writer.Format = BarcodeFormat.QR_CODE
-        options = QrCodeEncodingOptions()
-        options.DisableECI = True
-        options.CharacterSet = encode
-        options.Width = size
-        options.Height = size
-        writer.Options = options
+        writer.Options = new_and_init(QrCodeEncodingOptions,
+                                      DisableECI = True,
+                                      CharacterSet = encode,
+                                      Width = size,
+                                      Height = size)
         mtx = writer.Write(contents)
         bmp = Bitmap(mtx)
         bmp.Save(image)

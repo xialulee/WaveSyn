@@ -17,6 +17,7 @@ def dependencies_for_my_program():
 import six
 import threading
 from six.moves import queue
+from six import text_type
 
 import os
 import os.path
@@ -256,7 +257,7 @@ wavesyn
             #ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])                
             ret = self.eval(expr)
             if ret is not None:
-                self.stream_manager.write(str(ret)+'\n', 'RETVAL')
+                self.stream_manager.write(text_type(ret)+'\n', 'RETVAL')
             return ret    
             
                               
