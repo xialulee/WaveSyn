@@ -70,7 +70,11 @@ class ClassSelector(object):
         for item in os.listdir(package_path):
             filename = item.split('.')            
             if filename[-1] == 'py':
-                mod = importlib.import_module('.'.join((self.__package_name, filename[0])))
+                try:
+                    mod = importlib.import_module('.'.join((self.__package_name, filename[0])))
+                except ImportError:
+                    # To Do: print information on the console
+                    continue
                 mod_item_names = dir(mod)
                 for mod_item_name in mod_item_names:
                     mod_item = getattr(mod, mod_item_name)

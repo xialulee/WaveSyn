@@ -1,5 +1,6 @@
 from numpy import *
-from wavesynlib.mathtools import Operator, Algorithm
+from wavesynlib.mathtools import Algorithm
+from wavesynlib.languagecenter.wavesynscript.math import Operator
 
 @Operator
 def Proj_M1(s): # This function is corresponding to eq.22.
@@ -37,9 +38,11 @@ class DIAC(Algorithm):
     __name__    = 'ISAA-DIAC'
     def __init__(self):
         super(DIAC, self).__init__()
+        
 
     def initpoint(self, N):
         return exp(1j * 2 * pi * random.rand(N))
+        
         
     __parameters__  = (
         ['N', 'int', 'Sequence Length.'],
