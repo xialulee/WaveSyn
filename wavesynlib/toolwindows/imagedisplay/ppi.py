@@ -9,6 +9,7 @@ from __future__ import division, print_function
 __DEBUG__ = False
 
 
+from math import pi
 from scipy.ndimage import imread
 from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
@@ -35,6 +36,7 @@ fragment = """
 #define PI 3.1415926535897932384626433832795
 
 uniform sampler2D image;
+uniform float current_angle;
 in vec2 v_texcoord;
 
 out vec4 frag_color;
@@ -50,23 +52,19 @@ void main(){
     new_coord = v_texcoord;
     relative = new_coord - center;
     relative.x = - relative.x;
-    
-    if (length(relative)>0.5){
-        new_coord.x = -1;
-        new_coord.y = -1;
-    } else {
-        if (relative.x == 0) {
-            angle = PI / 2.0;
-        } else {
-            angle = atan(relative.y, relative.x) + PI;
-        }
-        len = length(relative);
         
+    if (length(relative)<=0.5) {
+        angle = 2*PI-(atan(relative.y, relative.x) + PI);
+        len = length(relative);    
         new_coord.x = angle / 2 / PI;
-        new_coord.y = len * 2;
+        new_coord.y = len * 2;    
+        frag_color = texture(image, new_coord) 
+            * max(1 - mod(angle+current_angle, 2*PI) / 2 / PI * 3, 0);
+        frag_color.r = 0.0;
+        frag_color.b = 0.0;
+    } else {
+        frag_color = vec4(0.0, 0.0, 0.0, 0.0);
     }
-    
-    frag_color = texture(image, new_coord);
 }
 """
 
@@ -77,7 +75,7 @@ class Canvas(app.Canvas):
                             keys='interactive')
 
         height, width, dumb = image.shape        
-        self.__image_ratio = width / height
+        self.__image_ratio = 1
         self.__image_size = width + 1j*height
 
         self.program = Program(vertex, fragment, 4)
@@ -87,11 +85,14 @@ class Canvas(app.Canvas):
 
         self.program['image'] = image
         self.program['image'].interpolation = 'linear'
+        self.program['current_angle'] = 0.0
 
         set_clear_color('black')
         self.__scale = 1
         self.__last_pos = 0+1j*0
         self.__offset = 0+1j*0
+        
+        self._timer = app.Timer(1/60, connect=self._on_timer, start=True)
 
         self.show()
         
@@ -159,6 +160,12 @@ class Canvas(app.Canvas):
             
         si *= scale
         set_viewport(offset.real, offset.imag, si.real, si.imag)
+        
+        
+    def _on_timer(self, event):
+        if self._timer.running:
+            self.program['current_angle'] += event.dt*pi
+        self.update()
         
 
 
