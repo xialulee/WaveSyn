@@ -25,7 +25,7 @@ out vec2 v_texcoord;
 
 void main(){
     gl_Position = vec4(position, 0.0, 1.0 );
-    v_texcoord = texcoord;
+    v_texcoord = texcoord - 0.5;
 }
 """
 
@@ -38,32 +38,21 @@ fragment = """
 uniform sampler2D image;
 uniform float current_angle;
 in vec2 v_texcoord;
-
-out vec4 frag_color;
+out vec3 frag_color;
 
 
 void main(){
-    vec2 new_coord;
-    vec2 center = vec2(0.5, 0.5);
-    vec2 relative;
     float angle;    
     float len;
-    
-    new_coord = v_texcoord;
-    relative = new_coord - center;
-    relative.x = - relative.x;
-        
-    if (length(relative)<=0.5) {
-        angle = 2*PI-(atan(relative.y, relative.x) + PI);
-        len = length(relative);    
-        new_coord.x = angle / 2 / PI;
-        new_coord.y = len * 2;    
-        frag_color = texture(image, new_coord) 
-            * max(1 - mod(angle+current_angle, 2*PI) / 2 / PI * 3, 0);
-        frag_color.r = 0.0;
-        frag_color.b = 0.0;
+            
+    if (length(v_texcoord)<=0.5) {
+        angle = 2*PI-(atan(v_texcoord.y, v_texcoord.x) + PI);
+        len = length(v_texcoord);      
+        frag_color.g = (texture(image, vec2(angle / 2 / PI, len * 2)) 
+            * max(1 - mod(angle+current_angle, 2*PI) / 2 / PI * 3, 0)).g;
+        frag_color.rb = vec2(0.0, 0.0);
     } else {
-        frag_color = vec4(0.0, 0.0, 0.0, 0.0);
+        frag_color = vec3(0.0, 0.0, 0.0);
     }
 }
 """
@@ -170,6 +159,6 @@ class Canvas(app.Canvas):
 
 
 if __name__ == '__main__':
-    mat = imread('c:/lab/test.png')
+    mat = imread('c:/lab/test.jpg')
     canvas = Canvas(image=mat)
     app.run()
