@@ -19,13 +19,12 @@ vertex = """
 #version 420
 
 attribute vec2 position;
-attribute vec2 texcoord;
-out vec2 v_texcoord;
+out vec2 texcoord;
 
 
 void main(){
     gl_Position = vec4(position, 0.0, 1.0 );
-    v_texcoord = texcoord - 0.5;
+    texcoord = position;
 }
 """
 
@@ -34,10 +33,11 @@ fragment = """
 #version 420
 
 #define PI 3.1415926535897932384626433832795
+#define TWO_PI (2*PI)
 
 uniform sampler2D image;
 uniform float current_angle;
-in vec2 v_texcoord;
+in vec2 texcoord;
 out vec3 frag_color;
 
 
@@ -45,11 +45,11 @@ void main(){
     float angle;    
     float len;
             
-    if (length(v_texcoord)<=0.5) {
-        angle = 2*PI-(atan(v_texcoord.y, v_texcoord.x) + PI);
-        len = length(v_texcoord);      
-        frag_color.g = (texture(image, vec2(angle / 2 / PI, len * 2)) 
-            * max(1 - mod(angle+current_angle, 2*PI) / 2 / PI * 3, 0)).g;
+    if (length(texcoord)<=1) {
+        angle = 2*PI-(atan(texcoord.y, texcoord.x) + PI);
+        len = length(texcoord);      
+        frag_color.g = (texture(image, vec2(angle / TWO_PI, len)) 
+            * max(1 - mod(angle+current_angle, TWO_PI) / TWO_PI * 3, 0)).g;
         frag_color.rb = vec2(0.0, 0.0);
     } else {
         frag_color = vec3(0.0, 0.0, 0.0);
@@ -69,8 +69,6 @@ class Canvas(app.Canvas):
 
         self.program = Program(vertex, fragment, 4)
         self.program['position'] = (-1, -1), (-1, +1), (+1, -1), (+1, +1)
-        self.program['texcoord'] = (0, +1), (0, 0), (+1, +1), (+1, 0)
-
 
         self.program['image'] = image
         self.program['image'].interpolation = 'linear'
