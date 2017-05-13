@@ -14,6 +14,11 @@ from scipy.ndimage import imread
 from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
+from jinja2 import Template
+from wavesynlib.languagecenter.glsl.utils import hit_circle
+from wavesynlib.languagecenter.glsl.constants import pi as PI_STR
+from six import binary_type
+
 
 vertex = """
 #version 420
@@ -29,10 +34,10 @@ void main(){
 """
 
 
-fragment = """
+fragment = binary_type(Template("""
 #version 420
 
-#define PI 3.1415926535897932384626433832795
+#define PI {{pi}}
 #define TWO_PI (2*PI)
 
 uniform sampler2D image;
@@ -40,22 +45,36 @@ uniform float current_angle;
 in vec2 texcoord;
 out vec3 frag_color;
 
+{{hit_circle}}
 
 void main(){
     float angle;    
     float len;
-            
-    if (length(texcoord)<=1) {
+    float hit;
+
+    for (int i=1; i<=3; ++i){    
+        hit = hit_circle(texcoord, 1.0/3.0*i, 0.005);
+        if (hit>0) break;
+    }
+        
+    vec3 color = vec3(0.0, 0.0, 0.0);        
+    if (length(texcoord)<=1){
         angle = 2*PI-(atan(texcoord.y, texcoord.x) + PI);
         len = length(texcoord);      
-        frag_color.g = (texture(image, vec2(angle / TWO_PI, len)) 
+        color.g = (texture(image, vec2(angle / TWO_PI, len)) 
             * max(1 - mod(angle+current_angle, TWO_PI) / TWO_PI * 3, 0)).g;
-        frag_color.rb = vec2(0.0, 0.0);
-    } else {
-        frag_color = vec3(0.0, 0.0, 0.0);
+        color.rb = vec2(0.0, 0.0);
     }
+            
+    if (hit>0.0)
+        frag_color = mix(color, vec3(0.0, 1.0, 0.0)*hit*0.5, 0.35);
+    else
+        frag_color = color;
 }
-"""
+""").render(
+    pi=PI_STR,
+    hit_circle=hit_circle.partial('hit_circle', center='vec2(0.0,0.0)').to_code()))
+
 
 
 class Canvas(app.Canvas):
