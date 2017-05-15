@@ -42,7 +42,7 @@ hit_line = Function(
     if (d>{{tol}})
         return 0.0;
     else
-        if (distance(xy, start)>lv || distance(xy, stop)>lv)
+        if (distance({{xy}}, {{start}})>lv || distance({{xy}}, {{stop}})>lv)
             return 0.0;
         else
             return ({{tol}}-d)/{{tol}};
