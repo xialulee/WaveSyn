@@ -15,7 +15,7 @@ from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
 from jinja2 import Template
-from wavesynlib.languagecenter.glsl.utils import hit_circle
+from wavesynlib.languagecenter.glsl.utils import hit_circle, hit_line
 from wavesynlib.languagecenter.glsl.constants import pi as PI_STR
 from six import binary_type
 
@@ -46,6 +46,7 @@ in vec2 texcoord;
 out vec3 frag_color;
 
 {{hit_circle}}
+{{hit_line}}
 
 void main(){
     float angle;    
@@ -55,6 +56,11 @@ void main(){
     for (int i=1; i<=3; ++i){    
         hit = hit_circle(texcoord, 1.0/3.0*i, 0.005);
         if (hit>0) break;
+    }
+    
+    if (hit == 0.0) {
+        hit = hit_line(texcoord, vec2(-1.0, 0.0), vec2(1.0, 0.0), 0.005);
+        hit += hit_line(texcoord, vec2(0.0, -1.0), vec2(0.0, 1.0), 0.005);
     }
         
     vec3 color = vec3(0.0, 0.0, 0.0);        
@@ -73,7 +79,8 @@ void main(){
 }
 """).render(
     pi=PI_STR,
-    hit_circle=hit_circle.partial('hit_circle', center='vec2(0.0,0.0)').to_code()))
+    hit_circle=hit_circle.partial('hit_circle', center='vec2(0.0,0.0)').to_code(),
+    hit_line=hit_line.to_code()))
 
 
 
