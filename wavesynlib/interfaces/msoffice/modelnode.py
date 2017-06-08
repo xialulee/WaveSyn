@@ -208,12 +208,41 @@ class ExcelUtils(ModelNode):
             sheet.Range(self._get_addr(top_left_x, top_left_y),
                         self._get_addr(top_left_x+col_num-1, top_left_y+row_num-1)).Value[:] = variant
             return                
+            
+            
+            
+class WordUtils(ModelNode):
+    def __init__(self, *args, **kwargs):
+        self.__com_handle = kwargs.pop('com_handle')
+        super(WordUtils, self).__init__(*args, **kwargs)
+        
+        
+    def insert_psd_image(self, filename):
+        from psd_tools import PSDImage
+        from tempfile import NamedTemporaryFile
+        from os import path, remove
+        import time
+        import json
+        
+        try:
+            temp = NamedTemporaryFile(suffix='.png', delete=False)
+            # We cannot use the automatic delete mechanism of NamedTemporaryFile
+            # since the save method of the following PIL object will call close of temp file
+            # which will activate the self-destruction of the temp file. 
+            PSDImage.load(filename).as_PIL().save(temp)
+            image = self.__com_handle.Selection.InlineShapes.AddPicture(FileName=temp.name, LinkToFile=False, SaveWithDocument=True)
+            temp.close()
+            image.Title = 'WaveSyn inserted PSD image.'
+            image.AlternativeText = json.dumps({'path':filename, 'time':int(time.time())})
+        finally:
+            if path.exists(temp.name):
+                remove(temp.name)
         
 
         
 class AppObject(ModelNode):
     _prog_info = {
-        'word': {'utils': None},
+        'word': {'utils': WordUtils},
         'excel': {'utils': ExcelUtils}
     }    
     
