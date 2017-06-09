@@ -18,6 +18,7 @@ import copy
 import json
 import os
 import time
+import win32gui
 from ctypes import POINTER, byref, sizeof, memmove, windll
 from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
 from comtypes import _safearray, COMError
@@ -307,29 +308,26 @@ class WordUtils(ModelNode):
         
 
         
-class AppObject(ModelNode):
-    _prog_info = {
-        'word': {'utils': WordUtils},
-        'excel': {'utils': ExcelUtils}
-    }    
-    
+class AppObject(ModelNode):    
     def __init__(self, *args, **kwargs):
         com_handle = kwargs.pop('com_handle')
-        app_name = kwargs.pop('app_name').lower()
         super(AppObject, self).__init__(self, *args, **kwargs)
         self.__com_handle = com_handle
-        self.__app_name = app_name
-        self.utils = self._prog_info[app_name]['utils'](com_handle=com_handle)
         
         
     @property
-    def app_name(self):
-        return self.__app_name
+    def name(self):
+        raise NotImplementedError
         
-    
+
     @property
     def com_handle(self):
         return self.__com_handle
+        
+        
+    @property
+    def caption(self):
+        return self.__com_handle.Caption
         
         
     @Scripting.printable
@@ -338,22 +336,78 @@ class AppObject(ModelNode):
         
         
     @Scripting.printable
-    def set_foreground(self):    
-        hwnd = self.com_handle.Hwnd
-        windll.user32.ShowWindow(hwnd, win32con.SW_RESTORE)
-        windll.user32.SetForegroundWindow(hwnd)
+    def change_caption(self, new_caption):
+        self.com_handle.Caption = new_caption
+        
+        
+        
+class ExcelObject(AppObject):
+    def __init__(self, *args, **kwargs):
+        super(ExcelObject, self).__init__(*args, **kwargs)
+        self.utils = ExcelUtils(com_handle=self.com_handle)
+        
+        
+    @property
+    def name(self):
+        return 'Excel'
         
         
     @Scripting.printable
-    def change_caption(self, new_caption):
-        self.com_handle.Caption = new_caption
+    def set_foreground(self):    
+        hwnd = self.com_handle.Hwnd
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        win32gui.SetForegroundWindow(hwnd)
+        
+        
+        
+class WordObject(AppObject):       
+    def __init__(self, *args, **kwargs):
+        super(WordObject, self).__init__(*args, **kwargs)
+        self.utils = WordUtils(com_handle=self.com_handle)
+
+    @property
+    def name(self):
+        return 'Word'        
+        
+    @property
+    def windows(self):
+        return self.com_handle.Windows
+        
+        
+    @Scripting.printable
+    def set_foreground(self, index=None):
+        if index:        
+            window = self.com_handle.Windows[index]
+        else:
+            window = self.com_handle.ActiveWindow
+        old_caption = window.Caption
+        new_caption = 'wavesyn-word-interface-windowfinder-uniq-id-' + str(time.time())
+        len_new = len(new_caption)
+        try:
+            window.Caption = new_caption
+            
+            def finder(hwnd, param):
+                title = win32gui.GetWindowText(hwnd)
+                if title[:len_new] == new_caption:
+                    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+                    win32gui.SetForegroundWindow(hwnd)
+                    return False
+                else:
+                    return True
+                    
+            try:
+                win32gui.EnumWindows(finder, None)
+            except:
+                pass
+        finally:
+            window.Caption = old_caption
       
 
 
 class MSOffice(NodeDict):
     _prog_info = {
-        'word':  {'id':'Word.Application'},
-        'excel': {'id':'Excel.Application'}
+        'word':  {'id':'Word.Application', 'class':WordObject},
+        'excel': {'id':'Excel.Application', 'class':ExcelObject}
     }
     
     def __init__(self, *args, **kwargs):
@@ -370,7 +424,7 @@ class MSOffice(NodeDict):
                 if hasattr(self[id_].com_handle, 'Hwnd') and self[id_].com_handle.Hwnd == com_handle.Hwnd:
                     return id_
         
-        wrapper = AppObject(app_name=app_name, com_handle=com_handle)
+        wrapper = self._prog_info[app_name]['class'](com_handle=com_handle)
         wrapper.show_window()
         object_id = id(wrapper)
         self[object_id] = wrapper
@@ -378,13 +432,25 @@ class MSOffice(NodeDict):
         
 
     @Scripting.printable        
-    def get_active(self, name):
-        return self._generate_object(name, client.GetActiveObject)
+    def get_active(self, app_name):
+        app_name = self.root_node.gui.dialogs.support_ask_list_item(
+            app_name,
+            the_list=['Word', 'Excel'],
+            message='Which app you want to get?'
+        )
+        app_name = app_name.lower()
+        return self._generate_object(app_name, client.GetActiveObject)
         
         
     @Scripting.printable
-    def create(self, name):
-        return self._generate_object(name, client.CreateObject)
+    def create(self, app_name):
+        app_name = self.root_node.gui.dialogs.support_ask_list_item(
+            app_name,
+            the_list=['Word', 'Excel'],
+            message='Which app you want to create?'
+        )
+        app_name = app_name.lower()
+        return self._generate_object(app_name, client.CreateObject)
         
         
         

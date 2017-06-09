@@ -23,7 +23,7 @@
 	    {
 		"Name":"Console", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Save As...",   "TearOff":0,    "UnderLine":0,  "Command":"wavesyn.console.onSaveAs()",	"Print":false},
-		    {"Name":"Clear", "UnderLine":0, "Command":"wavesyn.console.clear()"},
+		    {"Name":"Clear", "UnderLine":0, "Command":"wavesyn.gui.console.clear()"},
 		    {"Name":"Topmost Toggle",		"UnderLine":0,	"Command":"wavesyn.console.set_topmost('flip')", "Print":true}
 		]
 	    },
@@ -78,7 +78,7 @@
               ]
               },
               {"Name":"MS Office", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"Manager Window", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.msoffice.managerwindow', class_name='OfficeManager')"}
+                  {"Name":"Controller", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.msoffice.managerwindow', class_name='OfficeController')"}
               ]
               }
           ]
