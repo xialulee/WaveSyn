@@ -6,6 +6,8 @@ Created on Thu Aug 18 23:14:19 2016
 """
 from __future__ import print_function, division, unicode_literals
 
+from six import string_types
+
 import re
 import win32con
 from comtypes import client
@@ -13,9 +15,12 @@ from comtypes import client
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 
 import copy
+import json
+import os
+import time
 from ctypes import POINTER, byref, sizeof, memmove, windll
 from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
-from comtypes import _safearray
+from comtypes import _safearray, COMError
 
 
 
@@ -212,31 +217,93 @@ class ExcelUtils(ModelNode):
             
             
 class WordUtils(ModelNode):
+    _SIGNATURE_ = 'WaveSyn inserted PSD image.'
+    
+    
     def __init__(self, *args, **kwargs):
         self.__com_handle = kwargs.pop('com_handle')
         super(WordUtils, self).__init__(*args, **kwargs)
         
         
-    def insert_psd_image(self, filename):
+    def insert_psd_image(self, filename, comment='', resize=None, range_=None):
         from psd_tools import PSDImage
+        from PIL import Image
         from tempfile import NamedTemporaryFile
-        from os import path, remove
-        import time
-        import json
         
         try:
             temp = NamedTemporaryFile(suffix='.png', delete=False)
             # We cannot use the automatic delete mechanism of NamedTemporaryFile
             # since the save method of the following PIL object will call close of temp file
             # which will activate the self-destruction of the temp file. 
-            PSDImage.load(filename).as_PIL().save(temp)
-            image = self.__com_handle.Selection.InlineShapes.AddPicture(FileName=temp.name, LinkToFile=False, SaveWithDocument=True)
+            pil_image = PSDImage.load(filename).as_PIL()
+            if resize:
+                if  isinstance(resize, string_types):
+                    if resize[-1] != u'%':
+                        raise ValueError('Percentage should end up with "%".')
+                    percent = int(resize[:-1])
+                    resize = (pil_image.size[0]*percent//100, pil_image.size[1]*percent//100)
+                if resize[0]<pil_image.size[0] and resize[1]<pil_image.size[1]:
+                    resample = Image.LANCZOS
+                else:
+                    resample = Image.BICUBIC
+                pil_image = pil_image.resize(resize, resample)
+            pil_image.save(temp)
+            if range_ is None:
+                image = self.__com_handle.Selection.InlineShapes.AddPicture(FileName=temp.name)
+            else:
+                image = self.__com_handle.ActiveDocument.InlineShapes.AddPicture(FileName=temp.name, Range=range_)
             temp.close()
-            image.Title = 'WaveSyn inserted PSD image.'
-            image.AlternativeText = json.dumps({'path':filename, 'time':int(time.time())})
+            doc_dir = self.__com_handle.ActiveDocument.Path
+            if doc_dir:
+                try:                
+                    relative_path = os.path.relpath(filename, doc_dir)
+                except ValueError:
+                    relative_path = ''
+            else:
+                relative_path = ''
+            image.Title = self._SIGNATURE_
+            image.AlternativeText = json.dumps({
+                'path':filename, 
+                'relative_path':relative_path,
+                'time':int(time.time()),
+                'resize':resize,
+                'comment':comment})
         finally:
-            if path.exists(temp.name):
-                remove(temp.name)
+            if os.path.exists(temp.name):
+                os.remove(temp.name)
+                
+                
+    def update_psd_images(self, relative_first=True):        
+        psd_shapes = []        
+        
+        for shape in self.__com_handle.ActiveDocument.InlineShapes:
+            try:
+                title = shape.Title
+            except COMError:
+                continue
+            if title == self._SIGNATURE_:
+                psd_shapes.append(shape)
+                
+        for shape in psd_shapes:
+            info = json.loads(shape.AlternativeText)
+            insert_time = info['time']
+            file_path = info['path']
+            relative_path = info['relative_path']
+            comment = info['comment']
+            resize = info['resize']
+            mtime = os.path.getmtime(file_path)
+            if mtime > insert_time:
+                rng = shape.Range
+                shape.Delete()
+                p1 = os.path.abspath(os.path.join(self.__com_handle.ActiveDocument.Path, relative_path))
+                p2 = file_path
+                if not relative_first:
+                    p1, p2 = p2, p1
+                if os.path.exists(p1):
+                    file_path = p1
+                else:
+                    file_path = p2
+                self.insert_psd_image(file_path, resize=resize, comment=comment, range_=rng)
         
 
         
@@ -296,6 +363,13 @@ class MSOffice(NodeDict):
     def _generate_object(self, app_name, func):
         app_name = app_name.lower()
         com_handle = func(self._prog_info[app_name]['id'])
+        
+        # Word Application does not have Hwnd property.
+        if hasattr(com_handle, 'Hwnd'):
+            for id_ in self:
+                if hasattr(self[id_].com_handle, 'Hwnd') and self[id_].com_handle.Hwnd == com_handle.Hwnd:
+                    return id_
+        
         wrapper = AppObject(app_name=app_name, com_handle=com_handle)
         wrapper.show_window()
         object_id = id(wrapper)
