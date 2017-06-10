@@ -225,11 +225,18 @@ class WordUtils(ModelNode):
         self.__com_handle = kwargs.pop('com_handle')
         super(WordUtils, self).__init__(*args, **kwargs)
         
-        
-    def insert_psd_image(self, filename, comment='', resize=None, range_=None):
+    
+    @Scripting.printable    
+    def insert_psd_image(self, filename, comment='', resize=None, window=None, range_=None):
         from psd_tools import PSDImage
         from PIL import Image
         from tempfile import NamedTemporaryFile
+        
+        filename = self.root_node.gui.dialogs.support_ask_open_filename(
+            filename, 
+            filetypes=[('Photoshop Files', ('*.psd',))])    
+        if not filename:
+            return 
         
         try:
             temp = NamedTemporaryFile(suffix='.png', delete=False)
@@ -249,10 +256,20 @@ class WordUtils(ModelNode):
                     resample = Image.BICUBIC
                 pil_image = pil_image.resize(resize, resample)
             pil_image.save(temp)
-            if range_ is None:
-                image = self.__com_handle.Selection.InlineShapes.AddPicture(FileName=temp.name)
+
+            if window is None:
+                document = self.__com_handle.ActiveDocument
+                inline_shapes = document.InlineShapes
             else:
-                image = self.__com_handle.ActiveDocument.InlineShapes.AddPicture(FileName=temp.name, Range=range_)
+                winobj = self.__com_handle.Windows[window]
+                document = winobj.Document
+                inline_shapes = winobj.Selection.InlineShapes
+                
+            kwargs = {'FileName':temp.name}
+            if range_ is not None:
+                kwargs['Range'] = range_
+            image = inline_shapes.AddPicture(**kwargs)
+                
             temp.close()
             doc_dir = self.__com_handle.ActiveDocument.Path
             if doc_dir:
@@ -273,11 +290,20 @@ class WordUtils(ModelNode):
             if os.path.exists(temp.name):
                 os.remove(temp.name)
                 
-                
-    def update_psd_images(self, relative_first=True):        
-        psd_shapes = []        
+    
+    @Scripting.printable            
+    def update_psd_images(self, relative_first=True, window=None):        
+        psd_shapes = []
         
-        for shape in self.__com_handle.ActiveDocument.InlineShapes:
+        if window is None:
+            document = self.__com_handle.ActiveDocument
+            inline_shapes = document.InlineShapes
+        else:
+            winobj = self.__com_handle.Windows[window]
+            document = winobj.Document
+            inline_shapes = winobj.Selection.InlineShapes        
+        
+        for shape in inline_shapes:
             try:
                 title = shape.Title
             except COMError:

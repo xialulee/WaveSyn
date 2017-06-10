@@ -171,6 +171,8 @@ then node will have a property named 'a', which cannot be re-assigned.
     def node_path(self):
         if self.is_root:
             return self.node_name
+        elif isinstance(self.parent_node, dict):
+            return '{}[{}]'.format(self.parent_node.node_path, id(self))
         else:
             return '.'.join((self.parent_node.node_path, self.node_name))
 

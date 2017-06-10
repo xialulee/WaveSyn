@@ -12,7 +12,7 @@ import six.moves.tkinter_ttk as ttk
 
 from wavesynlib.guicomponents.tk import ScrolledTree, Group, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.languagecenter.wavesynscript import code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 
 
 
@@ -78,6 +78,9 @@ class OfficeController(TkToolWindow):
     'children':[
         {'class':'Button',
              'config':{'text':'Foreground', 'command':self.__on_foreground}
+        },
+        {'class':'Button',
+             'config':{'text':'Copy Path', 'command':self.__on_copy_path}
         }
     ]
 },
@@ -116,6 +119,26 @@ class OfficeController(TkToolWindow):
         treeview.update(app_dict)
         
         
+    def __get_selected(self):
+        tree = self.__treeview._tree
+        iid = tree.selection()[0]
+        cur = tree.item(iid)
+        app_name = cur['values'][0].lower()
+        id_ = cur['values'][1]
+        txt = cur['text']
+        if app_name == 'excel':
+            return id_, app_name, txt, True
+        elif app_name == 'word':
+            if id_:
+                return id_, app_name, txt, True
+            else:
+                piid = tree.parent(iid)                
+                app_id = tree.item(piid)['values'][1]
+                return app_id, app_name, txt, False
+        else:
+            raise ValueError
+        
+        
     def __connect_app(self, app_name=None, get_active=True):
         if app_name is None:
             app_name = self.root_node.lang_center.wavesynscript.constants.ASK_LIST_ITEM
@@ -139,22 +162,12 @@ class OfficeController(TkToolWindow):
         
         
     def __on_foreground(self):
-        office = self.root_node.interfaces.msoffice
-        tree = self.__treeview._tree
-        iid = tree.selection()[0]
-        cur = tree.item(iid)
-        app_name = cur['values'][0].lower()
-        id_ = cur['values'][1]
-        if app_name == 'excel':
-            office[id_].set_foreground()
-        elif app_name == 'word':
-            if id_:
-                office[id_].set_foreground()
-            else:
-                piid = tree.parent(iid)
-                pcontent = tree.item(piid)
-                app_id = pcontent['values'][1]
-                office[app_id].set_foreground(index=cur['text'])
+        office = self.root_node.interfaces.msoffice                
+        id_, app_name, txt, is_parent = self.__get_selected()
+        kwargs = {}
+        if app_name == 'word' and not is_parent:
+            kwargs['index'] = txt
+        office[id_].set_foreground(**kwargs)
                 
                 
     def __on_select(self, event):
@@ -174,8 +187,35 @@ class OfficeController(TkToolWindow):
     
     
     def __on_insert_psd(self):
-        pass
+        office = self.root_node.interfaces.msoffice
+        kwargs = {'filename':self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME}
+        id_, app_name, txt, is_parent = self.__get_selected()
+        if not is_parent:
+            kwargs['window'] = txt
+        with code_printer:
+            office[id_].utils.insert_psd_image(**kwargs)
     
     
     def __on_update_psd(self):
-        pass
+        office = self.root_node.interfaces.msoffice
+        id_, app_name, txt, is_parent = self.__get_selected()
+        if not is_parent:
+            window = txt
+        else:
+            window = None
+        with code_printer:
+            office[id_].update_psd_images(window=window)
+    
+    
+    @Scripting.printable
+    def copy_selected_path(self):
+        id_, app_name, txt, is_parent = self.__get_selected()
+        office = self.root_node.interfaces.msoffice
+        path = '{}[{}]'.format(office.node_path, id_)
+        self.root_node.interfaces.os.clipboard.write(path)        
+    
+    
+    def __on_copy_path(self):
+        with code_printer:
+            self.copy_selected_path()
+        

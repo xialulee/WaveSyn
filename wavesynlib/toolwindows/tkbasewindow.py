@@ -63,12 +63,6 @@ Properties inherited from ModelNode:
         with code_printer:
             self.close()
         
-    @property
-    def node_path(self):
-        if isinstance(self.parent_node, WindowDict):
-            return eval_format('{self.parent_node.node_path}[{id(self)}]')
-        else:
-            return ModelNode.node_path.__get__(self)
             
     @property
     def tk_object(self):
