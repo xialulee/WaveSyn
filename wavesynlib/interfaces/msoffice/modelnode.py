@@ -13,6 +13,7 @@ import win32con
 from comtypes import client
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
+from wavesynlib.languagecenter.designpatterns import Observable
 
 import copy
 import json
@@ -427,17 +428,33 @@ class WordObject(AppObject):
                 pass
         finally:
             window.Caption = old_caption
+            
+            
+            
+class WordEventsSink(object):
+    def __init__(self, office_dict):
+        self.__office_dict = office_dict
+    
+    
+    def ApplicationEvents4_DocumentOpen(self, this, doc):
+        self.__office_dict.notify_observers()
+        
+        
+    def ApplicationEvents4_Quit(self, this):
+        self.__office_dict.notify_observers()
       
 
 
-class MSOffice(NodeDict):
+class MSOffice(NodeDict, Observable):
     _prog_info = {
         'word':  {'id':'Word.Application', 'class':WordObject},
         'excel': {'id':'Excel.Application', 'class':ExcelObject}
     }
     
     def __init__(self, *args, **kwargs):
-        super(MSOffice, self).__init__(*args, **kwargs)
+        NodeDict.__init__(self, *args, **kwargs)
+        Observable.__init__(self)
+        self.__word_events_sink = WordEventsSink(self)
         
         
     def _generate_object(self, app_name, func):
@@ -452,6 +469,13 @@ class MSOffice(NodeDict):
         
         wrapper = self._prog_info[app_name]['class'](com_handle=com_handle)
         wrapper.show_window()
+        
+        if app_name == 'word':
+            # The connection object should be stored, 
+            # or it will be gabage collected, and consequently, 
+            # event sink will not be notified any more. 
+            self.__word_events_connection = client.GetEvents(wrapper.com_handle, self.__word_events_sink)
+
         object_id = id(wrapper)
         self[object_id] = wrapper
         return object_id

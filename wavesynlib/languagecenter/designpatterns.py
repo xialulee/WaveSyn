@@ -16,7 +16,7 @@ class SimpleObserver(object):
 class Observable(object):        
     def __init__(self, *args, **kwargs):
         super(Observable, self).__init__(*args, **kwargs)
-        self.__observers    = []
+        self.__observers = []
 
     def add_observer(self, observer):
         if not hasattr(observer, 'update'):

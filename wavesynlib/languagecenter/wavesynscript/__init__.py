@@ -17,7 +17,6 @@ from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodLock
 from wavesynlib.languagecenter.designpatterns import Observable
 
 
-# To Do: make a wavesyn.lang_center.wavesynscript node. 
 
 # Object Model of the Scripting System
 # It is a part of the scripting system.
