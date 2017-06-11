@@ -13,6 +13,7 @@ import six.moves.tkinter_ttk as ttk
 from wavesynlib.guicomponents.tk import ScrolledTree, Group, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.designpatterns import SimpleObserver
 
 
 
@@ -36,7 +37,7 @@ class AppTreeview(tk.Frame):
         self.clear()
         for id_ in app_dict:
             obj = app_dict[id_]
-            node = self.__tree.insert('', 'end', text=obj.caption, values=(obj.name, id_))
+            node = self.__tree.insert('', 'end', text=obj.caption, values=(obj.name, id_), open=True)
             if obj.name.lower() == 'word':
                 for window in obj.windows:
                     self.__tree.insert(node, 'end', text=window.Caption, values=('Word', ''))
@@ -116,7 +117,25 @@ class OfficeController(TkToolWindow):
         treeview.pack(expand='yes', fill='both')
         treeview._tree.bind('<<TreeviewSelect>>', self.__on_select)
         app_dict = self.root_node.interfaces.msoffice
-        treeview.update(app_dict)
+        treeview.update(app_dict)        
+                
+        @SimpleObserver
+        def app_observer(*args, **kwargs):
+            # At this moment it seems that we cannot access the message loop,
+            # since if we use after method of tk, it will block.
+            import time
+            @self.root_node.thread_manager.new_thread_do
+            def wait(treeview=treeview):
+                # Wait for 2.5 sec. If we call treeview.update immediately, 
+                # it will block (maybe because the update method will access the app model tree).
+                time.sleep(2.5)
+                @self.root_node.thread_manager.main_thread_do(block=False)
+                def update_tree():
+                    treeview.update(app_dict)
+            
+        self.__app_observer = app_observer
+            
+        app_dict.add_observer(app_observer)
         
         
     def __get_selected(self):
@@ -218,4 +237,9 @@ class OfficeController(TkToolWindow):
     def __on_copy_path(self):
         with code_printer:
             self.copy_selected_path()
-        
+            
+            
+    @Scripting.printable
+    def close(self):
+        self.root_node.interfaces.msoffice.delete_observer(self.__app_observer)
+        super(OfficeController, self).close()

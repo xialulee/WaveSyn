@@ -53,7 +53,7 @@ from wavesynlib.languagecenter.utils import eval_format, set_attributes, get_cal
 from wavesynlib.languagecenter.designpatterns import Singleton      
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
-#from wavesynlib.languagecenter import timeutils
+from wavesynlib.languagecenter import timeutils
 from wavesynlib.toolwindows.imagedisplay.modelnode import DisplayLauncher
 from wavesynlib.status import busy_doing
 from wavesynlib.languagecenter import datatypes
@@ -168,9 +168,9 @@ wavesyn
             )  
             
         # Timer utils
-#        self.timer = timeutils.ActionManager()              
-#        self.timer.after = timeutils.TimerActionNode(type_='after')
-#        self.timer.every = timeutils.TimerActionNode(type_='every')        
+        self.timer_manager = timeutils.ActionManager()              
+        self.timer_manager.after = timeutils.TimerActionNode(type_='after')
+        self.timer_manager.every = timeutils.TimerActionNode(type_='every')        
         # End Timer utils
                         
         self.editors    = EditorDict()

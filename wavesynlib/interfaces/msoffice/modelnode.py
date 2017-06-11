@@ -332,6 +332,33 @@ class WordUtils(ModelNode):
                 else:
                     file_path = p2
                 self.insert_psd_image(file_path, resize=resize, comment=comment, range_=rng)
+                
+                
+    @Scripting.printable
+    def adjust_mtdisplayequation_tabs(self, window=None):
+        wdAlignTabCenter = 1
+        wdTabLeaderSpaces = 0
+        wdAlignTabRight = 2
+        
+        if window is None:
+            doc = self.__com_handle.ActiveDocument     
+            page_setup = doc.PageSetup
+        else:
+            doc = self.__com_handle.Windows[window].Document
+            page_setup = doc.PageSetup
+            
+        available_width = page_setup.TextColumns[1]
+        
+        tab_stops = doc.Styles['MTDisplayEquation'].ParagraphFormat.TabStops
+        tab_stops.ClearAll()
+        tab_stops.Add(
+            Position = available_width / 2,
+            Alignment = wdAlignTabCenter,
+            Leader = wdTabLeaderSpaces)
+        tab_stops.Add(
+            Position = available_width,
+            Alignment = wdAlignTabRight,
+            Leader = wdTabLeaderSpaces)
         
 
         
@@ -391,14 +418,27 @@ class WordObject(AppObject):
     def __init__(self, *args, **kwargs):
         super(WordObject, self).__init__(*args, **kwargs)
         self.utils = WordUtils(com_handle=self.com_handle)
+        self.__event_connection = None
+
 
     @property
     def name(self):
         return 'Word'        
+
         
     @property
     def windows(self):
         return self.com_handle.Windows
+        
+        
+    @property
+    def _event_connection(self):
+        return self.__event_connection
+        
+        
+    @_event_connection.setter
+    def _event_connection(self, connection):
+        self.__event_connection = connection
         
         
     @Scripting.printable
@@ -430,19 +470,24 @@ class WordObject(AppObject):
             window.Caption = old_caption
             
             
-            
-class WordEventsSink(object):
-    def __init__(self, office_dict):
-        self.__office_dict = office_dict
-    
-    
     def ApplicationEvents4_DocumentOpen(self, this, doc):
-        self.__office_dict.notify_observers()
+        self.parent_node.notify_observers()
+        
+        
+    def ApplicationEvents4_NewDocument(self, this, doc):
+        self.parent_node.notify_observers()
+        
+        
+    def ApplicationEvents4_WindowDeactivate(self, this, doc, win):
+        # When a window loses focus or it is destroyed, 
+        # this will be triggered. 
+        self.parent_node.notify_observers()
         
         
     def ApplicationEvents4_Quit(self, this):
-        self.__office_dict.notify_observers()
-      
+        self.parent_node._on_app_quit(self)
+        self.parent_node.notify_observers()
+            
 
 
 class MSOffice(NodeDict, Observable):
@@ -454,7 +499,7 @@ class MSOffice(NodeDict, Observable):
     def __init__(self, *args, **kwargs):
         NodeDict.__init__(self, *args, **kwargs)
         Observable.__init__(self)
-        self.__word_events_sink = WordEventsSink(self)
+#        self.__word_events_sink = WordEventsSink(self)
         
         
     def _generate_object(self, app_name, func):
@@ -474,7 +519,8 @@ class MSOffice(NodeDict, Observable):
             # The connection object should be stored, 
             # or it will be gabage collected, and consequently, 
             # event sink will not be notified any more. 
-            self.__word_events_connection = client.GetEvents(wrapper.com_handle, self.__word_events_sink)
+            connection = client.GetEvents(wrapper.com_handle, wrapper)
+            wrapper._event_connection = connection
 
         object_id = id(wrapper)
         self[object_id] = wrapper
@@ -502,7 +548,9 @@ class MSOffice(NodeDict, Observable):
         app_name = app_name.lower()
         return self._generate_object(app_name, client.CreateObject)
         
-        
+    
+    def _on_app_quit(self, app_obj):
+        del self[id(app_obj)]
         
 
         
