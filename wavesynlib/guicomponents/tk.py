@@ -566,9 +566,8 @@ class ScrolledText(Frame, object):
                 break
             pastit = where + ('+%dc' % c.get())
             urlstr = self.text_widget.get(where, pastit)
-            def on_link_click(*args):
-                self.on_url_link_click(urlstr)
-            tag_name = self.create_link_tag(on_link_click)
+            tag_name = self.create_link_tag(
+                lambda event, urlstr=urlstr: self.on_url_link_click(urlstr))
             self.text_widget.tag_add(tag_name, where, pastit)
             if self.text_widget.compare(pastit, '<', stop):
                 start = pastit
