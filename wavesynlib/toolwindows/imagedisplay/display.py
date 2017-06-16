@@ -4,13 +4,11 @@ Created on Sat Jan 28 22:14:32 2017
 
 @author: Feng-cong Li
 """
-from __future__ import division, print_function
-
 __DEBUG__ = False
 
 from sys import argv
 import socket
-from six.moves import cStringIO as StringIO
+from io import BytesIO
 
 import numpy as np
 #from scipy.ndimage import imread
@@ -142,14 +140,14 @@ class Canvas(app.Canvas):
 def recv_data(port):
     sockobj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sockobj.connect(('localhost', port))
-    sio = StringIO()
+    bio = BytesIO()
     while True:
         data = sockobj.recv(4096)
         if not data: 
             break
-        sio.write(data)
-    retval = sio.getvalue()
-    sio.close()
+        bio.write(data)
+    retval = bio.getvalue()
+    bio.close()
     return retval
 
 

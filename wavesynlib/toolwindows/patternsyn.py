@@ -86,7 +86,7 @@ class OptimizeGroup(Group):
         # Create a new thread for solving the correlation matrix.            
         def solve_func():
             with code_printer:
-                topwin.solve(M=M, display=display)
+                topwin.solve(M=M, display=bool(display))
                 
             @self._app.thread_manager.main_thread_do(block=False)
             def on_finish_solving():

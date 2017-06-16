@@ -22,6 +22,7 @@ from six import text_type
 import os
 import os.path
 import sys
+import locale
 
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
@@ -71,8 +72,7 @@ def call_and_print_doc(func):
 
 
 
-@six.add_metaclass(Singleton)
-class Application(ModelNode): # Create an ABC for root node to help wavesynscript.Scripting determine whether the node is root. 
+class Application(ModelNode, metaclass=Singleton): # Create an ABC for root node to help wavesynscript.Scripting determine whether the node is root. 
     '''This class is the root of the model tree.
 In the scripting system, it is named as "wavesyn" (case sensitive).
 It also manages the whole application and provide services for other components.
@@ -80,7 +80,7 @@ For other nodes on the model tree, the instance of Application can be accessed b
 since the instance of Application is the first node created on the model tree.
 The model tree of the application is illustrated as follows:
 wavesyn
--console
+-gui
 -interfaces
     -os
         -clipboard
@@ -100,9 +100,7 @@ wavesyn
     ''' '''
     def __init__(self):
         # The instance of this class is the root of the model tree. Thus is_root is set to True
-        super(Application, self).__init__(
-            node_name=Scripting.root_name, 
-            is_root=True)
+        super().__init__(node_name=Scripting.root_name, is_root=True)
             
         Scripting.name_space['locals'][Scripting.root_name] = self
         Scripting.name_space['globals'] = globals()
@@ -280,9 +278,9 @@ wavesyn
                 PIPE = subprocess.PIPE
                 p = subprocess.Popen(stripped_code[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
                 (stdout, stderr) = p.communicate()
-                encoding = sys.getfilesystemencoding()
+                encoding = locale.getpreferredencoding()
                 print(stdout.decode(encoding, 'ignore'))
-                print(stderr.decode(encoding, 'ignore'), file=sys.stderr)                
+                print(stderr.decode(encoding, 'ignore'), file=sys.stderr)               
                 return
             try:
                 try:

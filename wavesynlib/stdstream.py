@@ -6,12 +6,14 @@ Created on Sun Oct 26 21:06:35 2014
 """
 
 from wavesynlib.languagecenter.designpatterns import  Observable
-import six.moves.queue as Queue
-import six.moves._thread as thread
+import queue
+import _thread as thread
 
 import sys
 REALSTDOUT  = sys.stdout
 REALSTDERR  = sys.stderr
+
+
 
 class StreamChain(object):
     def __init__(self):
@@ -52,7 +54,7 @@ class StreamManager(Observable):
             
     def __init__(self):
         super(StreamManager, self).__init__()
-        self.queue    = Queue.Queue()
+        self.queue    = queue.Queue()
         self.__stdout   = StreamChain()
         self.__stdout   += REALSTDOUT
         self.__stdout   += self.Stream(self, 'STDOUT')
@@ -72,5 +74,5 @@ class StreamManager(Observable):
             while True:
                 stream_type, content = self.queue.get_nowait()
                 self.notify_observers(stream_type, content)
-        except Queue.Empty:
+        except queue.Empty:
             pass

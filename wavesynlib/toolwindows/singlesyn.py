@@ -205,6 +205,10 @@ class AlgoSelGroup(Group):
             if not class_info:
                 return
             module_name, class_name = class_info
+            if isinstance(module_name, bytes):
+                module_name = module_name.decode('utf-8')
+            if isinstance(class_name, bytes):
+                class_name = class_name.decode('utf-8')
             @main_thread_do()
             def load():
                 with code_printer:

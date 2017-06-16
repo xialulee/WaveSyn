@@ -4,11 +4,9 @@ Created on Thu Mar 02 22:41:20 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
 import os
 from subprocess import Popen
+import webbrowser
 
 from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
@@ -16,8 +14,10 @@ from wavesynlib.interfaces.os.windows.wmi import WQL
 
 
 app_paths = {
-    'cmd': 'cmd'
+    'cmd': 'cmd',
+    'powershell': 'powershell'
 }
+
 
 
 class WMI(ModelNode):
@@ -31,6 +31,7 @@ class WMI(ModelNode):
             # Lazy init.
             self.__wql = WQL()
         return self.__wql.query(wql, output_format)
+    
 
 
 class Windows(ModelNode):
@@ -47,10 +48,12 @@ class Windows(ModelNode):
             self_dir = get_caller_dir()
             app_path = os.path.join(self_dir, 'apps', app_name)
         
-        cmd = ['python', app_path]
         if args:
+            cmd = ['python', app_path]
             args = [str(arg) for arg in args]
-        cmd.extend(args)
-        Popen(cmd)
+            cmd.extend(args)
+            Popen(cmd)
+        else:
+            webbrowser.open(app_path)
         
         

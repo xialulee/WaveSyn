@@ -115,6 +115,10 @@ class AlgorithmNode(ModelNode):
 
     def __init__(self, module_name, class_name):
         super(AlgorithmNode, self).__init__()
+        if isinstance(module_name, bytes):
+            module_name = module_name.decode('utf-8')
+        if isinstance(class_name, bytes):
+            class_name = class_name.decode('utf-8')
         mod = importlib.import_module(module_name)
         algorithm = getattr(mod, class_name)()
         self.__cuda = True if hasattr(algorithm, '__CUDA__') and algorithm.__CUDA__ else False

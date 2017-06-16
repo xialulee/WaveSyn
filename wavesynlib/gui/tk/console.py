@@ -8,31 +8,32 @@ from __future__ import division, print_function, unicode_literals
 
 # Some console functionalities are implemented by idlelib
 ##########################
-from idlelib.AutoComplete import AutoComplete
-import idlelib.AutoCompleteWindow
-idlelib.AutoCompleteWindow.KEYPRESS_SEQUENCES = ()
-from idlelib.Percolator import Percolator
-from idlelib.ColorDelegator import ColorDelegator
+#from idlelib.AutoComplete import AutoComplete
+#import idlelib.AutoCompleteWindow
+#idlelib.AutoCompleteWindow.KEYPRESS_SEQUENCES = ()
+#from idlelib.Percolator import Percolator
+#from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
-import six
-from six.moves.tkinter import *
-from six.moves.tkinter_ttk import *
-from six.moves.tkinter import Frame
+from tkinter import Menu, IntVar
+from tkinter.ttk import Progressbar, Scale, Combobox
+from tkinter import Frame, Label
 
-from six.moves.tkinter_tkfiledialog import asksaveasfilename
-from six.moves import queue
-from six.moves import _thread as thread
+from tkinter.filedialog import asksaveasfilename
+import queue
+import _thread as thread
 
 from datetime import datetime
 import traceback
 
 from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText
+from wavesynlib.guicomponents.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.languagecenter.utils import auto_subs, eval_format
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from wavesynlib.languagecenter import templates
+from wavesynlib.languagecenter.python import prog as prog_pattern
 from wavesynlib.status import busy_doing
 
 
@@ -82,6 +83,7 @@ class History(object):
         self.__search_list = None
         self.__cursor = 0
         
+        
     def get(self, direction):
         '''direction...'''
         direction = 1 if direction > 0 else -1
@@ -93,12 +95,14 @@ class History(object):
         else:
             self.__cursor = new_cursor
             return self.__search_list[-new_cursor]
+        
             
     def put(self, code):
         '''Append a line of code to the history list.'''
         self.__history_list.append(code)
         if len(self.__history_list) > self.__max_records + 1:
             del self.__history_list[1]
+            
             
     def search(self, code):
         if code:
@@ -109,24 +113,25 @@ class History(object):
         else:
             self.__search_list = self.__history_list            
             
+            
     def reset_cursor(self):
         self.__search_list = None
         self.__cursor = 0
-    
+        
+        
 
+class KeyEventSim:
+    def __init__(self, keysym):
+        self.keysym = keysym
+
+
+  
 # How to implement a thread safe console?
 # see: http://effbot.org/zone/tkinter-threads.htm              
-class ConsoleText(ScrolledText, ModelNode):
-    class StreamObserver(object):
-        def __init__(self, console_text):
-            self.__console_text  = console_text
-        def update(self, stream_type, content):
-            self.__console_text.write(stream_type, content)
-    
+class ConsoleText(ModelNode, ScrolledText):    
     def __init__(self, *args, **kwargs):
-        #super(ConsoleText, self).__init__(*args, **kwargs)
-        ScrolledText.__init__(self, *args, **kwargs)
-        ModelNode.__init__(self, *args, **kwargs)
+        tag_defs = kwargs.pop('tag_defs')
+        super().__init__(*args, **kwargs)
         # The shared queue of the PRODUCER-CONSUMER model.
         self.__queue    = queue.Queue()
         self.text['wrap']   = 'word'
@@ -136,7 +141,18 @@ class ConsoleText(ScrolledText, ModelNode):
         self.text.tag_configure('HISTORY',   foreground='purple')
         self.text.tag_configure('RETVAL',    foreground='orange')
         
+        self.__syntax_tags = []
+        for tag in tag_defs:
+            self.__syntax_tags.append(tag)
+            self.text.tag_configure(tag, **tag_defs[tag])
+        
         self.text.bind('<KeyPress>', self.on_key_press)
+        
+        # Begin syntax highlight
+        self.__redir = redir = WidgetRedirector(self.text)
+        self.__true_insert = redir.register('insert', self.__insert_hook)
+        self.__true_delete = redir.register('delete', self.__delete_hook)        
+        # End syntax highlight
 
         
         # Auto complete is implemented by idlelib
@@ -144,18 +160,56 @@ class ConsoleText(ScrolledText, ModelNode):
         self.indentwidth    = 4
         self.tabwidth       = 4
         self.context_use_ps1    = '>>> '
-        self.__auto_complete = AutoComplete(self)  
+        #self.__auto_complete = AutoComplete(self)  
         #############################################################
-                
-        # Syntax highlight is implemented by idlelib
-        #############################################################                
-        self.percolator = Percolator(self.text)
-        self.color_delegator = ColorDelegator()
-        self.percolator.insertfilter(self.color_delegator)   
-        #############################################################                        
+                                      
         self.prompt_symbol = '>>> '  
-        
         self.__history = History()
+        
+        
+    def __insert_hook(self, index, chars, tags=None):
+        if tags:
+            # All of the text inserted by WaveSyn has a tag (except the prompts). 
+            self.__true_insert(index, chars, tags)            
+        else: # To do: handle multiline text                    
+            if len(chars) == 1 or '\n' not in chars:
+                self.__true_insert(index, chars)
+                r, c = self.get_cursor_pos(index)
+                self.__syntax_highlight(row=r)
+            else:
+                lines = chars.split('\n')
+                if not lines[-1]:
+                    del lines[-1]
+                for line in lines:
+                    self.__true_insert(index, line)
+                    r, c = self.get_cursor_pos(index)
+                    self.__syntax_highlight(row=r)                    
+                    self.on_key_press(KeyEventSim('Return'))
+    
+    
+    def __delete_hook(self, index1, index2=None):
+        self.__true_delete(index1, index2)
+        r, c = self.get_cursor_pos('insert')
+        if self.text.get(f'{r}.0', f'{r}.3') in ('>>>', '...'):
+            self.__syntax_highlight(row=r)        
+        
+        
+    def __syntax_highlight(self, row):
+        for tag in self.__syntax_tags:
+            self.text.tag_remove(tag, f'{row}.0', f'{row}.end')
+            
+        line = self.text.get(f'{row}.0', f'{row}.end')
+        start = 0
+        while True: 
+            m = prog_pattern.search(line, start)
+            if not m: 
+                break
+            start = m.end()
+            for key, value in m.groupdict().items():
+                if value:
+                    self.text.tag_add(key, 
+                                      eval_format('{row}.{m.start()}'),
+                                      eval_format('{row}.{m.end()}'))
         
         
     def update_content(self, tag, content):
@@ -170,26 +224,21 @@ class ConsoleText(ScrolledText, ModelNode):
 
         self.text.insert('end', content, tag)
 
-        # Remove unnecessary highlighting
-        for tag in self.color_delegator.tagdefs:
-            self.text.tag_remove(tag, start, "end")            
-        self.text.insert('end', self.prompt_symbol)                
-        # Remove unnecessary highlighting
-        self.text.tag_remove("TODO", "1.0", 'end')
-        self.text.tag_add("SYNC", "1.0", 'end')                                
-        self.text.see('end')     
+        self.text.insert('end', self.prompt_symbol, 'STDOUT')                
+        self.text.see('end') 
+        
 
     def on_key_press(self, evt, code_list=[], init_history=[True]):     
         # Experimenting with idlelib's AutoComplete
         ##############################################################
-        keysym = evt.keysym  
-        if self.__auto_complete.autocompletewindow and \
-                self.__auto_complete.autocompletewindow.is_active():
-            if self.__auto_complete.autocompletewindow.keypress_event(evt) == 'break':
-                return 'break'
-            else:
-                if keysym == 'Tab':
-                    return 'break'
+#        keysym = evt.keysym  
+#        if self.__auto_complete.autocompletewindow and \
+#                self.__auto_complete.autocompletewindow.is_active():
+#            if self.__auto_complete.autocompletewindow.keypress_event(evt) == 'break':
+#                return 'break'
+#            else:
+#                if keysym == 'Tab':
+#                    return 'break'
                     
                     
         # Begin Support History
@@ -204,11 +253,11 @@ class ConsoleText(ScrolledText, ModelNode):
             
             if init_history[0]:
                 self.__history.reset_cursor()
-                current_input = self.text.get(auto_subs('$r.4'), 'end-1c')
+                current_input = self.text.get(f'{r}.4', 'end-1c')
                 self.__history.search(current_input)
                 init_history[0] = False
 
-            self.text.delete(auto_subs('$r.4'), 'end')
+            self.text.delete(f'{r}.4', 'end')
             code = self.__history.get(
                 1 if evt.keysym in ('Up', 'KP_Up') 
                 else -1)
@@ -218,8 +267,8 @@ class ConsoleText(ScrolledText, ModelNode):
             
             
         # Begin: Tab key for auto complete
-        if evt.keysym == 'Tab':
-            return self.__auto_complete.autocomplete_event(evt)
+#        if evt.keysym == 'Tab':
+#            return self.__auto_complete.autocomplete_event(evt)
         # End
             
             
@@ -257,7 +306,7 @@ class ConsoleText(ScrolledText, ModelNode):
                 return 'break'                
             if evt.keysym == 'Return': # Return
                 app = Scripting.root_node
-                code = self.text.get(auto_subs('$r.4'), auto_subs('$r.end'))
+                code = self.text.get(f'{r}.4', f'{r}.end')
                 self.__history.put(code)
                 try:
                     stripped_code = code.strip()
@@ -269,6 +318,7 @@ class ConsoleText(ScrolledText, ModelNode):
                         return 'break'
                     except TypeError: # Code is normal Python code.
                         if stripped_code == '':
+                            # A blank line ends a block.
                             code = '\n'.join(code_list)
                             del code_list[:]
                         stripped_code = code.strip()
@@ -298,7 +348,8 @@ class ConsoleText(ScrolledText, ModelNode):
 
                 
     def get_cursor_pos(self, mark='insert'): 
-        return (int(i) for i in self.text.index(mark).split('.'))               
+        r, c = (int(i) for i in self.text.index(mark).split('.'))
+        return r, c
         
 
 class StatusBar(Frame):
@@ -311,8 +362,8 @@ class StatusBar(Frame):
         
         balloon = Scripting.root_node.gui.balloon
                 
-        busy_lamp = six.moves.tkinter.Label(self, bg='forestgreen', width=1)
-        busy_lamp.pack(side=RIGHT, fill='y')
+        busy_lamp = Label(self, bg='forestgreen', width=1)
+        busy_lamp.pack(side='right', fill='y')
         balloon.bind_widget(busy_lamp, balloonmsg='''Main-thread status.
 Green: main-thread is available;
 Red:   main-thread is busy.''')
@@ -365,7 +416,7 @@ Red:   main-thread is busy.''')
             node_id = id(node)
             if command == 'new':
                 type_name = node.__class__.__name__
-                values.append(eval_format('{type_name}: {node_id}'))
+                values.append(f'{type_name}: {node_id}')
             elif command == 'del':
                 for index, value in enumerate(values):
                     wid = int(value.split(':')[1].strip())
@@ -427,7 +478,7 @@ class ConsoleWindow(ModelNode):
     def __init__(self, *args, **kwargs):
         self.__menu = kwargs.pop('menu')
         self.__tag_defs = kwargs.pop('tag_defs')
-        super(ConsoleWindow, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
     
 
     def on_connect(self):
@@ -442,7 +493,7 @@ class ConsoleWindow(ModelNode):
         self.__status_bar = status_bar = StatusBar(root)
         status_bar.pack(side='bottom', fill='x')
         
-        self.console_text = ConsoleText(root)        
+        self.console_text = ConsoleText(root, tag_defs=self.__tag_defs)        
         self.__stdstream_text = stdstream_text = self.console_text
         stdstream_text.pack(expand='yes', fill='both')
                     
@@ -465,15 +516,10 @@ class ConsoleWindow(ModelNode):
         menu = self.__menu
         make_menu(root, menu, json=True)
         self.__default_cursor = self.__stdstream_text.text['cursor']
-        #self.stream_observer = self.StreamObserver(self)
         @self.root_node.stream_manager.add_observer
         def observer(stream_type, content):
             self.console_text.update_content(tag=stream_type, content=content)
         
-        
-#    @property
-#    def console_text(self):
-#        return self.__stdstream_text        
         
     @property
     def prompt_symbol(self):

@@ -19,12 +19,12 @@ import random
 
 import six
 from six import string_types
-from six.moves.tkinter import *
-from six.moves.tkinter_ttk import *
+from tkinter import Text, Listbox, IntVar, Tk, Toplevel, Canvas
+from tkinter.ttk import Label, Scale, Entry, Button, Scrollbar, Treeview, Combobox
 import six.moves.tkinter_tix as tix
 from six.moves.tkinter import Frame
-import six.moves.tkinter_font as tkFont
-from six.moves.tkinter_tkfiledialog import askdirectory, asksaveasfilename
+#import six.moves.tkinter_font as tkFont
+from tkinter.filedialog import askdirectory, asksaveasfilename
 
 import PIL
 from PIL import ImageTk
@@ -32,9 +32,8 @@ from PIL import Image
 
 from functools import partial
 
-from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator, FunctionChain
-from wavesynlib.languagecenter.designpatterns import SimpleObserver, Observable
-from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer
+from wavesynlib.languagecenter.utils import eval_format, MethodDelegator, FunctionChain
+from wavesynlib.languagecenter.designpatterns import Observable
 
 __DEBUG__ = False
     
@@ -120,6 +119,16 @@ def check_positive_float(d, i, P, s, S, v, V, W):
         return True
     except (ValueError, AssertionError):
         return True if P=='' else False
+    
+    
+    
+def check_nonnegative_float(d, i, P, s, S, v, V, W):
+    try:
+        assert float(P) >= 0
+        return True
+    except (ValueError, AssertionError):
+        return True if P=='' else False
+    
         
 
 class ValueChecker(object):
@@ -132,33 +141,12 @@ class ValueChecker(object):
         self.check_positive_float = (root.register(check_positive_float),
                                      '%d', '%i', '%P', '%s', '%S', '%v', 
                                      '%V', '%W')
+        self.check_nonnegative_float = (root.register(check_nonnegative_float),
+                                     '%d', '%i', '%P', '%s', '%S', '%v', 
+                                     '%V', '%W')
 
 
-#class LabeledEntry(Frame, object):
-#    def __init__(self, *args, **kwargs):
-#        Frame.__init__(self, *args, **kwargs)
-#        self.__entry = Entry(self)
-#        self.__label = Label(self)
-#        
-#        if 'labelfirst' in kwargs and kwargs['labelfirst']:
-#            self.__label.pack(side=LEFT)
-#            self.__entry.pack(side=LEFT)
-#        else:
-#            self.__entry.pack(side=LEFT)
-#            self.__label.pack(side=LEFT)
-#            
-#        if 'labeltext' in kwargs:
-#            self.__label['text']    =kwargs['labeltext']
-#
-#    @property
-#    def entry(self):
-#        return self.__entry
-#
-#    @property
-#    def label(self):
-#        return self.__label
-        
-        
+                
 class LabeledScale(Frame, object):
     def __init__(self, *args, **kwargs):
         from_ = kwargs.pop('from_')
@@ -169,14 +157,14 @@ class LabeledScale(Frame, object):
         Frame.__init__(self, *args, **kwargs)
         
         if name is not None:
-            Label(self, text=name).pack(side=LEFT)
+            Label(self, text=name).pack(side='left')
         
         self.__scale = Scale(self, from_=from_, to=to, 
                                 command=self._on_change)
-        self.__scale.pack(side=LEFT, fill=X, expand=YES)
+        self.__scale.pack(side='left', fill='x', expand='yes')
         
         self.__value_label = value_label = Label(self)
-        value_label.pack(side=LEFT)
+        value_label.pack(side='left')
                 
     def _on_change(self, val):
         self.__value_label['text']  = self.__formatter(val)
@@ -192,9 +180,9 @@ class LabeledEntry(Frame, object):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         self.__label = Label(self)
-        self.__label.pack(side=LEFT)
+        self.__label.pack(side='left')
         self.__entry = Entry(self)
-        self.__entry.pack(fill=X, expand=YES)
+        self.__entry.pack(fill='x', expand='yes')
         self.__checker_function = None
         self.__image = None
 
@@ -229,7 +217,7 @@ class LabeledEntry(Frame, object):
 
     @entry_text.setter
     def entry_text(self, text):
-        self.__entry.delete(0, END)
+        self.__entry.delete(0, 'end')
         self.__entry.insert(0, text)
         
     @property
@@ -302,7 +290,7 @@ class PILImageFrame(Frame, object):
         zoomed_label.pack(side='left')
         
         self.__label = label = Label(self, image=photo)
-        label.pack(expand=YES, fill=BOTH)
+        label.pack(expand='yes', fill='both')
         
         def on_scale(val):
             val = float(val)
@@ -326,8 +314,8 @@ class TextWinHotkey(Text):
         self.bind('<Control-Key-c>', lambda event: 0)
 
     def select_all(self):
-        self.tag_add(SEL, '1.0', 'end-1c')
-        self.see(INSERT)
+        self.tag_add('sel', '1.0', 'end-1c')
+        self.see('insert')
         self.focus()
         return 'break'
 
@@ -335,7 +323,7 @@ class TextWinHotkey(Text):
 class ScrolledTree(Frame):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
-        self.pack(expand=YES, fill=BOTH)
+        self.pack(expand='yes', fill='both')
         self._make_widgets()
         self.__on_item_double_click = FunctionChain()
         def dbclick_callback(event):
@@ -353,8 +341,8 @@ class ScrolledTree(Frame):
         tree    = Treeview(self)
         sbar.config(command=tree.yview)
         tree.config(yscrollcommand=sbar.set)
-        sbar.pack(side=RIGHT, fill=Y)
-        tree.pack(side=LEFT, expand=YES, fill=BOTH)
+        sbar.pack(side='right', fill='y')
+        tree.pack(side='left', expand='yes', fill='both')
         self.tree   = tree
                 
     for method_name in (
@@ -446,7 +434,7 @@ class ScrolledText(Frame, object):
     '''This class is based on Programming Python 3rd Edition P517'''
     def __init__(self, parent=None, text='', file=None):
         Frame.__init__(self, parent)
-        self.pack(expand=YES, fill=BOTH)
+        self.pack(expand='yes', fill='both')
         self.make_widgets()
         self.set_text(text, file)
         self.__link_tag_functions = {}
@@ -458,11 +446,11 @@ class ScrolledText(Frame, object):
         
     def make_widgets(self):
         sbar    = Scrollbar(self)
-        text    = TextWinHotkey(self, relief=SUNKEN)
+        text    = TextWinHotkey(self, relief='sunken')
         sbar.config(command=text.yview)
         text.config(yscrollcommand=sbar.set)
-        sbar.pack(side=RIGHT, fill=Y)
-        text.pack(side=LEFT, expand=YES, fill=BOTH)
+        sbar.pack(side='right', fill='y')
+        text.pack(side='left', expand='yes', fill='both')
         self.text   = text # To Do: change the attribute name. 
         
         
@@ -490,9 +478,9 @@ class ScrolledText(Frame, object):
         if file:
             with open(file, 'r') as f:
                 text = f.read().decode('gbk')
-        self.text.delete('1.0', END)
+        self.text.delete('1.0', 'end')
         self.text.insert('1.0', text, *tags)
-        self.text.mark_set(INSERT, '1.0')
+        self.text.mark_set('insert', '1.0')
         self.text.focus()
         
         
@@ -522,16 +510,16 @@ class ScrolledText(Frame, object):
 
     def find_text(self, target):
         if target:
-            where = self.text.search(target, INSERT, END)
+            where = self.text.search(target, 'insert', 'end')
             if where:
                 if __DEBUG__:
                     print('Ctrl+F: searching for {0}'.format(target))
                     print('position', where)
                 pastit = where + ('+%dc' % len(target))
-                self.text.tag_remove(SEL, '1.0', END)
-                self.text.tag_add(SEL, where, pastit)
-                self.text.mark_set(INSERT, pastit)
-                self.text.see(INSERT)
+                self.text.tag_remove('sel', '1.0', 'end')
+                self.text.tag_add('sel', where, pastit)
+                self.text.mark_set('insert', pastit)
+                self.text.see('insert')
                 self.text.focus()
                 return True
             else:
@@ -591,8 +579,8 @@ class ScrolledList(Frame, object):
         list = Listbox(self)
         sbar.config(command=list.yview)
         list.config(yscrollcommand=sbar.set)
-        sbar.pack(side=RIGHT, fill=Y)
-        list.pack(side=LEFT, expand=YES, fill=BOTH)
+        sbar.pack(side='right', fill='y')
+        list.pack(side='left', expand='yes', fill='both')
         list.bind('<<ListboxSelect>>', self._on_listbox_click)
         
         self.__list_click_callback = None
@@ -609,7 +597,7 @@ class ScrolledList(Frame, object):
         return self.__sbar
 
     def clear(self):
-        self.__list.delete(0, END)
+        self.__list.delete(0, 'end')
                 
     @property
     def current_selection(self):
@@ -639,17 +627,17 @@ class ScrolledCanvas(Frame):
         Frame.__init__(self, *args, **kwargs)
         canvas = Canvas(self)        
         
-        xbar = Scrollbar(self, orient=HORIZONTAL)
+        xbar = Scrollbar(self, orient='horizontal')
         xbar.config(command=canvas.xview)
         canvas.config(xscrollcommand=xbar.set)
-        xbar.pack(side=BOTTOM, fill=X)
+        xbar.pack(side='bottom', fill='x')
         
         ybar = Scrollbar(self)
         ybar.config(command=canvas.yview)
         canvas.config(yscrollcommand=ybar.set)
-        ybar.pack(side=RIGHT, fill=Y)
+        ybar.pack(side='right', fill='y')
         
-        canvas.pack(expand=YES, fill=BOTH)
+        canvas.pack(expand='yes', fill='both')
         
         self.__canvas = canvas
 
@@ -662,10 +650,10 @@ class DirIndicator(Frame, Observable):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         Observable.__init__(self)
-        self._text = text = Text(self, wrap=NONE, height=1.2, relief=SOLID)
+        self._text = text = Text(self, wrap='none', height=1.2, relief='solid')
         text.bind('<Configure>', self._on_resize)
         text.bind('<KeyPress>', self._on_key_press)
-        text.pack(fill=X, expand=YES, side=LEFT)
+        text.pack(fill='x', expand='yes', side='left')
         self._default_cursor = text['cursor']
         self._default_background_color = text['background']
 
@@ -694,7 +682,7 @@ class DirIndicator(Frame, Observable):
         # WinOpen Button
         sys_name = platform.system().lower()
         try:
-            __mod = import_module(eval_format('wavesynlib.interfaces.os.{sys_name}.shell.winopen'))
+            __mod = import_module(f'wavesynlib.interfaces.os.{sys_name}.shell.winopen')
             winopen_func = getattr(__mod, 'winopen')
             def on_winopen_click(*args):
                 winopen_func(self._directory)
@@ -746,8 +734,8 @@ A directory selector will popup.
             
             
     def _on_resize(self, *args):
-        self._text.see(END)
-        self._text.mark_set(INSERT, END)
+        self._text.see('end')
+        self._text.mark_set('insert', 'end')
 
 
     def _change_cursor_to_hand(self, hand):
@@ -788,14 +776,14 @@ name will be highlighted.'''
                 menu_width = 800
             else:
                 menu_width = 200
-            menu_win.geometry(auto_subs('${menu_width}x300+$x+$y'))
+            menu_win.geometry(f'{menu_width}x300+{x}+{y}')
             # Once the so called MENU loses focus, it will DISAPPEAR instantly.
             menu_win.bind('<FocusOut>', lambda evt: menu_win.destroy())
             itemList = ScrolledList(menu_win)
-            itemList.pack(expand=YES, fill=BOTH)
+            itemList.pack(expand='yes', fill='both')
             itemList.list.focus_set()
             for item in items:
-                itemList.insert(END, item)
+                itemList.insert('end', item)
                 
             def on_list_click(index, label):
                 if not history_mode:
@@ -848,7 +836,7 @@ clicking its name.'''
             
     def _get_path(self):
         # 1.2 simply remove the characters forming the BACK button.
-        path = self._text.get('1.2', END)
+        path = self._text.get('1.2', 'end')
         # Remove the characters forming the BROWSER button.
         path = path[:-(self._blank_len + len(self._browse_text) + len(self._winopen_text))]            
         return path
@@ -858,7 +846,7 @@ clicking its name.'''
         text = self._text
         directory = self._directory
 
-        text.delete('1.2', END)
+        text.delete('1.2', 'end')
         folderList  = directory.split(os.path.sep)
         cumPath     = ''
         for index, folder in enumerate(folderList):
@@ -877,8 +865,8 @@ clicking its name.'''
             text.tag_bind(tagName, '<Leave>', 
                           lambda evt, tagName=tagName: 
                               self._on_folder_name_hover(tagName, enter=False))
-            text.insert(END, folder, tagName)
-            # END Configure folder name
+            text.insert('end', folder, tagName)
+            # 'end' Configure folder name
             
             # Configure folder sep
             sepName     = 'sep_tag_' + str(index)                
@@ -896,13 +884,13 @@ clicking its name.'''
                               self._on_folder_name_hover(tagName, 
                                                          enter=False, 
                                                          background_color='orange'))
-            text.insert(END, os.path.sep, sepName)
+            text.insert('end', os.path.sep, sepName)
             # END Configure folder sep
         
 
-        text.insert(END, ' '*self._blank_len)
-        text.insert(END, self._browse_text, 'browse_button') 
-        text.insert(END, self._winopen_text, 'winopen_button')
+        text.insert('end', ' '*self._blank_len)
+        text.insert('end', self._browse_text, 'browse_button') 
+        text.insert('end', self._winopen_text, 'winopen_button')
         
 
     def change_dir(self, dirname):
@@ -958,11 +946,11 @@ class Group(Frame, object):
     def __init__(self, *args, **kwargs):
         super(Group, self).__init__(*args, **kwargs)
         if 'relief' not in kwargs:
-            self['relief']  = GROOVE
+            self['relief']  = 'groove'
         if 'bd' not in kwargs:
             self['bd']      = 2
         self.__lblName  = Label(self)
-        self.__lblName.pack(side=BOTTOM)        
+        self.__lblName.pack(side='bottom')        
 
     @property
     def name(self):
@@ -974,84 +962,84 @@ class Group(Frame, object):
         
 
 
-class FontFrame(Frame, object):
-    def __init__(self, master=None, **kw):
-        Frame.__init__(self, master, **kw)
-        
-        # Font selector
-        selector_frame = LabelFrame(self, text='Font Selector')
-        selector_frame.pack(side=LEFT)
-        # Font face
-        face_frame = LabelFrame(selector_frame, text='Font Face')
-        face_frame.pack()
-        face_list = ScrolledList(face_frame)
-        face_list.pack()
-        fonts = list(tkFont.families(self))
-        fonts.sort()
-        for font in fonts:
-            face_list.insert(END, font)
-        face_list.list_click_callback = self._on_face_select
-        self.face_list = face_list
-            
-        # Font size
-        size_frame = LabelFrame(selector_frame, text='Font Size')
-        size_frame.pack()
-        size_combo = Combobox(size_frame, takefocus=1, stat='readonly')
-        size_combo.pack()
-        size_combo['value'] = range(7, 23)
-        size_combo.current(0)
-        size_combo.bind('<<ComboboxSelected>>', self._on_size_select)
-        self.size_combo = size_combo
-        
-        # Font Sample
-        default_font = ('Courier', 10, tkFont.NORMAL)
-        sample_frame = LabelFrame(self, text='Samples')
-        sample_frame.pack(side=RIGHT, expand=YES, fill=Y)
-        sample_label = Label(sample_frame, 
-                             text='\tabcdefghij\t\n\tABCDEFGHIJ\t\n\t0123456789\t', 
-                             font=default_font)
-        sample_label.pack(expand=YES)
-        self.sample_label = sample_label
-        
-        self.face = default_font[0]
-        self.size = default_font[1]
-        size_combo.current(self.size - 7)
-        
-    def _on_face_select(self, index, face):
-        size = self.size_combo.get()
-        self._set_sample(face, size)
-        
-    def _on_size_select(self, event):
-        self._set_sample(self.face, self.size_combo.get())
-        
-    def _set_sample(self, face, size):
-        self.face = face
-        self.size = size
-        self.sample_label.config(font=(self.face, self.size, tkFont.NORMAL))                            
-            
-def ask_font():
-    win = Toplevel()
-    win.title('Font Dialog')
-
-    buttonFrame = Frame(win)
-    retval = [None]
-    def onClick(ret=None):
-        win.destroy()
-        retval[0] = ret
-    
-    buttonFrame.pack(side=BOTTOM)
-    btnCancel = Button(buttonFrame, text='Cancel', command=lambda: onClick())
-    btnCancel.pack(side=RIGHT)
-    btnOk = Button(buttonFrame, text='OK', command=lambda: onClick((fontFrame.face, fontFrame.size)))
-    btnOk.pack(side=RIGHT)    
-            
-    fontFrame = FontFrame(win)
-    fontFrame.pack()
-    
-    win.focus_set()
-    win.grab_set()
-    win.wait_window()
-    return retval[0]
+#class FontFrame(Frame, object):
+#    def __init__(self, master=None, **kw):
+#        Frame.__init__(self, master, **kw)
+#        
+#        # Font selector
+#        selector_frame = LabelFrame(self, text='Font Selector')
+#        selector_frame.pack(side=LEFT)
+#        # Font face
+#        face_frame = LabelFrame(selector_frame, text='Font Face')
+#        face_frame.pack()
+#        face_list = ScrolledList(face_frame)
+#        face_list.pack()
+#        fonts = list(tkFont.families(self))
+#        fonts.sort()
+#        for font in fonts:
+#            face_list.insert('end', font)
+#        face_list.list_click_callback = self._on_face_select
+#        self.face_list = face_list
+#            
+#        # Font size
+#        size_frame = LabelFrame(selector_frame, text='Font Size')
+#        size_frame.pack()
+#        size_combo = Combobox(size_frame, takefocus=1, stat='readonly')
+#        size_combo.pack()
+#        size_combo['value'] = range(7, 23)
+#        size_combo.current(0)
+#        size_combo.bind('<<ComboboxSelected>>', self._on_size_select)
+#        self.size_combo = size_combo
+#        
+#        # Font Sample
+#        default_font = ('Courier', 10, tkFont.NORMAL)
+#        sample_frame = LabelFrame(self, text='Samples')
+#        sample_frame.pack(side=RIGHT, expand=YES, fill=Y)
+#        sample_label = Label(sample_frame, 
+#                             text='\tabcdefghij\t\n\tABCDEFGHIJ\t\n\t0123456789\t', 
+#                             font=default_font)
+#        sample_label.pack(expand=YES)
+#        self.sample_label = sample_label
+#        
+#        self.face = default_font[0]
+#        self.size = default_font[1]
+#        size_combo.current(self.size - 7)
+#        
+#    def _on_face_select(self, index, face):
+#        size = self.size_combo.get()
+#        self._set_sample(face, size)
+#        
+#    def _on_size_select(self, event):
+#        self._set_sample(self.face, self.size_combo.get())
+#        
+#    def _set_sample(self, face, size):
+#        self.face = face
+#        self.size = size
+#        self.sample_label.config(font=(self.face, self.size, tkFont.NORMAL))                            
+#            
+#def ask_font():
+#    win = Toplevel()
+#    win.title('Font Dialog')
+#
+#    buttonFrame = Frame(win)
+#    retval = [None]
+#    def onClick(ret=None):
+#        win.destroy()
+#        retval[0] = ret
+#    
+#    buttonFrame.pack(side='bottom')
+#    btnCancel = Button(buttonFrame, text='Cancel', command=lambda: onClick())
+#    btnCancel.pack(side=RIGHT)
+#    btnOk = Button(buttonFrame, text='OK', command=lambda: onClick((fontFrame.face, fontFrame.size)))
+#    btnOk.pack(side=RIGHT)    
+#            
+#    fontFrame = FontFrame(win)
+#    fontFrame.pack()
+#    
+#    win.focus_set()
+#    win.grab_set()
+#    win.wait_window()
+#    return retval[0]
     
     
 def ask_list_item(the_list, default_item_index=0, message=''):
@@ -1087,46 +1075,46 @@ def ask_list_item(the_list, default_item_index=0, message=''):
     return ret[0]               
 
 
-class GUIConsumer(object):                    
-    def __init__(self, producer, timer):
-        if not callable(producer):
-            raise TypeError('producer should be a callable object.')
-        self.__producer = producer           
-        
-        if not isinstance(timer, BaseObservableTimer):
-            raise TypeError('timer should be an instance of a derived class of BaseObservableTimer')
-        self.__active = False
-        self.__timer = timer
-        self.__timer.add_observer(SimpleObserver(self._on_tick))
-        self.__queue = Queue.Queue()
-        self.__producerThread = None        
-        
-    def _on_tick(self):
-        try:
-            while True:
-                data = self.__queue.get_nowait()
-                if self.__active is True:
-                    self.consume(data)
-        except Queue.Empty:
-            pass
-        
-    def _run_producer(self):
-        producer = self.__producer
-        while True:
-            self.__queue.put(producer())
-        
-    def consume(self, data):
-        return NotImplemented
-        
-    @property
-    def active(self):
-        return self.__active
-        
-    @active.setter
-    def active(self, val):
-        self.__active = val
-        if self.__active is True and self.__producerThread is None:
-            self.__producerThread = thread.start_new_thread(self._run_producer)
+#class GUIConsumer(object):                    
+#    def __init__(self, producer, timer):
+#        if not callable(producer):
+#            raise TypeError('producer should be a callable object.')
+#        self.__producer = producer           
+#        
+#        if not isinstance(timer, BaseObservableTimer):
+#            raise TypeError('timer should be an instance of a derived class of BaseObservableTimer')
+#        self.__active = False
+#        self.__timer = timer
+#        self.__timer.add_observer(SimpleObserver(self._on_tick))
+#        self.__queue = Queue.Queue()
+#        self.__producerThread = None        
+#        
+#    def _on_tick(self):
+#        try:
+#            while True:
+#                data = self.__queue.get_nowait()
+#                if self.__active is True:
+#                    self.consume(data)
+#        except Queue.Empty:
+#            pass
+#        
+#    def _run_producer(self):
+#        producer = self.__producer
+#        while True:
+#            self.__queue.put(producer())
+#        
+#    def consume(self, data):
+#        return NotImplemented
+#        
+#    @property
+#    def active(self):
+#        return self.__active
+#        
+#    @active.setter
+#    def active(self, val):
+#        self.__active = val
+#        if self.__active is True and self.__producerThread is None:
+#            self.__producerThread = thread.start_new_thread(self._run_producer)
             
 
 class ComplexCanvas(Canvas, object):
@@ -1402,15 +1390,16 @@ class ArrayRenderMixin(object):
             self.itemconfig(image_id, image=photoImage)
         return image_id, photoImage
         
-        
+
+
 def json_to_tk(parent, json_code, balloon=None):
     '''
 Example: [
     {"name":"alert_button", "class":"Button", "module":"ttk", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
 ]
     '''
-    import six.moves.tkinter as tk
-    import six.moves.tkinter_ttk as ttk
+    import tkinter as tk
+    import tkinter.ttk as ttk
     
     if isinstance(json_code, string_types):
         json_obj = json.loads(json_code)
@@ -1429,7 +1418,12 @@ Example: [
             mod = locals()[mod]
             cls = getattr(mod, class_name)            
         else:
-            cls = globals()[class_name]
+            if class_name in globals():
+                cls = globals()[class_name]
+            elif class_name in ttk.__dict__:
+                cls = ttk.__dict__[class_name]
+            else:
+                cls = tk.__dict__[class_name]
         
         widget = cls(parent, **item.pop('config', {}))
         widget.pack(**item.pop('pack', {}))
@@ -1455,7 +1449,7 @@ Example: [
 if __name__ == '__main__':
 #    window  = Tk()
 #    tree    = ScrolledTree(window)
-#    root    = tree.insert('', END, text='root')
+#    root    = tree.insert('', 'end', text='root')
 #    node    = tree.insert(root, END, text='node')
 #    window.mainloop()
 

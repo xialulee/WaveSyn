@@ -639,9 +639,9 @@ class GridGroup(Observable, Group):
     def __init__(self, *args, **kwargs):
         if 'value_checker' in kwargs:
             value_checker    = kwargs.pop('value_checker')
-            check_positive_float  = value_checker.check_positive_float
+            check_nonnegative_float  = value_checker.check_nonnegative_float
         else:
-            check_positive_float  = None
+            check_nonnegative_float  = None
             
         if 'balloon' in kwargs:
             kwargs.pop('balloon')
@@ -664,11 +664,11 @@ class GridGroup(Observable, Group):
             guidata = (
                 {
                     'linestyle': ('Major Line Style', propvars[0], None),
-                    'linewidth': ('Major Line Width', propvars[1], check_positive_float)
+                    'linewidth': ('Major Line Width', propvars[1], check_nonnegative_float)
                 },
                 {
                     'linestyle': ('Minor Line Style', propvars[2], None),
-                    'linewidth': ('Minor Line Width', propvars[3], check_positive_float)
+                    'linewidth': ('Minor Line Width', propvars[3], check_nonnegative_float)
                 }
             )
 
