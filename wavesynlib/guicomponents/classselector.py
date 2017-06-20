@@ -13,8 +13,8 @@ import subprocess as sp
 import multiprocessing as mp
 import inspect
 
-from six.moves.tkinter import *
-from six.moves.tkinter_ttk import *
+from tkinter import Toplevel, Tk
+from tkinter.ttk import Button
 from six.moves.tkinter import Frame
 
 from wavesynlib.guicomponents.tk import ScrolledTree
@@ -34,9 +34,9 @@ class ClassSelector(object):
         tree.pack()
         classes = self.load_modules()
         for package in classes:
-            packageNode = tree.insert('', END, text=package)
+            packageNode = tree.insert('', 'end', text=package)
             for class_name in classes[package]:
-                tree.insert(packageNode, END, text=class_name, values=package)
+                tree.insert(packageNode, 'end', text=class_name, values=package)
                 
         button_frame = Frame(window)
         button_frame.pack()
@@ -45,7 +45,7 @@ class ClassSelector(object):
             self.__selected_class_name    = class_name
             window.destroy()
         cancel_button = Button(button_frame, text='Cancel', command=lambda: _on_click('', ''))
-        cancel_button.pack(side=RIGHT)
+        cancel_button.pack(side='right')
         ok_button     = Button(
             button_frame, 
             text='OK', 
@@ -54,7 +54,7 @@ class ClassSelector(object):
                 tree.item(tree.selection(), 'text')
             )
         )
-        ok_button.pack(side=RIGHT)
+        ok_button.pack(side='right')
         
     def do_model(self):
         win = self.__window
@@ -72,7 +72,7 @@ class ClassSelector(object):
             if filename[-1] == 'py':
                 try:
                     mod = importlib.import_module('.'.join((self.__package_name, filename[0])))
-                except ImportError:
+                except ImportError as err:
                     # To Do: print information on the console
                     continue
                 mod_item_names = dir(mod)
