@@ -14,7 +14,7 @@ from reikna.core import Transformation, Parameter, Annotation, Type
 
 
 
-magSquare   = ElementwiseKernel(
+mag_square   = ElementwiseKernel(
     'pycuda::complex<double> * output, const pycuda::complex<double> * input',
     '''
 output[i] = input[i] * pycuda::conj(input[i]);
@@ -22,7 +22,7 @@ output[i] = input[i] * pycuda::conj(input[i]);
 )
  
 
-applyMask   = ElementwiseKernel(
+apply_mask   = ElementwiseKernel(
     'pycuda::complex<double> * output, const pycuda::complex<double> * origin, const double * mask',
     '''
 output[i] = origin[i] * mask[i];
@@ -59,12 +59,12 @@ class DIAC(Algorithm):
     __cache = {}
     
     def __init__(self):
-        super(DIAC, self).__init__()
+        super().__init__()
         
         
     def __get_procs(self, thr, N):
         if N not in self.__cache:
-            fft = wavesyncuda.FFTFactory.create_fft_proc(N, thr, compile_=False)
+            fft = wavesyncuda.FFTFactory.create_fft_proc(thr, (N,), compile_=False)
             unimod_trans = Transformation(
                 [Parameter('output', Annotation(Type(np.complex128, N), 'o')),
                 Parameter('input', Annotation(Type(np.complex128, N), 'i'))],
@@ -91,7 +91,7 @@ class DIAC(Algorithm):
     def __call__(self, N, Qr, K): 
         thr = self.cuda_worker.reikna_thread
         twoN = 2 * N
-        fft = wavesyncuda.FFTFactory[(twoN, thr)]
+        fft = wavesyncuda.FFTFactory[(thr, (twoN,))]
         
         mask        = np.ones((2*N,))
         mask[Qr]    = 0; mask[-Qr]   = 0
@@ -100,7 +100,7 @@ class DIAC(Algorithm):
         cut         = np.zeros((N,)) + 1j * np.zeros((N,))
         cut         = thr.to_device(cut)
         
-        s           = np.exp(1j * 2 * np.pi * np.random.rand(2*N))
+        s           = np.exp(1j * 2 * np.pi * np.random.rand(twoN))
         s[N:]       = 0
         s           = thr.to_device(s)
         Fs          = thr.array((2*N,), np.complex128)
@@ -108,9 +108,9 @@ class DIAC(Algorithm):
         
         for k in range(K):
             fft(Fs, s, 0) # Forward
-            magSquare(a, Fs)
+            mag_square(a, Fs)
             fft(a, a, 1) # Inverse
-            applyMask(a, a, mask)
+            apply_mask(a, a, mask)
             fft(a, a, 0) # Forward
             combine_mag_phi(a, a, Fs)
             fft(s, a, 1) # Inverse            

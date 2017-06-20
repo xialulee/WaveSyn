@@ -262,7 +262,7 @@ class AlgorithmNode(ModelNode):
         root_node = self.root_node            
         algorithm = self.__algorithm
         algorithm_class = type(algorithm)
-        dialog = Dialog(range(repeat_times), title=algorithm.__name__ + ' Progress')
+        dialog = Dialog(list(range(repeat_times)), title=algorithm.__name__ + ' Progress')
             
         queue = mp.Queue()
 #        all_arg = eval_format('[([], dict({Scripting.convert_args_to_str(**kwargs)}))]*{repeat_times}')

@@ -10,6 +10,7 @@ from six.moves.queue import Queue
 
 import reikna.cluda as cluda
 from reikna.fft import FFT
+from reikna.linalg import MatrixMul
 import numpy as np
 
 
@@ -19,10 +20,10 @@ from wavesynlib.languagecenter.wavesynscript import ModelNode
 api = cluda.cuda_api()
 
 
-class FFTFactory(object):
+class FFTFactory:
     @staticmethod
-    def create_fft_proc(N, thr, compile_=True):
-        fft = FFT(thr.array((N,), dtype=np.complex128))
+    def create_fft_proc(thr, size, axes=None, compile_=True):
+        fft = FFT(thr.array(size, dtype=np.complex128), axes)
         if compile_:
             fft = fft.compile(thr)
         return fft
@@ -40,9 +41,32 @@ class FFTFactory(object):
 FFTFactory  = FFTFactory()
 
 
+
+class MatrixMulFactory:
+    @staticmethod
+    def create_matrixmul_proc(thr, a_size, b_size, dtype=np.complex128, compile_=True):
+        mm = MatrixMul(thr.array(a_size, dtype=dtype), thr.array(b_size, dtype=dtype))
+        if compile_:
+            mm = mm.compile(thr)
+        return mm
+    
+    
+    def __init__(self):
+        self.__cache = {}
+        
+        
+    def __getitem__(self, key):
+        if key not in self.__cache:
+            self.__cache[key] = self.create_matrixmul_proc(*key)
+        return self.__cache[key]
+    
+MatrixMulFactory = MatrixMulFactory()
+
+
+
 class Worker(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(Worker, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__message_in = Queue()
         self.__message_out = Queue()
         self.__thr = None
