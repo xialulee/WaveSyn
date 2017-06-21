@@ -8,6 +8,7 @@ Created on Tue Jun 20 21:24:25 2017
 from wavesynlib.mathtools import Algorithm
 import wavesynlib.interfaces.gpu.cuda as wavesyncuda
 
+from math import sqrt
 import numpy as np
 from scipy import linalg
 
@@ -42,8 +43,7 @@ class WeCAN(Algorithm):
         ['K', 'int', 'Maximum iteration number.'])
     def __call__(self, N, gamma, e, K):
         thr = self.cuda_worker.reikna_thread
-        s = np.exp(1j * 2 * np.pi * np.random.rand(2*N), dtype=np.complex128)
-        s.shape = (N, 1)
+        s = np.exp(1j * 2 * np.pi * np.random.rand(N), dtype=np.complex128)
         # s_prev = np.zeros((N,), dtype=np.complex128)
         gamma[0] = 0
         Gamma = linalg.toeplitz(gamma)
@@ -58,13 +58,30 @@ class WeCAN(Algorithm):
         F = gpuarray.zeros((2*N, N), dtype=np.complex128)
         s = thr.to_device(s)
         rep_s = gpuarray.empty((N, N), dtype=np.complex128)
-        ones = thr.to_device(np.ones(N,), dtype=np.complex128)
-        fft = wavesyncuda.FFTFactory[(thr, (2*N, N), [0])]
+        ones = thr.to_device(np.ones(N, dtype=np.complex128))
+        sqrtNrv = thr.to_device(np.ones(N, dtype=np.double)/sqrt(N))
+        fnorm = gpuarray.zeros((2*N, 1), dtype=np.double)
+        fnormmat = gpuarray.zeros((2*N, N), dtype=np.double)
+        
+        fft = wavesyncuda.FFTFactory[(thr, (2*N, N), (0,))]
         outer = wavesyncuda.MatrixMulFactory[(thr, (N, 1), (1, N))]
+        rep = wavesyncuda.MatrixMulFactory[(thr, (2*N, 1), (1, N), np.double)]
+        sum_ = wavesyncuda.MatrixMulFactory[(thr, (N, N), (N, 1))]
+        rownorm = wavesyncuda.EntrywiseNormFactory[(thr, (2*N, N), (1,))]
         
         
         for k in range(K):
             outer(rep_s, s, ones)
-            Z[:, :N] = C * rep_s
+            Z[:N, :] = C * rep_s
             fft(F, Z)
+            rownorm(fnorm, F)
+            rep(fnormmat, fnorm, sqrtNrv)
+            Alpha[:, :] = F / fnormmat
+            fft(Alpha, Alpha, 1)
+            rep_s[:, :] = C.conj() * Alpha[:N, :]
+            sum_(s, rep_s, ones)
+            unimodularize(s, s, N)
+            self.progress_checker(k, K, None)
+            
+        return s.get()
         

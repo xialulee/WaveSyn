@@ -10,7 +10,7 @@ from six.moves.queue import Queue
 
 import reikna.cluda as cluda
 from reikna.fft import FFT
-from reikna.linalg import MatrixMul
+from reikna.linalg import MatrixMul, EntrywiseNorm
 import numpy as np
 
 
@@ -61,6 +61,28 @@ class MatrixMulFactory:
         return self.__cache[key]
     
 MatrixMulFactory = MatrixMulFactory()
+
+
+
+class EntrywiseNormFactory:
+    @staticmethod
+    def create_entrywisenorm_proc(thr, size, axes=None, dtype=np.complex128, compile_=True):
+        en = EntrywiseNorm(thr.array(size, dtype=dtype), axes=axes)
+        if compile_:
+            en = en.compile(thr)
+        return en
+    
+    
+    def __init__(self):
+        self.__cache = {}
+        
+        
+    def __getitem__(self, key):
+        if key not in self.__cache:
+            self.__cache[key] = self.create_entrywisenorm_proc(*key)
+        return self.__cache[key]
+    
+EntrywiseNormFactory = EntrywiseNormFactory()
 
 
 
