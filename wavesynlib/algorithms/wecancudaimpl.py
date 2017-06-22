@@ -44,7 +44,7 @@ class WeCAN(Algorithm):
     def __call__(self, N, gamma, e, K):
         thr = self.cuda_worker.reikna_thread
         s = np.exp(1j * 2 * np.pi * np.random.rand(N), dtype=np.complex128)
-        # s_prev = np.zeros((N,), dtype=np.complex128)
+        iterdiff = thr.to_device(np.zeros((1,), dtype=np.double))
         gamma[0] = 0
         Gamma = linalg.toeplitz(gamma)
         eigvalues = linalg.eig(Gamma)[0]
@@ -57,6 +57,7 @@ class WeCAN(Algorithm):
         Z = gpuarray.zeros((2*N, N), dtype=np.complex128)
         F = gpuarray.zeros((2*N, N), dtype=np.complex128)
         s = thr.to_device(s)
+        s_prev = thr.empty_like(s)
         rep_s = gpuarray.empty((N, N), dtype=np.complex128)
         ones = thr.to_device(np.ones(N, dtype=np.complex128))
         sqrtNrv = thr.to_device(np.ones(N, dtype=np.double)/sqrt(N))
@@ -68,9 +69,11 @@ class WeCAN(Algorithm):
         rep = wavesyncuda.MatrixMulFactory[(thr, (2*N, 1), (1, N), np.double)]
         sum_ = wavesyncuda.MatrixMulFactory[(thr, (N, N), (N, 1))]
         rownorm = wavesyncuda.EntrywiseNormFactory[(thr, (2*N, N), (1,))]
+        vecnorm = wavesyncuda.EntrywiseNormFactory[(thr, (N,))]
         
         
         for k in range(K):
+            s_prev[:] = s
             outer(rep_s, s, ones)
             Z[:N, :] = C * rep_s
             fft(F, Z)
@@ -81,6 +84,9 @@ class WeCAN(Algorithm):
             rep_s[:, :] = C.conj() * Alpha[:N, :]
             sum_(s, rep_s, ones)
             unimodularize(s, s, N)
+            vecnorm(iterdiff, s-s_prev)
+            if iterdiff.get() <= e:
+                break
             self.progress_checker(k, K, None)
             
         return s.get()
