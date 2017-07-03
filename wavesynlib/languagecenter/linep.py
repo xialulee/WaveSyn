@@ -28,3 +28,16 @@ def make_split_regex():
 #    
 #def codeSplitter(code):
 #    pass
+
+_begin_proc = []
+_end_proc = []
+
+
+
+def BEGIN(func):
+    _begin_proc.append(func)
+    
+    
+    
+def END(func):
+    _end_proc.append(func)
