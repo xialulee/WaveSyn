@@ -8,7 +8,6 @@ Created on Sat Mar 04 21:02:17 2017
 from __future__ import division, print_function, unicode_literals
 
 from comtypes import client
-from collections import OrderedDict
 import json
 
 
@@ -25,7 +24,7 @@ class WQL(object):
         def to_native(items):
             result = []
             for item in items:
-                d = OrderedDict()
+                d = {}
                 for prop in item.Properties_:
                     d[prop.Name] = prop.Value
                 result.append(d)
@@ -35,8 +34,13 @@ class WQL(object):
             result = to_native(items)
             return json.dumps(result)
         
+        def identity(items):
+            return items
+        
         return {
-            'original': lambda x: x,
+            'original': identity,
+            'comtypes': identity,
             'native': to_native,
+            'python': to_native,
             'json': to_json
         }[output_format](items)
