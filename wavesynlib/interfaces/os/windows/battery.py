@@ -10,9 +10,9 @@ from wavesynlib.interfaces.os.windows.wmi import SWbemSink
 
 
 
-class EventSink(SWbemSink):
+class EventSink(SWbemSink):    
     def on_object_ready(self, wbem_object, context):
-        print('on_object_ready')
+        pass
     
     
     def on_completed(self, hresult, error_object, context):
@@ -31,8 +31,12 @@ class EventSink(SWbemSink):
 class Battery(ModelNode):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__event_sink = None
         
         
     def on_connect(self):
-        self.root_node.interfaces.os.windows.wmi.set_sink(EventSink(), "SELECT * FROM __InstanceModificationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Battery'")
+        self.__event_sink = EventSink()
+        self.root_node.interfaces.os.windows.wmi.set_sink(
+            self.__event_sink, 
+            "SELECT * FROM __InstanceModificationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Battery'")
         

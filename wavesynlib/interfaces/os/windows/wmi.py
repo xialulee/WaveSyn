@@ -60,6 +60,8 @@ class SWbemSink(metaclass=abc.ABCMeta):
 class WQL:
     def __init__(self, services):
         self.__services = services
+        self.__connection = None
+        self.__com_sink = None
         
         
     def query(self, wql_str, output_format='original'):
@@ -91,8 +93,8 @@ class WQL:
         
         
     def set_sink(self, sink, wql_str):
-        com_sink = client.CreateObject('WbemScripting.SWbemSink')
+        self.__com_sink = com_sink = client.CreateObject('WbemScripting.SWbemSink')
         py_sink = sink
-        client.GetEvents(com_sink, py_sink)
+        self.__connection = client.GetEvents(com_sink, py_sink)
         self.__services.ExecNotificationQueryAsync(com_sink, wql_str)
         
