@@ -10,10 +10,7 @@ import cvxpy as cp
 import collections
 from abc import ABCMeta, abstractproperty
 
-class BasePattern(object):
-    __metaclass__ = ABCMeta
-    
-
+class BasePattern(metaclass=ABCMeta):
     @abstractproperty    
     def samplesMagnitude(self):
         raise NotImplementedError

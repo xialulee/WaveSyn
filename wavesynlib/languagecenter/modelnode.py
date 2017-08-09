@@ -13,7 +13,7 @@ from wavesynlib.languagecenter.wavesynscript.modelnode import WaveSynScriptNode
     
 class LangCenterNode(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(LangCenterNode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.wavesynscript = WaveSynScriptNode()
         self.html_utils = html_nodes.Utils()
         self.markdown_utils = markdown_nodes.Utils()

@@ -7,19 +7,63 @@ Created on Sat Mar 04 21:02:17 2017
 
 from __future__ import division, print_function, unicode_literals
 
-from comtypes import client
 import json
+import abc
+from comtypes import client
 
 
 
-class WQL(object):
-    def __init__(self):
-        loc = client.CreateObject('WbemScripting.SWbemLocator')
-        self.__server = loc.ConnectServer('.')
+class SWbemSink(metaclass=abc.ABCMeta):
+    def __init__(self, *args, **kwrags):
+        pass
+    
+    
+    def ISWbemSinkEvents_OnObjectReady(self, this, objWbemObject, objWbemAsyncContext):
+        self.on_object_ready(objWbemObject, objWbemAsyncContext)
+    
+    
+    @abc.abstractmethod    
+    def on_object_ready(self, wbem_object, context):
+        pass
+    
+    
+    def ISWbemSinkEvents_OnCompleted(self, this,
+        iHResult, objWbemErrorObject, objWbemAsyncContext):
+        self.on_completed(iHResult, objWbemErrorObject, objWbemAsyncContext)
+        
+        
+    @abc.abstractmethod
+    def on_completed(self, hresult, error_object, context):
+        pass
+    
+    
+    def ISWbemSinkEvents_OnProgress(self, this,
+        iUpperBound, iCurrent, strMessage, objWbemAsyncContext):
+        self.on_progress(iUpperBound, iCurrent, strMessage, objWbemAsyncContext)
+        
+        
+    @abc.abstractmethod
+    def on_progress(self, upper_bound, current, message, context):
+        pass
+    
+    
+    def ISWbemSinkEvents_OnObjectPut(self, this, objWbemObjectPath, objWbemAsyncContext):
+        self.on_object_put(objWbemObjectPath, objWbemAsyncContext)
+        
+        
+    @abc.abstractmethod
+    def on_object_put(self, object_path, context):
+        pass
+
+
+
+class WQL:
+    def __init__(self, services):
+        self.__services = services
         
         
     def query(self, wql_str, output_format='original'):
-        items = self.__server.ExecQuery(wql_str)
+        items = self.__services.ExecQuery(wql_str)
 
         def to_native(items):
             result = []
@@ -44,3 +88,11 @@ class WQL(object):
             'python': to_native,
             'json': to_json
         }[output_format](items)
+        
+        
+    def set_sink(self, sink, wql_str):
+        com_sink = client.CreateObject('WbemScripting.SWbemSink')
+        py_sink = sink
+        client.GetEvents(com_sink, py_sink)
+        self.__services.ExecNotificationQueryAsync(com_sink, wql_str)
+        

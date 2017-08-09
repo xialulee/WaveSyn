@@ -14,7 +14,7 @@ from wavesynlib.languagecenter.wavesynscript import (
 
 class WaveSynScriptNode(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(WaveSynScriptNode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.constants = Constants
         self.modes = modes.ModesNode()
             

@@ -178,8 +178,10 @@ then node will have a property named 'a', which cannot be re-assigned.
             
     @property
     def child_nodes(self):
-        return {attribute_name:self.__dict__[attribute_name].node_path for attribute_name in self.__dict__ 
-            if isinstance(self.__dict__[attribute_name], ModelNode)} 
+        return {attribute_name:self.__dict__[attribute_name].node_path 
+                for attribute_name in self.__dict__ 
+                if isinstance(self.__dict__[attribute_name], ModelNode) 
+                and attribute_name != 'parent_node'} 
 
             
     @property
