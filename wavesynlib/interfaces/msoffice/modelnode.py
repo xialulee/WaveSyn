@@ -20,7 +20,7 @@ import json
 import os
 import time
 import win32gui
-from ctypes import POINTER, byref, sizeof, memmove, windll
+from ctypes import POINTER, byref, sizeof, memmove
 from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
 from comtypes import _safearray, COMError
 
@@ -499,7 +499,6 @@ class MSOffice(NodeDict, Observable):
     def __init__(self, *args, **kwargs):
         NodeDict.__init__(self, *args, **kwargs)
         Observable.__init__(self)
-#        self.__word_events_sink = WordEventsSink(self)
         
         
     def _generate_object(self, app_name, func):

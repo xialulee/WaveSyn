@@ -223,7 +223,7 @@ class OfficeController(TkToolWindow):
         else:
             window = None
         with code_printer:
-            office[id_].update_psd_images(window=window)
+            office[id_].utils.update_psd_images(window=window)
     
     
     @Scripting.printable
