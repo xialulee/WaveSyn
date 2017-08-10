@@ -12,7 +12,22 @@ from wavesynlib.interfaces.os.windows.wmi import SWbemSink
 
 class EventSink(SWbemSink):    
     def on_object_ready(self, wbem_object, context):
-        pass
+        status = wbem_object.Properties_['TargetInstance'].Value.Properties_['BatteryStatus'].Value
+        print(
+            {
+                1: 'Discharging',
+                2: 'Connected to AC',
+                3: 'Fully charged',
+                4: 'Currently low',
+                5: 'Currently critically low',
+                6: 'Currently charging',
+                7: 'Currently charging and has high charge',
+                8: 'Currently charging and has low charge',
+                9: 'Currently charging and has critically low charge',
+                10: 'Unknown',
+                11: 'Partially charged'
+            }[status]
+        )
     
     
     def on_completed(self, hresult, error_object, context):
@@ -38,5 +53,5 @@ class Battery(ModelNode):
         self.__event_sink = EventSink()
         self.root_node.interfaces.os.windows.wmi.set_sink(
             self.__event_sink, 
-            "SELECT * FROM __InstanceModificationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Battery'")
+            "SELECT * FROM __InstanceModificationEvent WITHIN 30 WHERE TargetInstance ISA 'Win32_Battery'")
         
