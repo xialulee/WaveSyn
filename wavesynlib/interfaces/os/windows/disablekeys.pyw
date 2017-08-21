@@ -1,8 +1,9 @@
 # 2010.3.9 Created by Feng-cong Li
 
-from    Tkinter import *
+from tkinter import Tk, Frame, IntVar
+from tkinter.ttk import Checkbutton
 import  ctypes as ct
-import  tkMessageBox as msgbox
+import  tkinter.messagebox as msgbox
 import  sys
 
 hKHook = [0]
@@ -31,12 +32,7 @@ key_name['ALT+TAB'] = 'ALT+TAB'
 key_name['CTRL+ESC'] = 'CTRL+ESC'
 
 key_stat = {}
-key_stat['LWIN'] = False
-key_stat['RWIN'] = False
-key_stat['MENU'] = False
-key_stat['ALT+ESC'] = False
-key_stat['ALT+TAB'] = False
-key_stat['CTRL+ESC'] = False
+
 
 # hook functions
 class KBDLLHOOKSTRUCT(ct.Structure):
@@ -45,59 +41,52 @@ class KBDLLHOOKSTRUCT(ct.Structure):
 				('flags',		ct.c_int),
 				('time',		ct.c_int),
 				('dwExtraInfo',	ct.c_int)]
+    
+    
 
 def khook_proc(nCode, wParam, lParam):
     eat = False
     vkCode  = lParam.contents.vkCode
     flags   = lParam.contents.flags
-    if key_stat['LWIN']:
+    if key_stat['LWIN'].get():
         if vkCode == 91: eat = True
-    if key_stat['RWIN']:
+    if key_stat['RWIN'].get():
         if vkCode == 92: eat = True
-    if key_stat['MENU']:
+    if key_stat['MENU'].get():
         if vkCode == 93: eat = True
-    if key_stat['ALT+ESC']:
+    if key_stat['ALT+ESC'].get():
         if vkCode == VK_ESCAPE and flags & LLKHF_ALTDOWN != 0:
             eat = True
-    if key_stat['ALT+TAB']:
+    if key_stat['ALT+TAB'].get():
         if vkCode == VK_TAB and flags & LLKHF_ALTDOWN != 0:
             eat = True
-    if key_stat['CTRL+ESC']:
+    if key_stat['CTRL+ESC'].get():
         if vkCode == VK_ESCAPE and GetKeyState(VK_CONTROL) and 0x8000:
             eat = True
     if eat:
         return -1
     else:
         return CallNextHookEx(hKHook[0], nCode, wParam, lParam)
+    
+    
 
 # gui classes
 class Column(Frame):
     def __init__(self, parent = None):
         Frame.__init__(self, parent)
         self.__parent = parent
+        
 
 class MainWin(Frame):
-    def __init__(self, parent=None, **args):
-        Frame.__init__(self, parent, args)
+    def __init__(self, parent=None, **kwargs):
+        super().__init__(parent, **kwargs)
         self.pack()
-        c1 = Frame(self)
-        c2 = Frame(self)
-        c1.pack(side=LEFT, expand=YES, fill=Y)
-        c2.pack(side=LEFT, expand=YES, fill=Y)
-        def reverse(key):
-            def func():
-                key_stat[key] = not key_stat[key]
-            return func
-        for i in ['LWIN', 'RWIN', 'MENU']:
-            item = Frame(c1)
-            item.pack(side=TOP,expand=YES,fill=X)
-            Checkbutton(item, text=key_name[i],\
-                        command=reverse(i)).pack(side=LEFT)
-        for i in ['ALT+ESC', 'ALT+TAB', 'CTRL+ESC']:
-            item = Frame(c2)
-            item.pack(side=TOP,expand=YES,fill=X)
-            Checkbutton(item, text=key_name[i],\
-                        command=reverse(i)).pack(side=LEFT)
+            
+        for idx, name in enumerate(['LWIN', 'RWIN', 'MENU', 'ALT+ESC', 'ALT+TAB', 'CTRL+ESC']):
+            key_stat[name] = IntVar(0)
+            Checkbutton(self, text=key_name[name], variable=key_stat[name], width=10).grid(row=idx%3, column=idx//3)
+            
+            
 
 if __name__ == '__main__':
     KHOOK = ct.WINFUNCTYPE(ct.c_int, ct.c_int, ct.c_int, ct.POINTER(KBDLLHOOKSTRUCT))

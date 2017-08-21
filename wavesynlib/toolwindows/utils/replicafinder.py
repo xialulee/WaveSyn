@@ -29,7 +29,7 @@ _image_dir = os.path.join(get_caller_dir(), 'images')
 
 
 def md5_to_string(md5):
-    return ''.join(['{:x}'.format(ord(c)) for c in md5])
+    return ''.join(['{:x}'.format(c) for c in md5])
 
 class ReplicaFinder(Observable, ModelNode):
     def __init__(self, timer=None):
