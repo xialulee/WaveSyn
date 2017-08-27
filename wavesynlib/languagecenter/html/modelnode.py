@@ -12,7 +12,7 @@ from wavesynlib.languagecenter.html import utils
 
 class Utils(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(Utils, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
     def _get_html_code(self, html_code=None, stream=None, file_path=None, encoding=None):
         if hasattr(self.root_node.interfaces.os.clipboard, 'support_clipboard_html'):
