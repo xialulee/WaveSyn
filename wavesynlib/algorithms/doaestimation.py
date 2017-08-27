@@ -6,11 +6,9 @@ Created on Tue Dec 22 14:24:23 2015
 
 Originally posted on http://blog.sina.com.cn/s/blog_4513dde60100o6na.html
 """
-from __future__   import division, print_function
-
-import itertools
-
-from numpy        import abs, angle, array, atleast_1d, complex128, correlate, exp, isscalar, mat, pi, r_, roots, sort, sqrt, zeros
+from numpy import abs, angle, array, atleast_1d, \
+    complex128, correlate, exp, isscalar, pi, r_, \
+    roots, sort, sqrt, zeros
 
 from numpy.linalg import eigh, eigvals, pinv
 from numpy.random import randn
@@ -56,18 +54,21 @@ def LS_ESPRIT(Rx, p):
     return value: normalized frequencies.
     '''
     p       = int(p)
-    Rx      = mat(Rx)
     N       = Rx.shape[0]
-    # eigh is a newly added function in numpy 1.8.0 which calculates the eigenvalue and eigenvectors efficiently for Hermitian matrix. 
+    # eigh is a newly added function in numpy 1.8.0 
+    # which calculates the eigenvalue and eigenvectors 
+    # efficiently for Hermitian matrix. 
     D, U    = eigh(Rx)
     # Obtain signal subspace from U
-    # Unlike numpy.linalg.svd, the eigenvalue and the corresponding eigenvectors calculated by eigh are in ascending order. 
+    # Unlike numpy.linalg.svd, 
+    # the eigenvalue and the corresponding eigenvectors 
+    # calculated by eigh are in ascending order. 
     Usig    = U[:, (N-p):]
     # 
-    U0      = mat(Usig[:N-1, :])
-    U1      = mat(Usig[1:, :])
+    U0      = Usig[:N-1, :]
+    U1      = Usig[1:, :]
     # Eigenvalues of U1\U0
-    return -angle(eigvals(pinv(U1)*U0)) / 2 / pi
+    return -angle(eigvals(pinv(U1)@U0)) / 2 / pi
     
     
     
@@ -105,7 +106,7 @@ def genTestSig(n, freqs, amps, noisePow):
     x       = complex128(zeros((len(n), )))
     freqs   = atleast_1d(freqs)
     amps    = atleast_1d(amps)
-    for freq, amp in itertools.izip(freqs, amps):
+    for freq, amp in zip(freqs, amps):
         x += amp * exp(1j * 2 * pi * freq * n)
     awgn    = sqrt(noisePow/2) * randn(len(n)) + 1j * sqrt(noisePow/2) * randn(len(n))
     return x + awgn

@@ -52,10 +52,11 @@ def dak_dphi(k, s):
     
     
 def d2ak_dphi2(k, s):
-    t1 = np.mat(np.diag(s.conj())) * np.mat(np.diag(s[k:], k))
-    t2 = -np.mat(np.diag(s.conj())) * np.mat(np.diag(np.hstack((s[k:], np.zeros((k,))))))
-    t3 = np.mat(np.diag(s)) * np.mat(np.diag(s[:-k], -k)) 
-    t4 = -np.mat(np.diag(s)) * np.mat(np.diag(np.hstack((np.zeros((k,)), s[:-k])).conj()))
+    diag = np.diag
+    t1 = diag(s.conj()) @ diag(s[k:], k)
+    t2 = -diag(s.conj()) @ diag(np.hstack((s[k:], np.zeros((k,)))))
+    t3 = diag(s) @ diag(s[:-k], -k)
+    t4 = -diag(s) @ diag(np.hstack((np.zeros((k,)), s[:-k])).conj())
     return t1 + t2 + t3 + t4
     
         
