@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from collections import OrderedDict, Iterable
 import importlib
-
+from imp import reload
 
 from wavesynlib.languagecenter.utils import eval_format, auto_subs
 from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting, ModelNode, NodeDict
