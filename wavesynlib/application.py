@@ -326,7 +326,7 @@ wavesyn
                     
                 def new_browse_func(path):
                     def browse_func(*args):
-                        with code_printer:
+                        with code_printer():
                             self.interfaces.os.win_open(path)
                     return browse_func
                     

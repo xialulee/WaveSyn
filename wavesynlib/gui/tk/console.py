@@ -10,7 +10,7 @@ Created on Sun Aug 28 02:49:38 2016
 #import idlelib.AutoCompleteWindow
 #idlelib.AutoCompleteWindow.KEYPRESS_SEQUENCES = ()
 ##########################
-
+import os
 from tkinter import Menu, IntVar
 from tkinter.ttk import Progressbar, Scale, Combobox
 from tkinter import Frame, Label
@@ -457,7 +457,7 @@ Red:   main-thread is busy.''')
         balloon = Scripting.root_node.gui.balloon
 
         def on_progbar_dbclick(app):
-            with code_printer:
+            with code_printer():
                 self.__root_node.interfaces.os.windows.launch(app)
         
         mem_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
@@ -484,8 +484,17 @@ class ConsoleWindow(ModelNode):
         root = app.gui.root
 
         root.title('WaveSyn-Console')
+        
+        def chdir_func(directory, passive):
+            try:
+                with code_printer(not passive):
+                    self.root_node.interfaces.os.chdir(directory=directory)
+            except AttributeError:
+                # While the console node is connecting, several components
+                # are not ready to use. 
+                os.chdir(directory)
 
-        dir_indicator = CWDIndicator()
+        dir_indicator = CWDIndicator(chdir_func=chdir_func)
         dir_indicator.pack(fill='x')
 
         self.__status_bar = status_bar = StatusBar(root)
@@ -549,7 +558,7 @@ class ConsoleWindow(ModelNode):
         filename    = asksaveasfilename(filetypes=[('All types of files', '*.*')])
         if not filename:
             return
-        with code_printer:
+        with code_printer():
             self.save(filename)
             
     
@@ -560,7 +569,7 @@ class ConsoleWindow(ModelNode):
         
         
     def on_clear(self):
-        with code_printer:
+        with code_printer():
             self.clear()
             
 

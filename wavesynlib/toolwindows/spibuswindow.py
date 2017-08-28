@@ -316,7 +316,7 @@ class USBSPIWindow(TkToolWindow, Observable):
         open_or_close = self.__is_opened.get()
         serialno = self.__dev_combo.get()
 
-        with code_printer:
+        with code_printer():
             if open_or_close:
                 self.open_device(serialno)
             else:
@@ -349,7 +349,7 @@ class USBSPIWindow(TkToolWindow, Observable):
         kwargs['read_timeout'] = read_timeout
         kwargs['write_timeout'] = write_timeout
         
-        with code_printer:
+        with code_printer():
             self.configure_device(**kwargs)
     
     @Scripting.printable
@@ -367,7 +367,7 @@ class USBSPIWindow(TkToolWindow, Observable):
             data += '0'
 
         data_list = [int(data[(k*2):(k*2+2)], base=16) for k in range(len(data)//2)]
-        with code_printer:
+        with code_printer():
             self.write_bytes(serial_number=serialno, data=data_list)
         
     @Scripting.printable

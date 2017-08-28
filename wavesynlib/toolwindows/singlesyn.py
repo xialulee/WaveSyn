@@ -4,25 +4,21 @@ Created on Fri May 23 10:45:33 2014
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division
-
-from numpy import *
-import time
-from six.moves.tkinter import *
-from six.moves.tkinter_ttk import *
+from numpy import array, ndarray, angle, log10, convolve, fft, r_, conj
+from tkinter import Frame, IntVar
+from tkinter.ttk import Button, Checkbutton, Progressbar, Combobox
 
 
 from wavesynlib.guicomponents.tk import Group, LabeledEntry
-from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.guicomponents.classselector import ask_class_name
 from wavesynlib.application import Application
 from wavesynlib.toolwindows.figurewindow import FigureWindow
-from wavesynlib.languagecenter.utils import auto_subs, eval_format, set_attributes
+from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting, code_printer
 from wavesynlib.mathtools import Algorithm, AlgorithmDict, AlgorithmNode, DataContainer
 
-import threading
 import json
+
 
 
 class OptimizeGroup(Group):
@@ -30,10 +26,10 @@ class OptimizeGroup(Group):
         self._app = Application.instance    
         self.__topwin = kwargs.pop('topwin')
 
-        super(OptimizeGroup, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
                 
         parameter_frame    = Frame(self)
-        parameter_frame.pack(side=LEFT, expand=YES, fill=Y)
+        parameter_frame.pack(side='left', expand='yes', fill='y')
         self.__num = LabeledEntry(parameter_frame)
         set_attributes(self.__num,
             label_text   = 'num',
@@ -43,7 +39,7 @@ class OptimizeGroup(Group):
             checker_function   = self._app.gui.value_checker.check_int
         )
         self.__num.entry.bind('<Return>', lambda event: self._on_solve_click())
-        self.__num.pack(side=TOP)
+        self.__num.pack(side='top')
 
         self.__pci  = LabeledEntry(parameter_frame)
         set_attributes(self.__pci,
@@ -53,26 +49,26 @@ class OptimizeGroup(Group):
             entry_width  = 8,
             checker_function = self._app.gui.value_checker.check_int
         )
-        self.__pci.pack(side=TOP)
+        self.__pci.pack(side='top')
         
         self.__parallel_checker_variable    = IntVar()
         self.__parallel_checker  = Checkbutton(parameter_frame, text="Parallel", variable=self.__parallel_checker_variable, command=self._on_parallel_checker_click)
         self.__parallel_checker.pack()
         
         progfrm = Frame(self)
-        progfrm.pack(side=LEFT, expand=YES, fill=Y)
+        progfrm.pack(side='left', expand='yes', fill='y')
 
         self.__genbtn = Button(progfrm, text='Generate', command=self._on_solve_click)
-        self.__genbtn.pack(side=TOP)  
-        Button(progfrm, text='Stop', command=self._on_stop_button_click).pack(side=TOP)         
+        self.__genbtn.pack(side='top')  
+        Button(progfrm, text='Stop', command=self._on_stop_button_click).pack(side='top')         
         
         self.__progressbar_variable = IntVar()
         self.__finishedwav = IntVar()        
         self.__progressbar = Progressbar(progfrm, orient='horizontal', variable=self.__progressbar_variable, maximum=100)
-        self.__progressbar.pack(side=LEFT)
+        self.__progressbar.pack(side='left')
         self.__progressbar.config(length=55)   
         self.__finishedwavbar = Progressbar(progfrm, orient='horizontal', variable=self.__finishedwav)
-        self.__finishedwavbar.pack(side=LEFT)
+        self.__finishedwavbar.pack(side='left')
         self.__finishedwavbar.config(length=30)  
 
         self.name = 'Generate'
@@ -89,7 +85,7 @@ class OptimizeGroup(Group):
             run = self.__topwin.current_algorithm.process_run
         else:
             run = self.__topwin.current_algorithm.thread_run
-        with code_printer:
+        with code_printer():
             run(on_finished=['store', 'plot'], progress_indicator='progress_dialog', repeat_times=repeat_times, **params)
 
 
@@ -101,9 +97,9 @@ class OptimizeGroup(Group):
         topwin = self.__topwin
         if topwin.current_algorithm.need_cuda:
             self.__parallel_checker_variable.set(0)
-            topwin.root_node.gui.dialogs.report(eval_format('''{topwin.node_path}:
+            topwin.root_node.gui.dialogs.report(f'''{topwin.node_path}:
 Current algorithm "{topwin.current_algorithm.meta.name}" need CUDA worker, which does not support multi-cpu parallel.
-            '''))
+            ''')
             
             
     def _cancel_parallel(self):
@@ -211,12 +207,12 @@ class AlgoSelGroup(Group):
                 class_name = class_name.decode('utf-8')
             @main_thread_do()
             def load():
-                with code_printer:
+                with code_printer():
                     self._topwin.load_algorithm(module_name=module_name, class_name=class_name)
             
             
     def _on_reload_algorithm(self):
-        with code_printer:
+        with code_printer():
             self._topwin.current_algorithm.reload_algorithm()
 
 
@@ -241,13 +237,13 @@ class SingleWindow(FigureWindow, DataContainer):
         
         frmAlgo = Frame(tool_tabs)
         algorithm_selection_group  = AlgoSelGroup(frmAlgo, topwin=self)
-        algorithm_selection_group.pack(side=LEFT, fill=Y)
+        algorithm_selection_group.pack(side='left', fill='y')
         
         parameter_group = ParamsGroup(frmAlgo, topwin=self)
-        parameter_group.pack(side=LEFT, fill=Y)
+        parameter_group.pack(side='left', fill='y')
         
         solve_group = OptimizeGroup(frmAlgo, topwin=self)
-        solve_group.pack(side=LEFT, fill=Y)
+        solve_group.pack(side='left', fill='y')
         tool_tabs.add(frmAlgo, text='Algorithm')
         
         with self.attribute_lock:

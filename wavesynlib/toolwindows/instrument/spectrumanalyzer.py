@@ -4,13 +4,10 @@ Created on Wed Apr 13 16:40:36 2016
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
 import csv
 import numpy as np
 
-import six.moves.tkinter as tk
+import tkinter as tk
 
 from wavesynlib.guicomponents.tk import json_to_tk
 from wavesynlib.toolwindows.figurewindow import FigureWindow
@@ -18,7 +15,7 @@ from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.interfaces.devcomm.instruments.visainterface import get_resource_manager
 
 
-class RigolDSA1030Driver(object):
+class RigolDSA1030Driver:
     def __init__(self, name=None):
         self.__name = name
         self.__instrument = None
@@ -81,7 +78,7 @@ class SpectrumViewer(FigureWindow):
         tool_tabs = self._tool_tabs
         
         def on_refresh():
-            with code_printer:
+            with code_printer():
                 self.refresh()
         
         widgets_desc = [

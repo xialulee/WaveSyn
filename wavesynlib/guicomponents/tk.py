@@ -4,8 +4,6 @@ Created on Fri Apr 03 15:46:05 2015
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
 import os
 import sys
 import platform
@@ -17,13 +15,10 @@ import cmath
 import json
 import random
 
-import six
-from six import string_types
 from tkinter import Text, Listbox, IntVar, Tk, Toplevel, Canvas
 from tkinter.ttk import Label, Scale, Entry, Button, Scrollbar, Treeview, Combobox
-import six.moves.tkinter_tix as tix
-from six.moves.tkinter import Frame
-#import six.moves.tkinter_font as tkFont
+from tkinter import tix
+from tkinter import Frame
 from tkinter.filedialog import askdirectory, asksaveasfilename
 
 import PIL
@@ -850,12 +845,12 @@ clicking its name.'''
         folderList  = directory.split(os.path.sep)
         cumPath     = ''
         for index, folder in enumerate(folderList):
-            if not isinstance(folder, six.text_type):
+            if not isinstance(folder, str):
                 folder = folder.decode(self._coding, 'ignore')
             cumPath += folder + os.path.sep 
             
             # Configure folder name
-            tagName     = 'folder_name_' + str(index)
+            tagName     = f'folder_name_{str(index)}'
             text.tag_config(tagName)
             text.tag_bind(tagName, '<Button-1>', 
                           lambda evt, cumPath=cumPath: self.change_dir(cumPath))
@@ -869,7 +864,7 @@ clicking its name.'''
             # 'end' Configure folder name
             
             # Configure folder sep
-            sepName     = 'sep_tag_' + str(index)                
+            sepName = f'sep_tag_{str(index)}'                
             text.tag_config(sepName)
             text.tag_bind(sepName, '<Button-1>', 
                           lambda evt, cumPath=cumPath: 
@@ -918,33 +913,46 @@ clicking its name.'''
 
 class CWDIndicator(DirIndicator):
     def __init__(self, *args, **kwargs):
-        DirIndicator.__init__(self, *args, **kwargs)
+        self.__chdir_func = kwargs.pop('chdir_func', None)
+        
+        super().__init__(*args, **kwargs)
                         
         from wavesynlib.interfaces.timer.tk import TkTimer
         self.__timer = TkTimer(self, interval=500)
         self.__timer.add_observer(self)
         self.__timer.active = True
+        
                                                               
     def update(self, *args, **kwargs): 
         '''Method "update" is called by Observable objects. 
 Here, it is called by the timer of CWDIndicator instance.
 Normally, no argument is passed.'''        
         cwd = os.getcwd()
-        if not isinstance(cwd, six.text_type):
+        if not isinstance(cwd, str):
             cwd = cwd.decode(self._coding, 'ignore')
         if os.path.altsep is not None: # Windows OS
             cwd = cwd.replace(os.path.altsep, os.path.sep)
         if self._directory != cwd:
-            self.change_dir(cwd)
+            self.change_dir(cwd, passive=True)
+            
 
-    def change_dir(self, dirname):
-        os.chdir(dirname)  
-        super(CWDIndicator, self).change_dir(dirname)          
+    def change_dir(self, dirname, passive=False):
+        '''Change current working directory.
+dirname: new working directory,
+passive: False if the directory is changed by this widget,
+         True if the directory is changed by other methods.
+'''
+        if self.__chdir_func:
+            self.__chdir_func(dirname, passive)
+        else: # default change dir func
+            os.chdir(dirname)  
+        super().change_dir(dirname)          
                 
 
-class Group(Frame, object):
+
+class Group(Frame):
     def __init__(self, *args, **kwargs):
-        super(Group, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if 'relief' not in kwargs:
             self['relief']  = 'groove'
         if 'bd' not in kwargs:
@@ -952,9 +960,11 @@ class Group(Frame, object):
         self.__lblName  = Label(self)
         self.__lblName.pack(side='bottom')        
 
+
     @property
     def name(self):
         return self.__lblName['text']
+
 
     @name.setter
     def name(self, name):
@@ -1401,7 +1411,7 @@ Example: [
     import tkinter as tk
     import tkinter.ttk as ttk
     
-    if isinstance(json_code, string_types):
+    if isinstance(json_code, str):
         json_obj = json.loads(json_code)
     else:
         # To Do: copy the object, since json_to_tk will change the input. 

@@ -115,7 +115,7 @@ class Dialogs(ModelNode):
             link_str = link.get()
             text_str = text.get()
             target = '' if not blank.get() else 'target="_blank"'
-            with code_printer:
+            with code_printer():
                 self.root_node.interfaces.os.clipboard.write(f'<a href="{link_str}" {target}>{text_str}</a>', html=True)
             win.destroy()
         tkinter.Button(win, text='Ok', command=on_ok).pack()

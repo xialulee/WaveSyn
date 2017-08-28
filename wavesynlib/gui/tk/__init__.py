@@ -4,16 +4,10 @@ Created on Fri Apr 07 17:08:49 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+import tkinter.tix as Tix
 
 
-import six.moves.tkinter_tix as Tix
-
-
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.guicomponents.tk import TaskbarIcon, ValueChecker
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
@@ -27,7 +21,7 @@ class TkNode(ModelNode):
     def __init__(self, *args, **kwargs):
         self.__console_menu = kwargs.pop('console_menu')
         self.__tag_defs = kwargs.pop('tag_defs')
-        super(TkNode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._on_exit = None        
         
         

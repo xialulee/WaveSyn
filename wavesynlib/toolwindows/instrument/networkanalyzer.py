@@ -4,8 +4,6 @@ Created on Fri Mar 11 18:37:32 2016
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
 import os
 
 import numpy as np
@@ -75,7 +73,7 @@ dict(
         self.__filename = ''
             
     def _on_load(self):
-        with code_printer:
+        with code_printer():
             self.load(self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
     
     @Scripting.printable

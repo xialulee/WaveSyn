@@ -60,7 +60,7 @@ Properties inherited from ModelNode:
         
         
     def on_close(self):
-        with code_printer:
+        with code_printer():
             self.close()
         
             
@@ -124,17 +124,17 @@ class WindowManager(ModelNode, WindowComponent):
         
         
     def _on_copy_id_click(self):
-        with code_printer:
+        with code_printer():
             self.copy_window_id()
             
             
     def _on_copy_path_click(self):
-        with code_printer:
+        with code_printer():
             self.copy_window_path()
             
             
     def _on_topmost_click(self):
-        with code_printer:
+        with code_printer():
             topmost = True if self.__topmost.get() else False
             self.set_topmost(topmost)
 

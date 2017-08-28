@@ -4,11 +4,8 @@ Created on Mon Mar 27 15:33:03 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
-import six.moves.tkinter as tk
-import six.moves.tkinter_ttk as ttk
+import tkinter as tk
+from tkinter import ttk
 
 from wavesynlib.guicomponents.tk import ScrolledTree, Group, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
@@ -19,7 +16,7 @@ from wavesynlib.languagecenter.designpatterns import SimpleObserver
 
 class AppTreeview(tk.Frame):
     def __init__(self, *args, **kwargs):
-        tk.Frame.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._make_widgets()
         
         
@@ -55,7 +52,7 @@ class OfficeController(TkToolWindow):
     
     
     def __init__(self):
-        TkToolWindow.__init__(self)
+        super().__init__()
         self._gui_images = []
         tool_tabs = self._tool_tabs
         
@@ -164,7 +161,7 @@ class OfficeController(TkToolWindow):
 
         msoffice = self.root_node.interfaces.msoffice
         
-        with code_printer:
+        with code_printer():
             if get_active:
                 msoffice.get_active(app_name=app_name)
             else:
@@ -211,7 +208,7 @@ class OfficeController(TkToolWindow):
         id_, app_name, txt, is_parent = self.__get_selected()
         if not is_parent:
             kwargs['window'] = txt
-        with code_printer:
+        with code_printer():
             office[id_].utils.insert_psd_image(**kwargs)
     
     
@@ -222,7 +219,7 @@ class OfficeController(TkToolWindow):
             window = txt
         else:
             window = None
-        with code_printer:
+        with code_printer():
             office[id_].utils.update_psd_images(window=window)
     
     
@@ -235,11 +232,11 @@ class OfficeController(TkToolWindow):
     
     
     def __on_copy_path(self):
-        with code_printer:
+        with code_printer():
             self.copy_selected_path()
             
             
     @Scripting.printable
     def close(self):
         self.root_node.interfaces.msoffice.delete_observer(self.__app_observer)
-        super(OfficeController, self).close()
+        super().close()

@@ -4,15 +4,11 @@ Created on Fri Mar 11 13:01:11 2016
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
-
 import os
 import tempfile
 import time
-import six.moves.tkinter as tk
-import six.moves.tkinter_ttk as ttk
+import tkinter as tk
+from tkinter import ttk
 import psd_tools
 
 import numpy as np
@@ -26,7 +22,8 @@ from wavesynlib.languagecenter.utils import MethodDelegator
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 
 
-class LayerTree(object):    
+
+class LayerTree:
     def __init__(self, *args, **kwargs):
         self.__tree_view = tree_view = ScrolledTree(*args, **kwargs)
         tree_view.tree['columns'] = ('visible', 'opacity', 'blend_mode')
@@ -36,39 +33,46 @@ class LayerTree(object):
         tree_view.bind('<<TreeviewSelect>>', self._on_select_change)
         self.__layer_map = {}        
         self.__psd_image = None
+        
                                 
     @property
     def tree_view(self):
         return self.__tree_view
+    
         
     def _add_layer(self, layer, parent=''):
         tree_node = self.__tree_view.insert(
             parent, 
             'end', 
             text=layer.name, 
-            values=(str(layer.visible), str(layer.opacity*100//255)+'%', layer.blend_mode))
+            values=(str(layer.visible), f'{str(layer.opacity*100//255)}%', layer.blend_mode))
         self.__layer_map[tree_node] = layer
         
         if hasattr(layer, 'layers'): # if layer is in fact a Group
             for child in layer.layers:
                 self._add_layer(child, parent=tree_node)
                 
+                
     @property
     def psd_image(self):
         return self.__psd_image
+    
         
     @psd_image.setter
     def psd_image(self, image):
         self.__psd_image = image
         for layer in image.layers:
             self._add_layer(layer)
+            
         
     def _on_select_change(self, event):
         #print(self.__tree_view.selection()[0])
         pass
+    
         
     for method_name in ('pack',):
         locals()[method_name] = MethodDelegator('tree_view', method_name)
+        
                     
                     
 class PSDViewer(TkToolWindow):
@@ -76,7 +80,7 @@ class PSDViewer(TkToolWindow):
 
     
     def __init__(self):
-        TkToolWindow.__init__(self)
+        super().__init__()
         
         tool_tabs = self._tool_tabs
         
@@ -168,7 +172,7 @@ class PSDViewer(TkToolWindow):
         
 
     def _on_load_psd(self):
-        with code_printer:
+        with code_printer():
             self.load(self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
 
     
@@ -197,7 +201,7 @@ class PSDViewer(TkToolWindow):
         
         
     def _on_launch_viewer(self):
-        with code_printer:
+        with code_printer():
             self.launch_viewer()
         
         

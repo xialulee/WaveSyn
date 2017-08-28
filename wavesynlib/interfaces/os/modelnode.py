@@ -271,6 +271,7 @@ except ImportError:
     _get_cpu_percent = None
 
 
+
 class OperatingSystem(ModelNode):
     def _not_implemented(*args, **kwargs):
         raise NotImplementedError
@@ -302,6 +303,11 @@ class OperatingSystem(ModelNode):
     def win_open(self, path):
         func = self._obj_map['winopen']
         return func(path)
+    
+    
+    @Scripting.printable
+    def chdir(self, directory):
+        os.chdir(directory)
         
         
     @Scripting.printable

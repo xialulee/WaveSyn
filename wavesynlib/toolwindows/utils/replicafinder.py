@@ -4,15 +4,13 @@ Created on Wed Feb 03 16:00:18 2016
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
-import six.moves.tkinter as tk
-import six.moves.tkinter_ttk as ttk
+import tkinter as tk
+from tkinter import ttk
 
 import os
-import six.moves._thread as thread
+import _thread as thread
 import threading
-import six.moves.queue
+import queue
 import hashlib
 
 from PIL import ImageTk
@@ -28,25 +26,28 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 _image_dir = os.path.join(get_caller_dir(), 'images')
 
 
+
 def md5_to_string(md5):
     return ''.join(['{:x}'.format(c) for c in md5])
 
+
+
 class ReplicaFinder(Observable, ModelNode):
     def __init__(self, timer=None):
-        Observable.__init__(self)
-        ModelNode.__init__(self)
+        super().__init__()
         self.__block_size = 64 * 2**10
         self.__stop_event = threading.Event()
         self.__dead_event = threading.Event()
         self.__is_alive = False
         self.__result_lock = thread.allocate_lock()
         self.__result = {}
-        self.__queue = six.moves.queue.Queue()
+        self.__queue = queue.Queue()
         
         self.__timer = timer
         if timer is None:
             self.__timer = TkTimer(interval=200, active=False)
         self.__timer.add_observer(SimpleObserver(self._on_timer))
+        
             
     def _on_timer(self):
         while True:
@@ -59,8 +60,9 @@ class ReplicaFinder(Observable, ModelNode):
             try:
                 md5, path, current_dir = self.__queue.get_nowait()
                 self.notify_observers(md5, path, current_dir, stop=not self.__is_alive)
-            except six.moves.queue.Empty:
+            except queue.Empty:
                 break
+            
         
     def _calc_md5(self, filename):
         with open(filename, 'rb') as f:
@@ -71,10 +73,12 @@ class ReplicaFinder(Observable, ModelNode):
                     break
                 m.update(data)
         return m.digest()
+    
         
     @Scripting.printable
     def set_block_size(self, block_size):
         self.__block_size = block_size
+        
         
     @Scripting.printable
     def thread_run(self, path):
@@ -82,6 +86,7 @@ class ReplicaFinder(Observable, ModelNode):
         self.__timer.active = True
         self.__is_alive = True
         thread.start_new_thread(self._thread_finder, (path,))
+        
     
     def _thread_finder(self, path):
         try:
@@ -112,6 +117,7 @@ class ReplicaFinder(Observable, ModelNode):
         finally:
             # Indicating that this thread is dead.
             self.__dead_event.set()
+            
     
     @Scripting.printable
     def stop(self):
@@ -121,15 +127,17 @@ class ReplicaFinder(Observable, ModelNode):
             # Clear the queue
             try:            
                 self.__queue.get_nowait()
-            except six.moves.queue.Empty:
+            except queue.Empty:
                 break
+            
 
 
 class ReplicaTreeview(tk.Frame):
     def __init__(self, *args, **kwargs):
-        tk.Frame.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__md5_dict = {}
         self._make_widgets()
+        
         
     def _make_widgets(self):
         tree_container = ScrolledTree(self)
@@ -155,6 +163,7 @@ class ReplicaTreeview(tk.Frame):
         
         self.__tree.insert(md5_node, 'end', text=os.path.split(path)[-1], 
                            values=(path, str(os.path.getsize(path))))
+        
                            
     def clear(self):
         self.__md5_dict = {}
@@ -168,15 +177,17 @@ class ReplicaTreeview(tk.Frame):
             path = item_properties['values'][0]
         except IndexError:
             return
-        with code_printer:
+        with code_printer():
             Scripting.root_node.interfaces.os.win_open(path)
+            
             
 
 class ReplicaFinderWindow(TkToolWindow):
     window_name = 'WaveSyn-ReplicaFinder'    
     
+    
     def __init__(self):
-        TkToolWindow.__init__(self)
+        super().__init__()
         
         self._gui_images = []
         
@@ -231,7 +242,8 @@ class ReplicaFinderWindow(TkToolWindow):
         self.__busy_light.pack(side='right')     
         self.__current_dir_label = ttk.Label(status_bar)
         self.__current_dir_label.pack(side='right')
-        # } End                 
+        # } End   
+              
         
     def update(self, md5, path, current_dir, stop, laststate=[None]):
         if not stop: 
@@ -246,17 +258,20 @@ class ReplicaFinderWindow(TkToolWindow):
             light = self.__image_green_light if stop else self.__image_red_light
             self.__start_button['state'] = state
             self.__busy_light['image'] = light
+            
                                
     def _on_start_click(self):
         self.__treeview.clear()
         self.__start_button['state'] = 'disabled'
         self.__busy_light['image'] = self.__image_red_light
-        with code_printer:
+        with code_printer():
             self.replica_finder.thread_run(self.__dir_indicator.directory)
+            
         
     def _on_stop_click(self):
-        with code_printer:
+        with code_printer():
             self.replica_finder.stop()
+
 
 
 if __name__ == '__main__':

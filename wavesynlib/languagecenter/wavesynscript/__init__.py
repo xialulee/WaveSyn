@@ -23,13 +23,16 @@ from wavesynlib.languagecenter.designpatterns import Observable
 
 class _ModelTreeMonitor(Observable):
     def __init__(self):
-        Observable.__init__(self)
+        super().__init__()
+        
         
     def _on_add_node(self, node):
         self.notify_observers(node, 'add')
         
+        
     def _on_remove_node(self, node):
         self.notify_observers(node, 'remove')
+        
         
         
 model_tree_monitor = _ModelTreeMonitor()
@@ -38,17 +41,20 @@ model_tree_monitor = _ModelTreeMonitor()
 # http://pypix.com/python/context-managers/        
 class AttributeLock(object):
     def __init__(self, node):
-        super(AttributeLock, self).__init__()
+        super().__init__()
         if not isinstance(node, ModelNode):
             raise TypeError('Only the instance of ModelNode is accepted.')
         self.node   = node
+        
             
     def __enter__(self):
         self.node.attribute_auto_lock = True
         return self.node
+    
         
     def __exit__(self, *dumb):
         self.node.attribute_auto_lock = False
+        
         
         
 # To Do: Implement an on_bind callback which is called when a node is connecting to the tree.    
@@ -198,16 +204,20 @@ then node will have a property named 'a', which cannot be re-assigned.
         
 
                 
-class Dict(dict, object):
+class Dict(dict):
     def __init__(self, *args, **kwargs):
-        super(Dict, self).__init__()
+        super().__init__()
+        
+        
 
 # NodeDict
 class NodeDict(ModelNode, Dict):
-    _xmlrpcexport_  = []    
+    _xmlrpcexport_  = []
+    
     
     def __init__(self, node_name=''):
         super(NodeDict, self).__init__(node_name=node_name)
+        
         
     def __setitem__(self, key, val):
         object.__setattr__(val, 'parent_node', self)
@@ -216,30 +226,36 @@ class NodeDict(ModelNode, Dict):
         Dict.__setitem__(self, key, val)
         val.on_connect()
         
+        
     def __delitem__(self, key):
         model_tree_monitor._on_remove_node(self[key])
         Dict.__delitem__(self, key)
         
+        
     def pop(self, key):
         model_tree_monitor._on_remove_node(self[key])
         Dict.pop(self, key)
+        
 
 
 class List(list, object):
     def __init__(self, *args, **kwargs):
-        super(List, self).__init__()
+        super().__init__()
+        
+        
 
 # NodeList       
 class NodeList(ModelNode, List):
     _xmlrpcexport_  = []
     
     def __init__(self, node_name=''):
-        super(NodeList, self).__init__(node_name=node_name)
+        super().__init__(node_name=node_name)
         self.__element_lock = True
 
     
     def lock_elements(self, lock=True):
         self.__element_lock = lock
+        
         
     def append(self, val):
         object.__setattr__(val, 'parent_node', self)        
@@ -251,6 +267,7 @@ class NodeList(ModelNode, List):
     @property
     def element_lock(self):
         return self.__element_lock
+    
         
     def __update_index(method):
         def func(self, *args, **kwargs):            
@@ -273,6 +290,7 @@ class NodeList(ModelNode, List):
         locals()[method_name]    = MethodLock(method=__update_index(getattr(list, method_name)), lockName='element_lock')    
 # End Object Model
         
+        
 
 # More Node Types
 # File Manager, Manipulator and List
@@ -287,18 +305,21 @@ class FileManipulator(ModelNode):
     @property
     def node_path(self):
         return eval_format('{self.parent_node.node_path}["{self.filename}"]')
+    
         
         
 class FileList(ModelNode):
     def __init__(self, *args, **kwargs):
         filelist = kwargs.pop('filelist')
-        ModelNode.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         with self.attribute_lock:
             self.filelist = filelist
+            
             
     @property
     def node_path(self):
         return eval_format('{self.parent_node.node_path}{repr(self.filelist)}')
+    
             
             
 class FileManager(ModelNode):
@@ -306,9 +327,10 @@ class FileManager(ModelNode):
         filetypes = kwargs.pop('filetypes')
         self.__manipulator_class = kwargs.pop('manipulator_class', None)        
         self.__list_class = kwargs.pop('list_class', None)
-        ModelNode.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         with self.attribute_lock:
             self.filetypes = filetypes
+            
         
     def __getitem__(self, filename):
         dialogs = self.root_node.gui.dialogs
@@ -341,9 +363,10 @@ class FileManager(ModelNode):
         
 # WaveSyn Script Constants
 # To Do: move to datatypes
-class Constant(object):
+class Constant:
     __slots__ = ('__name', '__value')
     __cache = {}
+    
     
     def __new__(cls, name, value=None):
         if name in cls.__cache:
@@ -353,6 +376,7 @@ class Constant(object):
             return c
         else:
             return object.__new__(cls)
+        
     
     def __init__(self, name, value=None):
         if name not in self.__cache:
@@ -360,16 +384,20 @@ class Constant(object):
             self.__value = value
             self.__cache[name] = self
             
+            
     @property
     def name(self):
         return self.__name
+    
         
     @property
     def value(self):
         return self.__value
         
-        
+ 
+       
 constant_names = []
+
 
              
 class Constants(object): 
@@ -390,12 +418,14 @@ class Constants(object):
     def append_new_constant(cls, name, value=None):
         setattr(cls, name, Constant(name, value))
     # End Clipboard Constants
+    
 
 
 def _print_replacement_of_constant(const, value):
     Scripting.root_node.print_tip([{'type':'text', 'content':'''
 The actual value of the place where {0} holds is
   {1}'''.format(const.name, repr(value))}])
+    
 
     
 def constant_handler(print_replacement=True):
@@ -418,12 +448,14 @@ hold by a constant.
         return f    
     return _constant_handler        
 # End WaveSyn Script Constants
+    
 
 
 # Scripting Sub-System
 class ScriptCode(object):
     def __init__(self, code):
         self.code = code
+        
      
      
 class PrintableMethod(object):
@@ -433,7 +465,8 @@ class PrintableMethod(object):
         self.__name__ = func.__name__
         
     def __get__(self, obj, type=None):
-        return self.__func.__get__(obj)        
+        return self.__func.__get__(obj)  
+      
 
         
 class Scripting(ModelNode):
@@ -444,6 +477,7 @@ class Scripting(ModelNode):
     name_space = {'locals':{}, 'globals':{}}
     
     _print_code_flag = False
+    
     
     @staticmethod
     def convert_args_to_str(*args, **kwargs):
@@ -466,13 +500,16 @@ class Scripting(ModelNode):
         else:
             params = strArgs if strArgs else strKwargs
         return params
+    
         
     def __init__(self, root_node):
-        super(Scripting, self).__init__()
+        super().__init__()
         self.__root_node = root_node
+        
             
     def executeFile(self, filename):
         execfile(filename, **self.name_space) #?
+        
                 
     @classmethod    
     def printable(cls, method):
@@ -500,15 +537,28 @@ class Scripting(ModelNode):
         return PrintableMethod(func)
 
 
-class CodePrinter(object):            
+class CodePrinter:
+    def __init__(self, print_=True):
+        self.__print = print_
+
+            
     def __enter__(self):
-        Scripting._print_code_flag = True
+        Scripting._print_code_flag = self.__print
+        
         
     def __exit__(self, *dumb):
         Scripting._print_code_flag = False
 
 
-code_printer = CodePrinter()
+
+_code_printer = CodePrinter(True)
+_null_printer = CodePrinter(False)
+
+def code_printer(print_=True):
+    if print_:
+        return _code_printer
+    else:
+        return _null_printer
 
 
 

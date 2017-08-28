@@ -93,7 +93,7 @@ if action == "read":
         scrolled_text.auto_url_link = True
         
         def on_url_link_click(url):
-            with code_printer:
+            with code_printer():
                 self.root_node.webbrowser_open(url)
                 
         scrolled_text.on_url_link_click = on_url_link_click
@@ -200,7 +200,7 @@ if action == "read":
                     # Generate Map Link
                     if command['source'] == 'location_sensor':
                         def map_link_action(dumb):
-                            with code_printer:
+                            with code_printer():
                                 self.root_node.interfaces.os.map_open(latitude=pos['latitude'], longitude=pos['longitude'])
                             
                         tag_name = scrolled_text.create_link_tag(map_link_action)
@@ -237,12 +237,12 @@ if action == "read":
         
         
     def __on_read_device_clipboard(self, on_finish=None):
-        with code_printer:
+        with code_printer():
             self.read_device_clipboard(on_finish=on_finish)
             
             
     def __on_read_device_location(self, on_finish=None):
-        with code_printer:
+        with code_printer():
             self.read_device_location(on_finish=on_finish)
     
     

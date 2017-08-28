@@ -4,14 +4,11 @@ Created on Fri May 23 15:58:34 2014
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
-from six.moves.tkinter_colorchooser import askcolor
-from six.moves.tkinter import *
-from six.moves.tkinter_ttk import *
-from six.moves.tkinter import Frame, PanedWindow, Label
-from six.moves.tkinter_tkfiledialog import asksaveasfilename
-from six.moves.tkinter_tksimpledialog import askstring
+from tkinter.colorchooser import askcolor
+from tkinter import IntVar, StringVar, Toplevel, Frame, PanedWindow, Label
+from tkinter.ttk import Button, Notebook, Checkbutton, Combobox
+from tkinter.filedialog import asksaveasfilename
+from tkinter.simpledialog import askstring
 
 from PIL import ImageTk
 
@@ -29,7 +26,7 @@ from wavesynlib.languagecenter.wavesynscript import Scripting
 from wavesynlib.languagecenter.utils import (
     auto_subs, eval_format, set_attributes)
 from wavesynlib.languagecenter.wavesynscript import (
-    Scripting, ModelNode, NodeList, code_printer)
+    ModelNode, NodeList, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.guicomponents.tk import (
     Group, LabeledEntry, ScrolledList, LabeledScale)
@@ -43,6 +40,8 @@ color_map = {
     'g': 'forestgreen',
     'b': 'blue'
 }
+
+
 
 def ask_class_name():
     win = Toplevel()
@@ -70,10 +69,11 @@ def ask_class_name():
     return module_name.get(), class_name.get()
 
 
+
 class DataFigure(ModelNode, Observable):
     class Indicators(ModelNode):
         def __init__(self, node_name='', data_figure=None, callback=None):
-            super(DataFigure.Indicators, self).__init__(node_name=node_name)
+            super().__init__(node_name=node_name)
             self.__dataFig  = data_figure
             if data_figure is not None:
                 self.__ax   = data_figure.axes
@@ -81,6 +81,7 @@ class DataFigure(ModelNode, Observable):
             if callback is None:
                 callback    = lambda *args, **kwargs: None
             self.__callback = callback
+            
             
         @Scripting.printable
         def axvspan(self, xmin, xmax, ymin=0, ymax=1, **kwargs):
@@ -97,6 +98,7 @@ class DataFigure(ModelNode, Observable):
                 }
             )
             self.__dataFig.update()
+            
             
         @Scripting.printable
         def axhspan(self, ymin, ymax, xmin=0, xmax=1, **kwargs):
@@ -120,9 +122,10 @@ class DataFigure(ModelNode, Observable):
         @property
         def meta(self):
             return self.__meta
+        
     
     def __init__(self, master, node_name='', figure_size=(5,4), dpi=100, is_polar=False):
-        super(DataFigure, self).__init__(node_name=node_name)
+        super().__init__(node_name=node_name)
         
         figure = Figure(figure_size, dpi)
         
@@ -132,7 +135,7 @@ class DataFigure(ModelNode, Observable):
         self.__canvas = canvas
         toolbar = NavigationToolbar2TkAgg(canvas, master)
         toolbar.update()
-        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=YES)
+        canvas.get_tk_widget().pack(side='top', fill='both', expand='yes')
         toolbar.pack()       
         
         # canvas.mpl_connect('button_press_event', lambda event:print(event)) # test mpl_connect
@@ -155,48 +158,58 @@ class DataFigure(ModelNode, Observable):
         self.__minor_grid    = False
 
         self.__indicatorsMeta   = []
+        
 
     @property
     def node_path(self):
         if isinstance(self.parent_node, FigureList):
             return eval_format('{self.parent_node.node_path}[{self.index}]')
         else:
-            return ModelNode.node_path               
+            return ModelNode.node_path  
+             
         
     def plot(self, *args, **kwargs):
         line_object = self.axes.plot(*args, **kwargs)
         self.line_objects.append(line_object)
         self.update()
         
+        
     def show_image(self, *args, **kwargs):
         self.axes.imshow(*args, **kwargs)
         self.update()
+        
                                
     @property
     def major_grid(self):
         return self.__major_grid
+    
         
     @major_grid.setter
     def major_grid(self, val):
         self.__major_grid    = val
         self.axes.grid(val, 'major')
         
+        
     @property
     def minor_grid(self):
         return self.__minor_grid
+    
         
     @minor_grid.setter
     def minor_grid(self, val):
         self.__minor_grid    = val
         self.axes.grid(val, 'minor')
         
+        
     @property
     def xlim(self):
         return self.axes.get_xlim()
+    
         
     @property
     def ylim(self):
         return self.axes.get_ylim()
+    
         
     def get_tick(self, name):
         ax          = self.axes
@@ -207,6 +220,7 @@ class DataFigure(ModelNode, Observable):
             return tick
         else:
             return None
+        
     
     @Scripting.printable        
     def set_tick(self, name, val):
@@ -215,6 +229,7 @@ class DataFigure(ModelNode, Observable):
         if val is not None:
             getattr(getattr(ax, meth[0]), 'set_'+meth[1])(MultipleLocator(float(val)))
         self.update()
+        
             
     tick_parameters  = {
         'major_x_tick':   ('xaxis', 'major_locator'), 
@@ -226,6 +241,7 @@ class DataFigure(ModelNode, Observable):
         prop = property(lambda self, name=param: self.get_tick(name))
         locals()[param] = prop.setter(lambda self, val, name=param: 
                                       self.set_tick(name, val))
+            
 
     @Scripting.printable
     def turn_grid(self, b, which='major', axis='both', **kwargs):
@@ -237,10 +253,12 @@ class DataFigure(ModelNode, Observable):
             self.__minor_grid    = b            
         self.update()
 
+
     @Scripting.printable    
     def update(self):
         self.__canvas.show()
         self.notify_observers()
+        
 
     @Scripting.printable
     def copy_bitmap(self, dpi=300):
@@ -263,27 +281,32 @@ class DataFigure(ModelNode, Observable):
             clipb.image2clipb(filename)
         finally:
             remove(filename)
+            
 
     @Scripting.printable
     def set_title(self, title):
         self.axes.set_title(title)
         self.update()
+        
                                
     def clear(self):
         self.axes.clear()
         del self.line_objects[:]
         self.update()
+        
    
     @Scripting.printable    
     def axis(self, r):
         retval  = self.axes.axis(r)
         self.update()
         return retval
+    
         
     @Scripting.printable
     def auto_scale(self):
         self.axes.autoscale()
         self.update()
+        
             
     def delete_line(self, index):
         line_object = self.line_objects[index]
@@ -308,12 +331,13 @@ class DataFigure(ModelNode, Observable):
         
 class FigureList(NodeList):
     def __init__(self, node_name=''):
-        super(FigureList, self).__init__(node_name=node_name)
+        super().__init__(node_name=node_name)
         
     def append(self, val):        
         if not isinstance(val, DataFigure):
             raise TypeError(eval_format('{self.node_path} only accepts instance of DataFigure or of its subclasses.'))
         NodeList.append(self, val)
+        
         
 
 class FigureBook(Observable, FigureList):         
@@ -335,13 +359,14 @@ major_y_tick: the y axis' ...
 minor_x_tick: the x axis' tick of the minor grid.
 minor_y_tick: the y axis' ...'''    
 
-    class GridGroupObserver(object):
+    class GridGroupObserver:
         '''This class is used by FigureBook. FigureBook is a class supports observable protocal.
 Meanwhile, FigureBook can also observe other objects. This class, GridGroupObserver, can be used to observe
 an instance of the GridGroup class.     
     '''
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
+            
             
         def update(self, major_grid, minor_grid, props=None):
             if not props:
@@ -352,19 +377,22 @@ an instance of the GridGroup class.
             minor_grid = switch_name_map[minor_grid]
             
             current_figure = self.__figure_book.current_figure
-            with code_printer:
+            with code_printer():
                 current_figure.turn_grid(major_grid, which='major', 
                                          **props['major'])
                 current_figure.turn_grid(minor_grid, which='minor', 
-                                         **props['minor'])                   
+                                         **props['minor']) 
+
+                  
             
-    class AxisGroupObserver(object):
+    class AxisGroupObserver:
         def __init__(self, figure_book):
-            self.__figure_book   = figure_book
+            self.__figure_book = figure_book
+            
             
         def update(self, xlim, ylim, major_x_tick, major_y_tick, minor_x_tick, minor_y_tick, auto_scale=False):
-            with code_printer:
-                current_figure   = self.__figure_book.current_figure
+            with code_printer():
+                current_figure = self.__figure_book.current_figure
                 if auto_scale:
                     current_figure.auto_scale()
                     return
@@ -379,31 +407,37 @@ an instance of the GridGroup class.
                 for XY in ('x_', 'y_'):
                     for mm in ('major_', 'minor_'):
                         current_figure.set_tick(mm+XY+'tick', locals()[mm+XY+'tick'])
+                        
+                        
 
-    class ClearGroupObserver(object):
+    class ClearGroupObserver:
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
         def update(self, delType):           
-            with code_printer:
+            with code_printer():
                 if delType == 'all':
                     self.__figure_book.clear()
                 elif delType == 'sel':
                     self.__figure_book.delete_selected_lines(index=None)
                 else:
                     return
+                
+                
 
-    class LabelGroupObserver(object):
+    class LabelGroupObserver:
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
         def update(self, labelType, labelString):
             nameMap     = {'title':'set_title', 'xlabel':'setXLabel', 'ylabel':'setYLabel'}            
-            with code_printer:
+            with code_printer():
                 current_figure   = self.__figure_book.current_figure
                 getattr(current_figure, nameMap[labelType])(labelString)
+                
+                
                         
-    class IndicatorGroupObserver(object):
+    class IndicatorGroupObserver:
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
@@ -417,17 +451,21 @@ an instance of the GridGroup class.
                     the_max  = meta['ymax']
                 props   = meta['props']
 
-                with code_printer:
+                with code_printer():
                     getattr(self.__figure_book.current_figure.indicators, 
                             meta['type'])(the_min, the_max, **props)
                     self.__figure_book.update_indicator_list()
+                    
+                    
                 
-    class DataFigureObserver(object):
+    class DataFigureObserver:
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
+            
         def update(self, *args, **kwargs):
             self.__figure_book.notify_observers(*args, **kwargs)
+            
         
     def __init__(self, *args, **kwargs):
         '''
@@ -436,15 +474,15 @@ figure_meta: Meta information of figure.
 The rest parameters are passed to PanedWindow.__init__.
 '''
         node_name    = kwargs.pop('node_name', '')
-        super(FigureBook, self).__init__(node_name=node_name)
+        super().__init__(node_name=node_name)
 
         figure_meta = None if 'figure_meta' not in kwargs \
             else kwargs.pop('figure_meta')
-        kwargs['orient'] = HORIZONTAL
+        kwargs['orient'] = 'horizontal'
         
         paned_window = PanedWindow(*args, **kwargs)
 
-        paned_window.config(sashwidth=4, sashrelief=GROOVE, bg='forestgreen')        
+        paned_window.config(sashwidth=4, sashrelief='groove', bg='forestgreen')        
        
 #        figureTabsStyle = Style()
 #        figureTabsStyle.configure('Figure.TNotebook', tabposition='sw')       
@@ -463,25 +501,25 @@ The rest parameters are passed to PanedWindow.__init__.
         paned_window.add(figureTabs, stretch='always')
         
 
-        listPan     = PanedWindow(paned_window, orient=VERTICAL)
-        listPan.config(sashwidth=4, sashrelief=GROOVE, bg='forestgreen')        
+        listPan     = PanedWindow(paned_window, orient='vertical')
+        listPan.config(sashwidth=4, sashrelief='groove', bg='forestgreen')        
         paned_window.add(listPan, stretch='never')
 
         
         listFrm     = Frame(listPan)
         listPan.add(listFrm, stretch='always')        
-        Label(listFrm, text='Curves', bg='#b5d6b0').pack(side=TOP, fill=X)                
-        self.__list = ScrolledList(listFrm, relief=GROOVE)
+        Label(listFrm, text='Curves', bg='#b5d6b0').pack(side='top', fill='x')
+        self.__list = ScrolledList(listFrm, relief='groove')
         self.__list.list_config(width=20)
         self.__list.list_click_callback = self._on_list_click
-        self.__list.pack(fill=BOTH, expand=YES)  
+        self.__list.pack(fill='both', expand='yes')
 
         listFrm     = Frame(listPan)        
         listPan.add(listFrm, stretch='never')
-        Label(listFrm, text='Indicators', bg='#b5d6b0').pack(side=TOP, fill=X)
-        self.__indicator_listbox = ScrolledList(listFrm, relief=GROOVE)
+        Label(listFrm, text='Indicators', bg='#b5d6b0').pack(side='top', fill='x')
+        self.__indicator_listbox = ScrolledList(listFrm, relief='groove')
         self.__indicator_listbox.list_config(width=20)
-        self.__indicator_listbox.pack(fill=BOTH, expand=YES)
+        self.__indicator_listbox.pack(fill='both', expand='yes')
                       
         with self.attribute_lock:
             set_attributes(self,
@@ -495,9 +533,11 @@ The rest parameters are passed to PanedWindow.__init__.
                 data_pool    = []
             )
             
+            
     def append(self, val):
         val.add_observer(self.data_figure_observer)
         return super(FigureBook, self).append(val)
+    
             
     def notify_observers(self, **kwargs):
         current_figure = self.current_figure
@@ -515,10 +555,12 @@ The rest parameters are passed to PanedWindow.__init__.
             if kwargs['minor_x_tick'] is not None:
                 kwargs['minor_x_tick']    = rad2deg(kwargs['minor_x_tick'])
                 
-        super(FigureBook, self).notify_observers(**kwargs)            
+        super().notify_observers(**kwargs)       
+        
         
     def pack(self, *args, **kwargs):
-        self.paned_window.pack(*args, **kwargs)        
+        self.paned_window.pack(*args, **kwargs)  
+        
         
     def make_figures(self, figure_meta):
         for meta in figure_meta:
@@ -526,14 +568,17 @@ The rest parameters are passed to PanedWindow.__init__.
             fig = DataFigure(frm, is_polar=meta['polar'])
             self.figureTabs.add(frm, text=meta['name'])
             self.append(fig)        
+            
         
     @property        
     def current_figure(self):
-        return self[self.figureTabs.index(CURRENT)]
+        return self[self.figureTabs.index('current')]
+    
         
     @property
     def current_figure_index(self):
-        return self.figureTabs.index(CURRENT)
+        return self.figureTabs.index('current')
+    
                 
     def plot(self, *args, **kwargs):
         try:
@@ -543,7 +588,7 @@ The rest parameters are passed to PanedWindow.__init__.
             
         for figure in self:
             figure.plot_function(*args, **kwargs)
-        self.__list.insert(END, curve_name)
+        self.__list.insert('end', curve_name)
         
         if 'color' in kwargs:
             color = color_map[kwargs['color']]
@@ -551,8 +596,9 @@ The rest parameters are passed to PanedWindow.__init__.
             color = self[0].line_objects[-1][0].get_color()
             color = color_map.get(color, color)
             
-        self.__list.item_config(END, fg=color)
+        self.__list.item_config('end', fg=color)
         self.notify_observers()
+    
     
     @Scripting.printable
     def clear(self):
@@ -563,10 +609,12 @@ The rest parameters are passed to PanedWindow.__init__.
         self.current_figure.indicators.clear()
         self.update_indicator_list()
         self.notify_observers(major_grid=False, minor_grid=False)
+        
 
     def _on_tab_change(self, event): 
         self.notify_observers()
-        self.update_indicator_list()          
+        self.update_indicator_list()     
+        
         
     def _on_list_click(self, index, label):
         index = int(index)
@@ -575,6 +623,7 @@ The rest parameters are passed to PanedWindow.__init__.
                 pyplot.setp(line, linewidth=1)
             pyplot.setp(figure.line_objects[index], linewidth=2)
             figure.update()
+            
             
     @Scripting.printable            
     def export_matlab_script(self, filename):
@@ -592,6 +641,7 @@ The rest parameters are passed to PanedWindow.__init__.
                     params['ydata'] = ','.join((str(i) for i in params['ydata']))
                     print("{func}([{xdata}], [{ydata}], '{color}');hold on".format(**params), file=file)
                     # To do: Grid
+                    
                                         
     @Scripting.printable                    
     def delete_selected_lines(self, index=None):
@@ -609,24 +659,26 @@ The rest parameters are passed to PanedWindow.__init__.
         self.__list.delete(index)
         del self.data_pool[index]
         
+        
     def update_indicator_list(self):
         listbox = self.__indicator_listbox
-        listbox.delete(0, END)
+        listbox.delete(0, 'end')
         
         meta = self.current_figure.indicators.meta
         for m in meta:
             if m['type'] == 'axvspan':
                 xmin    = m['xmin']
                 xmax    = m['xmax']
-                listbox.insert(END, '{0}|{1}/{2}'.format('axvspan',xmin,xmax))
+                listbox.insert('end', '{0}|{1}/{2}'.format('axvspan',xmin,xmax))
             elif m['type'] == 'axhspan':
                 ymin    = m['ymin']
                 ymax    = m['ymax']
-                listbox.insert(END, '{0}|{1}/{2}'.format('axhspan',ymin,ymax))
+                listbox.insert('end', '{0}|{1}/{2}'.format('axhspan',ymin,ymax))
+                
         
 
 class GridGroup(Observable, Group):
-    class FigureObserver(object):
+    class FigureObserver:
         def __init__(self, grid_group):
             self.__grid_group    = grid_group
             
@@ -634,7 +686,8 @@ class GridGroup(Observable, Group):
             if 'major_grid' in kwargs:
                 self.__grid_group.major_checkbox = kwargs['major_grid']
             if 'minor_grid'  in kwargs:
-                self.__grid_group.minor  = kwargs['minor_grid']    
+                self.__grid_group.minor  = kwargs['minor_grid']  
+                
     
     def __init__(self, *args, **kwargs):
         if 'value_checker' in kwargs:
@@ -646,7 +699,7 @@ class GridGroup(Observable, Group):
         if 'balloon' in kwargs:
             kwargs.pop('balloon')
         
-        super(GridGroup, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         self.__gui_images = []
         
@@ -724,7 +777,7 @@ class GridGroup(Observable, Group):
                                              compound='left',
                                              variable=major, 
                                              command=self._on_check_click)
-        major_grid_checkbutton.pack(fill=X)
+        major_grid_checkbutton.pack(fill='x')
         self.major_grid_checkbutton = major_grid_checkbutton
         
         icon = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path('GridTab_Minor.png'))
@@ -734,7 +787,7 @@ class GridGroup(Observable, Group):
                                              compound='left',
                                              variable=minor, 
                                              command=self._on_check_click)
-        minor_grid_checkbutton.pack(fill=X)
+        minor_grid_checkbutton.pack(fill='x')
         self.minor_grid_checkbutton = minor_grid_checkbutton        
         
         property_button = Button(self, text='Property', 
@@ -752,15 +805,17 @@ class GridGroup(Observable, Group):
         self.notify_observers(major_grid=self.__major.get(), 
                               minor_grid=self.__minor.get())
                 
-    class __EnableDelegator(object):
+        
+    class __EnableDelegator:
         def __init__(self, widget_name):
             self.widget_name = widget_name
             
         def __get__(self, obj, type=None):
             def enable(state):                
-                en  = NORMAL if state else DISABLED
+                en  = 'normal' if state else 'disabled'
                 getattr(obj, self.widget_name).config(state=en)
             return enable
+        
             
     enableWidgets   = dict(
         enableGridMajor = 'major_grid_checkbutton',
@@ -768,28 +823,34 @@ class GridGroup(Observable, Group):
         enableProperty  = 'property_button'
     )
     
+    
     for method_name in enableWidgets:
         locals()[method_name] = __EnableDelegator(enableWidgets[method_name])
+        
         
     @property
     def major_checkbox(self):
         return self.__major.get()
+    
 
     @major_checkbox.setter
     def major_checkbox(self, value):
         self.__major.set(value)
+        
 
     @property
     def minor(self):
         return self.__minor.get()
+    
 
     @minor.setter
     def minor(self, value):
         self.__minor.set(value)  
+        
 
 
 class AxisGroup(Observable, Group):
-    class FigureObserver(object):
+    class FigureObserver:
         def __init__(self, axis_group):
             self.__axis_group    = axis_group            
         def update(self, **kwargs):
@@ -803,6 +864,7 @@ class AxisGroup(Observable, Group):
                 self.__axis_group.xlim   = kwargs['xlim']
             if 'ylim' in kwargs:
                 self.__axis_group.ylim   = kwargs['ylim']
+                
     
     def __init__(self, *args, **kwargs):
         if 'value_checker' in kwargs:
@@ -840,36 +902,43 @@ class AxisGroup(Observable, Group):
 
         btnfrm = Frame(self)
         btnfrm.pack()
-        Button(btnfrm, text='Confirm', command=self._on_confirm_button_click).pack(side=LEFT)
-        Button(btnfrm, text='Auto', command=self._on_auto_button_click).pack(side=RIGHT)
+        Button(btnfrm, text='Confirm', command=self._on_confirm_button_click).pack(side='left')
+        Button(btnfrm, text='Auto', command=self._on_auto_button_click).pack(side='right')
         self.name = 'Axis'        
         self.__figure_observer   = self.FigureObserver(self)
+        
 
     @property
     def figure_observer(self):
         return self.__figure_observer
+    
 
     @property
     def xlim(self):
         return tuple(map(lambda svar: float(svar.get()), self.__params[0:2]))
+    
 
     @xlim.setter
     def xlim(self, value):
         self.__params[0].set(str(value[0]))
         self.__params[1].set(str(value[1]))
+        
 
     @property
     def ylim(self):
         return tuple(map(lambda svar: float(svar.get()), self.__params[2:4]))
+    
 
     @ylim.setter
     def ylim(self, value):
         self.__params[2].set(str(value[0]))
         self.__params[3].set(str(value[1]))
+        
                
     for property_name, property_index   in (('major_x_tick', 4), ('major_y_tick', 5), ('minor_x_tick', 6), ('minor_y_tick', 7)):
         prop  = property(lambda self, index=property_index: float(self.__params[index].get()))
         locals()[property_name]  = prop.setter(lambda self, val, index=property_index: self.__params[index].set(str(val)))
+
 
     def _on_confirm_button_click(self, event=None):
         def to_float(x):
@@ -880,51 +949,61 @@ class AxisGroup(Observable, Group):
         p = [to_float(v.get()) for v in self.__params]
         self.notify_observers(xlim=p[0:2], ylim=p[2:4], major_x_tick=p[4], major_y_tick=p[5], minor_x_tick=p[6], minor_y_tick=p[7])
 
+
     def _on_auto_button_click(self):
         self.notify_observers(xlim=None, ylim=None, major_x_tick=None, major_y_tick=None, minor_x_tick=None, minor_y_tick=None, auto_scale=True)
 
 
+
 class ClearGroup(Observable, Group):
     def __init__(self, *args, **kwargs):
-        super(ClearGroup, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         Button(self, text='Clear All', command=self._on_clear_all).pack()
         Button(self, text='Del Sel', command=self._on_delete_selected).pack()
         Button(self, text='Del UnSel', command=self.onDelUnSel).pack()
         self.name = 'Clear Plot'
+        
 
     def _on_clear_all(self):
         self.notify_observers('all')
+        
 
     def _on_delete_selected(self):
         self.notify_observers('sel')
+        
 
     def onDelUnSel(self):           
         raise NotImplementedError
 
 
+
 class LabelGroup(Observable, Group):
     def __init__(self, *args, **kwargs):
-        super(LabelGroup, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         Button(self, text='Title', command=self._on_title_click).pack()
         Button(self, text='Label', command=self._on_label_click).pack()
         Button(self, text='Legend', command=self._on_legend_click).pack()
         self.name   = 'Label'
         
+        
     def _on_title_click(self):
         title_string = askstring('Title', 
                                  'Enter the title of current figure:')
         self.notify_observers('title', title_string)
+        
     
     def _on_label_click(self):
         raise NotImplementedError
+        
     
     def _on_legend_click(self):
         raise NotImplementedError
+        
 
 
 class IndicatorGroup(Observable, Group):
     def __init__(self, *args, **kwargs):
-        super(IndicatorGroup, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__indicator_combo = indicator_combo = Combobox(self, value=[], 
                                                             takefocus=1, 
                                                             stat='readonly', 
@@ -934,6 +1013,7 @@ class IndicatorGroup(Observable, Group):
         indicator_combo.pack()
         Button(self, text='Add', command=self._on_add).pack()
         self.name = 'Indicators'
+        
         
     def _on_add(self):
         indicatorType = self.__indicator_combo.get()
@@ -981,30 +1061,38 @@ class IndicatorGroup(Observable, Group):
                 meta['xmax']    = 1.0
                 meta['ymin']    = the_min
                 meta['ymax']    = the_max
-            self.notify_observers(meta)            
+            self.notify_observers(meta) 
+            
 
 
 class FigureExportGroup(Group): # To Do: Use observer protocol.
     def __init__(self, *args, **kwargs):
         self._app = Scripting.root_node
         self.__topwin = kwargs.pop('topwin')
-        super(FigureExportGroup, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__gui_images = []
         imageFigureExportBtn = ImageTk.PhotoImage(
             file=Scripting.root_node.get_gui_image_path('Pattern_ExportFigure_Button.png')
         )
         self.__gui_images.append(imageFigureExportBtn)
-        frm = Frame(self); frm.pack(side=LEFT)
-        Button(frm, image=imageFigureExportBtn, command=self._on_export_matlab_script).pack(side=TOP)
-        Button(frm, text='Script', command=self._on_export_matlab_script, width=6).pack(side=TOP)
+        frm = Frame(self); frm.pack(side='left')
+        Button(
+            frm, 
+            image=imageFigureExportBtn, 
+            command=self._on_export_matlab_script).pack(side='top')
+        Button(
+            frm, 
+            text='Script', 
+            command=self._on_export_matlab_script, width=6).pack(side='top')
         
         self.name = 'Figure'
+        
         
     def _on_export_matlab_script(self):
         filename = asksaveasfilename(filetypes=[('Matlab script files', '*.m')])
         if not filename:
             return
-        with code_printer:
+        with code_printer():
             self.__topwin.figure_book.export_matlab_script(filename)
         self._app.print_tip(
             auto_subs(
@@ -1012,60 +1100,67 @@ class FigureExportGroup(Group): # To Do: Use observer protocol.
 By running this script, Matlab will literally "re-plot" the curves shown here.'''
             )
         ) 
+            
                 
                 
 class FigureWindow(TkToolWindow):
-    _xmlrpcexport_  = ['plot_current_data']    
+    _xmlrpcexport_  = ['plot_current_data']  
+    
     
     def __init__(self, *args, **kwargs):
-        super(FigureWindow, self).__init__(*args, **kwargs)               
+        super().__init__(*args, **kwargs)               
         
         figure_book = FigureBook(self.tk_object)
-        figure_book.pack(expand=YES, fill=BOTH)                
+        figure_book.pack(expand='yes', fill='both')
         self.figure_book = figure_book
         
         app = Scripting.root_node
         self.balloon = app.gui.balloon
         self.value_checker = app.gui.value_checker
+        
                 
     @property
     def current_data(self):
         if self.figure_book.data_pool:
             return self.figure_book.data_pool[-1]
+        
             
     @current_data.setter
     def current_data(self, data):
         if data is not None:
             self.figure_book.data_pool.append(data)
             
+            
     @property
     def data_pool(self):
         return self.figure_book.data_pool
+    
         
     def data_pool_append(self, data):
         self.figure_book.data_pool.append(data)
+        
            
     def _make_view_tab(self):
         tool_tabs    = self._tool_tabs
         view_frame = Frame(tool_tabs)
         
-        grid_group = GridGroup(view_frame, bd=2, relief=GROOVE, 
+        grid_group = GridGroup(view_frame, bd=2, relief='groove', 
                                balloon=self.balloon, 
                                value_checker=self.value_checker)
-        grid_group.pack(side=LEFT, fill=Y)
+        grid_group.pack(side='left', fill='y')
         grid_group.add_observer(self.figure_book.grid_group_observer)
         self.figure_book.add_observer(grid_group.figure_observer)
               
-        axis_group = AxisGroup(view_frame, bd=2, relief=GROOVE, 
+        axis_group = AxisGroup(view_frame, bd=2, relief='groove', 
                                balloon=self.balloon, 
                                value_checker=self.value_checker)
-        axis_group.pack(side=LEFT, fill=Y)
+        axis_group.pack(side='left', fill='y')
         axis_group.add_observer(self.figure_book.axis_group_observer)
         self.figure_book.add_observer(axis_group.figure_observer)
       
         
-        clear_group = ClearGroup(view_frame, bd=2, relief=GROOVE)
-        clear_group.pack(side=LEFT, fill=Y)
+        clear_group = ClearGroup(view_frame, bd=2, relief='groove')
+        clear_group.pack(side='left', fill='y')
         clear_group.add_observer(self.figure_book.clear_group_observer)
         
         
@@ -1081,15 +1176,15 @@ class FigureWindow(TkToolWindow):
         
         
     def _make_marker_tab(self):
-        tool_tabs    = self._tool_tabs
-        marker_frame   = Frame(tool_tabs)
+        tool_tabs = self._tool_tabs
+        marker_frame = Frame(tool_tabs)
         
-        label_group        = LabelGroup(marker_frame, bd=2, relief=GROOVE)
-        label_group.pack(side=LEFT, fill=Y)
+        label_group = LabelGroup(marker_frame, bd=2, relief='groove')
+        label_group.pack(side='left', fill='y')
         label_group.add_observer(self.figure_book.label_group_observer)        
         
-        indicator_group    = IndicatorGroup(marker_frame, bd=2, relief=GROOVE)
-        indicator_group.pack(side=LEFT, fill=Y)
+        indicator_group    = IndicatorGroup(marker_frame, bd=2, relief='groove')
+        indicator_group.pack(side='left', fill='y')
         indicator_group.add_observer(self.figure_book.indicator_group_observer)
         
         with self.attribute_lock:
@@ -1105,8 +1200,8 @@ class FigureWindow(TkToolWindow):
         tool_tabs = self._tool_tabs
         export_frame = Frame(tool_tabs)
         figure_export_group = FigureExportGroup(export_frame, bd=2, 
-                                                relief=GROOVE, topwin=self)
-        figure_export_group.pack(side=LEFT, fill=Y)
+                                                relief='groove', topwin=self)
+        figure_export_group.pack(side='left', fill='y')
         
         with self.attribute_lock:
             set_attributes(self,

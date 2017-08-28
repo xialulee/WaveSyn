@@ -4,23 +4,21 @@ Created on Sun Feb 14 23:32:52 2016
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
-import six.moves.tkinter as tk
-import six.moves.tkinter_ttk as ttk
+import tkinter as tk
+from tkinter import ttk
 
 from wavesynlib.interfaces.os.windows import disablekeys
 from wavesynlib.guicomponents.tk import Group
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.languagecenter.wavesynscript import code_printer, Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import code_printer, Scripting
+
 
 
 class KeyboardToolWindow(TkToolWindow):
     window_name = 'WaveSyn-KeyboardTool'
     
     def __init__(self):
-        TkToolWindow.__init__(self)
+        super().__init__()
         
         disable_tab = tk.Frame(self._tool_tabs)
         self._tool_tabs.add(disable_tab, text='Disable')        
@@ -37,7 +35,7 @@ class KeyboardToolWindow(TkToolWindow):
         
         def callback(code, var):
             enable = False if var.get() else True
-            with code_printer:
+            with code_printer():
                 self.enable_key(enable, code)
         
         for n in range(2):
@@ -48,6 +46,7 @@ class KeyboardToolWindow(TkToolWindow):
         # }        
         
         self._make_window_manager_tab()
+        
         
     @Scripting.printable
     def enable_key(self, enable, key_name):
