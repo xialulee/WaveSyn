@@ -4,36 +4,37 @@ Created on Thu Aug 18 22:01:43 2016
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
 import os
 
-from six.moves import tkinter
-from six.moves.tkinter_tksimpledialog import askstring, askinteger
-from six.moves.tkinter_messagebox import showinfo, askyesno
-from six.moves.tkinter_tkfiledialog import asksaveasfilename, askopenfilename, askopenfilenames, askdirectory
+import tkinter
+from tkinter.simpledialog import askstring, askinteger
+from tkinter.messagebox import showinfo, askyesno
+from tkinter.filedialog import asksaveasfilename, askopenfilename, askopenfilenames, askdirectory
 
 from wavesynlib.guicomponents.tk import ask_list_item
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, constant_handler, code_printer
-from wavesynlib.languagecenter.utils import eval_format
 
 
 class Dialogs(ModelNode):    
     def __init__(self, *args, **kwargs):
-        ModelNode.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+        
         
     @constant_handler() 
     def support_ask_yesno(self, arg, **kwargs):
-        return askyesno(**kwargs)            
+        return askyesno(**kwargs)    
+        
         
     @constant_handler()
     def support_ask_integer(self, arg, **kwargs):
         return askinteger(**kwargs)
+    
                 
     @constant_handler()
     def support_ask_list_item(self, arg, **kwargs):
         return ask_list_item(**kwargs)
+    
     
     @constant_handler()
     def support_ask_files(self, arg, **kwargs):
@@ -49,6 +50,7 @@ class Dialogs(ModelNode):
         showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
         return arg
     
+    
     @constant_handler()
     def support_ask_ordered_files(self, arg, **kwargs):
         file_list = []
@@ -61,7 +63,8 @@ class Dialogs(ModelNode):
                 break
         arg = file_list
         showinfo('File List', 'The following files are selected:\n' + '\n'.join(arg))
-        return arg    
+        return arg   
+    
         
     @constant_handler()
     def support_ask_directory(self, arg, **kwargs):
@@ -70,10 +73,12 @@ class Dialogs(ModelNode):
     @constant_handler()
     def support_ask_open_filename(self, arg, **kwargs):
         return askopenfilename(**kwargs)
+    
         
     @constant_handler()
     def support_ask_saveas_filename(self, arg, **kwargs):
         return asksaveasfilename(**kwargs)
+    
         
     @constant_handler()
     def support_ask_slice(self, arg, **kwargs):
@@ -90,6 +95,7 @@ class Dialogs(ModelNode):
         else:
             arg = slice(*user_input)            
         return arg
+    
         
     def copy_link_text(self):
         win = tkinter.Toplevel()
@@ -110,7 +116,7 @@ class Dialogs(ModelNode):
             text_str = text.get()
             target = '' if not blank.get() else 'target="_blank"'
             with code_printer:
-                self.root_node.interfaces.os.clipboard.write(eval_format('<a href="{link_str}" {target}>{text_str}</a>'), html=True)
+                self.root_node.interfaces.os.clipboard.write(f'<a href="{link_str}" {target}>{text_str}</a>', html=True)
             win.destroy()
         tkinter.Button(win, text='Ok', command=on_ok).pack()
         

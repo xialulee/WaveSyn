@@ -4,15 +4,11 @@ Created on Sun Aug 28 02:49:38 2016
 
 @author: Feng-cong Li
 """
-from __future__ import division, print_function, unicode_literals
-
 # Some console functionalities are implemented by idlelib
 ##########################
 #from idlelib.AutoComplete import AutoComplete
 #import idlelib.AutoCompleteWindow
 #idlelib.AutoCompleteWindow.KEYPRESS_SEQUENCES = ()
-#from idlelib.Percolator import Percolator
-#from idlelib.ColorDelegator import ColorDelegator
 ##########################
 
 from tkinter import Menu, IntVar
@@ -29,12 +25,12 @@ import traceback
 from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText
 from wavesynlib.guicomponents.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
-from wavesynlib.languagecenter.utils import auto_subs, eval_format
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter.python import prog as prog_pattern
 from wavesynlib.status import busy_doing
+
 
 
 def make_menu(win, menu, json=False):
@@ -75,7 +71,8 @@ def make_menu(win, menu, json=False):
     win.config(menu=top)
     
     
-class History(object):
+    
+class History:
     '''Class for supporting console history.'''
     def __init__(self, max_records=50):
         self.__max_records = max_records
@@ -208,8 +205,8 @@ class ConsoleText(ModelNode, ScrolledText):
             for key, value in m.groupdict().items():
                 if value:
                     self.text.tag_add(key, 
-                                      eval_format('{row}.{m.start()}'),
-                                      eval_format('{row}.{m.end()}'))
+                                      f'{row}.{m.start()}',
+                                      f'{row}.{m.end()}')
         
         
     def update_content(self, tag, content):
@@ -275,12 +272,12 @@ class ConsoleText(ModelNode, ScrolledText):
         # Begin control the cursor when HOME key pressed.
         if evt.keysym in ('KP_Home', 'Home'):
             r, c = self.get_cursor_pos()
-            leading = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
+            leading = self.text.get(f'{r}.0', f'{r}.4')
             if leading in ('... ', '>>> '):
                 # The head position of a line is after the prompt. 
-                self.text.mark_set('insert', auto_subs('$r.4'))
+                self.text.mark_set('insert', f'{r}.4')
             else:
-                self.text.mark_set('insert', auto_subs('$r.0'))
+                self.text.mark_set('insert', f'{r}.0')
             return 'break'
         # End
             
@@ -292,13 +289,13 @@ class ConsoleText(ModelNode, ScrolledText):
         if (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
            (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
             r, c    = self.get_cursor_pos()
-            prompt  = self.text.get(auto_subs('$r.0'), auto_subs('$r.4'))
+            prompt  = self.text.get(f'{r}.0', f'{r}.4')
             if prompt != '>>> ' and prompt != '... ':
                 return 'break'
             if evt.keysym == 'BackSpace' and c <= 4:
                 return 'break'
             if evt.keysym == 'Escape':
-                self.text.delete(auto_subs('$r.4'), 'end')
+                self.text.delete(f'{r}.4', 'end')
             if c < 4:
                 return 'break'
             rend, cend  = self.get_cursor_pos('end-1c')
@@ -473,6 +470,7 @@ Red:   main-thread is busy.''')
         cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('cpumeter.pyw'))
         balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage.')        
         
+
         
 class ConsoleWindow(ModelNode):    
     def __init__(self, *args, **kwargs):
@@ -524,23 +522,28 @@ class ConsoleWindow(ModelNode):
     @property
     def prompt_symbol(self):
         return self.__stdstream_text.prompt_symbol
+    
         
     @prompt_symbol.setter
     def prompt_symbol(self, val):
         self.__stdstream_text.prompt_symbol    = val
         
+        
     @property
     def default_cursor(self):
         return self.__default_cursor
+    
                                                                
     @property
     def text(self):
         return self.__stdstream_text.text
+    
                                                                     
     @Scripting.printable    
     def save(self, filename): # for scripting system
         with open(filename, 'w') as f:
             f.write(self.__stdstream_text.get_text())
+            
             
     def on_save_as(self):        
         filename    = asksaveasfilename(filetypes=[('All types of files', '*.*')])
@@ -548,24 +551,29 @@ class ConsoleWindow(ModelNode):
             return
         with code_printer:
             self.save(filename)
+            
     
     @Scripting.printable    
     def clear(self):
         self.__stdstream_text.clear()
         print('', sep='', end='')
         
+        
     def on_clear(self):
         with code_printer:
             self.clear()
+            
 
     def set_window_attributes(self, *args, **kwargs):
-        return self.root_node.tk_root.wm_attributes(*args, **kwargs)        
+        return self.root_node.tk_root.wm_attributes(*args, **kwargs)  
+      
         
     def set_topmost(self, b):
         tk_root = self.root_node.tk_root
         if b == 'flip':
             b = False if tk_root.wm_attributes('-topmost') else True
         tk_root.wm_attributes('-topmost', b)
+        
         
     def set_transparency(self, transparency):
         self.root_node.gui.root.wm_attributes('-alpha', transparency)

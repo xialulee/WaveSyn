@@ -1,12 +1,8 @@
-from __future__ import print_function, division
-
 from collections import OrderedDict, Iterable
 import importlib
 from imp import reload
 
-from wavesynlib.languagecenter.utils import eval_format, auto_subs
-from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting, ModelNode, NodeDict
-from wavesynlib.languagecenter import datatypes
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
 from wavesynlib.toolwindows.tkbasewindow import WindowComponent
 
 import time
@@ -14,7 +10,7 @@ import multiprocessing as mp
 
 
 
-class ProgressChecker(object):
+class ProgressChecker:
     def __init__(self, interval=1):
         self.__checkerChain = []
         self.interval=interval
@@ -52,7 +48,7 @@ kwargs  the extra key paramters.
 
 
 
-class Parameter(object):
+class Parameter:
     def __init__(self, name='', type='', shortdesc='', longdesc=''):
         self.name   = name
         self.type   = type
@@ -60,7 +56,8 @@ class Parameter(object):
         self.longdesc   = longdesc
 
 
-class Algorithm(object):
+
+class Algorithm:
     __parameters__  = None
     __name__        = None
 
@@ -114,7 +111,7 @@ class AlgorithmNode(ModelNode):
 
 
     def __init__(self, module_name, class_name):
-        super(AlgorithmNode, self).__init__()
+        super().__init__()
         if isinstance(module_name, bytes):
             module_name = module_name.decode('utf-8')
         if isinstance(class_name, bytes):
@@ -148,7 +145,7 @@ class AlgorithmNode(ModelNode):
 
 
     def on_connect(self):
-        super(AlgorithmNode, self).on_connect()
+        super().on_connect()
         if self.need_cuda:
             self.__algorithm.cuda_worker = self.root_node.interfaces.gpu.cuda_worker
             
@@ -252,7 +249,7 @@ class AlgorithmNode(ModelNode):
                 dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)
                     
             delta_t = time.clock() - t1
-            dialog.set_text(index=0, text=auto_subs('Finished. Total time consumption: $delta_t (s)'))
+            dialog.set_text(index=0, text=f'Finished. Total time consumption: {delta_t} (s)')
             
             
     @Scripting.printable
@@ -289,13 +286,13 @@ class AlgorithmNode(ModelNode):
                     break
                     
             delta_t = time.clock() - t1
-            dialog.set_text(index=0, text=auto_subs('Finished. Total time consumption: $delta_t (s)'))
+            dialog.set_text(index=0, text=f'Finished. Total time consumption: {delta_t} (s)')
 
                         
     @property
     def node_path(self):
         if isinstance(self.parent_node, AlgorithmDict):
-            return eval_format('{self.parent_node.node_path}["{self.meta.name}"]')
+            return f'{self.parent_node.node_path}["{self.meta.name}"]'
         else:
             return ModelNode.node_path
             
@@ -316,12 +313,12 @@ def parallel_func(algorithm_class, process_id, queue, args, kwargs):
 
 class AlgorithmDict(NodeDict, WindowComponent):
     def __init__(self, node_name=''):
-        NodeDict.__init__(self, node_name=node_name)
+        super().__init__(node_name=node_name)
         
                 
     def __setitem__(self, key, val):
         if not isinstance(val, AlgorithmNode):
-            raise TypeError(eval_format('{self.node_path} only accepts instance of Algorithm or of its subclasses.'))
+            raise TypeError(f'{self.node_path} only accepts instance of Algorithm or of its subclasses.')
         if key != val.meta.name:
             raise ValueError('The key should be identical to the name of the algorithm.')
         NodeDict.__setitem__(self, key, val)

@@ -4,15 +4,8 @@ Created on Tue Jan 17 14:05:12 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-import six
-import six.moves._thread as thread
+import _thread as thread
 import threading
-import functools
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib.languagecenter.designpatterns import Singleton
@@ -31,10 +24,9 @@ class _ThreadObj(threading.Thread):
 
 
 # Only one thread manager for a process. 
-@six.add_metaclass(Singleton)
-class ThreadManager(ModelNode):
+class ThreadManager(ModelNode, metaclass=Singleton):
     def __init__(self, *args, **kwargs):
-        super(ThreadManager, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         # Instance of ThreadManager must be intitialized in the main thread. 
         with self.attribute_lock:

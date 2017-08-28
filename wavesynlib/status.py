@@ -4,10 +4,7 @@ Created on Tue Jan 26 12:50:36 2016
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, unicode_literals, division
-
-import six.moves._thread as thread
+import _thread as thread
 
 from wavesynlib.languagecenter.designpatterns import Observable
 
@@ -24,7 +21,7 @@ def is_busy():
 
 class _BusyContext(Observable):
     def __init__(self):
-        Observable.__init__(self)
+        super().__init__()
     
     def __enter__(self):
         with _lock:

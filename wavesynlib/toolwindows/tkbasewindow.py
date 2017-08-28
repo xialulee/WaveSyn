@@ -4,24 +4,21 @@ Created on Wed Feb 22 13:50:57 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division
-
 from importlib import import_module
 
-from six.moves.tkinter import Toplevel, Frame, IntVar
-from six.moves.tkinter_ttk import Notebook, Label, Button, Checkbutton, Scale
+from tkinter import Toplevel, Frame, IntVar
+from tkinter.ttk import Notebook, Label, Button, Checkbutton, Scale
 
 
 from PIL import ImageTk
 
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, code_printer)
-from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodDelegator
+from wavesynlib.languagecenter.utils import auto_subs, MethodDelegator
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.guicomponents.tk import Group, json_to_tk
-from wavesynlib.toolwindows.basewindow import BaseWindowNode, WindowDict
+from wavesynlib.toolwindows.basewindow import BaseWindowNode
 
 
 class TkWindowNode(BaseWindowNode):
@@ -33,15 +30,16 @@ Properties inherited from ModelNode:
     root_node: The root node of the WaveSyn Object Model Tree.
 '''
     window_name = ''
-
     _xmlrpcexport_  = ['close']    
+    
     
     def __init__(self, *args, **kwargs):
         super(TkWindowNode, self).__init__(*args, **kwargs)
         self.__tk_object = Toplevel()
-        self.__tk_object.title(eval_format('{self.window_name} id={id(self)}'))        
+        self.__tk_object.title(f'{self.window_name} id={id(self)}')
         self.__tk_object.protocol('WM_DELETE_WINDOW', self.on_close)
-                
+    
+            
     method_name_map   = {
         'update':'update', 
         'set_window_attributes':'wm_attributes'
@@ -50,7 +48,8 @@ Properties inherited from ModelNode:
     for method_name in method_name_map:
         locals()[method_name] = MethodDelegator('tk_object', 
                                                 method_name_map[method_name])        
-        
+
+       
     @Scripting.printable
     def close(self):
         #Scripting.root_node.on_window_quit(self)
@@ -58,6 +57,7 @@ Properties inherited from ModelNode:
             self.parent_node.on_window_close(self)
         # For Toplevel objects, use destroy rather than quit.
         self.__tk_object.destroy() 
+        
         
     def on_close(self):
         with code_printer:
@@ -67,12 +67,14 @@ Properties inherited from ModelNode:
     @property
     def tk_object(self):
         return self.__tk_object
+    
         
     def create_timer(self, interval=100, active=False):
         return TkTimer(self.__tk_object, interval, active)
         
+
         
-class WindowComponent(object):
+class WindowComponent:
     @property        
     def window_node(self):
         node = self
@@ -81,11 +83,13 @@ class WindowComponent(object):
             if isinstance(node, TkWindowNode):
                 return node         
         
+
         
 class WindowManager(ModelNode, WindowComponent):
     def __init__(self):
-        ModelNode.__init__(self)
+        super().__init__()
         self.__gui_images = []
+        
         
     def _make_widgets(self):
         tool_tabs = self.window_node._tool_tabs        
@@ -102,7 +106,7 @@ class WindowManager(ModelNode, WindowComponent):
             
         widgets_desc = [
 {"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "children":[
-    {"class":"Label", "config":{"text":eval_format("ID: {id(self.window_node)}")}},
+    {"class":"Label", "config":{"text":f"ID: {id(self.window_node)}"}},
     {"class":"Button", "config":{"text":"Copy ID  ", "image":copy_id_icon, "compound":"left", "command":self._on_copy_id_click}},
     {"class":"Button", "config":{"text":"Copy Path", "image":copy_path_icon, "compound":"left", "command":self._on_copy_path_click}}]
 },
@@ -118,45 +122,54 @@ class WindowManager(ModelNode, WindowComponent):
         json_to_tk(tab, widgets_desc)        
         tool_tabs.add(tab, text='Window Manager')
         
+        
     def _on_copy_id_click(self):
         with code_printer:
             self.copy_window_id()
             
+            
     def _on_copy_path_click(self):
         with code_printer:
             self.copy_window_path()
+            
             
     def _on_topmost_click(self):
         with code_printer:
             topmost = True if self.__topmost.get() else False
             self.set_topmost(topmost)
 
+
     @Scripting.printable        
     def copy_window_id(self):
         self.root_node.interfaces.os.clipboard.write(id(self.window_node))
+        
         
     @Scripting.printable
     def copy_window_path(self):
         self.root_node.interfaces.os.clipboard.write(self.window_node.node_path)
 
+
     @Scripting.printable
     def set_topmost(self, b):
         self.window_node.tk_object.wm_attributes('-topmost', b)
+
 
     @Scripting.printable
     def set_transparency(self, transparency):
         self.window_node.tk_object.wm_attributes('-alpha', transparency)                
 
+
  
 class TkToolWindow(TkWindowNode):
     '''Tk Window Node with a tabbed toolbar.'''
     def __init__(self, *args, **kwargs):
-        super(TkToolWindow, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         tool_tabs = Notebook(self.tk_object)
         tool_tabs.pack(fill='x')
         with self.attribute_lock:
             self._tool_tabs = tool_tabs
         self.window_manager = WindowManager()
+        
             
     def _make_window_manager_tab(self):
         self.window_manager._make_widgets()

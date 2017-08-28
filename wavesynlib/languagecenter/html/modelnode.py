@@ -4,8 +4,6 @@ Created on Sun Mar 05 17:50:52 2017
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.languagecenter.html import utils
 
@@ -13,6 +11,7 @@ from wavesynlib.languagecenter.html import utils
 class Utils(ModelNode):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
         
     def _get_html_code(self, html_code=None, stream=None, file_path=None, encoding=None):
         if hasattr(self.root_node.interfaces.os.clipboard, 'support_clipboard_html'):
@@ -30,6 +29,7 @@ class Utils(ModelNode):
         else:
             pass # Raise some exception.
         return html_code
+    
         
     @Scripting.printable
     def get_tables(self, html_code=None, stream=None, file_path=None, encoding=None):

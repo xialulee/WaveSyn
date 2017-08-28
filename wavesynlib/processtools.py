@@ -4,11 +4,6 @@ Created on Wed Feb 22 14:10:51 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import json
 from subprocess import Popen, PIPE
 
@@ -25,7 +20,7 @@ class ProcessNode(ModelNode):
         commandline.append(self.__executable)
         commandline.extend(self.__parameters)
         self.__pipes = Popen(commandline, stdout=PIPE, stdin=PIPE)
-        super(ProcessNode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         
     def run(self):
@@ -52,7 +47,7 @@ class ProcessNode(ModelNode):
         
 class ProcessDict(NodeDict):
     def __init__(self, *args, **kwargs):
-        NodeDict.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         
     def create(self, executable, parameters):        

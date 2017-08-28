@@ -4,13 +4,10 @@ Created on Sun Jan 10 16:55:14 2016
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division
-
 from importlib import import_module
 
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting)
-from wavesynlib.languagecenter.utils import eval_format
 from wavesynlib.languagecenter.designpatterns import Observable
 
 
@@ -27,7 +24,7 @@ class WindowDict(NodeDict, Observable):
                 
     def __setitem__(self, key, val):
         if not isinstance(val, BaseWindowNode):
-            raise TypeError(eval_format("{self.node_path} only accepts instance of BaseWindowNode's subclasses."))
+            raise TypeError(f"{self.node_path} only accepts instance of BaseWindowNode's subclasses.")
         if key != id(val):
             raise ValueError('The key should be identical to the ID of the window.')
         NodeDict.__setitem__(self, key, val)
@@ -48,6 +45,5 @@ class WindowDict(NodeDict, Observable):
         
     def on_window_close(self, window):
         self.root_node.print_tip(
-            eval_format(
-                '{window.node_path} is closed, and its ID becomes defunct for scripting system hereafter.'))
+                f'{window.node_path} is closed, and its ID becomes defunct for scripting system hereafter.')
         self.pop(id(window))

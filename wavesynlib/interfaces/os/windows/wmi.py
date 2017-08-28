@@ -4,9 +4,6 @@ Created on Sat Mar 04 21:02:17 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import division, print_function, unicode_literals
-
 import json
 import abc
 from comtypes import client

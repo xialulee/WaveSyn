@@ -4,20 +4,8 @@ Created on Fri May 02 15:48:27 2014
 
 @author: Feng-cong Li. xialulee@sina.com
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-
-def dependencies_for_my_program():
-    '''This function is used to solve the bugs of py2exe'''
-    from scipy.sparse.csgraph   import _validation 
-    from scipy.special          import _ufuncs_cxx
-
-import six
 import threading
-from six.moves import queue
-from six import text_type
+import queue
 
 import os
 import os.path
@@ -26,10 +14,6 @@ import locale
 
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
-
-from six.moves.tkinter import *
-from six.moves.tkinter_ttk import *
-
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -44,20 +28,19 @@ import json
 
 
 from wavesynlib.guicomponents.tk import PILImageFrame
-#from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.interfaces import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.threadtools import ThreadManager
 from wavesynlib.processtools import ProcessDict
-from wavesynlib.languagecenter.utils import eval_format, set_attributes, get_caller_dir
+from wavesynlib.languagecenter.utils import set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton      
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import timeutils
 from wavesynlib.toolwindows.imagedisplay.modelnode import DisplayLauncher
 from wavesynlib.status import busy_doing
-from wavesynlib.languagecenter import datatypes
+
 
 
 def call_and_print_doc(func):
@@ -157,8 +140,6 @@ wavesyn
                             
                 file_path = file_path,
                 dir_path = dir_path,
-                                
-                #stream_manager = StreamManager(),                
                 
                 config_file_path = config_file_path,
                 
@@ -245,17 +226,15 @@ wavesyn
         
         
     def create_timer(self, interval=100, active=False):
-#        return TkTimer(self.tk_root, interval, active)
         return self.gui.create_timer(interval, active)
                      
         
     def print_and_eval(self, expr):
         with self.exec_thread_lock:
-            self.stream_manager.write(expr+'\n', 'HISTORY')
-            #ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])                
+            self.stream_manager.write(expr+'\n', 'HISTORY')               
             ret = self.eval(expr)
             if ret is not None:
-                self.stream_manager.write(text_type(ret)+'\n', 'RETVAL')
+                self.stream_manager.write(str(ret)+'\n', 'RETVAL')
             return ret    
             
                               
@@ -289,7 +268,7 @@ wavesyn
                 except SyntaxError:
                     with busy_doing:
                         try:
-                            six.exec_(code, Scripting.name_space['globals'], Scripting.name_space['locals'])
+                            exec(code, Scripting.name_space['globals'], Scripting.name_space['locals'])
                         except KeyboardInterrupt:
                             self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
             except SystemExit:
@@ -309,7 +288,8 @@ wavesyn
             return
         stream_manager = self.stream_manager
         stream_manager.write('WaveSyn: ', 'TIP')
-        if type(contents) in (str, unicode):
+
+        if isinstance(contents, str):
             stream_manager.write(contents+'\n', 'TIP')
             return
 
@@ -329,12 +309,11 @@ wavesyn
                 stream_manager.write('\n')
                 return_list.append(None)
             elif item['type'] == 'pil_image':
-                # stream_manager.write('The QR code of the text stored by clipboard is shown above.', 'TIP')
                 text    = self.gui.console.text                
-                text.insert(END, '\n')
+                text.insert('end', '\n')
                 pil_frame    = PILImageFrame(text, pil_image=item['content'])
-                text.window_create(END, window=pil_frame)
-                text.insert(END, '\n')
+                text.window_create('end', window=pil_frame)
+                text.insert('end', '\n')
                 stream_manager.write('\n')
                 return_list.append(id(pil_frame))
             elif item['type'] == 'file_list':
@@ -366,7 +345,7 @@ wavesyn
                     config_link_tag(text, browse_tag_name, browse_func, self.gui.console.default_cursor)                    
                     stream_manager.write(' ')
                     
-                    stream_manager.write(eval_format('{file_path}\n'))
+                    stream_manager.write(f'{file_path}\n')
                 return_list.append(None)
         return return_list
                                             
@@ -406,13 +385,13 @@ wavesyn
         start_xmlrpc_server(addr, port)        
         def check_command():
             command = self.xmlrpc_command_slot.command
-            convert_args_to_str  = Scripting.convert_args_to_str # used by eval_format
+            convert_args_to_str  = Scripting.convert_args_to_str
             try:
                 if command is not None:
                     node_path, method_name, args, kwargs  = command
                     ret, err    = None, None
                     try:
-                        ret = self.print_and_eval(eval_format('{node_path}.{method_name}({convert_args_to_str(*args, **kwargs)})')) # paramToStr used here
+                        ret = self.print_and_eval(f'{node_path}.{method_name}({convert_args_to_str(*args, **kwargs)})') # paramToStr used here
                     except Exception as error:
                         err = error
                     ret = 0 if ret is None else ret

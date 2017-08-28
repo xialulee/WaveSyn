@@ -4,9 +4,6 @@ Created on Fri Mar 25 19:12:09 2016
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
 import os
 import platform
 import ctypes
@@ -15,31 +12,36 @@ from importlib import import_module
 import webbrowser
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, constant_handler
-from wavesynlib.languagecenter.utils import eval_format
+
 
 
 class TkClipboard(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(TkClipboard, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        
        
     @Scripting.printable
     def clear(self):
         self.root_node.gui.root.clipboard_clear()
+        
     
     @Scripting.printable
     def write(self, content):
         self.clear()
         self.root_node.gui.root.clipboard_append(content)
         
+        
     @Scripting.printable
     def read(self):
         return self.root_node.gui.root.clipboard_get()
+    
         
     @Scripting.printable
     def remove_text_formatting(self):
         content = self.read()
         self.write(content)
-        
+    
+    
     @Scripting.printable
     def remove_newlines(self, insert_blanks=True):
         text = self.read()
@@ -50,20 +52,24 @@ class TkClipboard(ModelNode):
             text = text.replace('\n', '')
         self.write(text)
         
+
         
 class TkMouse(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(TkMouse, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        
         
     @Scripting.printable
     def get_x(self):
         return self.root_node.gui.root.winfo_pointerx()
         
+    
     @Scripting.printable
     def get_y(self):
         return self.root_node.gui.root.winfo_pointery()
         
-        
+    
+    
 if platform.system().lower() == 'windows':
     from six.moves import cStringIO as StringIO
     from wavesynlib.interfaces.os.windows.clipboard import clipb
@@ -88,23 +94,25 @@ if platform.system().lower() == 'windows':
         @Scripting.printable
         def write(self, content, html=None, code=None):
             if (not html) and (not code) :
-                super(Clipboard, self).write(content)
+                super().write(content)
             else:
                 stream = StringIO()
                 stream.write(content)
                 stream.seek(0)
                 clipb.stream_to_clipboard(stream, mode=None, code=code, tee=None, null=None, html=html)
                 
+                
         @Scripting.printable
         def read(self, html=None, code=None):
             if (not html) and (not code):
-                return super(Clipboard, self).read()
+                return super().read()
             else:
                 stream = StringIO()
                 clipb.clipboard_to_stream(stream, mode=None, code=code, null=None, html=html)
                 stream.seek(0)
                 return stream.read()
                 
+            
         @Scripting.printable
         def to_console_qr(self):
             try:
@@ -116,6 +124,7 @@ if platform.system().lower() == 'windows':
             self.root_node.print_tip([{'type':'pil_image', 'content':image},
                                       {'type':'text', 'content':'The QR code of the text stored by clipboard is shown above.'}])
             
+    
         @Scripting.printable
         def to_console_image(self):
             from PIL import ImageGrab
@@ -167,7 +176,8 @@ if platform.system().lower() == 'windows':
             with open(path, 'rb') as file_obj:
                 clipb.image_file_to_clipboard(file_obj, is_psd)
                 
-                
+    
+            
     class Mouse(TkMouse): 
         _const_map = {
             'left_button_down':     win32con.MOUSEEVENTF_LEFTDOWN,
@@ -177,6 +187,7 @@ if platform.system().lower() == 'windows':
             'middle_button_down':   win32con.MOUSEEVENTF_MIDDLEDOWN,
             'middle_button_up':     win32con.MOUSEEVENTF_MIDDLEUP
         }
+
               
         @Scripting.printable
         def set_x(self, x):
@@ -186,6 +197,7 @@ if platform.system().lower() == 'windows':
                 prompt='Please input x-coordinate:')
             y = self.get_y()
             ctypes.windll.user32.SetCursorPos(x, y)
+
             
         @Scripting.printable
         def set_y(self, y):
@@ -195,6 +207,7 @@ if platform.system().lower() == 'windows':
                 title='Set Mouse Cursor Position',
                 prompt='Please input y-coordinate:')
             ctypes.windll.user32.SetCursorPos(x, y)
+
             
         @Scripting.printable
         def click(self, button='left'):
@@ -212,7 +225,7 @@ if platform.system().lower() == 'windows':
            
     class DesktopWallpaper(ModelNode):
         def __init__(self, *args, **kwargs):
-            super(DesktopWallpaper, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
             self.__idw = CoCreateInstance(
                 desktopwallpaper.CLSID_DesktopWallpaper,
                 interface=desktopwallpaper.IDesktopWallpaper
@@ -263,12 +276,12 @@ class OperatingSystem(ModelNode):
         raise NotImplementedError
     
     _sys_name = platform.system().lower()        
-    _obj_map = {'winopen':'wavesynlib.interfaces.os.{_sys_name}.shell.winopen', 
-                'get_memory_usage':'wavesynlib.interfaces.os.{_sys_name}.memstatus'}
+    _obj_map = {'winopen': f'wavesynlib.interfaces.os.{_sys_name}.shell.winopen', 
+                'get_memory_usage': f'wavesynlib.interfaces.os.{_sys_name}.memstatus'}
     
     for name in _obj_map:
         try:
-            __mod = import_module(eval_format(_obj_map[name]))
+            __mod = import_module(_obj_map[name])
             _obj_map[name] = getattr(__mod, name)
         except ImportError:
             _obj_map[name] = _not_implemented
@@ -293,7 +306,7 @@ class OperatingSystem(ModelNode):
         
     @Scripting.printable
     def map_open(self, latitude, longitude):
-        uri = eval_format('bingmaps:?cp={latitude}~{longitude}')
+        uri = f'bingmaps:?cp={latitude}~{longitude}'
         webbrowser.open(uri)
         
         

@@ -4,9 +4,6 @@ Created on Fri Aug 08 16:00:43 2014
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
 import platform
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode
@@ -15,7 +12,7 @@ from wavesynlib.languagecenter.wavesynscript import ModelNode
 
 class Interfaces(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(Interfaces, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         self.os = ModelNode(
             is_lazy=True, 
