@@ -4,8 +4,6 @@ Created on Tue Dec 29 10:44:36 2015
 
 @author: Feng-cong Li
 """
-from __future__ import print_function
-
 import json
 from copy import deepcopy
 import platform
@@ -13,8 +11,7 @@ import ast
 
 
 
-
-class ExprTranslator(object):
+class ExprTranslator:
     # This translator is originally posted on "http://blog.sina.com.cn/s/blog_4513dde60101jorh.html"
     opMap = {
         ast.Eq      : '-eq',
@@ -39,8 +36,7 @@ class ExprTranslator(object):
     nameMap     = {
         '_':        '$_'
     }
-    def __init__(self):
-        pass
+
     
     @classmethod
     def translate(cls, node):
@@ -59,7 +55,7 @@ class ExprTranslator(object):
             return '(' + ' '.join(expr) + ')'
             
         def attr():
-            return '({}).{}'.format(cls.translate(node.value), node.attr)
+            return f'({cls.translate(node.value)}).{node.attr}'
             
         def boolOp():
             return '(({left}) {op} ({right}))'.format(
@@ -88,12 +84,14 @@ class ExprTranslator(object):
             ast.Attribute:  attr,
             ast.Name:       lambda: cls.nameMap.get(node.id, node.id),
             ast.Num:        lambda: str(node.n),
-            ast.Str:        lambda: '"{}"'.format(node.s)
+            ast.Str:        lambda: f'"{node.s}"'
         }[type(node)]()
 
 
 
-class Command(object):
+# To Do: Move this class to 
+# wavesyn.interfaces.os.windows.powershell
+class Command:
     def __init__(self, commandString):
         self.__comStrList   = [commandString]
         
@@ -108,21 +106,21 @@ class Command(object):
         newObj  = deepcopy(self)
         if lang == 'py':
             expr    = ExprTranslator.translate(expr)
-        newObj.appendArg('| where{' + expr + '}')
+        newObj.appendArg(f'| where{{{expr}}}')
         return newObj
             
     def select(self, expr):
         if isinstance(expr, list): # To Do: iteratable objects
             expr = ','.join(expr)
         newObj  = deepcopy(self)
-        newObj.appendArg('| ' + 'select ' + expr)
+        newObj.appendArg(f'| select {expr}')
         return newObj
 
     if platform.system().lower() == 'windows': 
         @property
         def resultObject(self):
             from wavesynlib.interfaces.os.windows import powershell
-            tempCom     = self.commandString + ' | ConvertTo-Json'
+            tempCom     = f'{self.commandString} | ConvertTo-Json'
             stdout, stderr, errorlevel  = powershell.execute(tempCom)
             return json.loads(stdout) # To Do: Handle exceptions
     else:

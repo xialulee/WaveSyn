@@ -4,10 +4,7 @@ Created on Mon Jan 16 14:34:51 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
-from comtypes import *
+from comtypes import GUID, IUnknown, COMMETHOD, HRESULT, c_voidp
 from ctypes import POINTER
 from ctypes.wintypes import UINT, BOOL, LPCWSTR, LPWSTR, RECT, COLORREF
 

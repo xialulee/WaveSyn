@@ -4,11 +4,9 @@ Created on Sat Mar 04 16:08:52 2017
 
 @author: Feng-cong Li
 """
-
 import os
 
-from six.moves.tkinter import *
-from comtypes import *
+from tkinter import Tk, Label
 import ctypes as ct
 
 import psutil
@@ -23,6 +21,7 @@ from wavesynlib.languagecenter.utils import get_caller_dir
     
 def get_cpu_usage():
     return psutil.cpu_percent()
+
 
 
 APPID = '02519AC0-8DF8-4BE7-9A3E-56BFF162C7F7'

@@ -4,10 +4,8 @@ Created on Fri Jun 09 22:58:03 2017
 
 @author: Feng-cong Li
 """
-from __future__ import division, print_function, unicode_literals
-
 import sys
-from six.moves.tkinter import *
+from tkinter import Tk, Label
 import ctypes as ct
 import time
 

@@ -7,8 +7,7 @@
 
 import os
 
-from six.moves.tkinter import *
-from comtypes import *
+from tkinter import Tk, Label
 import ctypes as ct
 
 from wavesynlib.guicomponents import tk as tktools
@@ -16,6 +15,7 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.process import singleton
 from wavesynlib.languagecenter.utils import get_caller_dir
+
 
 
 class MEMORYSTATUS(ct.Structure):
@@ -31,6 +31,7 @@ class MEMORYSTATUS(ct.Structure):
     ]
     
     
+    
 def get_memory_usage():
     memstat = MEMORYSTATUS()
     memstat.dwLength = ct.sizeof(MEMORYSTATUS)    
@@ -39,7 +40,10 @@ def get_memory_usage():
     return memusage      
 
 
+
 APPID = '129832A8-AA09-4416-8C6A-9945FAB4CDFA'
+
+
 
 def main():
     if not singleton(APPID):
@@ -57,7 +61,7 @@ def main():
     @timer.add_observer   
     def show_memory_usage():
         memusage = get_memory_usage()
-        label['text']   = 'Memory Usage: {}%'.format(memusage)
+        label['text']   = f'Memory Usage: {memusage}%'
         tbIcon.progress = memusage        
         if memusage <= 60:
             state = TBPFLAG.TBPF_NORMAL
@@ -69,6 +73,7 @@ def main():
 
     timer.active = True
     root.mainloop()
+
 
 
 if __name__ == '__main__':

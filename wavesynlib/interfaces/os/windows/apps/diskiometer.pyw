@@ -4,11 +4,9 @@ Created on Sat Mar 04 17:05:02 2017
 
 @author: Feng-cong Li
 """
-from __future__ import division, print_function, unicode_literals
-
 import os
 
-from six.moves.tkinter import *
+from tkinter import Tk, Label
 import ctypes as ct
 
 from wavesynlib.guicomponents import tk as tktools
@@ -54,7 +52,7 @@ def main():
     @timer.add_observer   
     def show_disk_io():
         percent = disk_time.percent
-        label['text']   = 'Disk IO time percent: {}%'.format(percent)
+        label['text']   = f'Disk IO time percent: {percent}%'
         tb_icon.progress = percent        
         if percent <= 60:
             state = TBPFLAG.TBPF_NORMAL

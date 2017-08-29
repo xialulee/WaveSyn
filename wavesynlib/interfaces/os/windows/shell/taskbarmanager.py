@@ -3,14 +3,13 @@
 # python 2.7
 # Feng-cong Li
 
-from __future__ import print_function, division, unicode_literals
-
-from comtypes import *
+from comtypes import c_uint64, GUID, IUnknown, HRESULT, COMMETHOD, c_uint, c_voidp, c_uint32
 from ctypes import POINTER
 from ctypes.wintypes import HWND, HICON, DWORD, UINT, BOOL, LPCWSTR, RECT
 ULONGLONG = c_uint64
 
 GUID_CTaskbarList   = GUID('{56FDF344-FD6D-11d0-958A-006097C9A090}')
+
 
 
 class ITaskbarList(IUnknown):
@@ -35,7 +34,8 @@ class ITaskbarList(IUnknown):
         )
     ]
         
-        
+ 
+       
 class ITaskbarList2(ITaskbarList):
     _iid_   = GUID('{602D4995-B13A-429B-A66E-1935E44F4317}')
     _methods_   = [        
@@ -45,6 +45,7 @@ class ITaskbarList2(ITaskbarList):
         )
     ]
         
+
         
 class ITaskbarList3(ITaskbarList2):
     _iid_   = GUID('{EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF}')
@@ -115,6 +116,7 @@ class ITaskbarList3(ITaskbarList2):
     ]
 
 
+
 class ITaskbarList4(ITaskbarList3):
     _iid_   = GUID('{C43DC798-95D1-4BEA-9030-BB99E2983A1A}')
     _methods_   = [
@@ -127,7 +129,7 @@ class ITaskbarList4(ITaskbarList3):
     
     
 if __name__ == '__main__':
-    from Tkinter import *
+    from tkinter import Tk, Scale
     from comtypes import CoCreateInstance
     from win32gui import GetParent    
     
@@ -139,7 +141,7 @@ if __name__ == '__main__':
         return onMove
     
     root    = Tk()
-    tbar    = Scale(root, from_=0, to=100, orient=HORIZONTAL, command=onMove_gen(root))
+    tbar    = Scale(root, from_=0, to=100, orient='horizontal', command=onMove_gen(root))
     tbar.pack()
     root.mainloop()
     

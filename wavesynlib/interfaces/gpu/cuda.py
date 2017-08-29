@@ -4,20 +4,18 @@ Created on Fri Oct 09 17:15:41 2015
 
 @author: Feng-cong Li
 """
-
-import six.moves._thread as thread
-from six.moves.queue import Queue
+import _thread as thread
+from queue import Queue
 
 import reikna.cluda as cluda
 from reikna.fft import FFT
 from reikna.linalg import MatrixMul, EntrywiseNorm
 import numpy as np
 
-
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 
-
 api = cluda.cuda_api()
+
 
 
 class FFTFactory:

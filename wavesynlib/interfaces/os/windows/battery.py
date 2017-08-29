@@ -4,7 +4,6 @@ Created on Wed Aug  9 17:54:13 2017
 
 @author: Feng-cong Li
 """
-
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib.interfaces.os.windows.wmi import SWbemSink
 

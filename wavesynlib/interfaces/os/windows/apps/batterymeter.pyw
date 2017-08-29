@@ -4,12 +4,9 @@ Created on Tue Mar 14 16:34:07 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import division, print_function, unicode_literals
-
 import os
 
-from six.moves.tkinter import *
+from tkinter import Tk, Label
 import ctypes as ct
 
 from wavesynlib.guicomponents import tk as tktools
@@ -21,7 +18,7 @@ from wavesynlib.languagecenter.utils import get_caller_dir
 
     
     
-class Battery(object):
+class Battery:
     def __init__(self):
         self.__wql = WQL()
         

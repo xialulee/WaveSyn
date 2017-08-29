@@ -1,8 +1,7 @@
 # 2015 July 1
 # xialulee
 
-from Tkinter import *
-from os import path
+from tkinter import Canvas, Tk
 from wavesynlib.languagecenter.designpatterns import Observable
 from tkFileDialog import asksaveasfilename
 from PIL import ImageGrab
@@ -21,6 +20,7 @@ class RectSelCanvas(Canvas, Observable):
         self.bind('<B1-Motion>', self.onMouseMove)
         self.bind('<ButtonRelease-1>', self.onButton1Release)
         
+        
     def onButton1Press(self, event):
         self.__boxId    = self.create_rectangle(
             event.x, event.y, event.x, event.y
@@ -28,28 +28,31 @@ class RectSelCanvas(Canvas, Observable):
         self.__start_x   = event.x
         self.__start_y   = event.y
         
+        
     def onMouseMove(self, event):
         self.coords(self.__boxId, self.__start_x, self.__start_y, event.x, event.y)
+        
     
     def onButton1Release(self, event):
         self.delete(self.__boxId)
         self.notify_observers(self.__start_x, self.__start_y, event.x, event.y)
         self.__start_x   = None
         self.__start_y   = None
+        
 
 
 if __name__ == '__main__':
     root    = Tk()
     
     canvas  = RectSelCanvas(root, cursor='crosshair')
-    canvas.pack(fill=BOTH, expand=YES)    
+    canvas.pack(fill='both', expand='yes')
     
     image           = ImageGrab.grab()
     photoImage      = PhotoImage(image)
     canvas['borderwidth']   = 0
-    canvas.create_image((0, 0), anchor=NW, image=photoImage)   
+    canvas.create_image((0, 0), anchor='nw', image=photoImage)   
     
-    class Observer(object):
+    class Observer:
         def __init__(self, root, image):
             self.__image    = image
             self.__root     = root

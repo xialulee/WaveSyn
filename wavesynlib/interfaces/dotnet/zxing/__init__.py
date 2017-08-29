@@ -4,8 +4,6 @@ Created on Fri Apr 02 16:11:43 2017
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
 import os
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
@@ -22,7 +20,7 @@ from System.Drawing import Bitmap
 
 class ZXingNET(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(ZXingNET, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         
     @Scripting.printable

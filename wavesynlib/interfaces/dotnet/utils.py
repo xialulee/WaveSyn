@@ -4,16 +4,13 @@ Created on Mon Apr 24 22:57:24 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
 import six
 import clr
 import System
 
 
 
-class NETMemoryStream(object):
+class NETMemoryStream:
     def __init__(self):
         from System.IO import MemoryStream
         self.__stream = MemoryStream()
@@ -41,7 +38,7 @@ def new_and_init(class_object, **kwargs):
 
         
 
-class BitmapUtils(object):
+class BitmapUtils:
     @staticmethod
     def pil_to_net(image):    
         from System.Drawing import Bitmap    

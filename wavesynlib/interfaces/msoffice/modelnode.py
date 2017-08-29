@@ -4,10 +4,6 @@ Created on Thu Aug 18 23:14:19 2016
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
-from six import string_types
-
 import re
 import win32con
 from comtypes import client
@@ -29,7 +25,7 @@ from comtypes import _safearray, COMError
 class ExcelUtils(ModelNode):
     def __init__(self, *args, **kwargs):
         self.__com_handle = kwargs.pop('com_handle')
-        super(ExcelUtils, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__regex_for_addr = re.compile('([A-Z]+)([0-9]+)')
         
 
@@ -224,7 +220,7 @@ class WordUtils(ModelNode):
     
     def __init__(self, *args, **kwargs):
         self.__com_handle = kwargs.pop('com_handle')
-        super(WordUtils, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
     
     @Scripting.printable    
@@ -246,7 +242,7 @@ class WordUtils(ModelNode):
             # which will activate the self-destruction of the temp file. 
             pil_image = PSDImage.load(filename).as_PIL()
             if resize:
-                if  isinstance(resize, string_types):
+                if  isinstance(resize, str):
                     if resize[-1] != u'%':
                         raise ValueError('Percentage should end up with "%".')
                     percent = int(resize[:-1])
@@ -365,7 +361,7 @@ class WordUtils(ModelNode):
 class AppObject(ModelNode):    
     def __init__(self, *args, **kwargs):
         com_handle = kwargs.pop('com_handle')
-        super(AppObject, self).__init__(self, *args, **kwargs)
+        super().__init__(self, *args, **kwargs)
         self.__com_handle = com_handle
         
         
@@ -397,7 +393,7 @@ class AppObject(ModelNode):
         
 class ExcelObject(AppObject):
     def __init__(self, *args, **kwargs):
-        super(ExcelObject, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.utils = ExcelUtils(com_handle=self.com_handle)
         
         
@@ -416,7 +412,7 @@ class ExcelObject(AppObject):
         
 class WordObject(AppObject):       
     def __init__(self, *args, **kwargs):
-        super(WordObject, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.utils = WordUtils(com_handle=self.com_handle)
         self.__event_connection = None
 
