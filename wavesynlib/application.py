@@ -85,10 +85,11 @@ wavesyn
         # The instance of this class is the root of the model tree. Thus is_root is set to True
         super().__init__(node_name=Scripting.root_name, is_root=True)
             
-        Scripting.name_space['locals'][Scripting.root_name] = self
-        Scripting.name_space['globals'] = globals()
+        Scripting.namespace['locals'][Scripting.root_name] = self
+        Scripting.namespace['globals'] = globals()
         Scripting.root_node = self
-        self.homepage = 'https://github.com/xialulee/WaveSyn'
+        with self.attribute_lock:
+            self.homepage = 'https://github.com/xialulee/WaveSyn'
         
         file_path    = getsourcefile(type(self))
         dir_path     = os.path.split(file_path)[0]
@@ -98,9 +99,9 @@ wavesyn
         with open(config_file_path) as f:
             config  = json.load(f)
         console_menu = config['ConsoleMenu']
-        self.editor_info   = config['EditorInfo']
-        self.lock_attribute('editor_info')
-        self.prompt_symbols  = config['PromptSymbols']
+        with self.attribute_lock:
+            self.editor_info   = config['EditorInfo']
+            self.prompt_symbols  = config['PromptSymbols']
 
         tag_defs = config['TagDefs']
         # End load config file
@@ -110,6 +111,9 @@ wavesyn
         self.stream_manager = StreamManager()
         
         from wavesynlib.gui.tk import TkNode
+        # TkNode is a ModelNode which maintains the Tk root window
+        # and related utilities like value checker, balloon, and related
+        # WaveSyn components. 
         self.gui = TkNode(console_menu=console_menu, tag_defs=tag_defs)
         self.gui.on_exit = self._on_exit         
 
@@ -128,9 +132,11 @@ wavesyn
                 
                 # Thread related
                 thread_manager = ThreadManager(),
-                exec_thread_lock = threading.RLock(),
+                exec_thread_lock = threading.RLock(), # should be replaced with the "ensure main thread" mechanism. 
                 # End
                 
+                # To Do: build a widget on console
+                # for displaying the nodes of the model tree.
                 model_tree_monitor = model_tree_monitor,
 
                 # To Do: WaveSyn will have a uniform command slot system.
@@ -154,6 +160,8 @@ wavesyn
                         
         self.editors    = EditorDict()
         
+        
+        ## Begin: The command system of WaveSyn
         with self.attribute_lock:
             # The below one is the core of the new command system:
             self.command_queue = queue.Queue()
@@ -166,6 +174,9 @@ wavesyn
             try:
                 while True:
                     command_slot = self.command_queue.get_nowait()
+                    # No blocking, or the main thread will not 
+                    # responds to other events. 
+                    
                     if command_slot.source == 'local':
                         node = command_slot.node_list[-1]
                         if callable(node):
@@ -178,6 +189,7 @@ wavesyn
                 return
                 
         self.command_queue_timer.active = True
+        ## End.
         
         
         @self.editors.manager.add_observer
@@ -226,7 +238,16 @@ wavesyn
         
         
     def create_timer(self, interval=100, active=False):
+        '''Create a timer which is based on the Observer protocol.
+
+interval: the interval of the timer.
+    Default: 100.
+    Unit: millisecond.
+active: True for activating the timer, and False for deactivating.
+    Default: False.'''
         return self.gui.create_timer(interval, active)
+        # The timer system of WaveSyn is build on 
+        # tkinter. 
                      
         
     def print_and_eval(self, expr):
@@ -242,10 +263,10 @@ wavesyn
         with self.exec_thread_lock:
             try:
                 with busy_doing:
-                    ret = eval(expr, Scripting.name_space['globals'], Scripting.name_space['locals'])
+                    ret = eval(expr, Scripting.namespace['globals'], Scripting.namespace['locals'])
             except KeyboardInterrupt:
                 self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
-            Scripting.name_space['locals']['_']  = ret
+            Scripting.namespace['locals']['_']  = ret
             return ret
             
         
@@ -268,7 +289,7 @@ wavesyn
                 except SyntaxError:
                     with busy_doing:
                         try:
-                            exec(code, Scripting.name_space['globals'], Scripting.name_space['locals'])
+                            exec(code, Scripting.namespace['globals'], Scripting.namespace['locals'])
                         except KeyboardInterrupt:
                             self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
             except SystemExit:
@@ -360,10 +381,12 @@ wavesyn
              
                     
     def mainloop(self):
+        '''Lauch the event loop of WaveSyn.'''
         return self.gui.mainloop()
         
 
-    def _on_exit(self):    
+    def _on_exit(self):   
+        '''Called when WaveSyn exit. '''
         self.gui.interrupter.close()
         
         # Here we cannot iterate the 'windows' directly,
@@ -377,6 +400,8 @@ wavesyn
         
     @classmethod
     def do_events(cls):
+        # Please avoid to call this method. 
+        # Use the thread manager and the command queue instead.
         cls.instance.gui.root.update()
         
         
@@ -405,6 +430,9 @@ wavesyn
         
     @Scripting.printable
     def system(self, command):
+        '''Call system command.
+
+command: system command in string form. '''
         subprocess.call(command, shell=True)
         
         
@@ -417,7 +445,7 @@ wavesyn
     def set_matplotlib_style(self, style_name=''):
         import matplotlib.pyplot as plt
         
-        style_name = self.root_node.gui.dialogs.support_ask_list_item(
+        style_name = self.root_node.gui.dialogs.ask_list_item(
             style_name,
             the_list=plt.style.available,
             message='Select a style for newly-created figures.')

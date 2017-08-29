@@ -22,17 +22,22 @@ class TkClipboard(ModelNode):
        
     @Scripting.printable
     def clear(self):
+        '''Clear the clipboard.'''
         self.root_node.gui.root.clipboard_clear()
         
     
     @Scripting.printable
     def write(self, content):
+        '''Put a string into the clipboard.
+        
+content: A string which will be put into the clipbaord.'''
         self.clear()
         self.root_node.gui.root.clipboard_append(content)
         
         
     @Scripting.printable
     def read(self):
+        '''Read a string from the clipboard if the content of the clipboard is text.'''
         return self.root_node.gui.root.clipboard_get()
     
         
@@ -44,6 +49,10 @@ class TkClipboard(ModelNode):
     
     @Scripting.printable
     def remove_newlines(self, insert_blanks=True):
+        '''Delete the new lines or replace the new lines with blanks.
+
+insert_blanks: Delete the new lines if False else replace the new lines with blanks.
+    Default: True.'''
         text = self.read()
         if insert_blanks:
             text = re.sub(r'(?<=[^- ])\n', ' \n', text)
@@ -78,12 +87,12 @@ if platform.system().lower() == 'windows':
     
     class Clipboard(TkClipboard):
         @constant_handler(print_replacement=False)
-        def support_clipboard_html(self, arg, **kwargs):
+        def get_clipboard_html(self, arg, **kwargs):
             return self.read(html=True)
             
             
         @constant_handler(print_replacement=False)
-        def support_clipboard_image(self, arg, **kwargs):
+        def get_clipboard_image(self, arg, **kwargs):
             from PIL import ImageGrab
             image = ImageGrab.grabclipboard()
             if not image:
@@ -191,7 +200,7 @@ if platform.system().lower() == 'windows':
               
         @Scripting.printable
         def set_x(self, x):
-            x = self.root_node.gui.dialogs.support_ask_integer(
+            x = self.root_node.gui.dialogs.ask_integer(
                 x, 
                 title='Set Mouse Cursor Position', 
                 prompt='Please input x-coordinate:')
@@ -202,7 +211,7 @@ if platform.system().lower() == 'windows':
         @Scripting.printable
         def set_y(self, y):
             x = self.get_x()
-            y = self.root_node.gui.dialogs.support_ask_integer(
+            y = self.root_node.gui.dialogs.ask_integer(
                 y, 
                 title='Set Mouse Cursor Position',
                 prompt='Please input y-coordinate:')

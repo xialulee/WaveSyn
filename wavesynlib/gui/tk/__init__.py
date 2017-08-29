@@ -18,6 +18,10 @@ from wavesynlib.gui.tk.console import ConsoleWindow
 
 
 class TkNode(ModelNode):
+    '''TkNode is a ModelNode which maintains the Tk root window object,
+and related utilities like Balloon, value checker, and some other related
+WaveSyn components. 
+'''
     def __init__(self, *args, **kwargs):
         self.__console_menu = kwargs.pop('console_menu')
         self.__tag_defs = kwargs.pop('tag_defs')
@@ -45,6 +49,8 @@ class TkNode(ModelNode):
         
     @property
     def on_exit(self):
+        '''The on_exit property is a callable object, 
+which will be called on the exit event of WaveSyn.'''
         return self._on_exit
         
         
@@ -55,10 +61,20 @@ class TkNode(ModelNode):
         
         
     def create_timer(self, interval=100, active=False):
+        '''Create an instance of TkTimer. 
+interval: the interval of the timer.
+    Default: 100
+    Unit: millisecond.
+active: True for activating the timer, and False for deactivating. 
+    Default: False
+
+The TkTimer is based on the Observer protocol.
+'''
         return TkTimer(self.root, interval, active)
         
         
     def mainloop(self):
+        '''Lauch the event loop of Tk.'''
         self.root.mainloop()
         
         

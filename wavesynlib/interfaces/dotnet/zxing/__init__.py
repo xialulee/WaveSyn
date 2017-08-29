@@ -27,7 +27,7 @@ class ZXingNET(ModelNode):
         
     @Scripting.printable
     def read(self, image):
-        image = self.root_node.interfaces.os.clipboard.support_clipboard_image(image)
+        image = self.root_node.interfaces.os.clipboard.get_clipboard_image(image)
         # To Do: support ask open file dialog
         image = BitmapUtils.pil_to_net(image)
         result = BarcodeReader().Decode(image)

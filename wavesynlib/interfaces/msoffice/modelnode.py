@@ -233,7 +233,7 @@ class WordUtils(ModelNode):
         from PIL import Image
         from tempfile import NamedTemporaryFile
         
-        filename = self.root_node.gui.dialogs.support_ask_open_filename(
+        filename = self.root_node.gui.dialogs.ask_open_filename(
             filename, 
             filetypes=[('Photoshop Files', ('*.psd',))])    
         if not filename:
@@ -528,7 +528,7 @@ class MSOffice(NodeDict, Observable):
 
     @Scripting.printable        
     def get_active(self, app_name):
-        app_name = self.root_node.gui.dialogs.support_ask_list_item(
+        app_name = self.root_node.gui.dialogs.ask_list_item(
             app_name,
             the_list=['Word', 'Excel'],
             message='Which app you want to get?'
@@ -539,7 +539,7 @@ class MSOffice(NodeDict, Observable):
         
     @Scripting.printable
     def create(self, app_name):
-        app_name = self.root_node.gui.dialogs.support_ask_list_item(
+        app_name = self.root_node.gui.dialogs.ask_list_item(
             app_name,
             the_list=['Word', 'Excel'],
             message='Which app you want to create?'

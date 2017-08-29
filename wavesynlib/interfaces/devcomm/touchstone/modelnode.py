@@ -20,7 +20,7 @@ class TouchstoneFileManipulator(FileManipulator):
                     
     @Scripting.printable
     def to_csv(self, csv_filename, dB=True, angle='rad', unwrap=False):
-        csv_filename = self.root_node.gui.dialogs.support_ask_saveas_filename(
+        csv_filename = self.root_node.gui.dialogs.ask_saveas_filename(
             csv_filename, 
             filetypes=[('CSV Files', '*.csv'), ('All Files', '*.*')],
             defaultextension='.csv',

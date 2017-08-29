@@ -4,16 +4,11 @@ Created on Sat Aug 27 23:07:59 2016
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
 from importlib import import_module
 
-import six
-from six import string_types
 import collections
 
-from wavesynlib.languagecenter.utils import auto_subs, eval_format, MethodLock
+from wavesynlib.languagecenter.utils import MethodLock
 from wavesynlib.languagecenter.designpatterns import Observable
 
 
@@ -58,8 +53,9 @@ class AttributeLock(object):
         
         
 # To Do: Implement an on_bind callback which is called when a node is connecting to the tree.    
-class ModelNode(object):
+class ModelNode:
     _xmlrpcexport_  = []    
+    
     
     def __init__(self, *args, **kwargs):
         super(ModelNode, self).__init__()
@@ -135,7 +131,7 @@ then node will have a property named 'a', which cannot be re-assigned.
         if 'attribute_auto_lock' not in self.__dict__:
             object.__setattr__(self, 'attribute_auto_lock', False)
         if key in self._attribute_lock:
-            raise AttributeError(auto_subs('Attribute "$key" is unchangeable.'))
+            raise AttributeError(f'Attribute "{key}" is unchangeable.')
         if isinstance(val, ModelNode) and not val.is_root and val.parent_node==None:
             val.node_name = val.node_name if val.node_name else key
             object.__setattr__(val, 'parent_node', self)
@@ -177,7 +173,7 @@ then node will have a property named 'a', which cannot be re-assigned.
         if self.is_root:
             return self.node_name
         elif isinstance(self.parent_node, dict):
-            return '{}[{}]'.format(self.parent_node.node_path, id(self))
+            return f'{self.parent_node.node_path}[{id(self)}]'
         else:
             return '.'.join((self.parent_node.node_path, self.node_name))
 
@@ -216,7 +212,7 @@ class NodeDict(ModelNode, Dict):
     
     
     def __init__(self, node_name=''):
-        super(NodeDict, self).__init__(node_name=node_name)
+        super().__init__(node_name=node_name)
         
         
     def __setitem__(self, key, val):
@@ -238,7 +234,7 @@ class NodeDict(ModelNode, Dict):
         
 
 
-class List(list, object):
+class List(list):
     def __init__(self, *args, **kwargs):
         super().__init__()
         
@@ -247,6 +243,7 @@ class List(list, object):
 # NodeList       
 class NodeList(ModelNode, List):
     _xmlrpcexport_  = []
+    
     
     def __init__(self, node_name=''):
         super().__init__(node_name=node_name)
@@ -284,8 +281,7 @@ class NodeList(ModelNode, List):
         return func
 
     method_names = ['__delitem__', '__setitem__', 'pop', 'remove', 'reverse', 'sort', 'insert']
-    if six.PY2:
-        method_names.append('__delslice__')
+
     for method_name in method_names:
         locals()[method_name]    = MethodLock(method=__update_index(getattr(list, method_name)), lockName='element_lock')    
 # End Object Model
@@ -302,9 +298,10 @@ class FileManipulator(ModelNode):
         with self.attribute_lock:
             self.filename = filename
             
+            
     @property
     def node_path(self):
-        return eval_format('{self.parent_node.node_path}["{self.filename}"]')
+        return f'{self.parent_node.node_path}["{self.filename}"]'
     
         
         
@@ -318,7 +315,7 @@ class FileList(ModelNode):
             
     @property
     def node_path(self):
-        return eval_format('{self.parent_node.node_path}{repr(self.filelist)}')
+        return f'{self.parent_node.node_path}{repr(self.filelist)}'
     
             
             
@@ -334,13 +331,13 @@ class FileManager(ModelNode):
         
     def __getitem__(self, filename):
         dialogs = self.root_node.gui.dialogs
-        filename = dialogs.support_ask_open_filename(filename, filetypes=self.filetypes)
-        filename = dialogs.support_ask_ordered_files(filename, filetypes=self.filetypes)
-        filename = dialogs.support_ask_files(filename, filetypes=self.filetypes)        
+        filename = dialogs.ask_open_filename(filename, filetypes=self.filetypes)
+        filename = dialogs.ask_ordered_files(filename, filetypes=self.filetypes)
+        filename = dialogs.ask_files(filename, filetypes=self.filetypes)        
         
         if not filename:
             return
-        if isinstance(filename, string_types):
+        if isinstance(filename, str):
             if self.__manipulator_class is None:
                 raise NotImplementedError
             else:
@@ -364,11 +361,11 @@ class FileManager(ModelNode):
 # WaveSyn Script Constants
 # To Do: move to datatypes
 class Constant:
-    __slots__ = ('__name', '__value')
+    __slots__ = ('__name', '__value', '__doc')
     __cache = {}
     
     
-    def __new__(cls, name, value=None):
+    def __new__(cls, name, value=None, doc=None):
         if name in cls.__cache:
             c = cls.__cache[name]
             if value != c.value:
@@ -378,10 +375,11 @@ class Constant:
             return object.__new__(cls)
         
     
-    def __init__(self, name, value=None):
+    def __init__(self, name, value=None, doc=None):
         if name not in self.__cache:
             self.__name = name
             self.__value = value
+            self.__doc = doc
             self.__cache[name] = self
             
             
@@ -393,6 +391,15 @@ class Constant:
     @property
     def value(self):
         return self.__value
+    
+    
+    @property
+    def doc(self):
+        return self.__doc
+    
+    
+    def help(self):
+        print(self.doc)
         
  
        
@@ -412,31 +419,32 @@ class Constants(object):
     )
     
     for name, value in name_value_pairs:
-        locals()[name] = Constant(name, value)            
+        locals()[name] = Constant(name, value)      
+        
     
     @classmethod
-    def append_new_constant(cls, name, value=None):
-        setattr(cls, name, Constant(name, value))
+    def append_new_constant(cls, name, value=None, doc=None):
+        setattr(cls, name, Constant(name, value, doc))
     # End Clipboard Constants
     
 
 
 def _print_replacement_of_constant(const, value):
-    Scripting.root_node.print_tip([{'type':'text', 'content':'''
-The actual value of the place where {0} holds is
-  {1}'''.format(const.name, repr(value))}])
+    Scripting.root_node.print_tip([{'type':'text', 'content':f'''
+The actual value of the place where {const.name} holds is
+  {repr(value)}'''}])
     
 
     
-def constant_handler(print_replacement=True):
+def constant_handler(print_replacement=True, doc=None):
     '''This is a decorator with an argument.
 It functionality is help methods handling constants by fill in the actual value
 hold by a constant.
 '''    
     def _constant_handler(func):
         # Automatic constants generation based on method names. 
-        constant_name = func.__name__.replace('support_', '').upper()
-        Constants.append_new_constant(constant_name)
+        constant_name = func.__name__.upper()
+        Constants.append_new_constant(constant_name, doc=doc)
         constant = Constant(constant_name)
         #Wrapper function
         def f(self, arg, **kwargs):
@@ -452,13 +460,13 @@ hold by a constant.
 
 
 # Scripting Sub-System
-class ScriptCode(object):
+class ScriptCode:
     def __init__(self, code):
         self.code = code
         
      
      
-class PrintableMethod(object):
+class PrintableMethod:
     def __init__(self, func):
         self.__func = func
         self.__doc__ = func.__doc__
@@ -474,7 +482,7 @@ class Scripting(ModelNode):
     
     root_name = 'wavesyn' # The name of the object model tree's root
     root_node = None
-    name_space = {'locals':{}, 'globals':{}}
+    namespace = {'locals':{}, 'globals':{}}
     
     _print_code_flag = False
     
@@ -485,18 +493,17 @@ class Scripting(ModelNode):
             if isinstance(param, ScriptCode):
                 return param.code
             elif isinstance(param, Constant):
-                return eval_format('{Scripting.root_name}.lang_center.wavesynscript.constants.{param.name}')
+                return f'{Scripting.root_name}.lang_center.wavesynscript.constants.{param.name}'
             else:
                 return repr(param)
                 
         strArgs = ', '.join([paramToStr(arg) for arg in args]) if args else ''
-        #strKwargs = ', '.join([eval_format('{key}={paramToStr(kwargs[key])}') for key in kwargs]) \
-        #    if kwargs else '' 
-        strKwargs = ', '.join(['{}={}'.format(key, paramToStr(kwargs[key])) for key in kwargs]) if kwargs else ''    
+        strKwargs = ', '.join([f'{key}={paramToStr(kwargs[key])}' \
+            for key in kwargs]) if kwargs else ''    
        
             
         if strArgs and strKwargs:
-            params = ', '.join((strArgs, strKwargs))
+            params = f'{strArgs}, {strKwargs}'
         else:
             params = strArgs if strArgs else strKwargs
         return params
@@ -508,7 +515,10 @@ class Scripting(ModelNode):
         
             
     def executeFile(self, filename):
-        execfile(filename, **self.name_space) #?
+        exec(compile(open(filename, "rb").read(), filename, 'exec'), 
+             self.namespace['globals'], 
+             self.namespace['locals'])
+
         
                 
     @classmethod    
@@ -523,10 +533,7 @@ class Scripting(ModelNode):
                     #   and the main thread will check the command queue periodically.
                     # This mechanism will guarentee the thread safety of wavesyn scripting system.
                     ret = cls.root_node.print_and_eval(
-                        eval_format(
-                            '{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})'
-                        )
-                    )
+                        f'{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})')
                 finally:
                     cls._print_code_flag = True # Restore _print_code_flag settings.
             else:                          

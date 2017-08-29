@@ -30,9 +30,9 @@ from mupad                import SymConverter
 
 class MatlabCOMServer(object): # To Do: an instance attribute. For some functions, if they found instance is not None, then they will not create a new instance of this class.
     class NameSpace(object):
-        def __init__(self, matlabObj, name_space): 
+        def __init__(self, matlabObj, namespace): 
             self.__matlab_object    = matlabObj
-            self.__name_space    = name_space
+            self.__namespace    = namespace
             
         def __get_available_name(self):
             for k in range(1048576): # Try to find an available name not used in the workspace. Or execute global name before continuing.
@@ -49,13 +49,13 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
             if self.__matlab_object.call('eval', 1, auto_subs('isnumeric($name)'))[0]:
                 if self.__matlab_object.call('eval', 1, auto_subs('isreal($name)'))[0]:
                     with safearray_as_ndarray:
-                        retval  = self.__matlab_object.handle.GetVariable(name, self.__name_space)
+                        retval  = self.__matlab_object.handle.GetVariable(name, self.__namespace)
                 else:
                     tempReal    = self.__get_available_name() 
                     try:
                         self.__matlab_object.execute(auto_subs('$tempReal = real($name);'))
                         with safearray_as_ndarray:
-                            realPart    = self.__matlab_object.handle.GetVariable(tempReal, self.__name_space)
+                            realPart    = self.__matlab_object.handle.GetVariable(tempReal, self.__namespace)
                     finally:
                         self.__matlab_object.execute(auto_subs('clear $tempReal'))
                     
@@ -63,7 +63,7 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
                     try:
                         self.__matlab_object.execute(auto_subs('$tempImag = imag($name);'))
                         with safearray_as_ndarray:
-                            imagPart    = self.__matlab_object.handle.GetVariable(tempImag, self.__name_space)                    
+                            imagPart    = self.__matlab_object.handle.GetVariable(tempImag, self.__namespace)                    
                     finally:
                         self.__matlab_object.execute(auto_subs('clear $tempImag'))
 
@@ -80,9 +80,9 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
             if not isinstance(value, ndarray):
                 value   = array(value)
             if not isrealobj(value):                
-                self.__matlab_object.handle.PutFullMatrix(name, self.__name_space, value.real, value.imag)                
+                self.__matlab_object.handle.PutFullMatrix(name, self.__namespace, value.real, value.imag)                
             else:
-                self.__matlab_object.handle.PutWorkspaceData(name, self.__name_space, value)
+                self.__matlab_object.handle.PutWorkspaceData(name, self.__namespace, value)
     
     matlab_program_id  = 'matlab.application'
     

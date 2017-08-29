@@ -18,8 +18,8 @@ class Utils(ModelNode):
         
     @Scripting.printable
     def generate_table(self, table):
-        if hasattr(self.root_node.interfaces.os.clipboard, 'support_clipboard_html'):
-            if table is self.root_node.lang_center.wavesynscript.constants.CLIPBOARD_HTML:                
+        if hasattr(self.root_node.interfaces.os.clipboard, 'get_clipboard_html'):
+            if table is self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML:                
                 tables = self.root_node.lang_center.html_utils.get_tables(table)
                 ret = []
                 for table in tables:

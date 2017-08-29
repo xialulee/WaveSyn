@@ -145,7 +145,7 @@ class PSDViewer(TkToolWindow):
         
     @Scripting.printable
     def load(self, filename):
-        filename = self.root_node.gui.dialogs.support_ask_open_filename(
+        filename = self.root_node.gui.dialogs.ask_open_filename(
             filename, 
             filetypes=[('PSD Files', '*.psd'), ('All Files', '*.*')])
         if not filename:
