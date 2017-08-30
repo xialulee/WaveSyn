@@ -4,9 +4,6 @@ Created on Sun Aug 28 00:38:46 2016
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
 import os
 import tarfile
 

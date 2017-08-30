@@ -12,6 +12,7 @@ class ExprTranslator:
     # This translator is originally posted on "http://blog.sina.com.cn/s/blog_4513dde60101jorh.html"
     opMap = {
         ast.Eq      : '-eq',
+        ast.NotEq   : '-ne',
         ast.GtE     : '-ge',
         ast.LtE     : '-le',
         ast.Gt      : '-gt',
@@ -21,6 +22,7 @@ class ExprTranslator:
         ast.Sub     : '-',
         ast.Mult    : '*',
         ast.Div     : '/',
+        ast.Mod     : '%',
         
         ast.UAdd    : '+',
         ast.USub    : '-',
