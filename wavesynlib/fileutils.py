@@ -11,7 +11,7 @@ import os
 import tarfile
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
-from wavesynlib.languagecenter.utils import eval_format
+
 
 
 class TarFileManipulator(ModelNode):
@@ -23,7 +23,7 @@ class TarFileManipulator(ModelNode):
             
     @property
     def node_path(self):
-        return eval_format('{self.parent_node.node_path}["{self.filename}"]')
+        return f'{self.parent_node.node_path}["{self.filename}"]'
         
     @Scripting.printable
     def extract_all(self, directory):

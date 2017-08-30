@@ -61,8 +61,11 @@ class Windows(ModelNode):
         self.battery = ModelNode(
             is_lazy=True, 
             module_name='wavesynlib.interfaces.os.windows.battery',
-            class_name='Battery'
-        )
+            class_name='Battery')
+        self.powershell = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.interfaces.os.windows.powershell',
+            class_name='Powershell')
         
     
     @Scripting.printable

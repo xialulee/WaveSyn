@@ -4,9 +4,6 @@ Created on Tue Dec 29 10:44:36 2015
 
 @author: Feng-cong Li
 """
-import json
-from copy import deepcopy
-import platform
 import ast
 
 
@@ -87,60 +84,3 @@ class ExprTranslator:
             ast.Str:        lambda: f'"{node.s}"'
         }[type(node)]()
 
-
-
-# To Do: Move this class to 
-# wavesyn.interfaces.os.windows.powershell
-class Command:
-    def __init__(self, commandString):
-        self.__comStrList   = [commandString]
-        
-    def appendArg(self, arg):
-        self.__comStrList.append(arg)
-        
-    @property
-    def commandString(self):
-        return ' '.join(self.__comStrList)
-        
-    def where(self, expr, lang='py'):
-        newObj  = deepcopy(self)
-        if lang == 'py':
-            expr    = ExprTranslator.translate(expr)
-        newObj.appendArg(f'| where{{{expr}}}')
-        return newObj
-            
-    def select(self, expr):
-        if isinstance(expr, list): # To Do: iteratable objects
-            expr = ','.join(expr)
-        newObj  = deepcopy(self)
-        newObj.appendArg(f'| select {expr}')
-        return newObj
-
-    if platform.system().lower() == 'windows': 
-        @property
-        def resultObject(self):
-            from wavesynlib.interfaces.os.windows import powershell
-            tempCom     = f'{self.commandString} | ConvertTo-Json'
-            stdout, stderr, errorlevel  = powershell.execute(tempCom)
-            return json.loads(stdout) # To Do: Handle exceptions
-    else:
-        @property
-        def resultObject(self):
-            raise NotImplementedError
-
-        
-        
-def command(com, *args, **kwargs):
-    comObj  = Command(com)
-#    if kwargs:
-#        for key, value in kwargs:
-#            self.__comStrList.append('-'+key)
-#            self.__comStrList.append(value)
-    for arg in args:
-        comObj.appendArg(arg)
-    return comObj
-    
-    
-    
-if __name__ == '__main__':
-    print(command('ps').select('name,id').where('4900 < _.id < 5000').resultObject)
