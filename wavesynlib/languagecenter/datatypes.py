@@ -4,15 +4,12 @@ Created on Sat Dec 26 21:10:54 2015
 
 @author: Feng-cong Li
 """
-from __future__  import print_function
-
 import sys
 import json
-from six.moves import zip as izip
 from collections import OrderedDict
 
 
-class CommandSlot(object):
+class CommandSlot:
     __slots__ = [
         'source', # Where the command come from. For security considerations, e.g., if a command is received by xmlrpcserver, the source will be set to something indicating that the source may be malicious. {'native', 'local', 'remote'}
         'node_list', # The nodes comprise the path. For security considerations, e.g., we can forbid a node being obtained by commands from other machines.
@@ -20,6 +17,7 @@ class CommandSlot(object):
         'args', # The arguments.
         'kwargs' # The keyword arguments.
     ]
+    
     
     def __init__(self, source=None, node_list=None, 
                  method_name=None, args=None, kwargs=None):
@@ -30,7 +28,8 @@ class CommandSlot(object):
         self.kwargs = kwargs if kwargs is not None else {}
 
 
-class Table(object):
+
+class Table:
     def __init__(self, head):
         self.__head     = head
         self.__buf      = []
@@ -48,7 +47,7 @@ class Table(object):
         
     def generate_row(self, row):
         d   = OrderedDict()
-        for key, value in izip(self.__head, row):
+        for key, value in zip(self.__head, row):
             d[key]  = value
         return d
         

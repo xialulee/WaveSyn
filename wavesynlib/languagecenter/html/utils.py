@@ -4,18 +4,17 @@ Created on Wed Aug 17 22:34:54 2016
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
 import xml
-from six.moves import html_parser
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+import html
+from html import parser
+
 
 
 # See http://stackoverflow.com/a/9662410
 remove_tags = lambda html_code: ''.join(xml.etree.ElementTree.fromstring(html_code).itertext())
 
 
-class _TableTextExtractor(html_parser.HTMLParser, object):
+class _TableTextExtractor(parser.HTMLParser, object):
     def __init__(self, tables):
         super(_TableTextExtractor, self).__init__()
         self.__tables = tables
@@ -47,6 +46,7 @@ class _TableTextExtractor(html_parser.HTMLParser, object):
     def handle_data(self, data):
         if self.__in_td_tag:
             self.__current_row[-1] += data
+            
 
 
 def get_table_text(html_code):
@@ -57,4 +57,20 @@ def get_table_text(html_code):
     
 
 
-    
+def iterable_to_table(iterable, have_head=False):
+    row_str = []
+    for idx, row in enumerate(iterable):
+        if idx==0 and have_head:
+            start = '<th>'; stop = '</th>'
+        else:
+            start = '<td>'; stop = '</td>'
+        items = []
+        for item in row:
+            item_str = html.escape(str(item))
+            items.append(f'{start}{item_str}{stop}')
+        a_row = ' '.join(items)
+        row_str.append(f'<tr>{a_row}</tr>')
+    table_str = '\n'.join(row_str)
+    return f'''<table>
+{table_str}
+</table>'''

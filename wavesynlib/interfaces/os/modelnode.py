@@ -101,13 +101,17 @@ if platform.system().lower() == 'windows':
             
         
         @Scripting.printable
-        def write(self, content, html=None, code=None):
+        def write(self, content, html=None, table=None, code=None):
+            if table:
+                from wavesynlib.languagecenter.html.utils import iterable_to_table
+                html = True
+                content = iterable_to_table(content)          
             if (not html) and (not code) :
                 super().write(content)
             else:
                 stream = StringIO()
                 stream.write(content)
-                stream.seek(0)
+                stream.seek(0)                    
                 clipb.stream_to_clipboard(stream, mode=None, code=code, tee=None, null=None, html=html)
                 
                 
