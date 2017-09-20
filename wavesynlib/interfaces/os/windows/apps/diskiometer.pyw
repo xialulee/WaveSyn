@@ -8,6 +8,7 @@ import os
 
 from tkinter import Tk, Label
 import ctypes as ct
+from comtypes import client
 
 from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
@@ -20,7 +21,9 @@ from wavesynlib.languagecenter.utils import get_caller_dir
     
 class DiskTime(object):
     def __init__(self):
-        self.__wql = WQL()
+        loc = client.CreateObject('WbemScripting.SWbemLocator')
+        services = loc.ConnectServer('.')
+        self.__wql = WQL(services)
         
     
     @property
@@ -40,9 +43,9 @@ def main():
         return
     
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
-    root    = Tk()
+    root = Tk()
     root.iconbitmap(default=os.path.join(get_caller_dir(), 'disktimemeter.ico'))
-    label   = Label()
+    label = Label()
     label.pack()
     tb_icon  = tktools.TaskbarIcon(root) 
     disk_time = DiskTime()
@@ -53,6 +56,7 @@ def main():
     def show_disk_io():
         percent = disk_time.percent
         label['text']   = f'Disk IO time percent: {percent}%'
+        root.title(f'Disk IO {percent}%')
         tb_icon.progress = percent        
         if percent <= 60:
             state = TBPFLAG.TBPF_NORMAL

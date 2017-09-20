@@ -8,6 +8,7 @@ import os
 
 from tkinter import Tk, Label
 import ctypes as ct
+from comtypes import client
 
 from wavesynlib.guicomponents import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
@@ -20,7 +21,9 @@ from wavesynlib.languagecenter.utils import get_caller_dir
     
 class Battery:
     def __init__(self):
-        self.__wql = WQL()
+        loc = client.CreateObject('WbemScripting.SWbemLocator')
+        service = loc.ConnectServer('.')
+        self.__wql = WQL(service)
         
     
     @property
@@ -52,7 +55,8 @@ def main():
     @timer.add_observer   
     def show_percent():
         percent = battery.percent
-        label['text']   = 'Battery: {}%'.format(percent)
+        label['text']   = f'Battery: {percent}%'
+        root.title(f'Battery {percent}%')
         tb_icon.progress = percent        
         if 10 <= percent <= 30:
             state = TBPFLAG.TBPF_PAUSED

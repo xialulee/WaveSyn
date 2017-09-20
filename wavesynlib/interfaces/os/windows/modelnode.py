@@ -7,6 +7,7 @@ Created on Thu Mar 02 22:41:20 2017
 import os
 from subprocess import Popen
 import webbrowser
+import comtypes
 from comtypes import client
 
 from wavesynlib.languagecenter.utils import get_caller_dir
@@ -83,5 +84,10 @@ class Windows(ModelNode):
             Popen(cmd)
         else:
             webbrowser.open(app_path)
+            
+            
+    @Scripting.printable
+    def create_guid(self):
+        return str(comtypes.GUID.create_new())
         
         

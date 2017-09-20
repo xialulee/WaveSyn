@@ -42,7 +42,8 @@ def main():
     @timer.add_observer   
     def show_cpu_usage():
         cpu_usage = get_cpu_usage()
-        label['text']   = 'CPU Usage: {}%'.format(cpu_usage)
+        label['text']   = f'CPU Usage: {cpu_usage}%'
+        root.title(f'CPU {cpu_usage}%')
         tb_icon.progress = cpu_usage        
         if cpu_usage <= 60:
             state = TBPFLAG.TBPF_NORMAL

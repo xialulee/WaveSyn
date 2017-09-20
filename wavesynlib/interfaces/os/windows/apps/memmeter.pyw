@@ -62,6 +62,7 @@ def main():
     def show_memory_usage():
         memusage = get_memory_usage()
         label['text']   = f'Memory Usage: {memusage}%'
+        root.title(f'RAM {memusage}%')
         tbIcon.progress = memusage        
         if memusage <= 60:
             state = TBPFLAG.TBPF_NORMAL
