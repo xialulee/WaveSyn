@@ -13,34 +13,49 @@ from string import Template, Formatter
 
 import inspect
 
+
+
 def auto_subs(template):
     return Template(template).substitute(sys._getframe(1).f_locals)
     
+ 
     
 def get_caller_dir():
     return os.path.abspath(os.path.dirname(inspect.getfile(sys._getframe(1))))    
+
+
+
+def call_immediately(func):
+    func()
     
+
+
 class EvalFormatter(Formatter):
     def __init__(self, level=1):
         super(EvalFormatter, self).__init__()
         self.caller = None # Will be set by method "format".
         self.level  = level
+        
                              
     def get_value(self, expr, args=None, kwargs=None):
         caller   = self.caller        
         return eval(expr, caller.f_globals, caller.f_locals)
+    
         
     def get_field(self, field_name, args, kwargs):
         obj = self.get_value(field_name, args, kwargs)
         return obj, field_name        
+    
         
     def format(self, format_string, *args, **kwargs):
         self.caller = sys._getframe(self.level)
         return Formatter.format(self, format_string, *args, **kwargs)
                 
 
+
 def eval_format(format_string):
     return EvalFormatter(level=2).format(format_string) 
+
 
 
 class MethodDelegator(object):
@@ -49,15 +64,18 @@ class MethodDelegator(object):
         self.attribute_name   = attribute_name
         self.method_name = method_name
     
+    
     def __get__(self, obj, type=None):
         return getattr(getattr(obj, self.attribute_name), self.method_name)  
         
         
+    
 class MethodLock(object):
     def __init__(self, method, lockName):
         super(MethodLock, self).__init__()
         self.__descriptor   = method
         self.__lockName     = lockName
+        
         
     def __get__(self, obj, type=None):
         lock = getattr(obj, self.__lockName)
@@ -68,13 +86,15 @@ class MethodLock(object):
             return self.__descriptor.__get__(obj, type)        
         
         
+        
 def set_attributes(obj, **kwargs):
     '''This function mimics the VisualBasic "with" statement.'''    
     for attribute_name in kwargs:
         setattr(obj, attribute_name, kwargs[attribute_name])
         
 
-class ObjectWithLock(object):    
+
+class ObjectWithLock:    
     '''This is a mixin class.'''
     @property
     def lock(self):
@@ -82,11 +102,13 @@ class ObjectWithLock(object):
             self._lock  = threading.Lock()
         return self._lock
         
+    
 
-class FunctionChain(object):
+class FunctionChain:
     def __init__(self):
-        super(FunctionChain, self).__init__()
+        super().__init__()
         self.__functions    = []
+    
     
     def __call__(self, *args, **kwargs):
         retval = None
@@ -94,28 +116,34 @@ class FunctionChain(object):
             retval = func(*args, **kwargs)
         return retval
     
+    
     def add_function(self, func):
         self.__functions.append(func)
+    
     
     def delete_function(self, func):
         self.__functions.remove(func)
     
+    
     def delete_functions(self):
         self.__functions    = []
+    
     
     def count_functions(self):
         return len(self.__functions)
     
      
 
-class property_with_args(object):
-    class Property(object):
+class property_with_args:
+    class Property:
         def __init__(self, instance, func):
             self.__instance = instance
             self.__func = func
+            
         
         def __getitem__(self, args):
             return self.__func(self.__instance, args)
+    
     
     def __init__(self, func):
         self.__func = func

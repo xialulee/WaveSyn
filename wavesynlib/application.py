@@ -123,6 +123,8 @@ wavesyn
                 
         with self.attribute_lock:
             set_attributes(self,
+                code_printer = code_printer,
+                           
                 processes = ProcessDict(),
                                                                 
                 file_utils = ModelNode(

@@ -4,14 +4,14 @@ Created on Sat Jan 14 16:19:30 2017
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
 import socket
 import random
 import struct
 import json
 import datetime
-import six.moves._thread as thread
+import importlib
+
+from pathlib import Path
 
 import qrcode
 from PIL import ImageTk
@@ -21,7 +21,26 @@ import six.moves.tkinter_ttk as ttk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
-from wavesynlib.languagecenter.utils import eval_format
+from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
+
+
+
+_plugins = {'location':[]}
+
+
+
+@call_immediately
+def load_plugins():
+    self_dir = Path(get_caller_dir())
+    loc_dir = self_dir.joinpath('plugins/locationsensor')
+    for file in loc_dir.glob('*.py'):
+        if file.name == '__init__.py':
+            continue
+        mod_name = file.name[:-3] # Remove the suffix ".py" which has three chars.
+        mod_path = f'wavesynlib.toolwindows.mobiledevice.plugins.locationsensor.{mod_name}'
+        mod = importlib.import_module(mod_path)
+        _plugins['location'].append(mod.Plugin(Scripting.root_node))
+        
 
 
 class DataTransferWindow(TkToolWindow):
@@ -142,87 +161,105 @@ if action == "read":
             self.__qr_canvas.canvas.itemconfig(self.__qr_id, image=self.__qr_image) 
         self.__data_book.select(self._qr_tab)
             
-        thread.start_new_thread(self._server_thread, (sockobj, command))
-    
-    
-    def _server_thread(self, sockobj, command):
-        sockobj.listen(2)
-        conn, addr = sockobj.accept()
-        
-        @self.root_node.thread_manager.main_thread_do(block=False)
-        def clear_qr_image():
-            self.__qr_canvas.canvas.delete(self.__qr_id)
-            self.__qr_id = None
-
-        exit_flag = conn.recv(1)
-        if exit_flag != b'\x00':
-            return
-        password = struct.unpack('!I', conn.recv(4))[0]
-        if password != self.__password:
-            return
-            
-        if command['action'] == 'read':
-            # Loop receiving data
-            data_list = []
-            while True:
-                data = conn.recv(8192)
-                if not data: 
-                    break
-                data_list.append(data)
-            data = b''.join(data_list)
-            # End receiving data            
-            
-            if command['source'] in ('clipboard', 'location_sensor'):
-                # Store received data
-                text = data.decode('utf-8')
-                self.__data = {'data':text, 'type':'text'}
-                # End store received data
+        @self.root_node.thread_manager.new_thread_do
+        def transfer():
+            with sockobj:
+                sockobj.listen(2)
+                # Here it waits for two potential objects.
+                # One is the android data provider,
+                # and the other is WaveSyn itself for cancellation.
+                #
+                # If the data receiving mission is aborted for some reason,
+                # the main threa of WaveSyn will send a piece of data here,
+                # to notify this thread not to wait any longer. 
+                #
+                # The first byte of the received data is the exit_flag.
+                # If WaveSyn wants to abort this data receiving mission, 
+                # it will send a byte exit_flag='0x00', and this thread kills itself.
+                #
+                # Data format:
+                # [exit_flag:1byte] [password:4bytes] [data:arbitrary bytes]
                 
-                if command['source'] == 'location_sensor':
-                    pos = json.loads(text)                    
-                    text = eval_format('latitude={pos["latitude"]}, longitude={pos["longitude"]}')
+                conn, addr = sockobj.accept()
                 
                 @self.root_node.thread_manager.main_thread_do(block=False)
-                def show_text():
-                    scrolled_text = self.__scrolled_text
-                    scrolled_text.append_text(text)
-                    scrolled_text.append_text('\n\n')
-                    
-                    # Generate Copy Link
-                    def copy_link_action(dumb):
-                        self.root_node.interfaces.os.clipboard.write(text)
-                        
-                    tag_name = scrolled_text.create_link_tag(copy_link_action)
-                    scrolled_text.append_text('[COPY]', tag_name)
-                    scrolled_text.append_text(' ')
-                    # End Generate Copy Link
-                    
-                    # Generate Map Link
-                    if command['source'] == 'location_sensor':
-                        def map_link_action(dumb):
-                            with code_printer():
-                                self.root_node.interfaces.os.map_open(latitude=pos['latitude'], longitude=pos['longitude'])
-                            
-                        tag_name = scrolled_text.create_link_tag(map_link_action)
-                        scrolled_text.append_text('[MAP]', tag_name)
-                        scrolled_text.append_text(' ')
-                    # End Generate Map Link
-                    
-                    scrolled_text.append_text('\n{}{}{}\n\n\n'.format(
-                        '='*12, 
-                        datetime.datetime.now().isoformat(), 
-                        '='*12
-                    ))
-                    
-                    
-            @self.root_node.thread_manager.main_thread_do(block=False)
-            def on_finish():
-                self.__data_book.select(self._data_tab)
-                if self.__on_finish:
-                    self.__on_finish(self.device_data['data'])
-                    self.__on_finish = None
-                    
+                def clear_qr_image():
+                    self.__qr_canvas.canvas.delete(self.__qr_id)
+                    self.__qr_id = None
         
+                exit_flag = conn.recv(1)
+                if exit_flag != b'\x00':
+                    # The first byte is zero, which means abort this transfer mission.
+                    return
+                
+                password = struct.unpack('!I', conn.recv(4))[0]
+                if password != self.__password:
+                    return
+                    
+                if command['action'] == 'read':
+                    # Loop receiving data
+                    data_list = []
+                    while True:
+                        data = conn.recv(8192)
+                        if not data: 
+                            break
+                        data_list.append(data)
+                    data = b''.join(data_list)
+                    # End receiving data            
+                    
+                    if command['source'] in ('clipboard', 'location_sensor'):
+                        # Store received data
+                        text = data.decode('utf-8')
+                        self.__data = {'data':text, 'type':'text'}
+                        # End store received data
+                        
+                        if command['source'] == 'location_sensor':
+                            pos = json.loads(text)                    
+                            text = f'latitude={pos["latitude"]}, longitude={pos["longitude"]}'
+                        
+                        @self.root_node.thread_manager.main_thread_do(block=False)
+                        def show_text():
+                            # Always manipulate the GUI components in the main thread!
+                            scrolled_text = self.__scrolled_text
+                            scrolled_text.append_text(text)
+                            scrolled_text.append_text('\n\n')
+                            
+                            # Generate Copy Link
+                            def copy_link_action(dumb):
+                                self.root_node.interfaces.os.clipboard.write(text)
+                                
+                            tag_name = scrolled_text.create_link_tag(copy_link_action)
+                            scrolled_text.append_text('[COPY]', tag_name)
+                            scrolled_text.append_text(' ')
+                            # End Generate Copy Link
+                            
+                            # Generate Plugin Links
+                            if command['source'] == 'location_sensor':
+                                for plugin in _plugins['location']:
+                                    if not plugin.test_data(pos):
+                                        continue
+                                    def link_action(dumb):
+                                        plugin.action(pos)
+                                    tag_name = scrolled_text.create_link_tag(link_action)
+                                    scrolled_text.append_text(f'[{plugin.link_text}]', tag_name)
+                                    scrolled_text.append_text(' ')
+                            # End Generate Plugin Links
+                            
+                            scrolled_text.append_text('\n{}{}{}\n\n\n'.format(
+                                '='*12, 
+                                datetime.datetime.now().isoformat(), 
+                                '='*12
+                            ))
+                            
+                            
+                    @self.root_node.thread_manager.main_thread_do(block=False)
+                    def on_finish():
+                        # Always manipulate the GUI components in the main thread.
+                        self.__data_book.select(self._data_tab)
+                        if self.__on_finish:
+                            self.__on_finish(self.device_data['data'])
+                            self.__on_finish = None        
+    
     
     @Scripting.printable
     def read_device_clipboard(self, on_finish):

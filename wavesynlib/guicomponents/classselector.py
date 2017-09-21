@@ -4,8 +4,6 @@ Created on Sat Apr 04 10:03:17 2015
 
 @author: Feng-cong Li
 """
-from __future__ import print_function
-
 import os
 import sys
 import importlib
@@ -20,7 +18,7 @@ from six.moves.tkinter import Frame
 from wavesynlib.guicomponents.tk import ScrolledTree
 
 
-class ClassSelector(object):        
+class ClassSelector:
     def __init__(self, package_name, base_class, display_base_class=False):
         self.__package_name = package_name
         self.__base_class = base_class
@@ -56,12 +54,14 @@ class ClassSelector(object):
         )
         ok_button.pack(side='right')
         
+        
     def do_model(self):
         win = self.__window
         win.focus_set()
         win.grab_set()
         win.wait_window() 
         return self.__selected_module_name, self.__selected_class_name
+    
         
     def load_modules(self):
         retval = {}
@@ -87,9 +87,10 @@ class ClassSelector(object):
         return retval
                 
 
+
 def ask_class_name(package_name, base_class):
-    file_path    = inspect.getsourcefile(ClassSelector)
-    p           = sp.Popen(['python', file_path, package_name, base_class.__module__, base_class.__name__], stdout=sp.PIPE);
+    file_path = inspect.getsourcefile(ClassSelector)
+    p = sp.Popen(['python', file_path, package_name, base_class.__module__, base_class.__name__], stdout=sp.PIPE);
     stdout, stderr  = p.communicate()
     return stdout.strip().split()
     
@@ -97,27 +98,34 @@ def ask_class_name(package_name, base_class):
 
 # Use multiprocessing for creating nonblocking ClassSelector dialog.
 # However, it seems that multiprocessing will copy the parent process (not only the selector poped out, but also another a new wavesyn console came out).
-# So, create_process is not used.
+# Hence, create_process is not used.
 # Maybe later I'll figure out how to solve this problem.
-class ClassSelectorProcess(object):
+class ClassSelectorProcess:
     def __init__(self, process, parent_conn):
-        self.process        = process
-        self.parent_conn     = parent_conn
+        self.process = process
+        self.parent_conn = parent_conn
+        
         
     def start(self):
         return self.process.start()
+    
         
     def is_alive(self):
         return self.process.is_alive()
+    
     
     @property    
     def return_value(self):
         if self.is_alive():
             raise Exception('ClassSelector process is still running.')
         return self.parent_conn.recv()
+    
+    
 
 def selector_procedure(conn, args, kwargs):
     conn.send(ClassSelector(*args, **kwargs).do_model())
+    
+    
     
 def create_process(*args, **kwargs): 
     parent_conn, child_conn   = mp.Pipe()
