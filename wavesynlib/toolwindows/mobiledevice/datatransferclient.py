@@ -9,10 +9,16 @@ import socket
 import json
 import struct
 import time
+import os
 
 import androidhelper as android
 
 droid = android.Android()
+
+
+
+_device_code = os.environ['HOSTNAME']
+
 
 
 def read_qr():
@@ -30,7 +36,9 @@ def send_text(text, ip, port, password):
     sockobj.connect((ip, port))
     sockobj.send('\x00')
     sockobj.send(struct.pack('!I', password))
-    sockobj.send(text)
+    data = {'device code':_device_code, 'data':text}
+    data = json.dumps(data)
+    sockobj.send(data)
     sockobj.close()
     
     

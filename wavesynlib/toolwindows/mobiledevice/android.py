@@ -16,8 +16,8 @@ from pathlib import Path
 import qrcode
 from PIL import ImageTk
 
-import six.moves.tkinter as tk
-import six.moves.tkinter_ttk as ttk
+import tkinter as tk
+import tkinter.ttk as ttk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
@@ -210,6 +210,8 @@ if action == "read":
                     if command['source'] in ('clipboard', 'location_sensor'):
                         # Store received data
                         text = data.decode('utf-8')
+                        data_obj = json.loads(text)
+                        text = data_obj['data']
                         self.__data = {'data':text, 'type':'text'}
                         # End store received data
                         
@@ -221,8 +223,17 @@ if action == "read":
                         def show_text():
                             # Always manipulate the GUI components in the main thread!
                             scrolled_text = self.__scrolled_text
-                            scrolled_text.append_text(text)
-                            scrolled_text.append_text('\n\n')
+                            scrolled_text.append_text(f'''
+{"="*30}
+{datetime.datetime.now().isoformat()}
+Device Code: {data_obj["device code"]}
+IP: {addr[0]}
+{"="*30}
+
+{text}
+
+
+''')
                             
                             # Generate Copy Link
                             def copy_link_action(dumb):
@@ -244,12 +255,7 @@ if action == "read":
                                     scrolled_text.append_text(f'[{plugin.link_text}]', tag_name)
                                     scrolled_text.append_text(' ')
                             # End Generate Plugin Links
-                            
-                            scrolled_text.append_text('\n{}{}{}\n\n\n'.format(
-                                '='*12, 
-                                datetime.datetime.now().isoformat(), 
-                                '='*12
-                            ))
+                            scrolled_text.append_text('\n'*3)
                             
                             
                     @self.root_node.thread_manager.main_thread_do(block=False)
