@@ -256,7 +256,7 @@ class LabeledEntry(Frame, object):
         self.__entry.config(validate='key', validatecommand=func)
                 
 
-class PILImageFrame(Frame, object):
+class PILImageFrame(Frame):
     def __init__(self, *args, **kwargs):
         pil_image = kwargs.pop('pil_image')
         photo = ImageTk.PhotoImage(pil_image)
@@ -278,6 +278,12 @@ class PILImageFrame(Frame, object):
         Label(frame, text=eval_format('id={id(self)}')).pack(side='left')
         Button(frame, text='Save Origin', command=lambda:on_save(self.__origin_image)).pack(side='left')
         Button(frame, text='Save Zoomed', command=lambda:on_save(self.__zoomed_image)).pack(side='left')
+        if platform.system().lower() == 'windows':
+            from wavesynlib.interfaces.os.windows.clipboard import clipb
+            
+            def on_copy():
+                clipb.image_file_to_clipboard(self.__origin_image)
+            Button(frame, text='Copy', command=on_copy).pack(side='left')
 
         scale = Scale(frame, from_=0, to=100, orient='horizontal', value=100)
         scale.pack(side='left')

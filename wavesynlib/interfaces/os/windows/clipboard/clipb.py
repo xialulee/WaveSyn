@@ -7,7 +7,7 @@ import getopt
 import re
 import msvcrt
 import six
-from six.moves  import cStringIO as StringIO
+from io import BytesIO
 from PIL        import Image, ImageGrab
 from psd_tools  import PSDImage
 
@@ -138,14 +138,16 @@ def image_file_to_clipboard(fileObj, is_psd=False):
 See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
 '''
     if is_psd:
-        psd     = PSDImage.from_stream(fileObj)
-        image   = psd.as_PIL()
+        psd = PSDImage.from_stream(fileObj)
+        image = psd.as_PIL()
+    elif isinstance(fileObj, Image.Image):
+        image = fileObj
     else:
-        image   = Image.open(fileObj)
-    sio     = StringIO()
-    image.convert('RGB').save(sio, 'BMP')
-    data    = sio.getvalue()[14:]
-    sio.close()
+        image = Image.open(fileObj)
+    bio = BytesIO()
+    image.convert('RGB').save(bio, 'BMP')
+    data = bio.getvalue()[14:]
+    bio.close()
     win32clipboard.OpenClipboard()
     try:
         win32clipboard.EmptyClipboard()

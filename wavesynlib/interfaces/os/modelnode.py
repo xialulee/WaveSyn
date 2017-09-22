@@ -325,7 +325,7 @@ class OperatingSystem(ModelNode):
         
     @Scripting.printable
     def map_open(self, latitude, longitude):
-        uri = f'bingmaps:?cp={latitude}~{longitude}'
+        uri = f'bingmaps:?collection=point.{latitude}_{longitude}_Pin'
         webbrowser.open(uri)
         
         

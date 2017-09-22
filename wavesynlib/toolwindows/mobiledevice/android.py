@@ -12,20 +12,22 @@ import datetime
 import importlib
 
 from pathlib import Path
+from io import BytesIO
 
 import qrcode
-from PIL import ImageTk
+from PIL import ImageTk, Image
 
 import tkinter as tk
 import tkinter.ttk as ttk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry
+from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry, PILImageFrame
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
 
 
 
 _plugins = {'location':[]}
+MAXDEVCODELEN = 16
 
 
 
@@ -69,6 +71,12 @@ if action == "read":
     {'class':'Button', 'name':'write_clipb', 
          'balloonmsg':'Write the clipboard of an Android device.',
          'config':{'text':'Write', 'command':self.__on_write_device_clipboard}} # To Do: Change it. 
+]},
+    
+{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Gallery'}, 'children':[
+    {'class':'Button', 
+         'balloonmsg':'Get gallery photos.',
+         'config':{'text':'Pick', 'command':self.__on_pick_gallery_photo}}
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
@@ -163,6 +171,53 @@ if action == "read":
             
         @self.root_node.thread_manager.new_thread_do
         def transfer():
+            def show_head(device_code, addr, read):
+                mark = '=' if read else '*'
+                wtext = self.__scrolled_text
+                wtext.append_text(f'''
+{mark*30}
+From Device
+Device Code: {device_code}
+IP: {addr[0]}
+{datetime.datetime.now().isoformat()}
+{mark*30}''')   
+                
+                
+            def generate_loc_plugin_link(pos):
+                wtext = self.__scrolled_text
+                
+                for plugin in _plugins['location']:
+                    if not plugin.test_data(pos):
+                        continue
+                    def link_action(dumb, plugin=plugin):
+                        plugin.action(pos)
+                    tag_name = wtext.create_link_tag(link_action)
+                    wtext.append_text(f'[{plugin.link_text}]', tag_name)
+                    wtext.append_text(' ')   
+                    
+                    
+            def recv_head(conn):
+                exit_flag = conn.recv(1)
+                if exit_flag != b'\x00':
+                    # The first byte is not zero, which means abort this transfer mission.
+                    return True, None
+                password = struct.unpack('!I', conn.recv(4))[0]
+                if password != self.__password:
+                    return True, None
+                device_code = conn.recv(MAXDEVCODELEN).decode('utf-8')
+                return False, device_code
+            
+            
+            def recv_data(conn):
+                data_list = []
+                while True:
+                    data = conn.recv(8192)
+                    if not data:
+                        break
+                    data_list.append(data)
+                return b''.join(data_list)
+                
+            
             with sockobj:
                 sockobj.listen(2)
                 # Here it waits for two potential objects.
@@ -188,24 +243,13 @@ if action == "read":
                     self.__qr_canvas.canvas.delete(self.__qr_id)
                     self.__qr_id = None
         
-                exit_flag = conn.recv(1)
-                if exit_flag != b'\x00':
-                    # The first byte is zero, which means abort this transfer mission.
-                    return
-                
-                password = struct.unpack('!I', conn.recv(4))[0]
-                if password != self.__password:
+                exit_flag, device_code = recv_head(conn)
+                if exit_flag:
                     return
                     
                 if command['action'] == 'read':
                     # Loop receiving data
-                    data_list = []
-                    while True:
-                        data = conn.recv(8192)
-                        if not data: 
-                            break
-                        data_list.append(data)
-                    data = b''.join(data_list)
+                    data = recv_data(conn)
                     # End receiving data            
                     
                     if command['source'] in ('clipboard', 'location_sensor'):
@@ -224,18 +268,8 @@ if action == "read":
                         def show_text():
                             # Always manipulate the GUI components in the main thread!
                             scrolled_text = self.__scrolled_text
-                            scrolled_text.append_text(f'''
-{"="*30}
-From Device
-Device Code: {data_obj["device code"]}
-IP: {addr[0]}
-{datetime.datetime.now().isoformat()}
-{"="*30}
-
-{text}
-
-
-''')
+                            show_head(device_code=device_code, addr=addr, read=True)
+                            scrolled_text.append_text(f'\n\n{text}\n\n\n')
                             
                             # Generate Copy Link
                             def copy_link_action(dumb):
@@ -248,16 +282,21 @@ IP: {addr[0]}
                             
                             # Generate Plugin Links
                             if command['source'] == 'location_sensor':
-                                for plugin in _plugins['location']:
-                                    if not plugin.test_data(pos):
-                                        continue
-                                    def link_action(dumb, plugin=plugin):
-                                        plugin.action(pos)
-                                    tag_name = scrolled_text.create_link_tag(link_action)
-                                    scrolled_text.append_text(f'[{plugin.link_text}]', tag_name)
-                                    scrolled_text.append_text(' ')
+                                generate_loc_plugin_link(pos=pos)
                             # End Generate Plugin Links
                             scrolled_text.append_text('\n'*3)
+                            scrolled_text.see('end')
+                    elif command['source'] == 'gallery':
+                        bio = BytesIO(data)
+                        img = Image.open(bio)
+                        @self.root_node.thread_manager.main_thread_do(block=False)
+                        def show_image():
+                            scrolled_text = self.__scrolled_text
+                            show_head(device_code=device_code, addr=addr, read=True)
+                            scrolled_text.append_text('\n'*2)
+                            pil_frame = PILImageFrame(scrolled_text, pil_image=img)
+                            scrolled_text.text.window_create('end', window=pil_frame)
+                            scrolled_text.append_text('\n'*4)
                             scrolled_text.see('end')
                             
                             
@@ -278,15 +317,8 @@ IP: {addr[0]}
                     def on_finish():
                         self.__data_book.select(self._data_tab)
                         scrolled_text = self.__scrolled_text
-                        scrolled_text.append_text(f'''
-{"*"*30}
-To Device
-IP: {addr[0]}
-{datetime.datetime.now().isoformat()}
-{"*"*30}
-
-
-''')
+                        show_head(device_code=device_code, addr=addr, read=False)
+                        scrolled_text.append_text('\n'*3)
                         scrolled_text.see('end')
                     
     
@@ -297,9 +329,19 @@ IP: {addr[0]}
         
         
     @Scripting.printable
+    def pick_gallery_photo(self, on_finish):
+        self._launch_server(command={'action':'read', 'source':'gallery'})
+        self.__on_finish = on_finish
+        
+        
+    @Scripting.printable
     def read_device_location(self, on_finish):
         self._launch_server(command={'action':'read', 'source':'location_sensor'})
         self.__on_finish = on_finish
+        
+        
+    def write_device_clipboard(self):
+        self._launch_server(command={'action':'write', 'target':'clipboard'})        
         
         
     def __on_read_device_clipboard(self, on_finish=None):
@@ -316,5 +358,8 @@ IP: {addr[0]}
         with code_printer():
             self.write_device_clipboard()
     
-    def write_device_clipboard(self):
-        self._launch_server(command={'action':'write', 'target':'clipboard'})
+
+    def __on_pick_gallery_photo(self, on_finish=None):
+        with code_printer():
+            self.pick_gallery_photo(on_finish=on_finish)
+            
