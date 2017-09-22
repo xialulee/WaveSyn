@@ -173,10 +173,11 @@ if action == "read":
         def transfer():
             def show_head(device_code, addr, read):
                 mark = '=' if read else '*'
+                direction = 'From' if read else 'To'
                 wtext = self.__scrolled_text
                 wtext.append_text(f'''
 {mark*30}
-From Device
+{direction} Device
 Device Code: {device_code}
 IP: {addr[0]}
 {datetime.datetime.now().isoformat()}
