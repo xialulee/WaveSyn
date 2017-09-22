@@ -68,7 +68,7 @@ if action == "read":
          'config':{'text':'Read', 'command':self.__on_read_device_clipboard}},
     {'class':'Button', 'name':'write_clipb', 
          'balloonmsg':'Write the clipboard of an Android device.',
-         'config':{'text':'Write', 'command':lambda:self._launch_server({'direction':'to device', 'data_type':'text', 'clipboard':True})}} # To Do: Change it. 
+         'config':{'text':'Write', 'command':self.__on_write_device_clipboard}} # To Do: Change it. 
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
@@ -178,12 +178,13 @@ if action == "read":
                 # it will send a byte exit_flag='0x00', and this thread kills itself.
                 #
                 # Data format:
-                # [exit_flag:1byte] [password:4bytes] [data:arbitrary bytes]
+                # [exit_flag:1byte] [password:4bytes] [data:arbitrary bytes in json format]
                 
                 conn, addr = sockobj.accept()
                 
                 @self.root_node.thread_manager.main_thread_do(block=False)
                 def clear_qr_image():
+                    # Always manipulate the GUI components in the main thread.
                     self.__qr_canvas.canvas.delete(self.__qr_id)
                     self.__qr_id = None
         
@@ -225,9 +226,10 @@ if action == "read":
                             scrolled_text = self.__scrolled_text
                             scrolled_text.append_text(f'''
 {"="*30}
-{datetime.datetime.now().isoformat()}
+From Device
 Device Code: {data_obj["device code"]}
 IP: {addr[0]}
+{datetime.datetime.now().isoformat()}
 {"="*30}
 
 {text}
@@ -256,6 +258,7 @@ IP: {addr[0]}
                                     scrolled_text.append_text(' ')
                             # End Generate Plugin Links
                             scrolled_text.append_text('\n'*3)
+                            scrolled_text.see('end')
                             
                             
                     @self.root_node.thread_manager.main_thread_do(block=False)
@@ -265,7 +268,27 @@ IP: {addr[0]}
                         if self.__on_finish:
                             self.__on_finish(self.device_data['data'])
                             self.__on_finish = None        
-    
+                
+                elif command['action'] == 'write':                                        
+                    if command['target'] == 'clipboard':
+                        text = self.root_node.interfaces.os.clipboard.read()
+                        data = {'data':text, 'type':'text'}
+                    conn.send(json.dumps(data).encode('utf-8'))
+                    @self.root_node.thread_manager.main_thread_do(block=False)
+                    def on_finish():
+                        self.__data_book.select(self._data_tab)
+                        scrolled_text = self.__scrolled_text
+                        scrolled_text.append_text(f'''
+{"*"*30}
+To Device
+IP: {addr[0]}
+{datetime.datetime.now().isoformat()}
+{"*"*30}
+
+
+''')
+                        scrolled_text.see('end')
+                    
     
     @Scripting.printable
     def read_device_clipboard(self, on_finish):
@@ -287,7 +310,11 @@ IP: {addr[0]}
     def __on_read_device_location(self, on_finish=None):
         with code_printer():
             self.read_device_location(on_finish=on_finish)
+            
+            
+    def __on_write_device_clipboard(self):
+        with code_printer():
+            self.write_device_clipboard()
     
-    
-    def _clipb_to_dev(self):
-        pass
+    def write_device_clipboard(self):
+        self._launch_server(command={'action':'write', 'target':'clipboard'})

@@ -440,8 +440,8 @@ class ScrolledText(Frame, object):
         
         
     def make_widgets(self):
-        sbar    = Scrollbar(self)
-        text    = TextWinHotkey(self, relief='sunken')
+        sbar = Scrollbar(self)
+        text = TextWinHotkey(self, relief='sunken')
         sbar.config(command=text.yview)
         text.config(yscrollcommand=sbar.set)
         sbar.pack(side='right', fill='y')
@@ -465,7 +465,11 @@ class ScrolledText(Frame, object):
         
     @property
     def text_widget(self):
-        return self.text        
+        return self.text
+    
+    
+    def see(self, *args, **kwargs):
+        self.text.see(*args, **kwargs)
         
 
     def set_text(self, text='', file=None, *tags):
