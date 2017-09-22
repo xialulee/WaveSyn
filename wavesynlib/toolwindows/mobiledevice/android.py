@@ -238,7 +238,7 @@ if action == "read":
                                 for plugin in _plugins['location']:
                                     if not plugin.test_data(pos):
                                         continue
-                                    def link_action(dumb):
+                                    def link_action(dumb, plugin=plugin):
                                         plugin.action(pos)
                                     tag_name = scrolled_text.create_link_tag(link_action)
                                     scrolled_text.append_text(f'[{plugin.link_text}]', tag_name)
