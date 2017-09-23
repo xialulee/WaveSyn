@@ -434,8 +434,10 @@ Red:   main-thread is busy.''')
                     
         @SimpleObserver
         def check_cpu_mem():
-            self.__membar.set(get_memory_usage())
-            self.__cpubar.set(get_cpu_usage())
+            with code_printer(print_=False):
+                # Important! Disable the code printer.
+                self.__membar.set(get_memory_usage())
+                self.__cpubar.set(get_cpu_usage())
             
         timer.divider(divide_by=10).add_observer(check_cpu_mem)
         timer.active = True

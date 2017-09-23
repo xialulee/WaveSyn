@@ -26,7 +26,7 @@ from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
 
 
 
-_plugins = {'location':[]}
+_plugins = {'locationsensor':[], 'file':[], 'text':[]}
 MAXDEVCODELEN = 16
 
 
@@ -34,14 +34,18 @@ MAXDEVCODELEN = 16
 @call_immediately
 def load_plugins():
     self_dir = Path(get_caller_dir())
-    loc_dir = self_dir.joinpath('plugins/locationsensor')
-    for file in loc_dir.glob('*.py'):
-        if file.name == '__init__.py':
-            continue
-        mod_name = file.name[:-3] # Remove the suffix ".py" which has three chars.
-        mod_path = f'wavesynlib.toolwindows.mobiledevice.plugins.locationsensor.{mod_name}'
-        mod = importlib.import_module(mod_path)
-        _plugins['location'].append(mod.Plugin(Scripting.root_node))
+    for name, path in [
+            ('locationsensor', 'plugins/locationsensor'),
+            ('file', 'plugins/file'),
+            ('text', 'plugins/text')]:
+        loc_dir = self_dir.joinpath(path)
+        for file in loc_dir.glob('*.py'):
+            if file.name == '__init__.py':
+                continue
+            mod_name = file.name[:-3] # Remove the suffix ".py" which has three chars.
+            mod_path = f'wavesynlib.toolwindows.mobiledevice.plugins.{name}.{mod_name}'
+            mod = importlib.import_module(mod_path)
+            _plugins[name].append(mod.Plugin(Scripting.root_node))
         
 
 
@@ -73,10 +77,13 @@ if action == "read":
          'config':{'text':'Write', 'command':self.__on_write_device_clipboard}} # To Do: Change it. 
 ]},
     
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Gallery'}, 'children':[
+{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Storage'}, 'children':[
     {'class':'Button', 
          'balloonmsg':'Get gallery photos.',
-         'config':{'text':'Pick', 'command':self.__on_pick_gallery_photo}}
+         'config':{'text':'Get Image', 'command':self.__on_pick_gallery_photo}},
+    {'class':'Button',
+         'balloonmsg':'Get File',
+         'config':{'text':'Get File', 'command':self.__on_get_device_file}}
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
@@ -112,6 +119,7 @@ if action == "read":
         self.__password = None
         self.__data = None
         self.__on_finish = None
+        self.__save_file_dir = None
 
         data_book.add(qr_canvas, text='QR Code')
         
@@ -168,7 +176,8 @@ if action == "read":
         else:
             self.__qr_canvas.canvas.itemconfig(self.__qr_id, image=self.__qr_image) 
         self.__data_book.select(self._qr_tab)
-            
+        
+        # Launch the data transfer thread    
         @self.root_node.thread_manager.new_thread_do
         def transfer():
             def show_head(device_code, addr, read):
@@ -184,16 +193,18 @@ IP: {addr[0]}
 {mark*30}''')   
                 
                 
-            def generate_loc_plugin_link(pos):
+            def generate_plugin_link(data, type_):
                 wtext = self.__scrolled_text
                 
-                for plugin in _plugins['location']:
-                    if not plugin.test_data(pos):
+                for plugin in _plugins[type_]:
+                    if not plugin.test_data(data):
                         continue
+                    
+                    @wtext.create_link_tag
                     def link_action(dumb, plugin=plugin):
-                        plugin.action(pos)
-                    tag_name = wtext.create_link_tag(link_action)
-                    wtext.append_text(f'[{plugin.link_text}]', tag_name)
+                        plugin.action(data)
+                    
+                    wtext.append_text(f'[{plugin.link_text}]', link_action)
                     wtext.append_text(' ')   
                     
                     
@@ -206,7 +217,8 @@ IP: {addr[0]}
                 if password != self.__password:
                     return True, None
                 device_code = conn.recv(MAXDEVCODELEN).decode('utf-8')
-                return False, device_code
+                datalen = struct.unpack('!I', conn.recv(4))[0]
+                return False, device_code, datalen
             
             
             def recv_data(conn):
@@ -244,13 +256,16 @@ IP: {addr[0]}
                     self.__qr_canvas.canvas.delete(self.__qr_id)
                     self.__qr_id = None
         
-                exit_flag, device_code = recv_head(conn)
+                exit_flag, device_code, datalen = recv_head(conn)
                 if exit_flag:
                     return
                     
                 if command['action'] == 'read':
                     # Loop receiving data
-                    data = recv_data(conn)
+                    if command['source'] != 'storage':
+                        # For file transfer mission,
+                        # if the file is large, recv_data will be memory consuming. 
+                        data = recv_data(conn)
                     # End receiving data            
                     
                     if command['source'] in ('clipboard', 'location_sensor'):
@@ -272,21 +287,13 @@ IP: {addr[0]}
                             show_head(device_code=device_code, addr=addr, read=True)
                             scrolled_text.append_text(f'\n\n{text}\n\n\n')
                             
-                            # Generate Copy Link
-                            def copy_link_action(dumb):
-                                self.root_node.interfaces.os.clipboard.write(text)
-                                
-                            tag_name = scrolled_text.create_link_tag(copy_link_action)
-                            scrolled_text.append_text('[COPY]', tag_name)
-                            scrolled_text.append_text(' ')
-                            # End Generate Copy Link
-                            
-                            # Generate Plugin Links
+                            generate_plugin_link(data=text, type_='text')
                             if command['source'] == 'location_sensor':
-                                generate_loc_plugin_link(pos=pos)
-                            # End Generate Plugin Links
+                                generate_plugin_link(data=pos, type_='locationsensor')
+
                             scrolled_text.append_text('\n'*3)
                             scrolled_text.see('end')
+                            
                     elif command['source'] == 'gallery':
                         bio = BytesIO(data)
                         img = Image.open(bio)
@@ -298,6 +305,33 @@ IP: {addr[0]}
                             pil_frame = PILImageFrame(scrolled_text, pil_image=img)
                             scrolled_text.text.window_create('end', window=pil_frame)
                             scrolled_text.append_text('\n'*4)
+                            scrolled_text.see('end')
+                            
+                    elif command['source'] == 'storage':
+                        namelen = ord(conn.recv(1))
+                        filename = Path(conn.recv(namelen).decode('utf-8'))
+                        directory = Path(self.__save_file_dir)
+                        path = directory.joinpath(filename)
+                        if path.exists():
+                            stem, ext = filename.stem, filename.suffix
+                            for k in range(1, 10000):
+                                filename = f'{stem}[{k}]{ext}'
+                                path = directory.joinpath(filename)
+                                if not path.exists():
+                                    break
+                        with path.open('wb') as f:
+                            while True:
+                                buf = conn.recv(32768)
+                                if not buf:
+                                    break
+                                f.write(buf)
+                        @self.root_node.thread_manager.main_thread_do(block=False)
+                        def show_info():
+                            show_head(device_code=device_code, addr=addr, read=True)
+                            scrolled_text = self.__scrolled_text
+                            scrolled_text.append_text(f'\n\n{str(path)}\n\n')
+                            generate_plugin_link(data=str(path), type_='file')
+                            scrolled_text.append_text('\n'*3)
                             scrolled_text.see('end')
                             
                             
@@ -335,6 +369,11 @@ IP: {addr[0]}
         self.__on_finish = on_finish
         
         
+    def get_device_file(self, savein, on_finish):
+        self.__save_file_dir = self.root_node.gui.dialogs.ask_directory(savein)
+        self._launch_server(command={'action':'read', 'source':'storage'})
+        
+        
     @Scripting.printable
     def read_device_location(self, on_finish):
         self._launch_server(command={'action':'read', 'source':'location_sensor'})
@@ -363,4 +402,9 @@ IP: {addr[0]}
     def __on_pick_gallery_photo(self, on_finish=None):
         with code_printer():
             self.pick_gallery_photo(on_finish=on_finish)
+            
+            
+    def __on_get_device_file(self, on_finish=None):
+        with code_printer():
+            self.get_device_file(savein=self.root_node.lang_center.wavesynscript.constants.ASK_DIRECTORY, on_finish=on_finish)
             
