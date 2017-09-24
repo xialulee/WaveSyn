@@ -4,7 +4,6 @@ Created on Sat Mar 04 16:08:52 2017
 
 @author: Feng-cong Li
 """
-import os
 
 from tkinter import Tk, Label
 import ctypes as ct
@@ -31,9 +30,9 @@ def main():
         return
     
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
-    root    = Tk()
-    root.iconbitmap(default=os.path.join(get_caller_dir(), 'cpumeter.ico'))
-    label   = Label()
+    root = Tk()
+    root.iconbitmap(default=get_caller_dir()/'cpumeter.ico')
+    label = Label()
     label.pack()
     tb_icon  = tktools.TaskbarIcon(root) 
     

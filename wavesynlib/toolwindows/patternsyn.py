@@ -48,14 +48,14 @@ class OptimizeGroup(Group):
             self.__M, 
             balloonmsg='The number of the array elements.')
 
-        imageSolveBtn = ImageTk.PhotoImage(
+        image_solve = ImageTk.PhotoImage(
             file=Scripting.root_node.get_gui_image_path('Pattern_Solve_Button.png'))
-        self.__gui_images.append(imageSolveBtn)
+        self.__gui_images.append(image_solve)
 
         self.__btnSolve = Button(
             self, 
             text='Solve', 
-            image=imageSolveBtn, 
+            image=image_solve, 
             compound='left', 
             command=self._on_solve_button_click)
         self.__btnSolve.pack(side='top', fill='x')
@@ -63,14 +63,14 @@ class OptimizeGroup(Group):
             self.__btnSolve, 
             balloonmsg='Launch the solver to synthesize the correlation matrix.')
         
-        imageDisplayBtn = ImageTk.PhotoImage(
+        image_display = ImageTk.PhotoImage(
             file=Scripting.root_node.get_gui_image_path('Pattern_Display_Button.png'))
-        self.__gui_images.append(imageDisplayBtn)
+        self.__gui_images.append(image_display)
         self.__bDisplay = IntVar(0)
         chk_display = Checkbutton(
             self, 
             text="Display", 
-            image=imageDisplayBtn, 
+            image=image_display, 
             compound='left', 
             variable=self.__bDisplay)
         chk_display.pack(side='top')

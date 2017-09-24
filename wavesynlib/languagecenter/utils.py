@@ -4,12 +4,11 @@ Created on Wed Dec 30 19:25:10 2015
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division
 
-import os
 import sys
 import threading
 from string import Template, Formatter
+from pathlib import Path
 
 import inspect
 
@@ -21,7 +20,7 @@ def auto_subs(template):
  
     
 def get_caller_dir():
-    return os.path.abspath(os.path.dirname(inspect.getfile(sys._getframe(1))))    
+    return Path(inspect.getfile(sys._getframe(1))).parent.absolute()
 
 
 
@@ -81,7 +80,7 @@ class MethodLock(object):
         lock = getattr(obj, self.__lockName)
         descriptor  = self.__descriptor
         if lock:
-            raise AttributeError(eval_format('Method {descriptor.__name__} has been locked and cannot be called.'))
+            raise AttributeError(f'Method {descriptor.__name__} has been locked and cannot be called.')
         else:
             return self.__descriptor.__get__(obj, type)        
         

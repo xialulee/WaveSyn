@@ -51,7 +51,7 @@ def main():
     
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
-    root.iconbitmap(default=os.path.join(get_caller_dir(), 'memmeter.ico'))
+    root.iconbitmap(default=get_caller_dir()/'memmeter.ico')
     label   = Label()
     label.pack()
     tbIcon  = tktools.TaskbarIcon(root) 

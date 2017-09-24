@@ -44,7 +44,7 @@ def main():
     
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
-    root.iconbitmap(default=os.path.join(get_caller_dir(), 'batterymeter.ico'))
+    root.iconbitmap(default=get_caller_dir()/'batterymeter.ico')
     label   = Label()
     label.pack()
     tb_icon  = tktools.TaskbarIcon(root) 

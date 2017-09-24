@@ -4,7 +4,7 @@ Created on Thu Mar 02 22:41:20 2017
 
 @author: Feng-cong Li
 """
-import os
+
 from subprocess import Popen
 import webbrowser
 import comtypes
@@ -74,8 +74,7 @@ class Windows(ModelNode):
         if app_name in app_paths:
             app_path = app_paths[app_name]
         else:
-            self_dir = get_caller_dir()
-            app_path = os.path.join(self_dir, 'apps', app_name)
+            app_path = str(get_caller_dir() / 'apps' / app_name)
         
         if args:
             cmd = ['python', app_path]

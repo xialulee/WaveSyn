@@ -5,10 +5,7 @@ Created on Sun Jan 29 21:26:31 2017
 @author: Feng-cong Li
 """
 
-from __future__ import print_function, division, unicode_literals
-
-import six.moves._thread as thread
-import os
+import _thread as thread
 import socket
 from subprocess import Popen
 import numpy as np
@@ -19,7 +16,7 @@ from wavesynlib.languagecenter.utils import get_caller_dir
 
 class DisplayLauncher(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(DisplayLauncher, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
     
     @Scripting.printable
@@ -53,5 +50,5 @@ class DisplayLauncher(ModelNode):
             
         thread.start_new_thread(send_data, ())
         
-        display_path = os.path.join(get_caller_dir(), 'display.py')
+        display_path = str(get_caller_dir() / 'display.py')
         Popen(['python', display_path, str(port), str(width), str(height)])

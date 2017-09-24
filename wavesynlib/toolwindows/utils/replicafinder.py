@@ -23,7 +23,7 @@ from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.interfaces.timer.tk import TkTimer
 
 
-_image_dir = os.path.join(get_caller_dir(), 'images')
+_image_dir = get_caller_dir()/'images'
 
 
 
@@ -202,14 +202,14 @@ class ReplicaFinderWindow(TkToolWindow):
         row = tk.Frame(select_group)
         row.pack()
         
-        image_start = ImageTk.PhotoImage(file=os.path.join(_image_dir, 'start_button.png'))
+        image_start = ImageTk.PhotoImage(file=_image_dir/'start_button.png')
         self._gui_images.append(image_start)
         self.__start_button = start_button = ttk.Button(row, 
                    image=image_start, 
                    command=self._on_start_click)
         start_button.pack(side='left', fill='y')
         
-        image_stop = ImageTk.PhotoImage(file=os.path.join(_image_dir, 'stop_button.png'))
+        image_stop = ImageTk.PhotoImage(file=_image_dir/'stop_button.png')
         self._gui_images.append(image_stop)
         ttk.Button(row, image=image_stop,
                    command=self._on_stop_click).pack(side='left', fill='y')                   
@@ -234,9 +234,9 @@ class ReplicaFinderWindow(TkToolWindow):
         # Start Status Bar {
         status_bar = tk.Frame(self.tk_object)
         status_bar.pack(fill='x')
-        image_red = ImageTk.PhotoImage(file=os.path.join(_image_dir, 'red_light.png'))    
+        image_red = ImageTk.PhotoImage(file=_image_dir / 'red_light.png')
         self.__image_red_light = image_red
-        image_green = ImageTk.PhotoImage(file=os.path.join(_image_dir, 'green_light.png'))
+        image_green = ImageTk.PhotoImage(file=_image_dir / 'green_light.png')
         self.__image_green_light = image_green
         self.__busy_light = ttk.Label(status_bar, image=image_green)
         self.__busy_light.pack(side='right')     

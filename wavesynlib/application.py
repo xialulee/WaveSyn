@@ -225,7 +225,7 @@ wavesyn
     def _add_env_path(self):
         path_string = os.environ['PATH']        
         self_path = get_caller_dir()
-        extra_path = [os.path.join(self_path, 'interfaces/os/cmdutils')]
+        extra_path = [str(self_path / 'interfaces/os/cmdutils')]
         extra_path.append(path_string)
         path_string = os.path.pathsep.join(extra_path)
         os.environ['PATH'] = path_string

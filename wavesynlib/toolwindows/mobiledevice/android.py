@@ -38,7 +38,7 @@ def load_plugins():
             ('locationsensor', 'plugins/locationsensor'),
             ('file', 'plugins/file'),
             ('text', 'plugins/text')]:
-        loc_dir = self_dir.joinpath(path)
+        loc_dir = self_dir/path
         for file in loc_dir.glob('*.py'):
             if file.name == '__init__.py':
                 continue
@@ -61,8 +61,18 @@ action: read / write
 if action == "read":
     source = clipboard / location_sensor / album
 '''
-        TkToolWindow.__init__(self)
+        super().__init__()
+        
         self._gui_images = []
+
+        res_dir = get_caller_dir()/'resources'
+        image_read_clipb = ImageTk.PhotoImage(file=res_dir/'readclipb.png')
+        image_write_clipb = ImageTk.PhotoImage(file=res_dir/'writeclipb.png')
+        image_get_file = ImageTk.PhotoImage(file=res_dir/'getfile.png')
+        image_get_image = ImageTk.PhotoImage(file=res_dir/'getimage.png')
+        image_sensor_location = ImageTk.PhotoImage(file=res_dir/'locationsensor.png')
+        self._gui_images.extend((image_read_clipb, image_write_clipb, image_get_file, image_get_image, image_sensor_location))
+        
         tool_tabs = self._tool_tabs
         
         default_qr_size = 200
@@ -71,25 +81,25 @@ if action == "read":
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Clipboard'}, 'children':[
     {'class':'Button', 'name':'read_clipb', 
          'balloonmsg':'Read the clipboard of an Android device.',
-         'config':{'text':'Read', 'command':self.__on_read_device_clipboard}},
+         'config':{'text':'Read', 'image':image_read_clipb, 'compound':'left', 'command':self.__on_read_device_clipboard}},
     {'class':'Button', 'name':'write_clipb', 
          'balloonmsg':'Write the clipboard of an Android device.',
-         'config':{'text':'Write', 'command':self.__on_write_device_clipboard}} # To Do: Change it. 
+         'config':{'text':'Write', 'image':image_write_clipb, 'compound':'left', 'command':self.__on_write_device_clipboard}} # To Do: Change it. 
 ]},
     
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Storage'}, 'children':[
     {'class':'Button', 
          'balloonmsg':'Get gallery photos.',
-         'config':{'text':'Get Image', 'command':self.__on_pick_gallery_photo}},
+         'config':{'text':'Get Image', 'image':image_get_image, 'command':self.__on_pick_gallery_photo}},
     {'class':'Button',
          'balloonmsg':'Get File',
-         'config':{'text':'Get File', 'command':self.__on_get_device_file}}
+         'config':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}}
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
     {'class':'Button', 
          'balloonmsg':'Read the AGPS sensor of an Android device.',
-         'config':{'text':'Location', 'command':self.__on_read_device_location}}
+         'config':{'text':'Location', 'image':image_sensor_location, 'compound':'left', 'command':self.__on_read_device_location}}
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'QR Code'}, 'children':[
@@ -311,12 +321,12 @@ IP: {addr[0]}
                         namelen = ord(conn.recv(1))
                         filename = Path(conn.recv(namelen).decode('utf-8'))
                         directory = Path(self.__save_file_dir)
-                        path = directory.joinpath(filename)
+                        path = directory/filename
                         if path.exists():
                             stem, ext = filename.stem, filename.suffix
                             for k in range(1, 10000):
                                 filename = f'{stem}[{k}]{ext}'
-                                path = directory.joinpath(filename)
+                                path = directory/filename
                                 if not path.exists():
                                     break
                         with path.open('wb') as f:
