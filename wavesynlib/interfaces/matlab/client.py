@@ -93,7 +93,7 @@ class MatlabCOMServer(object): # To Do: an instance attribute. For some function
         self.__type_converter        = {}
         self.add_type_converter(DateTimeConverter())
         self.add_type_converter(SymConverter())
-        self.execute(eval_format('addpath {get_my_dir()}'))
+        self.execute(f'addpath {get_my_dir()}')
         
         
     def release(self):

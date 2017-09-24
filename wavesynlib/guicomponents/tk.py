@@ -275,7 +275,7 @@ class PILImageFrame(Frame):
             if filename:
                 image.save(filename)
         
-        Label(frame, text=eval_format('id={id(self)}')).pack(side='left')
+        Label(frame, text=f'id={id(self)}').pack(side='left')
         Button(frame, text='Save Origin', command=lambda:on_save(self.__origin_image)).pack(side='left')
         Button(frame, text='Save Zoomed', command=lambda:on_save(self.__zoomed_image)).pack(side='left')
         if platform.system().lower() == 'windows':
@@ -303,7 +303,7 @@ class PILImageFrame(Frame):
             self.__zoomed_image = zoomed_image
             self.__photo = ImageTk.PhotoImage(zoomed_image)
             self.__label['image'] = self.__photo
-            zoomed_label['text'] = '{}%'.format(int(val))
+            zoomed_label['text'] = f'{int(val)}%'
             
         scale['command'] = on_scale
         
@@ -518,9 +518,9 @@ class ScrolledText(Frame, object):
             where = self.text.search(target, 'insert', 'end')
             if where:
                 if __DEBUG__:
-                    print('Ctrl+F: searching for {0}'.format(target))
+                    print(f'Ctrl+F: searching for {target}')
                     print('position', where)
-                pastit = where + ('+%dc' % len(target))
+                pastit = where + f'+{len(target)}c'
                 self.text.tag_remove('sel', '1.0', 'end')
                 self.text.tag_add('sel', where, pastit)
                 self.text.mark_set('insert', pastit)
@@ -1211,10 +1211,10 @@ class IQSlider(Frame, Observable):
             i_magnitude    = (pos.real - center.real) / iq.radius * iq.i_range
             q_magnitude    = -(pos.imag - center.imag) / iq.radius * iq.q_range
             
-            iq.canvas.itemconfig(self.__iq_text, text=u' I:{}, Q:{} '.format(int(i_magnitude), int(q_magnitude)))            
+            iq.canvas.itemconfig(self.__iq_text, text=f' I:{int(i_magnitude)}, Q:{int(q_magnitude)} ')            
             iq.canvas.coords(self.__iq_text, pos.real, pos.imag)
             
-            iq.canvas.itemconfig(self.__textPolar, text=u' A:{}, ϕ:{}° '.format(int(abs(i_magnitude+1j*q_magnitude)), int(360*math.atan2(q_magnitude, i_magnitude)/2/math.pi)))                        
+            iq.canvas.itemconfig(self.__textPolar, text=f' A:{int(abs(i_magnitude+1j*q_magnitude))}, ϕ:{int(360*math.atan2(q_magnitude, i_magnitude)/2/math.pi)}° ')                        
             iq.canvas.coords(self.__textPolar, pos.real, pos.imag)
             
             if (pos.imag - center.imag) * (pos.real - center.real) > 0:

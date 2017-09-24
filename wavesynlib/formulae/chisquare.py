@@ -95,19 +95,19 @@ if __name__ == '__main__':
     from numpy import linalg
     print('Test chisquare.Q:')
     print('(nu=1, lambda_=2, x=0.5, epsilon=0.0001) should produce 0.7772.')
-    print('Q(1, 2, 0.5, 0.0001) = {0}'.format(Q(1, 2, 0.5, 0.0001)))
+    print(f'Q(1, 2, 0.5, 0.0001) = {Q(1, 2, 0.5, 0.0001)}')
     print()
     print('(nu=5, lambda_=6, x=10,  epsilon=0.0001) should produce 0.5063.')
-    print('Q(5, 6, 10, 0.0001) = {0}'.format(Q(5, 6, 10, 0.0001)))
+    print(f'Q(5, 6, 10, 0.0001) = {Q(5, 6, 10, 0.0001)}')
     print()
     print('(nu=8, lambda_=10, x=15, epsilon=0.0001) should produce 0.6161.')
-    print('Q(8, 10, 15, 0.0001) = {0}'.format(Q(8, 10, 15, 0.0001)))
+    print(f'Q(8, 10, 15, 0.0001) = {Q(8, 10, 15, 0.0001)}')
     print()
     
     print('Test chisquare.thresholdNP:')
     Pfa     = 1e-4
     dim     = 4
-    print('(Pfa={0}, N={1}) for complex additive noise w~CN(0, I)'.format(Pfa, dim))    
+    print(f'(Pfa={Pfa}, N={dim}) for complex additive noise w~CN(0, I)')    
     comp    = True
     threshold = thresholdNP(Pfa, dim, comp=comp)
     event = 0
@@ -115,4 +115,4 @@ if __name__ == '__main__':
     for k in range(10**6):
         if linalg.norm(np.sqrt(0.5) * (np.random.randn(4, 1) + 1j * np.random.randn(4, 1))) ** 2 > threshold:
             event += 1
-    print('Simulation results: Pfa = {0}'.format(event / testNum))    
+    print(f'Simulation results: Pfa = {event/testNum}')    

@@ -85,7 +85,7 @@ class PONLP(Algorithm):
         print('k\tJ(\u03c6)')
         def callback(phi):
             k_iter[0] += 1
-            print('{}\t{}'.format(k_iter[0], J(phi)))        
+            print(f'{k_iter[0]}\t{J(phi)}')        
         phi = fmin_ncg(J, phi_init, fprime=dJ, fhess=d2J, avextol=1e-16, callback=callback)
         return np.exp(1j*phi)
         

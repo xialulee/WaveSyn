@@ -57,7 +57,7 @@ def clipboard_to_stream(stream, mode, code, null, html=False):
         format_name = 'HTML' if html else 'TEXT'
         s = win32clipboard.GetClipboardData(clipboard_format)
     except TypeError:
-        sys.stderr.write('Clipb-Error: Data in clipboard is not {} FORMAT!\n'.format(format_name))
+        sys.stderr.write(f'Clipb-Error: Data in clipboard is not {format_name} FORMAT!\n')
         exitcode = ERROR_CLIPB
     else:
         if code:

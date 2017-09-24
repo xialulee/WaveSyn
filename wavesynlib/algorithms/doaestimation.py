@@ -118,7 +118,7 @@ if __name__ == '__main__':
     amps        = [1, 1, 1]
     noisePow    = 0.1
     N           = 10
-    print('{} complex sinusoids are presented in additive white Gaussian noise.'.format(len(freqs)))
+    print(f'{len(freqs)} complex sinusoids are presented in additive white Gaussian noise.')
     print('Amplitudes of these sinusoids are:', amps)
     print('Frequencies of these sinusoids are:', freqs)
     print('Power of additive white Gaussian noise is', noisePow)

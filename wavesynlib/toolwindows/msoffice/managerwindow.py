@@ -227,7 +227,7 @@ class OfficeController(TkToolWindow):
     def copy_selected_path(self):
         id_, app_name, txt, is_parent = self.__get_selected()
         office = self.root_node.interfaces.msoffice
-        path = '{}[{}]'.format(office.node_path, id_)
+        path = f'{office.node_path}[{id_}]'
         self.root_node.interfaces.os.clipboard.write(path)        
     
     

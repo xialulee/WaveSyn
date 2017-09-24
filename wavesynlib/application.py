@@ -199,7 +199,7 @@ wavesyn
             code = editor.code
             if not code:
                 return
-            self.stream_manager.write('WaveSyn: executing code from editor {0} listed as follows:\n'.format(id(editor)), 'TIP')
+            self.stream_manager.write(f'WaveSyn: executing code from editor {id(editor)} listed as follows:\n', 'TIP')
             self.stream_manager.write(code, 'HISTORY')
             self.stream_manager.write('\n')
             self.execute(code)            
