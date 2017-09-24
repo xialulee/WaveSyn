@@ -13,6 +13,7 @@ import importlib
 
 from pathlib import Path
 from io import BytesIO
+from threading import Lock
 
 import qrcode
 from PIL import ImageTk, Image
@@ -88,16 +89,16 @@ if action == "read":
 ]},
     
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Storage'}, 'children':[
-    {'class':'Button', 
+    {'class':'Button', 'name':'get_file',
          'balloonmsg':'Get gallery photos.',
          'config':{'text':'Get Image', 'image':image_get_image, 'command':self.__on_pick_gallery_photo}},
-    {'class':'Button',
+    {'class':'Button', 'name':'get_image',
          'balloonmsg':'Get File',
          'config':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}}
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
-    {'class':'Button', 
+    {'class':'Button', 'name':'read_gps',
          'balloonmsg':'Read the AGPS sensor of an Android device.',
          'config':{'text':'Location', 'image':image_sensor_location, 'compound':'left', 'command':self.__on_read_device_location}}
 ]},
@@ -130,6 +131,8 @@ if action == "read":
         self.__data = None
         self.__on_finish = None
         self.__save_file_dir = None
+        self.__ip_port = None
+        self.__lock = Lock()
 
         data_book.add(qr_canvas, text='QR Code')
         
@@ -150,6 +153,20 @@ if action == "read":
         self._make_window_manager_tab()
         
         
+        
+    def __enable_transfer_widgets(self, enable=True):
+        w = self.__widgets
+        widgets = [
+            w['read_clipb'],
+            w['write_clipb'],
+            w['get_file'],
+            w['get_image'],
+            w['read_gps']]
+        for widget in widgets:
+            widget['state'] = 'normal' if enable else 'disabled'
+        
+        
+        
     @property
     def qr_size(self):
         return int(self.__widgets['qr_size'].entry_text)
@@ -160,32 +177,42 @@ if action == "read":
         return self.__data
         
         
-    def _launch_server(self, command):
+    def _launch_server(self, command):                
         sockobj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        port = 10000
-        while True:
-            try:
-                sockobj.bind(('', port))
-            except socket.error:
-                port += 1
-                if port > 65535:
-                    raise socket.error
+        try:
+            port = 10000
+            while True:
+                try:
+                    sockobj.bind(('', port))
+                except socket.error:
+                    port += 1
+                    if port > 65535:
+                        raise socket.error
+                else:
+                    break
+    
+            self_ip = socket.gethostbyname(socket.gethostname())
+            self_port = port
+            with self.__lock:
+                self.__ip_port = (self_ip, self_port)
+            self.__password = password = random.randint(0, 65535)
+            qr_string = json.dumps({'ip':self_ip, 'port':self_port, 'password':password, 'command':command})
+            image = qrcode.make(qr_string).resize((self.qr_size, self.qr_size))        
+            self.__qr_image = ImageTk.PhotoImage(image=image) 
+     
+            if self.__qr_id is None:
+                self.__qr_id = self.__qr_canvas.canvas.create_image((0, 0), image=self.__qr_image, anchor='nw')
             else:
-                break
-
-        self_ip = socket.gethostbyname(socket.gethostname())
-        self_port = port
-        self.__password = password = random.randint(0, 65535)
-        qr_string = json.dumps({'ip':self_ip, 'port':self_port, 'password':password, 'command':command})
-        image = qrcode.make(qr_string).resize((self.qr_size, self.qr_size))        
-        self.__qr_image = ImageTk.PhotoImage(image=image) 
- 
-        if self.__qr_id is None:
-            self.__qr_id = self.__qr_canvas.canvas.create_image((0, 0), image=self.__qr_image, anchor='nw')
-        else:
-            self.__qr_canvas.canvas.itemconfig(self.__qr_id, image=self.__qr_image) 
-        self.__data_book.select(self._qr_tab)
+                self.__qr_canvas.canvas.itemconfig(self.__qr_id, image=self.__qr_image) 
+            self.__data_book.select(self._qr_tab)
+        except Exception as err:            
+            sockobj.close()
+            with self.__lock:
+                self.__ip_port = None
+            raise err
+            
+        self.__enable_transfer_widgets(False)
         
         # Launch the data transfer thread    
         @self.root_node.thread_manager.new_thread_do
@@ -222,10 +249,10 @@ IP: {addr[0]}
                 exit_flag = conn.recv(1)
                 if exit_flag != b'\x00':
                     # The first byte is not zero, which means abort this transfer mission.
-                    return True, None
+                    return True, None, 0
                 password = struct.unpack('!I', conn.recv(4))[0]
                 if password != self.__password:
-                    return True, None
+                    return True, None, 0
                 device_code = conn.recv(MAXDEVCODELEN).decode('utf-8')
                 datalen = struct.unpack('!I', conn.recv(4))[0]
                 return False, device_code, datalen
@@ -241,7 +268,7 @@ IP: {addr[0]}
                 return b''.join(data_list)
                 
             
-            with sockobj:
+            try:
                 sockobj.listen(2)
                 # Here it waits for two potential objects.
                 # One is the android data provider,
@@ -365,6 +392,13 @@ IP: {addr[0]}
                         show_head(device_code=device_code, addr=addr, read=False)
                         scrolled_text.append_text('\n'*3)
                         scrolled_text.see('end')
+            finally:
+                sockobj.close()
+                with self.__lock:
+                    self.__ip_port = None 
+                @self.root_node.thread_manager.main_thread_do(block=False)
+                def enable():
+                    self.__enable_transfer_widgets()
                     
     
     @Scripting.printable
