@@ -69,10 +69,11 @@ if action == "read":
         res_dir = get_caller_dir()/'resources'
         image_read_clipb = ImageTk.PhotoImage(file=res_dir/'readclipb.png')
         image_write_clipb = ImageTk.PhotoImage(file=res_dir/'writeclipb.png')
+        image_send_clipb_image = ImageTk.PhotoImage(file=res_dir/'sendclipbimage.png')
         image_get_file = ImageTk.PhotoImage(file=res_dir/'getfile.png')
         image_get_image = ImageTk.PhotoImage(file=res_dir/'getimage.png')
         image_sensor_location = ImageTk.PhotoImage(file=res_dir/'locationsensor.png')
-        self._gui_images.extend((image_read_clipb, image_write_clipb, image_get_file, image_get_image, image_sensor_location))
+        self._gui_images.extend((image_read_clipb, image_write_clipb, image_send_clipb_image, image_get_file, image_get_image, image_sensor_location))
         
         tool_tabs = self._tool_tabs
         
@@ -80,21 +81,28 @@ if action == "read":
         
         widgets_desc = [
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Clipboard'}, 'children':[
-    {'class':'Button', 'name':'read_clipb', 
-         'balloonmsg':'Read the clipboard of an Android device.',
-         'config':{'text':'Read', 'image':image_read_clipb, 'compound':'left', 'command':self.__on_read_device_clipboard}},
-    {'class':'Button', 'name':'write_clipb', 
-         'balloonmsg':'Write the clipboard of an Android device.',
-         'config':{'text':'Write', 'image':image_write_clipb, 'compound':'left', 'command':self.__on_write_device_clipboard}} # To Do: Change it. 
+    {'class':'Frame', 'children':[
+        {'class':'Button', 'name':'read_clipb', 'grid':{'row':0, 'column':0},
+             'balloonmsg':'Read the clipboard of an Android device.',
+             'config':{'image':image_read_clipb, 'command':self.__on_read_device_clipboard}},
+        {'class':'Button', 'name':'write_clipb','grid':{'row':0, 'column':1},
+             'balloonmsg':'Write the clipboard of an Android device.',
+             'config':{'image':image_write_clipb, 'command':self.__on_write_device_clipboard}}, 
+        {'class':'Button', 'name':'send_clipb_image', 'grid':{'row':0, 'column':2},
+             'balloonmsg':'Send image in clipboard to the Android device.',
+             'config':{'image':image_send_clipb_image, 'command':self.__on_send_clipboard_image_to_device}}
+    ]}
 ]},
     
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Storage'}, 'children':[
-    {'class':'Button', 'name':'get_file',
-         'balloonmsg':'Get gallery photos.',
-         'config':{'text':'Get Image', 'image':image_get_image, 'command':self.__on_pick_gallery_photo}},
-    {'class':'Button', 'name':'get_image',
-         'balloonmsg':'Get File',
-         'config':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}}
+    {'class':'Frame', 'children':[
+        {'class':'Button', 'name':'get_file', 'grid':{'row':0, 'column':0},
+             'balloonmsg':'Get gallery photos.',
+             'config':{'text':'Get Image', 'image':image_get_image, 'command':self.__on_pick_gallery_photo}},
+        {'class':'Button', 'name':'get_image', 'grid':{'row':0, 'column':1},
+             'balloonmsg':'Get File',
+             'config':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}}
+    ]}
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
@@ -161,7 +169,8 @@ if action == "read":
             w['write_clipb'],
             w['get_file'],
             w['get_image'],
-            w['read_gps']]
+            w['read_gps'],
+            w['send_clipb_image']]
         for widget in widgets:
             widget['state'] = 'normal' if enable else 'disabled'
         
@@ -384,7 +393,17 @@ IP: {addr[0]}
                     if command['target'] == 'clipboard':
                         text = self.root_node.interfaces.os.clipboard.read()
                         data = {'data':text, 'type':'text'}
-                    conn.send(json.dumps(data).encode('utf-8'))
+                        conn.send(json.dumps(data).encode('utf-8'))
+                    elif command['target'].startswith('dir:'):
+                        if command['source'] == 'clipboard:image':
+                            from PIL import ImageGrab
+                            image = ImageGrab.grabclipboard()
+                            if not image:
+                                raise TypeError('No image in clipboard.')
+                            bio = BytesIO()
+                            image.save(bio, format='png')
+                            conn.send(bio.getvalue())
+                            bio.close()
                     @self.root_node.thread_manager.main_thread_do(block=False)
                     def on_finish():
                         self.__data_book.select(self._data_tab)
@@ -425,7 +444,15 @@ IP: {addr[0]}
         
         
     def write_device_clipboard(self):
-        self._launch_server(command={'action':'write', 'target':'clipboard'})        
+        self._launch_server(command={'action':'write', 'target':'clipboard'}) 
+        
+        
+    def send_clipboard_image_to_device(self):
+        self._launch_server(command={
+            'action':'write', 
+            'target':'dir:Download', 
+            'source':'clipboard:image', 
+            'name':f'clipboard_{int(datetime.datetime.now().timestamp())}.png'})
         
         
     def __on_read_device_clipboard(self, on_finish=None):
@@ -441,6 +468,11 @@ IP: {addr[0]}
     def __on_write_device_clipboard(self):
         with code_printer():
             self.write_device_clipboard()
+            
+            
+    def __on_send_clipboard_image_to_device(self):
+        with code_printer():
+            self.send_clipboard_image_to_device()
     
 
     def __on_pick_gallery_photo(self, on_finish=None):

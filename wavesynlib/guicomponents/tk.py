@@ -1446,7 +1446,10 @@ Example: [
                 cls = tk.__dict__[class_name]
         
         widget = cls(parent, **item.pop('config', {}))
-        widget.pack(**item.pop('pack', {}))
+        if 'grid' in item:
+            widget.grid(**item.pop('grid', {}))        
+        else:
+            widget.pack(**item.pop('pack', {}))
         
         if 'balloonmsg' in item and balloon is not None:
             balloon.bind_widget(widget, balloonmsg=item.pop('balloonmsg'))

@@ -157,6 +157,26 @@ def send_file(path, ip, port, password):
 def pick_and_send_file(ip, port, password):
     path = pick_file()
     send_file(path, ip, port, password)
+    
+    
+    
+def recv_file(dir_, name, ip, port, password):
+    app_path = os.environ['ANDROID_APP_PATH']
+    file_path = os.path.join(app_path, '..', dir_, name)
+    for k in range(10000):
+        if os.path.exists(file_path):
+            file_path = os.path.join(app_path, '..', dir_, '[{}]{}'.format(k, name))
+        else:
+            break
+    print(os.path.abspath(file_path))
+    with open(file_path, 'wb') as f:
+        sockobj = init_and_send_head(ip, port, password, 0)
+        while True:
+            buf = sockobj.recv(32768)
+            if not buf:
+                break
+            f.write(buf)
+        sockobj.close()
 
 
 
@@ -172,3 +192,7 @@ if __name__ == '__main__':
     elif action == u'write':
         if command['target'] == 'clipboard':
             recv_clipb_text(ip, port, password)
+        elif command['target'][:4] == 'dir:':
+            name = command['name']
+            dir_ = command['target'][4:]
+            recv_file(dir_, name, ip, port, password)
