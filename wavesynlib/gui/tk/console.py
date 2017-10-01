@@ -351,11 +351,9 @@ class ConsoleText(ModelNode, ScrolledText):
 
 class StatusBar(Frame):
     def __init__(self, *args, **kwargs):
+        self.__root_node = kwargs.pop('wavesyn_root')
         Frame.__init__(self, *args, **kwargs)
         timer = TkTimer(widget=self, interval=200, active=False)
-        
-        from wavesynlib.application import Application
-        self.__root_node = Application.instance
         
         balloon = Scripting.root_node.gui.balloon
                 
@@ -499,7 +497,7 @@ class ConsoleWindow(ModelNode):
         dir_indicator = CWDIndicator(chdir_func=chdir_func)
         dir_indicator.pack(fill='x')
 
-        self.__status_bar = status_bar = StatusBar(root)
+        self.__status_bar = status_bar = StatusBar(root, wavesyn_root=app)
         status_bar.pack(side='bottom', fill='x')
         
         self.console_text = ConsoleText(root, tag_defs=self.__tag_defs)        

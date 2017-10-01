@@ -23,7 +23,7 @@ import json
 
 class OptimizeGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app = Application.instance    
+        self._app = kwargs.pop('wavesyn_root')   
         self.__topwin = kwargs.pop('topwin')
 
         super().__init__(*args, **kwargs)
@@ -109,11 +109,11 @@ Current algorithm "{topwin.current_algorithm.meta.name}" need CUDA worker, which
 
 class ParamsGroup(Group):
     def __init__(self, *args, **kwargs):
-        self._app = Application.instance
+        self._app = kwargs.pop('wavesyn_root')
         self.__topwin   = kwargs.pop('topwin')
         self.balloon    = self._app.gui.balloon
 
-        super(ParamsGroup, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__algo = None
         self.__MAXROW = 3
         self.__params = {}  
@@ -239,10 +239,10 @@ class SingleWindow(FigureWindow, DataContainer):
         algorithm_selection_group  = AlgoSelGroup(frmAlgo, topwin=self)
         algorithm_selection_group.pack(side='left', fill='y')
         
-        parameter_group = ParamsGroup(frmAlgo, topwin=self)
+        parameter_group = ParamsGroup(frmAlgo, topwin=self, wavesyn_root=self.root_node)
         parameter_group.pack(side='left', fill='y')
         
-        solve_group = OptimizeGroup(frmAlgo, topwin=self)
+        solve_group = OptimizeGroup(frmAlgo, topwin=self, wavesyn_root=self.root_node)
         solve_group.pack(side='left', fill='y')
         tool_tabs.add(frmAlgo, text='Algorithm')
         
@@ -267,7 +267,7 @@ class SingleWindow(FigureWindow, DataContainer):
             ]
         )
         
-        with open(Application.instance.config_file_path) as f:
+        with open(self.root_node.config_file_path) as f:
             config  = json.load(f)
         algorithms  = config['SingleWaveformAlgorithms']
 
