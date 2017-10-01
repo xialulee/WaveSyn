@@ -58,7 +58,7 @@ class ModelNode:
     
     
     def __init__(self, *args, **kwargs):
-        super(ModelNode, self).__init__()
+        super().__init__()
         node_name = kwargs.get('node_name', '')
         is_root = kwargs.get('is_root', False)
         is_lazy = kwargs.get('is_lazy', False)
@@ -189,11 +189,7 @@ then node will have a property named 'a', which cannot be re-assigned.
     @property
     def root_node(self):
         node = self
-        
-        if node.parent_node is None: # Not connected to the tree yet. 
-            from wavesynlib.application import Application
-            return Application.instance
-            
+                    
         while not node.is_root:
             node = node.parent_node
         return node

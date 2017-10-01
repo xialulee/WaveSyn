@@ -64,6 +64,8 @@ if action == "read":
 '''
         super().__init__()
         
+        
+    def on_connect(self):
         self._gui_images = []
 
         res_dir = get_caller_dir()/'resources'

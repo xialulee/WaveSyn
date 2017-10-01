@@ -225,7 +225,9 @@ class SingleWindow(FigureWindow, DataContainer):
     def __init__(self, *args, **kwargs):     
         FigureWindow.__init__(self, *args, **kwargs)
         self.current_data    = None
-                
+        
+        
+    def on_connect(self):
         # algorithm dict and current data
         self.algorithms = AlgorithmDict()
         self.lock_attribute('algorithms')

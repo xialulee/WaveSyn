@@ -53,6 +53,9 @@ class OfficeController(TkToolWindow):
     
     def __init__(self):
         super().__init__()
+        
+        
+    def on_connect(self):
         self._gui_images = []
         tool_tabs = self._tool_tabs
         
