@@ -5,6 +5,7 @@ Created on Fri Mar 11 13:01:11 2016
 @author: Feng-cong Li
 """
 import os
+from pathlib import Path
 import tempfile
 import time
 import tkinter as tk
@@ -17,6 +18,7 @@ from PIL import Image
 from PIL import ImageTk
 
 from wavesynlib.guicomponents.tk import ScrolledTree, ScrolledCanvas, json_to_tk
+from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.utils import MethodDelegator
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
@@ -140,18 +142,38 @@ class PSDViewer(TkToolWindow):
         self.__tk_image = None
         self.__image_id = None
         self.__psd_path = ''
+        self.__mtime = 0.0
+        self.__scale = 100
         self.__all_canvas = all_canvas
+        
+        self.__timer = TkTimer(widget=self.tk_object)
+        @self.__timer.add_observer
+        def watch():
+            if self.__psd_path:
+                mtime = self.__psd_path.stat().st_mtime
+                if mtime > self.__mtime:
+                    with code_printer(False):
+                        self.load(self.__psd_path)
 
         
     @Scripting.printable
     def load(self, filename):
+        self.__timer.active = False
+        
         filename = self.root_node.gui.dialogs.ask_open_filename(
             filename, 
             filetypes=[('PSD Files', '*.psd'), ('All Files', '*.*')])
         if not filename:
             return
+        
+        filename = Path(filename)
+        if not filename.exists():
+            raise ValueError(f'Path {filename} does not exists.')
         self.__psd_path = filename
+        #self.__scale = 100
+        self.__mtime = Path(filename).stat().st_mtime
         self.__psd_image = psd_tools.PSDImage.load(filename)
+                
         self.__layer_tree.psd_image = self.__psd_image
         self.__pil_image = self.__psd_image.as_PIL()
         self.__tk_image = ImageTk.PhotoImage(image=self.__pil_image)
@@ -162,7 +184,10 @@ class PSDViewer(TkToolWindow):
         width = self.__psd_image.header.width
         height = self.__psd_image.header.height
         self.__all_canvas.canvas.config(scrollregion=(0, 0, width, height))
-        self.__image_scale['value'] = 100
+        #self.__image_scale['value'] = 100
+        self._on_scale(self.__scale)
+        
+        self.__timer.active = True
         
         
     @Scripting.printable
@@ -189,6 +214,7 @@ class PSDViewer(TkToolWindow):
             return
         val = int(float(val))
         self.__scale_label['text'] = str(val) + '%'
+        self.__scale = val
         
         psd = self.__psd_image
         width, height = psd.header.width, psd.header.height
@@ -215,6 +241,11 @@ class PSDViewer(TkToolWindow):
         desktop_wallpaper.position = self.__wallpaper_position.current()
         time.sleep(1) # OS need time to set the wallpaper.
         os.remove(tfile.name)
+        
+        
+    def close_callback(self):
+        self.__timer.active = False
+        super().close_callback()
         
         
         

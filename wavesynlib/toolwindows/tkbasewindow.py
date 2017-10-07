@@ -47,7 +47,11 @@ Properties inherited from ModelNode:
     
     for method_name in method_name_map:
         locals()[method_name] = MethodDelegator('tk_object', 
-                                                method_name_map[method_name])        
+                                                method_name_map[method_name])
+
+
+    def close_callback(self):
+        pass        
 
        
     @Scripting.printable
@@ -56,6 +60,7 @@ Properties inherited from ModelNode:
         if hasattr(self.parent_node, 'on_window_close'):
             self.parent_node.on_window_close(self)
         # For Toplevel objects, use destroy rather than quit.
+        self.close_callback()
         self.__tk_object.destroy() 
         
         
