@@ -4,11 +4,11 @@ Created on Fri Apr 07 17:08:49 2017
 
 @author: Feng-cong Li
 """
-import tkinter.tix as Tix
+import tkinter
 
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
-from wavesynlib.guicomponents.tk import TaskbarIcon, ValueChecker
+from wavesynlib.guicomponents.tk import TaskbarIcon, ValueChecker, Balloon
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
 from wavesynlib.toolwindows import simpledialogs
@@ -32,8 +32,8 @@ WaveSyn components.
     def on_connect(self):
         super().on_connect()
         with self.attribute_lock:
-            self.root = Tix.Tk()
-            self.balloon = Tix.Balloon(self.root)
+            self.root = tkinter.Tk()
+            self.balloon = Balloon()
             self.taskbar_icon = TaskbarIcon(self.root)
             self.interrupter = InterrupterNode()
             self.dialogs = simpledialogs.Dialogs()

@@ -354,11 +354,12 @@ class StatusBar(Frame):
         self.__root_node = kwargs.pop('wavesyn_root')
         Frame.__init__(self, *args, **kwargs)
         timer = TkTimer(widget=self, interval=200, active=False)
-        
+
         balloon = Scripting.root_node.gui.balloon
-                
+                        
         busy_lamp = Label(self, bg='forestgreen', width=1)
         busy_lamp.pack(side='right', fill='y')
+        
         balloon.bind_widget(busy_lamp, balloonmsg='''Main-thread status.
 Green: main-thread is available;
 Red:   main-thread is busy.''')

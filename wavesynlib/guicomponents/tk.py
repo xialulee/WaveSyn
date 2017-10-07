@@ -126,7 +126,7 @@ def check_nonnegative_float(d, i, P, s, S, v, V, W):
     
         
 
-class ValueChecker(object):
+class ValueChecker:
     def __init__(self, root):
         self.__root = root
         self.check_int = (root.register(partial(check_value, func=int)),
@@ -141,15 +141,65 @@ class ValueChecker(object):
                                      '%V', '%W')
 
 
-                
-class LabeledScale(Frame, object):
+
+class Balloon:
+    '''Balloon implementation which is compatible with the original Tix one.
+Based on this post: http://www.voidspace.org.uk/python/weblog/arch_d7_2006_07_01.shtml.
+'''
+    class Tip:
+        def __init__(self, parent, text):
+            self.tip_widget = None
+            self.parent = parent
+            self.text = text
+        
+        
+        def show(self):
+            parent = self.parent
+            text = self.text
+            x, y, cx, cy = parent.bbox('insert')
+            x = x + parent.winfo_rootx() + 27
+            y = y + cy + parent.winfo_rooty() +27
+            self.tip_widget = tipw = Toplevel(self.parent)
+            tipw.wm_overrideredirect(1)
+            tipw.wm_geometry("+%d+%d" % (x, y))
+            Label(tipw, text=text, justify='left',
+                  background="#ffffe0", relief='solid', borderwidth=1,
+                  font=("tahoma", "8", "normal")).pack(ipadx=1)
+            
+            
+        def hide(self):
+            tipw = self.tip_widget
+            self.tip_widget = None
+            if tipw:
+                tipw.destroy()
+            
+    
+    def __init__(self, *args, **kwargs):
+        pass
+        
+            
+    def bind_widget(self, widget, balloonmsg):
+        tip = self.Tip(widget, balloonmsg)
+        
+        def enter(event):
+            tip.show()
+            
+        def leave(event):
+            tip.hide()
+            
+        widget.bind('<Enter>', enter)
+        widget.bind('<Leave>', leave)
+        
+        
+                        
+class LabeledScale(Frame):
     def __init__(self, *args, **kwargs):
         from_ = kwargs.pop('from_')
         to = kwargs.pop('to')
         name = kwargs.pop('name')
         formatter = kwargs.pop('formatter', str)
         self.__formatter = formatter
-        Frame.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         if name is not None:
             Label(self, text=name).pack(side='left')
@@ -171,9 +221,9 @@ class LabeledScale(Frame, object):
         return self.__scale.set(val)
                                                                   
         
-class LabeledEntry(Frame, object):
+class LabeledEntry(Frame):
     def __init__(self, *args, **kwargs):
-        Frame.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__label = Label(self)
         self.__label.pack(side='left')
         self.__entry = Entry(self)
@@ -358,8 +408,8 @@ class ScrolledTree(Frame):
 
 
 
-class CheckTree(object): 
-    class TreeNode(object):
+class CheckTree: 
+    class TreeNode:
         __slots__ = ['bind_object', 'children']
         
         def __init__(self, bind_object=None, children=None):
