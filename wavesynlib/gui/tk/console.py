@@ -11,7 +11,7 @@ Created on Sun Aug 28 02:49:38 2016
 #idlelib.AutoCompleteWindow.KEYPRESS_SEQUENCES = ()
 ##########################
 import os
-from tkinter import Menu, IntVar
+from tkinter import Menu, IntVar, Toplevel
 from tkinter.ttk import Progressbar, Scale, Combobox
 from tkinter import Frame, Label
 
@@ -265,7 +265,15 @@ class ConsoleText(ModelNode, ScrolledText):
             
         # Begin: Tab key for auto complete
 #        if evt.keysym == 'Tab':
-#            return self.__auto_complete.autocomplete_event(evt)
+#            acw = Toplevel(self.text)            
+#            acw.wm_overrideredirect(1)
+#            x, y, w, h = self.text.bbox('insert')
+#            x += self.text.winfo_rootx()
+#            y += self.text.winfo_rooty()
+#            acw.geometry(f'+{x}+{y+h}')
+#            acw.focus_set()
+#            acw.bind('<FocusOut>', lambda event: acw.withdraw(), print('FocusOut'))            
+#            return 'break'
         # End
             
             
