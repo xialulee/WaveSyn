@@ -4,13 +4,11 @@ Created on Fri Mar 18 12:11:35 2016
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
-
 import numpy as np
 from numpy import fft
 from scipy.optimize import fmin_ncg
 
-from wavesynlib.mathtools import Algorithm
+from wavesynlib.mathtools import Algorithm, Expression, Parameter
 
 
 def objective(phi, Qr):
@@ -63,17 +61,17 @@ def d2ak_dphi2(k, s):
 class PONLP(Algorithm):
     __name__ = 'PONLP'
     def __init__(self):
-        super(PONLP, self).__init__()
+        super().__init__()
+
         
     def initpoint(self, N):
         return np.exp(1j * 2 * np.pi * np.random.rand(N))
         
-    __parameters__ = (
-        ['N', 'int', 'Sequence Length.'],
-        ['Qr', 'expression', 'The interval in which correlation sidelobes are suppressed.'],
-        ['tol', 'expression', 'Tolerance.']
-    )
-    def __call__(self, N, Qr, tol):
+
+    def __call__(self, 
+                 N: Parameter(int, 'Sequence Length.'), 
+                 Qr: Parameter(Expression, 'The interval in which correlation sidelobes are suppressed.'), 
+                 tol: Parameter(float, 'Tolerance.')):
         s_init = self.initpoint(N)
         phi_init = np.angle(s_init)
         if not isinstance(Qr, np.ndarray):

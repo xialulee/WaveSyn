@@ -5,7 +5,7 @@ Created on Tue Jun 20 21:24:25 2017
 @author: Feng-cong Li
 """
 
-from wavesynlib.mathtools import Algorithm
+from wavesynlib.mathtools import Algorithm, Expression, Parameter
 import wavesynlib.interfaces.gpu.cuda as wavesyncuda
 
 from math import sqrt
@@ -36,12 +36,11 @@ class WeCAN(Algorithm):
         super().__init__()
         
         
-    __parameters__ = (
-        ['N', 'int', 'Sequence Length N.'],
-        ['gamma', 'expression', 'N-by-1, corresponding to weights w_k = gamma_k^2'],
-        ['e', 'float', 'Threashold for exit condition.'],
-        ['K', 'int', 'Maximum iteration number.'])
-    def __call__(self, N, gamma, e, K):
+    def __call__(self, 
+                 N: Parameter(int, 'Sequence Length N.'), 
+                 gamma: Parameter(Expression, 'N-by-1, corresponding to weights w_k = gamma_k^2'), 
+                 e: Parameter(float, 'Threashold for exit condition.'), 
+                 K: Parameter(int, 'Maximum iteration number.')):
         thr = self.cuda_worker.reikna_thread
         s = np.exp(1j * 2 * np.pi * np.random.rand(N), dtype=np.complex128)
         iterdiff = thr.to_device(np.zeros((1,), dtype=np.double))

@@ -1,5 +1,5 @@
-from numpy import *
-from wavesynlib.mathtools import Algorithm
+from numpy import angle, array, conj, exp, fft, ndarray, pi, random, sqrt
+from wavesynlib.mathtools import Algorithm, Expression, Parameter
 from wavesynlib.languagecenter.wavesynscript.math import Operator
 
 @Operator
@@ -44,12 +44,10 @@ class DIAC(Algorithm):
         return exp(1j * 2 * pi * random.rand(N))
         
         
-    __parameters__  = (
-        ['N', 'int', 'Sequence Length.'],
-        ['Qr', 'expression', 'The interval in which correlation sidelobes are suppressed.'],
-        ['K', 'int', 'Maximum iteration number.']
-    )
-    def __call__(self, N, Qr, K):
+    def __call__(self, 
+                 N: Parameter(int, 'Sequence Length'), 
+                 Qr: Parameter(Expression, 'The interval in which correlation sidelobes are suppressed.'), 
+                 K: Parameter(int, 'Maximum iteration number.')):
         s_init  = self.initpoint(N)
         if not isinstance(Qr, ndarray):
             Qr      = array(Qr)        

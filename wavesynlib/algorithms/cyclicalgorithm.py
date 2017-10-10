@@ -4,9 +4,9 @@ Created on Thu May 29 09:28:31 2014
 
 @author: Feng-cong Li
 """
-from wavesynlib.mathtools import Algorithm
+from wavesynlib.mathtools import Algorithm, Parameter
 from wavesynlib.languagecenter.wavesynscript.math import Operator
-from numpy import *
+from numpy import angle, exp, pi, random
 from numpy.fft.fftpack import fft, ifft
 
 
@@ -24,17 +24,17 @@ def Proj_F1(s):
 class CAN(Algorithm):
     __name__    = 'CAN'
     def __init__(self):
-        super(CAN, self).__init__()
+        super().__init__()
+
 
     def initpoint(self, N):
         return exp(1j * 2 * pi * random.rand(N))
         
-    __parameters__  = (
-        ['N', 'int', 'Sequence Length.'],
-        ['e', 'float', 'Threshold for exit iteration.'],
-        ['K', 'int', 'Maximum iteration number.']
-    )
-    def __call__(self, N, e, K):
+
+    def __call__(self, 
+                 N: Parameter(int, 'Sequence Length.'), 
+                 e: Parameter(float, 'Threashold for exit iteration.'), 
+                 K: Parameter(int, 'Maximum iteration number.')):
         s_init  = self.initpoint(N)       
         Tcan   = (Proj_M1 * Proj_F1) ** K
         Tcan.iterThreshold  = e

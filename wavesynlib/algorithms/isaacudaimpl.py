@@ -4,7 +4,8 @@ Created on Fri Oct 09 14:00:27 2015
 
 @author: Feng-cong Li
 """
-from wavesynlib.mathtools import Algorithm
+from wavesynlib.mathtools import Algorithm, Expression
+from wavesynlib.mathtools import Parameter as algo_param
 import wavesynlib.interfaces.gpu.cuda as wavesyncuda
 
 import numpy as np
@@ -80,15 +81,11 @@ class DIAC(Algorithm):
             self.__cache[N] = fft_unimod
         return self.__cache[N]
         
-        
-    __parameters__  = (
-        ['N', 'int', 'Sequence Length.'],
-        ['Qr', 'expression', 'The interval in which correlation sidelobes are suppressed.'],
-        ['K', 'int', 'Maximum iteration number.']
-    )
-    
-        
-    def __call__(self, N, Qr, K): 
+                
+    def __call__(self, 
+                 N: algo_param(int, 'Sequence Length.'), 
+                 Qr: algo_param(Expression, 'The interval in which correlation sidelobes are suppressed.'), 
+                 K: algo_param(int, 'Maximum iteration number')): 
         thr = self.cuda_worker.reikna_thread
         twoN = 2 * N
         fft = wavesyncuda.FFTFactory[(thr, (twoN,))]

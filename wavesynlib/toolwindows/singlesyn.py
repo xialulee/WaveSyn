@@ -11,11 +11,10 @@ from tkinter.ttk import Button, Checkbutton, Progressbar, Combobox
 
 from wavesynlib.guicomponents.tk import Group, LabeledEntry
 from wavesynlib.guicomponents.classselector import ask_class_name
-from wavesynlib.application import Application
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.utils import set_attributes
-from wavesynlib.languagecenter.wavesynscript import ScriptCode, Scripting, code_printer
-from wavesynlib.mathtools import Algorithm, AlgorithmDict, AlgorithmNode, DataContainer
+from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.mathtools import Algorithm, AlgorithmDict, AlgorithmNode, DataContainer, Expression
 
 import json
 
@@ -138,10 +137,13 @@ class ParamsGroup(Group):
             paramitem.label_width = 5
             paramitem.entry_width = 8
             if self.balloon:
-                self.balloon.bind_widget(paramitem.label, balloonmsg=param.shortdesc)
-            if param.type == 'int':
+                tip = f'''{param.shortdesc}
+
+Type: {param.type.__name__}.'''
+                self.balloon.bind_widget(paramitem.label, balloonmsg=tip)
+            if param.type is int:
                 paramitem.checker_function = self._app.gui.value_checker.check_int
-            elif param.type == 'float':
+            elif param.type is float:
                 paramitem.checker_function = self._app.gui.value_checker.check_float
             paramitem.grid(row=index%self.__MAXROW, column=index//self.__MAXROW)
             #self.__params[param.name] = {'gui':paramitem, 'meta':param}
@@ -154,7 +156,7 @@ class ParamsGroup(Group):
 
     def get_parameters(self):
         params = self.__params
-        convert = {'int':int, 'float':float, 'expression':lambda expr: ScriptCode(expr), '':lambda x: x}
+        convert = {int:int, float:float, Expression:Expression.converter, '':lambda x: x}
         return {name: convert[params[name]['meta'].type](params[name]['gui'].entry_text) for name in params}
         
         
@@ -169,7 +171,7 @@ class ParamsGroup(Group):
 class AlgoSelGroup(Group):
     def __init__(self, *args, **kwargs):
         self._topwin  = kwargs.pop('topwin')
-        super(AlgoSelGroup, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         self.__algorithm_list = Combobox(self, value=[], takefocus=1, stat='readonly', width=12)
         self.__algorithm_list['values']   = []

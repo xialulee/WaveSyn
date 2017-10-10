@@ -2,7 +2,8 @@ from collections import OrderedDict, Iterable
 import importlib
 from imp import reload
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
+from wavesynlib.languagecenter.wavesynscript import (
+        Scripting, ModelNode, NodeDict, ScriptCode)
 from wavesynlib.toolwindows.tkbasewindow import WindowComponent
 
 import time
@@ -49,16 +50,28 @@ kwargs  the extra key paramters.
 
 
 class Parameter:
-    def __init__(self, name='', type='', shortdesc='', longdesc=''):
+    __slots__ = 'type', 'shortdesc', 'longdesc', 'name'
+    
+    def __init__(self, type='', shortdesc='', longdesc='', name=''):
         self.name   = name
         self.type   = type
         self.shortdesc  = shortdesc
         self.longdesc   = longdesc
+        
+        
+        
+class Expression:
+    def __init__(self):
+        pass
+    
+    
+    @classmethod
+    def converter(expr):
+        return ScriptCode(expr)
 
 
 
 class Algorithm:
-    __parameters__  = None
     __name__        = None
 
     
@@ -106,7 +119,6 @@ class AlgorithmNode(ModelNode):
             self.parameters = OrderedDict()
 
 
-    __parameters__ = None
     __name__ = None
 
 
@@ -125,14 +137,15 @@ class AlgorithmNode(ModelNode):
         self.__meta.class_name = class_name
         self.__meta.name    = algorithm.__name__
         self.__algorithm    = algorithm
-        
-        if algorithm.__parameters__:
-            for item in algorithm.__parameters__:
-                self.__meta.parameters[item[0]]    = Parameter(*item)
-        else:
-            paramsnum   = algorithm.__call__.func_code.co_argcount
-            for param in algorithm.__call__.func_code.co_varnames[1:paramsnum]:  
-                self.__meta.parameters[param]   = Parameter(param, type='expression')
+                    
+        # co_varnames[0] is "self";
+        # hence we start from 1
+        func = algorithm.__call__
+        arg_count = func.__code__.co_argcount
+        for name in func.__code__.co_varnames[1:arg_count]: 
+            p = func.__annotations__.get(name, Parameter(type='expression'))
+            p.name = name
+            self.__meta.parameters[name] = p
                 
                 
     @property

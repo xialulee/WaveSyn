@@ -5,7 +5,7 @@ Created on Tue May 27 16:01:11 2014
 @author: Feng-cong Li
 """
 from numpy import *
-from wavesynlib.mathtools import Algorithm
+from wavesynlib.mathtools import Algorithm, Expression, Parameter
 
 class ALGOTEST(Algorithm):
     __name__    = 'ALGOTEST'
@@ -13,14 +13,15 @@ class ALGOTEST(Algorithm):
         self.exitcond   = {}
         Algorithm.__init__(self)
 
+
     def initpoint(self, N):
         return exp(1j * 2 * pi * random.rand(N))
         
-#    __parameters__  = (
-#        ['N', 'int', 'Sequence Length.'],
-#        ['Qr', 'expression', 'The interval in which correlation sidelobes are suppressed.'],
-#        ['K', 'int', 'Maximum iteration number.']
-#    )
-    def __call__(self, A, B, C, D):
+
+    def __call__(self, 
+                 A: Parameter(int, 'first'), 
+                 B: Parameter(Expression, 'second'), 
+                 C: Parameter(float, 'third'), 
+                 D: Parameter(float, 'fourth')):
         s_init  = self.initpoint(A)
         return s_init
