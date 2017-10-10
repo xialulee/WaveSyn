@@ -4,7 +4,6 @@ from imp import reload
 
 from wavesynlib.languagecenter.wavesynscript import (
         Scripting, ModelNode, NodeDict, ScriptCode)
-from wavesynlib.toolwindows.tkbasewindow import WindowComponent
 
 import time
 import multiprocessing as mp
@@ -66,7 +65,7 @@ class Expression:
     
     
     @classmethod
-    def converter(expr):
+    def converter(cls, expr):
         return ScriptCode(expr)
 
 
@@ -324,7 +323,7 @@ def parallel_func(algorithm_class, process_id, queue, args, kwargs):
 
 
 
-class AlgorithmDict(NodeDict, WindowComponent):
+class AlgorithmDict(NodeDict):
     def __init__(self, node_name=''):
         super().__init__(node_name=node_name)
         
