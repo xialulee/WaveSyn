@@ -151,5 +151,20 @@ class property_with_args:
         
     def __get__(self, instance, owner):
         return self.Property(instance, self.__func)
-        
+    
+    
+    
+import ctypes
+
+def build_struct(f):
+    field_names = f.__code__.co_varnames[:f.__code__.co_argcount]
+    field_types = f.__annotations__
+    
+    field_desc = []
+    for name in field_names:
+        field_desc.append((name, field_types[name]))
+    
+    class TheStruct(ctypes.Structure):
+        _fields_ = field_desc
+    return TheStruct        
                        
