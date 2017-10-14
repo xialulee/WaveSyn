@@ -11,6 +11,22 @@ from wavesynlib.languagecenter.utils import build_struct
 
 
 
+BATTERY_DEVTYPE_GAMEPAD = BYTE(0)
+BATTERY_DEVTYPE_HEADSET = BYTE(1)
+
+BATTERY_LEVEL_EMPTY = BYTE(0)
+BATTERY_LEVEL_FULL = BYTE(3)
+BATTERY_LEVEL_LOW = BYTE(1)
+BATTERY_LEVEL_MEDIUM = BYTE(2)
+
+BATTERY_TYPE_ALKALINE = BYTE(2)
+BATTERY_TYPE_DISCONNECTED = BYTE(0)
+BATTERY_TYPE_NIMH = BYTE(3)
+BATTERY_TYPE_UNKNOWN = BYTE(0XFF)
+BATTERY_TYPE_WIRED = BYTE(1)
+
+
+
 @build_struct
 def XINPUT_GAMEPAD(
     wButtons: WORD,
@@ -36,6 +52,14 @@ def XINPUT_STATE(
 def XINPUT_VIBRATION(
     wLeftMotorSpeed: WORD,
     wRightMotorSpeed: WORD
+):pass
+        
+        
+        
+@build_struct
+def XINPUT_BATTERY_INFORMATION(
+    BatteryType: BYTE,
+    BatteryLevel: BYTE
 ):pass
         
         
@@ -66,4 +90,15 @@ def vibrate(user_index, left_motor_speed, right_motor_speed):
     vibration.wLeftMotorSpeed = left_motor_speed
     vibration.wRightMotorSpeed = right_motor_speed
     xinput.XInputSetState(user_index, byref(vibration))
+    
+    
+    
+def get_battery_info(user_index, dev_type=BATTERY_DEVTYPE_GAMEPAD):
+    info = XINPUT_BATTERY_INFORMATION()
+    user_index = DWORD(user_index)
+    if not isinstance(dev_type, BYTE):
+        dev_type = BYTE(dev_type)
+    xinput.XInputGetBatteryInformation(user_index, dev_type, byref(info))
+    return info
+    
     
