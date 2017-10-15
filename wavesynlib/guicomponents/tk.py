@@ -318,7 +318,9 @@ class PILImageFrame(Frame):
         frame = Frame(self)
         frame.pack(fill='x')
         
-        save_dlg = lambda: asksaveasfilename(filetypes=[('JPEG', '.jpg'), ('PNG', '.png')], defaultextension='.jpg')        
+        save_dlg = lambda: asksaveasfilename(filetypes=[
+                ('JPEG', '.jpg'), ('PNG', '.png')], 
+            defaultextension='.jpg')        
                         
         def on_save(image):
             filename = save_dlg()
@@ -326,8 +328,12 @@ class PILImageFrame(Frame):
                 image.save(filename)
         
         Label(frame, text=f'id={id(self)}').pack(side='left')
-        Button(frame, text='Save Origin', command=lambda:on_save(self.__origin_image)).pack(side='left')
-        Button(frame, text='Save Zoomed', command=lambda:on_save(self.__zoomed_image)).pack(side='left')
+        Button(frame, 
+               text='Save Origin', 
+               command=lambda:on_save(self.__origin_image)).pack(side='left')
+        Button(frame, 
+               text='Save Zoomed', 
+               command=lambda:on_save(self.__zoomed_image)).pack(side='left')
         if platform.system().lower() == 'windows':
             from wavesynlib.interfaces.os.windows.clipboard import clipb
             
@@ -439,7 +445,8 @@ class CheckTree:
             node = node.children[node_name]
         return node
         
-    def add(self, parent_node=None, node_status=False, bind_object=None, **kwargs):
+    def add(self, 
+            parent_node=None, node_status=False, bind_object=None, **kwargs):
         parent_node = str(parent_node) if parent_node else None
         node = self.__tree_model        
         if parent_node is not None:
@@ -481,12 +488,13 @@ class CheckTree:
         
 
 
-class ScrolledText(Frame, object):
+class ScrolledText(Frame):
     '''This class is based on Programming Python 3rd Edition P517'''
-    def __init__(self, parent=None, text='', file=None):
+    def __init__(self, 
+                 parent=None, text='', file=None, horizontal_scroll=False):
         Frame.__init__(self, parent)
         self.pack(expand='yes', fill='both')
-        self.make_widgets()
+        self.make_widgets(horizontal_scroll=horizontal_scroll)
         self.set_text(text, file)
         self.__link_tag_functions = {}
         self.__disable_keys = False
@@ -495,13 +503,22 @@ class ScrolledText(Frame, object):
         self.on_url_link_click = lambda dumb: None
         
         
-    def make_widgets(self):
-        sbar = Scrollbar(self)
+    def make_widgets(self, horizontal_scroll=False):
         text = TextWinHotkey(self, relief='sunken')
-        sbar.config(command=text.yview)
-        text.config(yscrollcommand=sbar.set)
-        sbar.pack(side='right', fill='y')
-        text.pack(side='left', expand='yes', fill='both')
+        
+        ybar = Scrollbar(self)        
+        ybar.config(command=text.yview)
+        ybar.pack(side='right', fill='y')
+        
+        if horizontal_scroll:
+            xbar = Scrollbar(self)
+            xbar.config(command=text.xview, orient='horizontal')
+            xbar.pack(side='bottom', fill='x')
+            text.config(xscrollcommand=xbar.set)
+            
+        text.config(yscrollcommand=ybar.set)  
+        
+        text.pack(side='left', expand='yes', fill='both')      
         self.text   = text # To Do: change the attribute name. 
         
         
