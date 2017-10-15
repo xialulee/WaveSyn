@@ -27,7 +27,7 @@ from PIL import Image
 
 from functools import partial
 
-from wavesynlib.languagecenter.utils import eval_format, MethodDelegator, FunctionChain
+from wavesynlib.languagecenter.utils import MethodDelegator, FunctionChain
 from wavesynlib.languagecenter.designpatterns import Observable
 
 __DEBUG__ = False
@@ -379,7 +379,7 @@ class TextWinHotkey(Text):
 
 class ScrolledTree(Frame):
     def __init__(self, *args, **kwargs):
-        Frame.__init__(self, *args, **kwargs)
+        super().__init__(self, *args, **kwargs)
         self.pack(expand='yes', fill='both')
         self._make_widgets()
         self.__on_item_double_click = FunctionChain()
