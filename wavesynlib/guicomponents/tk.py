@@ -379,7 +379,7 @@ class TextWinHotkey(Text):
 
 class ScrolledTree(Frame):
     def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.pack(expand='yes', fill='both')
         self._make_widgets()
         self.__on_item_double_click = FunctionChain()
@@ -633,7 +633,7 @@ class ScrolledText(Frame):
                 start = pastit
 
 
-class ScrolledList(Frame, object):
+class ScrolledList(Frame):
     method_name_map   = {
         'insert':'insert', 
         'delete':'delete', 
@@ -646,7 +646,7 @@ class ScrolledList(Frame, object):
                                                 method_name_map[method_name])
     
     def __init__(self, *args, **kwargs):
-        Frame.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         sbar = Scrollbar(self)
         list = Listbox(self)
         sbar.config(command=list.yview)
@@ -1505,7 +1505,9 @@ Example: [
             mod = locals()[mod]
             cls = getattr(mod, class_name)            
         else:
-            if class_name in globals():
+            if isinstance(class_name, type):
+                cls = class_name
+            elif class_name in globals():
                 cls = globals()[class_name]
             elif class_name in ttk.__dict__:
                 cls = ttk.__dict__[class_name]

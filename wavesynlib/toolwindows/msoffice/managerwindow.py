@@ -60,33 +60,33 @@ class OfficeController(TkToolWindow):
         tool_tabs = self._tool_tabs
         
         widgets_desc = [
-{'class':'Group', 
+{'class':Group, 
      'pack':{'side':'left', 'fill':'y'},
     'setattr':{'name':'Connect'},
     'children':[
-        {'class':'Button',
+        {'class':ttk.Button,
              'config':{'text':'Get Active', 'command':self.__on_get_active}
         },
-        {'class':'Button',
+        {'class':ttk.Button,
              'config':{'text':'Create', 'command':self.__on_create}
         }
     ]
 },
 
-{'class':'Group',
+{'class':Group,
     'pack':{'side':'left', 'fill':'y'},
     'setattr':{'name':'Window'},
     'children':[
-        {'class':'Button',
+        {'class':ttk.Button,
              'config':{'text':'Foreground', 'command':self.__on_foreground}
         },
-        {'class':'Button',
+        {'class':ttk.Button,
              'config':{'text':'Copy Path', 'command':self.__on_copy_path}
         }
     ]
 },
 
-{'class':'Group',
+{'class':Group,
     'name':'utils_group',
     'pack':{'side':'left', 'fill':'y'},
     'setattr':{'name':'Utils'}
