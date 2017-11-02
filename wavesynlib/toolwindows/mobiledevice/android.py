@@ -103,7 +103,10 @@ if action == "read":
              'config':{'text':'Get Image', 'image':image_get_image, 'command':self.__on_pick_gallery_photo}},
         {'class':'Button', 'name':'get_image', 'grid':{'row':0, 'column':1},
              'balloonmsg':'Get File',
-             'config':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}}
+             'config':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}},
+        {'class':'Button', 'name':'send_image', 'grid':{'row':1, 'column':0},
+             'balloonmsg':'Send a picture to device',
+             'config':{'text':'Send Image', 'image':image_send_clipb_image, 'command':self.__on_send_image_to_device}}
     ]}
 ]},
 
@@ -141,6 +144,7 @@ if action == "read":
         self.__data = None
         self.__on_finish = None
         self.__save_file_dir = None
+        self.__send_filename = None
         self.__ip_port = None
         self.__lock = Lock()
 
@@ -407,6 +411,9 @@ IP: {addr[0]}
                             image.save(bio, format='png')
                             conn.send(bio.getvalue())
                             bio.close()
+                        elif command['source'].startswith('storage'):
+                            with open(self.__send_filename, 'rb') as file_send:
+                                conn.send(file_send.read())
                     @self.root_node.thread_manager.main_thread_do(block=False)
                     def on_finish():
                         self.__data_book.select(self._data_tab)
@@ -434,7 +441,8 @@ IP: {addr[0]}
         self._launch_server(command={'action':'read', 'source':'gallery'})
         self.__on_finish = on_finish
         
-        
+    
+    @Scripting.printable    
     def get_device_file(self, savein, on_finish):
         self.__save_file_dir = self.root_node.gui.dialogs.ask_directory(savein)
         self._launch_server(command={'action':'read', 'source':'storage'})
@@ -445,17 +453,30 @@ IP: {addr[0]}
         self._launch_server(command={'action':'read', 'source':'location_sensor'})
         self.__on_finish = on_finish
         
-        
+    
+    @Scripting.printable    
     def write_device_clipboard(self):
         self._launch_server(command={'action':'write', 'target':'clipboard'}) 
         
-        
+    
+    @Scripting.printable    
     def send_clipboard_image_to_device(self):
         self._launch_server(command={
             'action':'write', 
             'target':'dir:Download', 
             'source':'clipboard:image', 
             'name':f'clipboard_{int(datetime.datetime.now().timestamp())}.png'})
+    
+    
+    @Scripting.printable
+    def send_image_to_device(self, filename):
+        filename = Path(self.root_node.gui.dialogs.ask_open_filename(filename))
+        self.__send_filename = filename
+        self._launch_server(command={
+            'action':'write',
+            'target':'dir:Download',
+            'source':'storage:image',
+            'name':f'from_pc_{filename.name}'})
         
         
     def __on_read_device_clipboard(self, on_finish=None):
@@ -476,6 +497,11 @@ IP: {addr[0]}
     def __on_send_clipboard_image_to_device(self):
         with code_printer():
             self.send_clipboard_image_to_device()
+            
+            
+    def __on_send_image_to_device(self):
+        with code_printer():
+            self.send_image_to_device(filename=self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
     
 
     def __on_pick_gallery_photo(self, on_finish=None):
