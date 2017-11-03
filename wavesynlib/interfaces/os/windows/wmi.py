@@ -6,6 +6,7 @@ Created on Sat Mar 04 21:02:17 2017
 """
 import json
 import abc
+from collections import OrderedDict
 from comtypes import client
 
 
@@ -67,7 +68,7 @@ class WQL:
         def to_native(items):
             result = []
             for item in items:
-                d = {}
+                d = OrderedDict()
                 for prop in item.Properties_:
                     d[prop.Name] = prop.Value
                 result.append(d)
