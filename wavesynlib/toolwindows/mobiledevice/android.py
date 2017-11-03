@@ -13,7 +13,7 @@ import importlib
 
 from pathlib import Path
 from io import BytesIO
-from threading import Lock
+from threading import Lock, Event
 
 import qrcode
 from PIL import ImageTk, Image
@@ -24,6 +24,11 @@ from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry, PILImageFrame
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
+
+
+
+class AbortException(Exception):
+    pass
 
 
 
@@ -125,16 +130,17 @@ if action == "read":
          'config':{'text':'Location', 'image':image_sensor_location, 'compound':'left', 'command':self.__on_read_device_location}}
 ]},
 
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'QR Code'}, 'children':[
+{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Manage'}, 'children':[
     {'class':'LabeledEntry', 'name':'qr_size', 
          'balloonmsg':'Size (pixels) of the generated QR code.',
          'setattr':{
-             'label_text':'Size', 
-             'label_width':5, 
-             'entry_width':8,
+             'label_text':'QR Size', 
+             'label_width':7, 
+             'entry_width':4,
              'entry_text':str(default_qr_size),
              'checker_function':self.root_node.gui.value_checker.check_int}},
-    {'class':'Button', 'config':{'text':'Ok'}}
+    {'class':'Button', 'config':{'text':'Ok'}},
+    {'class':'Button', 'config':{'text':'Abort', 'command':self.__on_abort}}
 ]}
 ]
 
@@ -156,6 +162,7 @@ if action == "read":
         self.__send_filename = None
         self.__ip_port = None
         self.__lock = Lock()
+        self.__abort_event = Event()
 
         data_book.add(qr_canvas, text='QR Code')
         
@@ -205,6 +212,8 @@ if action == "read":
         
     def _launch_server(self, command):                
         sockobj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        abort_event = self.__abort_event
+        abort_event.clear()
 
         try:
             port = 10000
@@ -256,6 +265,11 @@ IP: {addr[0]}
 {mark*30}''')   
                 
                 
+            def clear_qr_image():
+                self.__qr_canvas.canvas.delete(self.__qr_id)
+                self.__qr_id = None                
+                
+                
             def generate_plugin_link(data, type_):
                 wtext = self.__scrolled_text
                 
@@ -268,26 +282,40 @@ IP: {addr[0]}
                         plugin.action(data)
                     
                     wtext.append_text(f'[{plugin.link_text}]', link_action)
-                    wtext.append_text(' ')   
+                    wtext.append_text(' ') 
+                    
+                    
+            def recv_(conn, datalen):
+                abort_flag = False
+                while True:
+                    try:
+                        buf = conn.recv(datalen)
+                        return buf
+                    except socket.timeout:
+                        if abort_event.is_set():
+                            abort_flag = True
+                            break
+                if abort_flag:
+                    raise AbortException
                     
                     
             def recv_head(conn):
-                exit_flag = conn.recv(1)
+                exit_flag = recv_(conn, 1)
                 if exit_flag != b'\x00':
                     # The first byte is not zero, which means abort this transfer mission.
                     return True, None, 0
-                password = struct.unpack('!I', conn.recv(4))[0]
+                password = struct.unpack('!I', recv_(conn, 4))[0]
                 if password != self.__password:
-                    return True, None, 0
-                device_code = conn.recv(MAXDEVCODELEN).decode('utf-8')
-                datalen = struct.unpack('!I', conn.recv(4))[0]
+                    return True, None, 0                
+                device_code = recv_(conn, MAXDEVCODELEN).decode('utf-8')
+                datalen = struct.unpack('!I', recv_(conn, 4))[0]
                 return False, device_code, datalen
             
             
             def recv_data(conn):
                 data_list = []
                 while True:
-                    data = conn.recv(8192)
+                    data = recv_(conn, 8192)
                     if not data:
                         break
                     data_list.append(data)
@@ -296,6 +324,21 @@ IP: {addr[0]}
             
             try:
                 sockobj.listen(2)
+                sockobj.settimeout(0.5)
+                abort_flag = False
+                while True:
+                    try:
+                        conn, addr = sockobj.accept()
+                    except socket.timeout:
+                        if abort_event.is_set():
+                            abort_flag = True
+                            break
+                    else:
+                        break
+                    
+                if abort_flag:
+                    raise AbortException
+                    
                 # Here it waits for two potential objects.
                 # One is the android data provider,
                 # and the other is WaveSyn itself for cancellation.
@@ -311,13 +354,11 @@ IP: {addr[0]}
                 # Data format:
                 # [exit_flag:1byte] [password:4bytes] [data:arbitrary bytes in json format]
                 
-                conn, addr = sockobj.accept()
-                
-                @self.root_node.thread_manager.main_thread_do(block=False)
-                def clear_qr_image():
-                    # Always manipulate the GUI components in the main thread.
-                    self.__qr_canvas.canvas.delete(self.__qr_id)
-                    self.__qr_id = None
+                #conn, addr = sockobj.accept()
+                conn.settimeout(0.5)
+
+                # Always manipulate the GUI components in the main thread.                
+                self.root_node.thread_manager.main_thread_do(block=False)(clear_qr_image)
         
                 exit_flag, device_code, datalen = recv_head(conn)
                 if exit_flag:
@@ -371,8 +412,8 @@ IP: {addr[0]}
                             scrolled_text.see('end')
                             
                     elif command['source'] == 'storage':
-                        namelen = ord(conn.recv(1))
-                        filename = Path(conn.recv(namelen).decode('utf-8'))
+                        namelen = ord(recv_(conn, 1))
+                        filename = Path(recv_(conn, namelen).decode('utf-8'))
                         directory = Path(self.__save_file_dir)
                         path = directory/filename
                         if path.exists():
@@ -388,7 +429,7 @@ IP: {addr[0]}
                             recvcnt = 0
                             self.__transfer_progress.set(0)
                             while True:
-                                buf = conn.recv(buflen)
+                                buf = recv_(conn, buflen)
                                 if not buf:
                                     self.__transfer_progress.set(0)
                                     break
@@ -449,6 +490,8 @@ IP: {addr[0]}
                         show_head(device_code=device_code, addr=addr, read=False)
                         scrolled_text.append_text('\n'*3)
                         scrolled_text.see('end')
+            except AbortException:
+                self.root_node.thread_manager.main_thread_do(block=False)(clear_qr_image)
             finally:
                 sockobj.close()
                 with self.__lock:
@@ -516,6 +559,16 @@ IP: {addr[0]}
             'target':'dir:Download',
             'source':'storage:file',
             'name':f'from_pc_{filename.name}'})
+    
+    
+    @Scripting.printable
+    def abort(self):
+        self.__abort_event.set()
+    
+    
+    def __on_abort(self):
+        with code_printer():
+            self.abort()
         
         
     def __on_read_device_clipboard(self, on_finish=None):
