@@ -33,6 +33,16 @@ class Battery:
         for item in items:
             val = item.Properties_['EstimatedChargeRemaining'].Value
         return int(val)
+    
+    
+    @property
+    def status(self):
+        items = self.__wql.query('SELECT BatteryStatus FROM Win32_Battery')
+        val = 10
+        for item in items:
+            val = item.Properties_['BatteryStatus'].Value
+        return int(val)
+        
         
 
 
@@ -43,18 +53,26 @@ def main():
         return
     
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
+    caller_dir = get_caller_dir()
+    icon_charge = caller_dir/'batterymeter_charge.ico'
+    icon_discharge = caller_dir/'batterymeter_discharge.ico'
     root    = Tk()
-    root.iconbitmap(default=get_caller_dir()/'batterymeter.ico')
+    root.iconbitmap(default=icon_discharge)
     label   = Label()
     label.pack()
     tb_icon  = tktools.TaskbarIcon(root) 
     battery = Battery()
     
-    timer = TkTimer(widget=root, interval=2000) # No Config Dialog
+    timer = TkTimer(widget=root, interval=5000) # No Config Dialog
     
     @timer.add_observer   
-    def show_percent():
+    def show_percent_status():
         percent = battery.percent
+        status = battery.status
+        if status in (1, 3, 4, 5, 10, 11):
+            root.iconbitmap(default=icon_discharge)
+        else:
+            root.iconbitmap(default=icon_charge)
         label['text']   = f'Battery: {percent}%'
         root.title(f'Battery {percent}%')
         tb_icon.progress = percent        
