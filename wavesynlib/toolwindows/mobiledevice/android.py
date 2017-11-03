@@ -72,14 +72,17 @@ if action == "read":
         image_read_clipb = ImageTk.PhotoImage(file=res_dir/'readclipb.png')
         image_write_clipb = ImageTk.PhotoImage(file=res_dir/'writeclipb.png')
         image_send_clipb_image = ImageTk.PhotoImage(file=res_dir/'sendclipbimage.png')
+        image_send_file = ImageTk.PhotoImage(file=res_dir/'sendfile.png')
         image_get_file = ImageTk.PhotoImage(file=res_dir/'getfile.png')
         image_get_image = ImageTk.PhotoImage(file=res_dir/'getimage.png')
         image_sensor_location = ImageTk.PhotoImage(file=res_dir/'locationsensor.png')
-        self._gui_images.extend((image_read_clipb, image_write_clipb, image_send_clipb_image, image_get_file, image_get_image, image_sensor_location))
+        self._gui_images.extend((image_read_clipb, image_write_clipb, image_send_clipb_image, image_send_file, image_get_file, image_get_image, image_sensor_location))
         
         tool_tabs = self._tool_tabs
         
         default_qr_size = 200
+        
+        self.__transfer_progress = tk.IntVar()
         
         widgets_desc = [
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Clipboard'}, 'children':[
@@ -106,7 +109,13 @@ if action == "read":
              'config':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}},
         {'class':'Button', 'name':'send_image', 'grid':{'row':1, 'column':0},
              'balloonmsg':'Send a picture to device',
-             'config':{'text':'Send Image', 'image':image_send_clipb_image, 'command':self.__on_send_image_to_device}}
+             'config':{'text':'Send Image', 'image':image_send_clipb_image, 'command':self.__on_send_image_to_device}},
+        {'class':'Button', 'name':'send_file', 'grid':{'row':1, 'column':1},
+             'balloonmsg':'Send a file to device',
+             'config':{'text':'Send File', 'image':image_send_file, 'command':self.__on_send_file_to_device}},
+        {'class':'Progressbar', 'name':'transfer_progressbar', 'grid':{'row':2, 'columnspan':2},
+             'balloonmsg':'Data transfer progress',
+             'config':{'length':60, 'variable':self.__transfer_progress, 'maximum':100}}
     ]}
 ]},
 
@@ -165,8 +174,7 @@ if action == "read":
         
         data_book.pack(expand='yes', fill='both')
         
-        self._make_window_manager_tab()
-        
+        self._make_window_manager_tab()        
         
         
     def __enable_transfer_widgets(self, enable=True):
@@ -177,7 +185,9 @@ if action == "read":
             w['get_file'],
             w['get_image'],
             w['read_gps'],
-            w['send_clipb_image']]
+            w['send_clipb_image'],
+            w['send_image'],
+            w['send_file']]
         for widget in widgets:
             widget['state'] = 'normal' if enable else 'disabled'
         
@@ -373,11 +383,18 @@ IP: {addr[0]}
                                 if not path.exists():
                                     break
                         with path.open('wb') as f:
+                            buflen = 65536
+                            filelen = datalen
+                            recvcnt = 0
+                            self.__transfer_progress.set(0)
                             while True:
-                                buf = conn.recv(32768)
+                                buf = conn.recv(buflen)
                                 if not buf:
+                                    self.__transfer_progress.set(0)
                                     break
                                 f.write(buf)
+                                recvcnt += buflen
+                                self.__transfer_progress.set(int(recvcnt/filelen*100))
                         @self.root_node.thread_manager.main_thread_do(block=False)
                         def show_info():
                             show_head(device_code=device_code, addr=addr, read=True)
@@ -412,8 +429,19 @@ IP: {addr[0]}
                             conn.send(bio.getvalue())
                             bio.close()
                         elif command['source'].startswith('storage'):
-                            with open(self.__send_filename, 'rb') as file_send:
-                                conn.send(file_send.read())
+                            filename = Path(self.__send_filename)
+                            filelen = filename.stat().st_size
+                            sendcnt = 0
+                            buflen = 65536
+                            with open(filename, 'rb') as file_send:
+                                while True:
+                                    buf = file_send.read(buflen)
+                                    if not buf:
+                                        self.__transfer_progress.set(0)
+                                        break
+                                    conn.send(buf)
+                                    sendcnt += buflen
+                                    self.__transfer_progress.set(int(sendcnt/filelen*100))
                     @self.root_node.thread_manager.main_thread_do(block=False)
                     def on_finish():
                         self.__data_book.select(self._data_tab)
@@ -477,6 +505,17 @@ IP: {addr[0]}
             'target':'dir:Download',
             'source':'storage:image',
             'name':f'from_pc_{filename.name}'})
+    
+    
+    @Scripting.printable
+    def send_file_to_device(self, filename):
+        filename = Path(self.root_node.gui.dialogs.ask_open_filename(filename))
+        self.__send_filename = filename
+        self._launch_server(command={
+            'action':'write',
+            'target':'dir:Download',
+            'source':'storage:file',
+            'name':f'from_pc_{filename.name}'})
         
         
     def __on_read_device_clipboard(self, on_finish=None):
@@ -502,6 +541,11 @@ IP: {addr[0]}
     def __on_send_image_to_device(self):
         with code_printer():
             self.send_image_to_device(filename=self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
+            
+            
+    def __on_send_file_to_device(self):
+        with code_printer():
+            self.send_file_to_device(filename=self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
     
 
     def __on_pick_gallery_photo(self, on_finish=None):
