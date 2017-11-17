@@ -24,11 +24,7 @@ from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry, PILImageFrame
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
-
-
-
-class AbortException(Exception):
-    pass
+from wavesynlib.misc.socketutils import AbortException, InterruptHandler
 
 
 
@@ -284,52 +280,25 @@ IP: {addr[0]}
                     wtext.append_text(f'[{plugin.link_text}]', link_action)
                     wtext.append_text(' ') 
                     
-                    
-            def recv_(conn, datalen):
-                abort_flag = False
-                while True:
-                    try:
-                        buf = conn.recv(datalen)
-                        return buf
-                    except socket.timeout:
-                        if abort_event.is_set():
-                            abort_flag = True
-                            break
-                if abort_flag:
-                    raise AbortException
-                    
-                    
-            def send_(conn, data):
-                abort_flag = False
-                while True:
-                    try:
-                        conn.send(data)
-                        break
-                    except socket.timeout:
-                        if abort_event.is_set():
-                            abort_flag = True
-                            break
-                    if abort_flag:
-                        raise AbortException
-                    
-                    
-            def recv_head(conn):
-                exit_flag = recv_(conn, 1)
+
+            def recv_head(ih):
+                exit_flag = ih.recv(1)
                 if exit_flag != b'\x00':
                     # The first byte is not zero, which means abort this transfer mission.
+                    # Not used currently. 
                     return True, None, 0
-                password = struct.unpack('!I', recv_(conn, 4))[0]
+                password = struct.unpack('!I', ih.recv(4))[0]
                 if password != self.__password:
                     return True, None, 0                
-                device_code = recv_(conn, MAXDEVCODELEN).decode('utf-8')
-                datalen = struct.unpack('!I', recv_(conn, 4))[0]
+                device_code = ih.recv(MAXDEVCODELEN).decode('utf-8')
+                datalen = struct.unpack('!I', ih.recv(4))[0]
                 return False, device_code, datalen
             
             
-            def recv_data(conn):
+            def recv_data(ih):
                 data_list = []
                 while True:
-                    data = recv_(conn, 8192)
+                    data = ih.recv(8192)
                     if not data:
                         break
                     data_list.append(data)
@@ -353,28 +322,12 @@ IP: {addr[0]}
                 if abort_flag:
                     raise AbortException
                     
-                # Here it waits for two potential objects.
-                # One is the android data provider,
-                # and the other is WaveSyn itself for cancellation.
-                #
-                # If the data receiving mission is aborted for some reason,
-                # the main threa of WaveSyn will send a piece of data here,
-                # to notify this thread not to wait any longer. 
-                #
-                # The first byte of the received data is the exit_flag.
-                # If WaveSyn wants to abort this data receiving mission, 
-                # it will send a byte exit_flag='0x00', and this thread kills itself.
-                #
-                # Data format:
-                # [exit_flag:1byte] [password:4bytes] [data:arbitrary bytes in json format]
-                
-                #conn, addr = sockobj.accept()
-                conn.settimeout(0.5)
+                ih = InterruptHandler(conn, 0.5, lambda dumb: abort_event.is_set())
 
                 # Always manipulate the GUI components in the main thread.                
                 self.root_node.thread_manager.main_thread_do(block=False)(clear_qr_image)
         
-                exit_flag, device_code, datalen = recv_head(conn)
+                exit_flag, device_code, datalen = recv_head(ih)
                 if exit_flag:
                     return
                     
@@ -383,7 +336,7 @@ IP: {addr[0]}
                     if command['source'] != 'storage':
                         # For file transfer mission,
                         # if the file is large, recv_data will be memory consuming. 
-                        data = recv_data(conn)
+                        data = recv_data(ih)
                     # End receiving data            
                     
                     if command['source'] in ('clipboard', 'location_sensor'):
@@ -426,8 +379,8 @@ IP: {addr[0]}
                             scrolled_text.see('end')
                             
                     elif command['source'] == 'storage':
-                        namelen = ord(recv_(conn, 1))
-                        filename = Path(recv_(conn, namelen).decode('utf-8'))
+                        namelen = ord(ih.recv(1))
+                        filename = Path(ih.recv(namelen).decode('utf-8'))
                         directory = Path(self.__save_file_dir)
                         path = directory/filename
                         if path.exists():
@@ -443,7 +396,7 @@ IP: {addr[0]}
                             recvcnt = 0
                             self.__transfer_progress.set(0)
                             while True:
-                                buf = recv_(conn, buflen)
+                                buf = ih.recv(buflen)
                                 if not buf:
                                     self.__transfer_progress.set(0)
                                     break
@@ -472,7 +425,7 @@ IP: {addr[0]}
                     if command['target'] == 'clipboard':
                         text = self.root_node.interfaces.os.clipboard.read()
                         data = {'data':text, 'type':'text'}
-                        conn.send(json.dumps(data).encode('utf-8'))
+                        ih.send(json.dumps(data).encode('utf-8'))
                     elif command['target'].startswith('dir:'):
                         if command['source'] == 'clipboard:image':
                             from PIL import ImageGrab
@@ -481,7 +434,7 @@ IP: {addr[0]}
                                 raise TypeError('No image in clipboard.')
                             bio = BytesIO()
                             image.save(bio, format='png')
-                            conn.send(bio.getvalue())
+                            ih.send(bio.getvalue())
                             bio.close()
                         elif command['source'].startswith('storage'):
                             filename = Path(self.__send_filename)
@@ -494,7 +447,7 @@ IP: {addr[0]}
                                     if not buf:
                                         self.__transfer_progress.set(0)
                                         break
-                                    send_(conn, buf)
+                                    ih.send(buf)
                                     sendcnt += len(buf)
                                     self.__transfer_progress.set(int(sendcnt/filelen*100))
                     @self.root_node.thread_manager.main_thread_do(block=False)
