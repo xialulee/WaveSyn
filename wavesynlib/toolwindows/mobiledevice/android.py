@@ -299,6 +299,20 @@ IP: {addr[0]}
                     raise AbortException
                     
                     
+            def send_(conn, data):
+                abort_flag = False
+                while True:
+                    try:
+                        conn.send(data)
+                        break
+                    except socket.timeout:
+                        if abort_event.is_set():
+                            abort_flag = True
+                            break
+                    if abort_flag:
+                        raise AbortException
+                    
+                    
             def recv_head(conn):
                 exit_flag = recv_(conn, 1)
                 if exit_flag != b'\x00':
@@ -475,13 +489,13 @@ IP: {addr[0]}
                             sendcnt = 0
                             buflen = 65536
                             with open(filename, 'rb') as file_send:
-                                while True:
+                                while True:                                    
                                     buf = file_send.read(buflen)
                                     if not buf:
                                         self.__transfer_progress.set(0)
                                         break
-                                    conn.send(buf)
-                                    sendcnt += buflen
+                                    send_(conn, buf)
+                                    sendcnt += len(buf)
                                     self.__transfer_progress.set(int(sendcnt/filelen*100))
                     @self.root_node.thread_manager.main_thread_do(block=False)
                     def on_finish():
