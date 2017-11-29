@@ -23,4 +23,9 @@ colormap = {1:vp.color.green, 2:vp.color.yellow, 3:vp.color.white}
 for R in (1, 2, 3):
     for theta in (30, 60, 90, 120, 150):
         theta = theta/180*pi
-        vp.ring(pos=vp.vec(0,0,cos(theta)*R), radius=sin(theta)*R, axis=vp.vec(0,0,1), thickness=0.03, color=colormap[R])
+        vp.ring(
+            pos=vp.vec(0,0,cos(theta)*R), 
+            radius=sin(theta)*R, 
+            axis=vp.vec(0,0,1), 
+            thickness=0.03, 
+            color=colormap[R])
