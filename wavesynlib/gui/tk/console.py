@@ -22,11 +22,14 @@ import _thread as thread
 from datetime import datetime
 import traceback
 
-from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText
+import jedi
+
+from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText, ScrolledList
 from wavesynlib.guicomponents.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
+from wavesynlib.languagecenter.utils import call_immediately
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter.python import prog as prog_pattern
 from wavesynlib.status import busy_doing
@@ -87,11 +90,12 @@ class History:
         new_cursor = self.__cursor + direction
 
         # Always return a string for this function
-        if new_cursor > len(self.__search_list) or new_cursor < 0:
-            return self.__search_list[0]
-        else:
+        if 0<=new_cursor<=len(self.__search_list):
             self.__cursor = new_cursor
-            return self.__search_list[-new_cursor]
+            return self.__search_list[-new_cursor]        
+        else:
+            return self.__search_list[0]
+
         
             
     def put(self, code):
@@ -226,18 +230,6 @@ class ConsoleText(ModelNode, ScrolledText):
         
 
     def on_key_press(self, evt, code_list=[], init_history=[True]):     
-        # Experimenting with idlelib's AutoComplete
-        ##############################################################
-#        keysym = evt.keysym  
-#        if self.__auto_complete.autocompletewindow and \
-#                self.__auto_complete.autocompletewindow.is_active():
-#            if self.__auto_complete.autocompletewindow.keypress_event(evt) == 'break':
-#                return 'break'
-#            else:
-#                if keysym == 'Tab':
-#                    return 'break'
-                    
-                    
         # Begin Support History
         if evt.keysym not in ('Up', 'Down'):
             init_history[0] = True
@@ -264,16 +256,88 @@ class ConsoleText(ModelNode, ScrolledText):
             
             
         # Begin: Tab key for auto complete
-#        if evt.keysym == 'Tab':
-#            acw = Toplevel(self.text)            
-#            acw.wm_overrideredirect(1)
-#            x, y, w, h = self.text.bbox('insert')
-#            x += self.text.winfo_rootx()
-#            y += self.text.winfo_rooty()
-#            acw.geometry(f'+{x}+{y+h}')
-#            acw.focus_set()
-#            acw.bind('<FocusOut>', lambda event: acw.withdraw(), print('FocusOut'))            
-#            return 'break'
+        if evt.keysym == 'Tab':
+            # Using call_immediately to make an independent namespace, which
+            # prevents the contamination of namespace.
+            @call_immediately
+            def do():
+                r, c = self.get_cursor_pos('insert')
+                script = jedi.api.Interpreter(
+                    self.text.get(f'{r}.4', 'end-1c'), 
+                    [Scripting.namespace['locals'], 
+                     Scripting.namespace['globals']])
+    
+                if not script.completions():
+                    return 'break'
+    
+                if len(script.completions())==1:
+                    cstr = script.completions()[0].complete
+                    self.text.insert('end', cstr)
+                    return 'break'
+                
+                acw = Toplevel(self.text)            
+                acw.wm_overrideredirect(1)
+                namelist = ScrolledList(acw)
+                namelist.pack(expand='yes', fill='both')
+                namelist.list_config(selectmode='single')
+                x, y, w, h = self.text.bbox('insert')
+                x += self.text.winfo_rootx()
+                y += self.text.winfo_rooty()
+                acw.geometry(f'+{x}+{y+h}')
+                namelist.list.focus_set()
+                
+                def on_exit(event):
+                    acw.destroy()
+                
+                acw.bind('<FocusOut>', on_exit)   
+                namelist.list.bind('<Escape>', on_exit)
+                
+                def on_updown(event, direction):
+                    cursel = int(namelist.current_selection[0])
+                    newsel = cursel + direction
+                    if not (0<= newsel < namelist.length):
+                        return 'break'
+                    namelist.selection_clear(cursel)
+                    namelist.selection_set(newsel)
+                    namelist.see(newsel)
+                    return 'break'
+                    
+                namelist.list.bind('<Down>', lambda event:on_updown(event, 1))
+                namelist.list.bind('<Tab>', lambda event:on_updown(event, 1))
+                namelist.list.bind('<Up>', lambda event:on_updown(event, -1))
+                namelist.list.bind('<Shift-Tab>', lambda event:on_updown(event, -1))
+                                
+                for completion in script.completions():
+                    namelist.append(completion.name)
+                namelist.selection_set(0)
+                
+                def on_select(event):
+                    cursel = int(namelist.current_selection[0])
+                    cstr = script.completions()[cursel].complete
+                    self.text.insert('end', cstr)
+                    on_exit(None)
+                    
+                namelist.list.bind('<Return>', on_select)
+                namelist.list.bind('<ButtonRelease-1>', on_select)
+                
+                keyseq = ['']
+                def on_key_press(event):
+                    if (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
+                        (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
+                        keyseq[0] += event.keysym
+                        for idx, completion in enumerate(script.completions()):
+                            if completion.complete.startswith(keyseq[0]):
+                                cursel = int(namelist.current_selection[0])
+                                namelist.selection_clear(cursel)
+                                namelist.selection_set(idx)
+                                namelist.see(idx)
+                                return
+                        on_exit(None)
+                    else:
+                        return
+                namelist.list.bind('<KeyPress>', on_key_press)
+                # No more key bindings hereafter. 
+            return 'break'
         # End
             
             

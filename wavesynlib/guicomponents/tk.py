@@ -637,6 +637,10 @@ class ScrolledList(Frame):
     method_name_map   = {
         'insert':'insert', 
         'delete':'delete', 
+        'activate':'activate',
+        'selection_set':'selection_set',
+        'selection_clear':'selection_clear',
+        'see':'see',
         'item_config':'itemconfig',
         'list_config':'config'
     }
@@ -663,27 +667,43 @@ class ScrolledList(Frame):
     @property
     def list(self):
         return self.__list
+    
 
     @property
     def sbar(self):
         return self.__sbar
+    
 
     def clear(self):
         self.__list.delete(0, 'end')
+        
                 
     @property
     def current_selection(self):
         return self.__list.curselection()
+    
+    
+    def append(self, item):
+        self.__list.insert('end', item)
+        
+        
+    @property
+    def length(self):
+        # Don't plus one. END points to the next position of the tail element.
+        return self.list.index('end')
+    
         
     @property
     def list_click_callback(self):
         return self.__list_click_callback
+    
 
     @list_click_callback.setter
     def list_click_callback(self, val):
         if not callable(val):
             raise TypeError
         self.__list_click_callback = val
+        
 
     def _on_listbox_click(self, event):
         index = self.__list.curselection()
@@ -693,6 +713,7 @@ class ScrolledList(Frame):
             if self.list_click_callback:
                 self.list_click_callback(index, label)
                 
+
                 
 class ScrolledCanvas(Frame):
     def __init__(self, *args, **kwargs):
@@ -855,7 +876,7 @@ name will be highlighted.'''
             itemList.pack(expand='yes', fill='both')
             itemList.list.focus_set()
             for item in items:
-                itemList.insert('end', item)
+                itemList.append(item)
                 
             def on_list_click(index, label):
                 if not history_mode:
