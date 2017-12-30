@@ -277,13 +277,19 @@ class ConsoleText(ModelNode, ScrolledText):
                 
                 acw = Toplevel(self.text)            
                 acw.wm_overrideredirect(1)
+                
+                seltext = Label(acw, anchor='w', justify='left')
+                seltext.pack(expand='yes', fill='x')                 
+                                
                 namelist = ScrolledList(acw)
                 namelist.pack(expand='yes', fill='both')
                 namelist.list_config(selectmode='single')
+                
                 x, y, w, h = self.text.bbox('insert')
                 x += self.text.winfo_rootx()
                 y += self.text.winfo_rooty()
-                acw.geometry(f'+{x}+{y+h}')
+                # y+h is the position below the current line.
+                acw.geometry(f'+{x}+{y}') 
                 namelist.list.focus_set()
                 
                 def on_exit(event):
@@ -309,6 +315,8 @@ class ConsoleText(ModelNode, ScrolledText):
                                 
                 for completion in script.completions():
                     namelist.append(completion.name)
+                    
+                # init
                 namelist.selection_set(0)
                 
                 def on_select(event):
@@ -322,9 +330,13 @@ class ConsoleText(ModelNode, ScrolledText):
                 
                 keyseq = ['']
                 def on_key_press(event):
-                    if (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
-                        (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
-                        keyseq[0] += event.keysym
+                    if (event.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
+                        (event.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
+                        if event.keysym=='BackSpace':
+                            keyseq[0] = keyseq[0][:-1]
+                        else:
+                            keyseq[0] += event.keysym
+                        seltext['text'] = keyseq[0]
                         for idx, completion in enumerate(script.completions()):
                             if completion.complete.startswith(keyseq[0]):
                                 cursel = int(namelist.current_selection[0])
