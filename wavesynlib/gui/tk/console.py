@@ -267,7 +267,7 @@ class ConsoleText(ModelNode, ScrolledText):
                     [Scripting.namespace['locals'], 
                      Scripting.namespace['globals']])
     
-                if not script.completions():
+                if len(script.completions())==0:
                     return 'break'
     
                 if len(script.completions())==1:
