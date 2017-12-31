@@ -105,7 +105,6 @@ class ObjectWithLock:
 
 class FunctionChain:
     def __init__(self):
-        super().__init__()
         self.__functions    = []
     
     

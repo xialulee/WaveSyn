@@ -461,15 +461,35 @@ class ScriptCode:
         self.code = code
         
      
-     
+        
 class PrintableMethod:
+    def __init__(self, func, obj):
+        self.__doc__ = func.__doc__
+        self.__name__ = func.__name__
+        self.__func = func
+        self.__obj = obj
+        
+        
+    def __call__(self, *args, **kwargs):
+        return self.__func(self.__obj, *args, **kwargs)
+    
+    
+    @property
+    def panel(self):
+        return 'test'
+        
+        
+     
+class PrintableDescriptor:
     def __init__(self, func):
         self.__func = func
         self.__doc__ = func.__doc__
         self.__name__ = func.__name__
         
     def __get__(self, obj, type=None):
-        return self.__func.__get__(obj)  
+        #return self.__func.__get__(obj)  
+        m = PrintableMethod(self.__func, obj)
+        return m
       
 
         
@@ -537,7 +557,7 @@ class Scripting(ModelNode):
             return ret
         func.__doc__    = method.__doc__
         func.__name__   = method.__name__
-        return PrintableMethod(func)
+        return PrintableDescriptor(func)
 
 
 class CodePrinter:

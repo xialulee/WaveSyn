@@ -24,7 +24,7 @@ app_paths = {
 
 class WMI(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(WMI, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__wql = None
         self.__services = None
         
@@ -44,10 +44,25 @@ class WMI(ModelNode):
        
     @Scripting.printable
     def query(self, wql, output_format='original'):
+        '''Launch a WQL query and return the result.
+    wql: WQL string.
+    output_format: the format of the result.
+        "original": return the raw comtypes pointer (default).
+        "comtypes": equivalent to "original".
+        "native": result converted to Python builtin data types.
+        "python": equivalent to "comtypes".
+        "json": result converted to JSON string.
+        
+    Return Value: the result of the query, of which the data type depends on 
+        the value of output_format.'''
+        wql = self.root_node.gui.dialogs.ask_string(
+            wql,
+            title='WQL',
+            prompt='Please input the WQL string.')
         self.__init_services()
         return self.__wql.query(wql, output_format)
     
-    
+        
     @Scripting.printable
     def set_sink(self, sink, wql):
         self.__init_services()
@@ -57,7 +72,7 @@ class WMI(ModelNode):
 
 class Windows(ModelNode):
     def __init__(self, *args, **kwargs):
-        super(Windows, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.wmi = WMI()
         self.battery = ModelNode(
             is_lazy=True, 

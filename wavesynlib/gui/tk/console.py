@@ -29,7 +29,7 @@ from wavesynlib.guicomponents.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
-from wavesynlib.languagecenter.utils import call_immediately
+from wavesynlib.languagecenter.utils import call_immediately, FunctionChain
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter.python import prog as prog_pattern
 from wavesynlib.status import busy_doing
@@ -148,6 +148,7 @@ class ConsoleText(ModelNode, ScrolledText):
             self.text.tag_configure(tag, **tag_defs[tag])
         
         self.text.bind('<KeyPress>', self.on_key_press)
+        self.text.bind('<KeyRelease>', self.on_key_release)
         
         # Begin syntax highlight
         self.__redir = redir = WidgetRedirector(self.text)
@@ -166,6 +167,9 @@ class ConsoleText(ModelNode, ScrolledText):
                                       
         self.prompt_symbol = '>>> '  
         self.__history = History()
+        
+        # should use func chain
+        self.__encounter_func_callback = FunctionChain()
         
         
     def __insert_hook(self, index, chars, tags=None):
@@ -211,7 +215,12 @@ class ConsoleText(ModelNode, ScrolledText):
                     self.text.tag_add(key, 
                                       f'{row}.{m.start()}',
                                       f'{row}.{m.end()}')
-        
+                    
+
+    @property                    
+    def encounter_func_callback(self):
+        return self.__encounter_func_callback
+                    
         
     def update_content(self, tag, content):
         r, c    = self.get_cursor_pos('end')
@@ -227,6 +236,18 @@ class ConsoleText(ModelNode, ScrolledText):
 
         self.text.insert('end', self.prompt_symbol, 'STDOUT')                
         self.text.see('end') 
+        
+        
+    def on_key_release(self, evt):
+        r, c = self.get_cursor_pos('insert')
+        current_code = self.text.get(f'{r}.4', f'{r}.{c}')
+        script = jedi.api.Interpreter(
+            current_code,
+            [Scripting.namespace['locals'], Scripting.namespace['globals']])
+        cs = script.goto_assignments()
+        if cs:
+            self.__encounter_func_callback(cs)
+            
         
 
     def on_key_press(self, evt, code_list=[], init_history=[True]):     
@@ -277,6 +298,7 @@ class ConsoleText(ModelNode, ScrolledText):
                 
                 acw = Toplevel(self.text)            
                 acw.wm_overrideredirect(1)
+                acw.wm_attributes('-topmost', True)
                 
                 seltext = Label(acw, anchor='w', justify='left')
                 seltext.pack(expand='yes', fill='x')                 
@@ -435,8 +457,7 @@ class ConsoleText(ModelNode, ScrolledText):
 
 class StatusBar(Frame):
     def __init__(self, *args, **kwargs):
-        self.__root_node = kwargs.pop('wavesyn_root')
-        Frame.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         timer = TkTimer(widget=self, interval=200, active=False)
 
         balloon = Scripting.root_node.gui.balloon
@@ -462,7 +483,7 @@ Red:   main-thread is busy.''')
         # } End Transparent Scale
 
         # Topmost Button {
-        import six.moves.tkinter as tkinter
+        import tkinter
         topmost_button = tkinter.Button(self, text='TOP', relief='groove') 
         topmost_button.pack(side='right')
         
@@ -476,6 +497,19 @@ Red:   main-thread is busy.''')
         topmost_button['command'] = on_click
         balloon.bind_widget(topmost_button, balloonmsg='Set the console as a topmost window.')
         # } End Topmost Button 
+        
+        # Doc Button {
+        docbtn = tkinter.Button(self, text='DOC', relief='groove')
+        docbtn.pack(side='right')
+        
+        def on_click():
+            docwin = Scripting.root_node.gui.console.doc_window
+            with code_printer(True):
+                docwin.show_window()
+                
+        docbtn['command'] = on_click
+        balloon.bind_widget(docbtn, balloonmsg='Show document window.')
+        #} End Doc Window        
         
         #{ Window Combo
         window_combo = Combobox(self, value=[], takefocus=1, stat='readonly')
@@ -508,7 +542,7 @@ Red:   main-thread is busy.''')
             else:
                 window_combo.set('')
         #} End Window Combo
-                
+                        
         self.__lock = thread.allocate_lock()
         self.__busy = False
              
@@ -534,7 +568,7 @@ Red:   main-thread is busy.''')
     def set_busy(self, busy=True):
         with self.__lock:
             self.__busy = busy
-        if self.__root_node.thread_manager.in_main_thread:
+        if Scripting.root_node.thread_manager.in_main_thread:
             # Only main thread can set busy light
             self._set_busy_light()
             
@@ -543,7 +577,7 @@ Red:   main-thread is busy.''')
 
         def on_progbar_dbclick(app):
             with code_printer():
-                self.__root_node.interfaces.os.windows.launch(app)
+                Scripting.root_node.interfaces.os.windows.launch(app)
         
         mem_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
         mem_progbar.pack(side='right', fill='y')
@@ -554,6 +588,58 @@ Red:   main-thread is busy.''')
         cpu_progbar.pack(side='right', fill='y')
         cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('cpumeter.pyw'))
         balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage.')        
+
+
+
+from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
+
+class DocWindow(TkToolWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tk_object.title('Document')
+        self._make_window_manager_tab()
+        self.__scrolledtext = stext = ScrolledText(self.tk_object)      
+        stext.pack(expand='yes', fill='both')
+        self.__visible = True
+        
+        @Scripting.root_node.gui.console.console_text.encounter_func_callback.add_function
+        def on_encounter_func(cs):
+            if cs and self.visible:
+                self.text = str(cs[0].docstring())
+            Scripting.root_node.gui.console.console_text.text.focus_set()        
+        
+        
+    @property
+    def text(self):
+        return self.__scrolledtext.get_text()
+    
+    
+    @text.setter
+    def text(self, content):
+        self.__scrolledtext.set_text(content)
+        
+        
+    def close_callback(self):
+        self.tk_object.withdraw()
+        self.__visible = False
+        return True
+    
+    
+    @property
+    def visible(self):
+        return self.__visible
+    
+    
+    @visible.setter
+    def visible(self, val):
+        self.tk_object.update()
+        self.tk_object.deiconify()
+        self.__visible = True
+        
+        
+    @Scripting.printable
+    def show_window(self):
+        self.visible = True
         
 
         
@@ -582,7 +668,7 @@ class ConsoleWindow(ModelNode):
         dir_indicator = CWDIndicator(chdir_func=chdir_func)
         dir_indicator.pack(fill='x')
 
-        self.__status_bar = status_bar = StatusBar(root, wavesyn_root=app)
+        self.__status_bar = status_bar = StatusBar(root)
         status_bar.pack(side='bottom', fill='x')
         
         self.console_text = ConsoleText(root, tag_defs=self.__tag_defs)        
@@ -611,7 +697,12 @@ class ConsoleWindow(ModelNode):
         @self.root_node.stream_manager.add_observer
         def observer(stream_type, content):
             self.console_text.update_content(tag=stream_type, content=content)
-        
+            
+        self.doc_window = ModelNode(
+            is_lazy=True, 
+            module_name='wavesynlib.gui.tk.console', 
+            class_name='DocWindow')            
+    
         
     @property
     def prompt_symbol(self):

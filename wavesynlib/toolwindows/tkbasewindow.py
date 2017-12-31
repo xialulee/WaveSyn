@@ -34,7 +34,7 @@ Properties inherited from ModelNode:
     
     
     def __init__(self, *args, **kwargs):
-        super(TkWindowNode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__tk_object = Toplevel()
         self.__tk_object.title(f'{self.window_name} id={id(self)}')
         self.__tk_object.protocol('WM_DELETE_WINDOW', self.on_close)
@@ -60,8 +60,8 @@ Properties inherited from ModelNode:
         if hasattr(self.parent_node, 'on_window_close'):
             self.parent_node.on_window_close(self)
         # For Toplevel objects, use destroy rather than quit.
-        self.close_callback()
-        self.__tk_object.destroy() 
+        if not self.close_callback():
+            self.__tk_object.destroy() 
         
         
     def on_close(self):

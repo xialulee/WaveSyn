@@ -39,6 +39,13 @@ and the place where this constant holds will be replaced with the given integer.
     def ask_integer(self, arg, **kwargs):
         return askinteger(**kwargs)
     
+    
+    @constant_handler(doc='''Popup a dialog to ask user a string,
+and the place where this constant holds will be replaced with the given string.
+''')
+    def ask_string(self, arg, **kwargs):
+        return askstring(**kwargs)
+    
                 
     @constant_handler(doc='''Popup a dialog with a list and ask for an item in the list,
 and the place where this constant holds will be replaced with the chosen item. 
