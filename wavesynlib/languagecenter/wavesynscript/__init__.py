@@ -4,6 +4,7 @@ Created on Sat Aug 27 23:07:59 2016
 
 @author: Feng-cong Li
 """
+import sys
 from importlib import import_module
 
 import collections
@@ -462,33 +463,39 @@ class ScriptCode:
         
      
         
-class PrintableMethod:
-    def __init__(self, func, obj):
-        self.__doc__ = func.__doc__
-        self.__name__ = func.__name__
-        self.__func = func
-        self.__obj = obj
-        
-        
-    def __call__(self, *args, **kwargs):
-        return self.__func(self.__obj, *args, **kwargs)
-    
-    
-    @property
-    def panel(self):
-        return 'test'
-        
-        
-     
 class PrintableDescriptor:
-    def __init__(self, func):
+    def __init__(self, 
+                 func, # The decorated func
+                 original # The original method without decoration.
+        ):
         self.__func = func
+        self.__original = original # the original method without decoration.
         self.__doc__ = func.__doc__
         self.__name__ = func.__name__
         
     def __get__(self, obj, type=None):
-        #return self.__func.__get__(obj)  
-        m = PrintableMethod(self.__func, obj)
+        class PrintableMethod:
+            def __init__(self, obj, func, original):
+                self.__original = original
+                self.__func = func
+                self.__obj = obj
+                
+                
+            def __call__(self, *args, **kwargs):
+                return self.__func(self.__obj, *args, **kwargs)
+            
+            
+            @property
+            def panel(self):
+                caller = sys._getframe(1)
+                argmap = obj.root_node.create_arg_panel_for_func(self.__original)
+                for name in argmap:
+                    argmap[name] = eval(argmap[name], caller.f_globals, caller.f_locals)
+                return self.__call__(**argmap)
+                
+        PrintableMethod.__name__ = self.__func.__name__
+        PrintableMethod.__doc__ = self.__func.__doc__            
+        m = PrintableMethod(obj, self.__func, self.__original)
         return m
       
 
@@ -557,7 +564,7 @@ class Scripting(ModelNode):
             return ret
         func.__doc__    = method.__doc__
         func.__name__   = method.__name__
-        return PrintableDescriptor(func)
+        return PrintableDescriptor(func, method)
 
 
 class CodePrinter:

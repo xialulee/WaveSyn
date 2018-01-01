@@ -11,6 +11,7 @@ import os
 import os.path
 import sys
 import locale
+import tkinter
 
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
@@ -27,7 +28,7 @@ import subprocess
 import json
 
 
-from wavesynlib.guicomponents.tk import PILImageFrame
+from wavesynlib.guicomponents.tk import PILImageFrame, ArgEntry, ScrolledText
 from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.interfaces import Interfaces
 from wavesynlib.stdstream import StreamManager
@@ -250,6 +251,43 @@ active: True for activating the timer, and False for deactivating.
         return self.gui.create_timer(interval, active)
         # The timer system of WaveSyn is build on 
         # tkinter. 
+        
+        
+    def create_arg_panel_for_func(self, func):
+        '''Read the argument information of the given function, 
+and generate a dialog which helps user to input parameters.'''
+        dialog = tkinter.Toplevel()
+        frmright = tkinter.Frame(dialog)
+        frmright.pack(side='right', expand='yes', fill='both')
+        frmleft = tkinter.Frame(dialog)
+        frmleft.pack(side='left', fill='y')
+        
+        argmap = {}
+        for name in func.__code__.co_varnames[:func.__code__.co_argcount]:
+            if name == 'self':
+                continue
+            else:
+                argmap[name] = ae = ArgEntry(frmleft)
+                ae.pack()
+                ae.arg_name = name
+                
+        def on_ok():
+            for name in argmap:
+                argmap[name] = argmap[name].arg_value
+            dialog.destroy()
+            
+        tkinter.ttk.Button(frmleft, text='ok', command=on_ok).pack()
+                
+        doctext = ScrolledText(frmright)
+        doctext.pack(expand='yes', fill='both')
+        if func.__doc__:
+            doctext.set_text(func.__doc__)
+        
+        dialog.focus_set()
+        dialog.grab_set()
+        dialog.wait_window()
+        
+        return argmap
                      
         
     def print_and_eval(self, expr):
