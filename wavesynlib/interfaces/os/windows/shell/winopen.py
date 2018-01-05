@@ -6,14 +6,16 @@ Created on Tue Aug 11 16:01:51 2015
 """
 import os
 import sys
+from pathlib import Path
 
 
 
 def winopen(path):
-    if os.path.isdir(path):
-        os.system('explorer.exe ' + path)
-    elif os.path.isfile(path):
-        os.system('explorer.exe /select,' + path)
+    path = Path(path)
+    if path.is_dir():
+        os.system('explorer.exe ' + str(path))
+    elif path.is_file():
+        os.system('explorer.exe /select,' + str(path))
     else:
         raise ValueError('Invalid path.')
         

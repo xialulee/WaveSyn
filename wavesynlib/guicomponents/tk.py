@@ -320,6 +320,27 @@ class ArgEntry(Frame):
         
         
     @property
+    def entry(self):
+        return self.__entry
+    
+    
+    @property
+    def entry_text(self):
+        return self.__entry.get()
+    
+    
+    @entry_text.setter
+    def entry_text(self, value):
+        self.__entry.delete(0, 'end')
+        self.__entry.insert(0, value)
+    
+    
+    @property
+    def button(self):
+        return self.__btn
+        
+        
+    @property
     def arg_name(self):
         return self.__namelabel['text']
     

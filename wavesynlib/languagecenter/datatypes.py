@@ -9,6 +9,22 @@ import json
 from collections import OrderedDict
 
 
+
+class ArgType:
+    pass
+
+
+
+class ArgOpenFile(ArgType):
+    pass
+
+
+
+class ArgSaveAs(ArgType):
+    pass
+
+
+
 class CommandSlot:
     __slots__ = [
         'source', # Where the command come from. For security considerations, e.g., if a command is received by xmlrpcserver, the source will be set to something indicating that the source may be malicious. {'native', 'local', 'remote'}

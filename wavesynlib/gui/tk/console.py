@@ -18,7 +18,7 @@ from tkinter import Frame, Label
 from tkinter.filedialog import asksaveasfilename
 import queue
 import _thread as thread
-
+from pathlib import Path
 from datetime import datetime
 import traceback
 
@@ -226,7 +226,7 @@ class ConsoleText(ModelNode, ScrolledText):
         r, c    = self.get_cursor_pos('end')
         start   = 'end-5c'
         stop    = 'end-1c'
-        if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
+        if self.text.get(start, stop) in ('>>> ', '... '):
             self.text.delete(start, stop)
 
         # Record the position of the END before inserting anything.
@@ -441,6 +441,8 @@ class ConsoleText(ModelNode, ScrolledText):
                                 traceback.print_exc()
                             if ret is not None:
                                 self.update_content(tag='RETVAL', content=repr(ret)+'\n')
+                                if isinstance(ret, Path):
+                                    self.root_node.print_tip([{'type':'file_list', 'content':(str(ret),)}])
     
                 finally:
                     self.text.mark_set('insert', 'end')

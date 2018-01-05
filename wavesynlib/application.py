@@ -12,6 +12,9 @@ import os.path
 import sys
 import locale
 import tkinter
+from pathlib import Path
+
+from collections import OrderedDict
 
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
@@ -38,7 +41,7 @@ from wavesynlib.languagecenter.utils import set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton      
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
-from wavesynlib.languagecenter import timeutils
+from wavesynlib.languagecenter import timeutils, datatypes
 from wavesynlib.toolwindows.imagedisplay.modelnode import DisplayLauncher
 from wavesynlib.status import busy_doing
 
@@ -62,19 +65,6 @@ In the scripting system, it is named as "wavesyn" (case sensitive).
 It also manages the whole application and provide services for other components.
 For other nodes on the model tree, the instance of Application can be accessed by Application.instance,
 since the instance of Application is the first node created on the model tree.
-The model tree of the application is illustrated as follows:
-wavesyn
--gui
--interfaces
-    -os
-        -clipboard
--windows[id]
-    -instance of PatternFitting
-        -figure_book
-    -instance of SingleSyn
-        -figure_book
-    -instance of MIMOSyn
-        -figure_book
 '''    
     
     _xmlrpcexport_  = [
@@ -262,21 +252,42 @@ and generate a dialog which helps user to input parameters.'''
         frmleft = tkinter.Frame(dialog)
         frmleft.pack(side='left', fill='y')
         
-        argmap = {}
-        for name in func.__code__.co_varnames[:func.__code__.co_argcount]:
+        argmap = OrderedDict()
+        annotations = func.__annotations__
+        defaults = func.__defaults__
+        defcount = len(defaults)
+        argcount = func.__code__.co_argcount
+        defstart = argcount - defcount
+        for idx, name in enumerate(func.__code__.co_varnames[:argcount]):
             if name == 'self':
                 continue
             else:
                 argmap[name] = ae = ArgEntry(frmleft)
                 ae.pack()
                 ae.arg_name = name
-                
-        def on_ok():
+                if idx >= defstart:
+                    ae.entry_text = repr(defaults[idx-defstart])
+                if name in annotations:
+                    if annotations[name] == datatypes.ArgOpenFile:
+                        ae.button['command'] = lambda ae=ae: open_file(arg_entry=ae)   
+                        ae.button['state'] = 'enable'
+                        ae.button['text'] = 'Select'
+        
+        def open_file(arg_entry):
+            path = tkinter.filedialog.askopenfilename()
+            arg_entry.entry_text = repr(path)
+        
+        def on_ok(event=None):
             for name in argmap:
                 argmap[name] = argmap[name].arg_value
             dialog.destroy()
             
-        tkinter.ttk.Button(frmleft, text='ok', command=on_ok).pack()
+        items = tuple(argmap.items())
+        items[0][1].entry.focus_set()
+        items[-1][1].entry.bind('<Return>', on_ok)            
+            
+        ok_btn = tkinter.ttk.Button(frmleft, text='ok', command=on_ok)
+        ok_btn.pack()
                 
         doctext = ScrolledText(frmright)
         doctext.pack(expand='yes', fill='both')
@@ -296,6 +307,10 @@ and generate a dialog which helps user to input parameters.'''
             ret = self.eval(expr)
             if ret is not None:
                 self.stream_manager.write(str(ret)+'\n', 'RETVAL')
+                
+                if isinstance(ret, Path):
+                    self.print_tip([{'type':'file_list', 'content':(str(ret),)}])
+                    
             return ret    
             
                               
@@ -348,7 +363,7 @@ and generate a dialog which helps user to input parameters.'''
         if self.no_tip:
             return
         stream_manager = self.stream_manager
-        stream_manager.write('WaveSyn: ', 'TIP')
+        stream_manager.write('WaveSyn: \n', 'TIP')
 
         if isinstance(contents, str):
             stream_manager.write(contents+'\n', 'TIP')
@@ -381,8 +396,8 @@ and generate a dialog which helps user to input parameters.'''
                 file_list = item['content']
                 def new_open_func(path):
                     def open_func(*args):
-                        import webbrowser
-                        webbrowser.open(path)
+                        with code_printer():
+                            self.webbrowser_open(path)
                     return open_func
                     
                 def new_browse_func(path):
@@ -416,11 +431,11 @@ and generate a dialog which helps user to input parameters.'''
         
 
     def open_home_page(self):
-        '''Open the home page of wavesyn.'''
+        '''Open the home page of WaveSyn.'''
         webbrowser.open(self.homepage, new=1, autoraise=True)
              
                     
-    def mainloop(self):
+    def _mainloop(self):
         '''Lauch the event loop of WaveSyn.'''
         return self.gui.mainloop()
         
@@ -477,12 +492,18 @@ command: system command in string form. '''
         
         
     @Scripting.printable
-    def webbrowser_open(self, url):
+    def webbrowser_open(self, url:str):
+        '''Open the given URL using the default app.
+        
+    url: string. the URL of the object to be opened.'''
         webbrowser.open(url)
         
         
     @Scripting.printable
     def set_matplotlib_style(self, style_name=''):
+        '''Set the plot style of matplotlib.
+        
+    style_name: string. The name of the new style.'''
         import matplotlib.pyplot as plt
         
         style_name = self.root_node.gui.dialogs.ask_list_item(
@@ -506,6 +527,6 @@ def mainloop():
     #
     # launch.py and launchwavesyn.py will call this mainloop function in __main__.
     wavesyn.gui.interrupter.launch()
-    wavesyn.mainloop()
+    wavesyn._mainloop()
         
         

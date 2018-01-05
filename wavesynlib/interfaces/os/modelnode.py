@@ -10,12 +10,15 @@ import ctypes
 import re
 from importlib import import_module
 import webbrowser
+from pathlib import Path
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, constant_handler
+from wavesynlib.languagecenter import datatypes
 
 
 
 class TkClipboard(ModelNode):
+    '''The very basic clipboard node which is platform independent.'''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -30,7 +33,7 @@ class TkClipboard(ModelNode):
     def write(self, content):
         '''Put a string into the clipboard.
         
-content: A string which will be put into the clipbaord.'''
+    content: A string which will be put into the clipbaord.'''
         self.clear()
         self.root_node.gui.root.clipboard_append(content)
         
@@ -43,6 +46,8 @@ content: A string which will be put into the clipbaord.'''
         
     @Scripting.printable
     def remove_text_formatting(self):
+        '''This method removes the fomatting of the clipboard's text,
+if the clipboard on this OS supports rich text format.'''
         content = self.read()
         self.write(content)
     
@@ -51,8 +56,8 @@ content: A string which will be put into the clipbaord.'''
     def remove_newlines(self, insert_blanks=True):
         '''Delete the new lines or replace the new lines with blanks.
 
-insert_blanks: Delete the new lines if False else replace the new lines with blanks.
-    Default: True.'''
+    insert_blanks: Delete the new lines if False else replace the new lines with blanks.
+        Default: True.'''
         text = self.read()
         if insert_blanks:
             text = re.sub(r'(?<=[^- ])\n', ' \n', text)
@@ -64,17 +69,20 @@ insert_blanks: Delete the new lines if False else replace the new lines with bla
 
         
 class TkMouse(ModelNode):
+    '''The very basic mouse node which is platform independent.'''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         
     @Scripting.printable
     def get_x(self):
+        '''Get the x-coord of the mouse pointer.'''
         return self.root_node.gui.root.winfo_pointerx()
         
     
     @Scripting.printable
     def get_y(self):
+        '''Get the y-coord of the mouse pointer.'''
         return self.root_node.gui.root.winfo_pointery()
         
     
@@ -86,13 +94,16 @@ if platform.system().lower() == 'windows':
     import win32con
     
     class Clipboard(TkClipboard):
+        '''The advanced clipboard node for Windows OS.'''
         @constant_handler(print_replacement=False)
         def get_clipboard_html(self, arg, **kwargs):
+            '''Get the HTML code of the formatted text on clipboard.'''
             return self.read(html=True)
             
             
         @constant_handler(print_replacement=False)
         def get_clipboard_image(self, arg, **kwargs):
+            '''Get image object on clipboard.'''
             from PIL import ImageGrab
             image = ImageGrab.grabclipboard()
             if not image:
@@ -102,6 +113,12 @@ if platform.system().lower() == 'windows':
         
         @Scripting.printable
         def write(self, content, html=None, table=None, code=None):
+            '''Set clipboard content.
+            
+    content: the object which will be put onto the clipboard.
+    html: BOOL. Whether the content is rich text coded in HTML. Default: False
+    table: BOOL. Whether the content is a table. Default: False
+    code: string. The coding of the content text.'''
             if table:
                 from wavesynlib.languagecenter.html.utils import iterable_to_table
                 html = True
@@ -117,6 +134,10 @@ if platform.system().lower() == 'windows':
                 
         @Scripting.printable
         def read(self, html=None, code=None):
+            '''Get the content of the clipboard.
+            
+    html: BOOL. Whether to get the raw HTML code of the fomatted text on clipboard.
+    code: coding of the text on clipboard.'''
             if (not html) and (not code):
                 return super().read()
             else:
@@ -140,6 +161,7 @@ if platform.system().lower() == 'windows':
     
         @Scripting.printable
         def to_console_image(self):
+            '''Get the image on clipboard, and display it on the console of WaveSyn.'''
             from PIL import ImageGrab
             image = ImageGrab.grabclipboard()
             if image:
@@ -152,12 +174,14 @@ if platform.system().lower() == 'windows':
                 
         @Scripting.printable
         def to_console_file_list(self):
+            '''Get the file list on the clipboard, and display it on the console of WaveSyn.'''
             self.root_node.print_tip([{'type':'text', 'content':'The files in clipboard are listed as follows:'},
                                       {'type':'file_list', 'content':clipb.get_clipboard_file_list()}])
                 
                 
         @Scripting.printable
-        def to_console(self):            
+        def to_console(self):
+            '''Display the content of the clipboard on the console of WaveSyn.'''
             def for_text():
                 self.root_node.print_tip([{'type':'text', 'content':'\n'.join(('The text in clipboard is listed as follows', self.read()))}])
                 
@@ -183,6 +207,8 @@ if platform.system().lower() == 'windows':
             
         @Scripting.printable
         def convert_file_to_image(self):
+            '''If the content of the clipboard is an image file,
+convert it to an image object and put this object onto the clipboard.'''
             path = clipb.get_clipboard_file_list()[0]
             ext = os.path.splitext(path)[-1]
             is_psd = ext=='.psd' 
@@ -192,6 +218,7 @@ if platform.system().lower() == 'windows':
     
             
     class Mouse(TkMouse): 
+        '''The advanced mouse node on Windows.'''
         _const_map = {
             'left_button_down':     win32con.MOUSEEVENTF_LEFTDOWN,
             'left_button_up':       win32con.MOUSEEVENTF_LEFTUP,
@@ -204,6 +231,9 @@ if platform.system().lower() == 'windows':
               
         @Scripting.printable
         def set_x(self, x):
+            '''Set the x-coord of the mouse pointer.
+            
+    x: int. The new x-coord of the mouse pointer.'''
             x = self.root_node.gui.dialogs.ask_integer(
                 x, 
                 title='Set Mouse Cursor Position', 
@@ -214,6 +244,9 @@ if platform.system().lower() == 'windows':
             
         @Scripting.printable
         def set_y(self, y):
+            '''Set the y-coord of the mouse pointer.
+            
+    y: int. The new y-coord of the mouse pointer.'''
             x = self.get_x()
             y = self.root_node.gui.dialogs.ask_integer(
                 y, 
@@ -224,6 +257,9 @@ if platform.system().lower() == 'windows':
             
         @Scripting.printable
         def click(self, button='left'):
+            '''Simulate a mouse click.
+            
+    button: ["left", "right", "middle"]. The button which will be simulated.'''
             button = button.upper()
             for action in ('DOWN', 'UP'):
                 const = getattr(win32con, 'MOUSEEVENTF_{}{}'.format(button, action))
@@ -237,6 +273,7 @@ if platform.system().lower() == 'windows':
     from wavesynlib.interfaces.os.windows.shell import desktopwallpaper           
            
     class DesktopWallpaper(ModelNode):
+        '''The wallpaper node on Windows.'''
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.__idw = CoCreateInstance(
@@ -244,13 +281,22 @@ if platform.system().lower() == 'windows':
                 interface=desktopwallpaper.IDesktopWallpaper
             )
             
-            
-        def set(self, path, monitor_id=None):
+        
+        @Scripting.printable
+        def set(self, path:datatypes.ArgOpenFile, monitor_id=None):
+            '''Set wallpaper.
+    path: a given image which will be set as the wallpaper.
+    monitor_id: the id of the monitor of which the wallpaper will be set.
+        None for default monitor setting.'''
             self.__idw.SetWallpaper(monitor_id, path)
             
-            
+        
+        @Scripting.printable
         def get(self, monitor_id=None):
-            return self.__idw.GetWallpaper(monitor_id)
+            '''Get the path of the current wallpaper.
+            
+    monitor_id: the id of the monitor. Default: None.'''
+            return Path(self.__idw.GetWallpaper(monitor_id))
             
         
         @property
@@ -286,6 +332,8 @@ except ImportError:
 
 
 class OperatingSystem(ModelNode):
+    '''The OS node of WaveSyn, which provides utilities for calling the functionalities
+provided by the Operating System.'''
     def _not_implemented(*args, **kwargs):
         raise NotImplementedError
     
@@ -314,6 +362,12 @@ class OperatingSystem(ModelNode):
     
     @Scripting.printable    
     def win_open(self, path):
+        '''Display the contents of the given directory using system file browser.
+
+path: string or pathlib.Path. The path of the given directory or file.
+  if a path of a file is given, the file browser will highlight that file
+  (if the explorer support this feature).
+'''
         func = self._obj_map['winopen']
         return func(path)
     

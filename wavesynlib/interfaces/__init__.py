@@ -11,6 +11,10 @@ from wavesynlib.languagecenter.wavesynscript import ModelNode
 
 
 class Interfaces(ModelNode):
+    '''The interface node of WaveSyn, which provides several mechanisms for 
+communicating with different software applications and hardware devices.
+'''
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
