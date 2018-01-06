@@ -208,7 +208,7 @@ since the instance of Application is the first node created on the model tree.
         self.scripting = Scripting(self)
         self.no_tip = False
 
-        self.monitor_timer.active    = True
+        self.monitor_timer.active = True
         
         self._add_env_path()
         

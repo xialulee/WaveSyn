@@ -226,7 +226,7 @@ class ConsoleText(ModelNode, ScrolledText):
         r, c    = self.get_cursor_pos('end')
         start   = 'end-5c'
         stop    = 'end-1c'
-        if self.text.get(start, stop) in ('>>> ', '... '):
+        if self.text.get(start, stop) == '>>> ' or self.text.get(start, stop) == '... ':
             self.text.delete(start, stop)
 
         # Record the position of the END before inserting anything.

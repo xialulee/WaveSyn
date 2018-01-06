@@ -52,7 +52,8 @@ class EditorManager(Observable):
 
     def update(self):
         if self.__editorDict:
-            for editor in self.__editorDict.itervalues():
+            for key in self.__editorDict:
+                editor = self.__editorDict[key]
                 if not editor.is_alive():
                     self.notify_observers(editor)
                     self.__editorDict.pop(id(editor))
@@ -61,16 +62,16 @@ class EditorManager(Observable):
 
 class EditorDict(NodeDict):
     def __init__(self, node_name=''):
-        super(EditorDict, self).__init__(node_name=node_name)
+        super().__init__(node_name=node_name)
         with self.attribute_lock:
-            self.manager    = EditorManager(self)
+            self.manager = EditorManager(self)
 
     def __setitem__(self, key, val):
         if not isinstance(val, EditorNode):
             raise TypeError(eval_format('{self.node_path} only accepts instance of EditorNode or of its subclasses.'))
         if key != id(val):
             raise ValueError('The key should be identical to the ID of the editor.')
-        super(EditorDict, self).__setitem__(key, val)
+        super().__setitem__(key, val)
 
     def add(self, node):
         self[id(node)]  = node
