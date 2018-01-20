@@ -12,6 +12,7 @@ import os.path
 import sys
 import locale
 import tkinter
+import pickle
 from pathlib import Path
 
 from collections import OrderedDict
@@ -497,6 +498,53 @@ command: system command in string form. '''
         
     url: string. the URL of the object to be opened.'''
         webbrowser.open(url)
+        
+        
+    @Scripting.printable
+    def save_var(self, var, filename, protocol=pickle.HIGHEST_PROTOCOL):        
+        from wavesynlib.languagecenter.wavesynscript import Constant
+                    
+        is_var_name = True if isinstance(var, Constant) else False
+            
+        dialogs = self.gui.dialogs
+        var = dialogs.ask_string(var,
+            title='Variable Name',
+            prompt='Enter variable name here:')
+        
+        if not var:
+            return
+        
+        if is_var_name:
+            f_locals = Scripting.namespace['locals']
+            f_globals = Scripting.namespace['globals']
+            if var in f_locals:
+                var = f_locals[var]
+            else:
+                var = f_globals[var]
+        
+        filename = dialogs.ask_saveas_filename(
+            filename,
+            filetypes=[('Pickle Files', '*.pkl')])
+        
+        if not filename:
+            return
+        
+        with open(filename, 'wb') as fileobj:
+            pickle.dump(var, fileobj, protocol)
+            
+            
+    @Scripting.printable
+    def load_var(self, filename):
+        filename = self.gui.dialogs.ask_open_filename(
+            filename,
+            filetypes=[('Pickle Files', '*.pkl'), ('All Files', '*.*')])
+        
+        if not filename:
+            return
+        
+        with open(filename, 'rb') as fileobj:
+            ret = pickle.load(fileobj)
+        return ret
         
         
     @Scripting.printable

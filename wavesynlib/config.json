@@ -24,7 +24,8 @@
 		"Name":"Console", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Save As...",   "TearOff":0,    "UnderLine":0,  "Command":"wavesyn.console.onSaveAs()",	"Print":false},
 		    {"Name":"Clear", "UnderLine":0, "Command":"wavesyn.gui.console.clear()"},
-		    {"Name":"Topmost Toggle",		"UnderLine":0,	"Command":"wavesyn.console.set_topmost('flip')", "Print":true}
+		    {"Name":"Save Variable", "UnderLine":0,	"Command":"wavesyn.save_var(var=wavesyn.lang_center.wavesynscript.constants.ASK_STRING, filename=wavesyn.lang_center.wavesynscript.constants.ASK_SAVEAS_FILENAME)", "Print":true},
+		    {"Name":"Load Variable", "UnderLine":0,	"Command":"wavesyn.load_var(filename=wavesyn.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)", "Print":true}
 		]
 	    },
 
