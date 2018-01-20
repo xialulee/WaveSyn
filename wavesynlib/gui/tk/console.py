@@ -470,16 +470,21 @@ class StatusBar(Frame):
                            '50per_charge', '75per_charge', '100per_charge']:
             battery_images[image_name] = ImageTk.PhotoImage(
                 file=str(image_dir/(image_name+'.png')))
+            
+        self.__busy_images = busy_images = {}
+        image_dir = Path(Scripting.root_node.get_gui_image_path('busysignal'))
+        busy_images['busy'] = ImageTk.PhotoImage(file=str(image_dir/('busy'+'.png')))
+        busy_images['available'] = ImageTk.PhotoImage(file=str(image_dir/('available'+'.png')))
 
         balloon = Scripting.root_node.gui.balloon
                         
-        busy_lamp = Label(self, bg='forestgreen', width=1)
+        self.__busy_lamp = busy_lamp = Label(self)
+        busy_lamp['image'] = busy_images['available']
         busy_lamp.pack(side='right', fill='y')
         
         balloon.bind_widget(busy_lamp, balloonmsg='''Main-thread status.
 Green: main-thread is available;
 Red:   main-thread is busy.''')
-        self.__busy_lamp = busy_lamp
         
         battery_meter = Label(self)
         battery_meter.pack(side='right', fill='y')
@@ -593,8 +598,12 @@ Red:   main-thread is busy.''')
         # To Do: add several customizable lamps for users.
         
     def _set_busy_light(self):
-        bg = 'red' if self.__busy else 'forestgreen'
-        self.__busy_lamp['bg'] = bg
+        if self.__busy:
+            image = self.__busy_images['busy']
+        else:
+            image = self.__busy_images['available']
+        if self.__busy_lamp['image'] != image:
+            self.__busy_lamp['image'] = image
         self.update()
         
     def set_busy(self, busy=True):
