@@ -14,6 +14,7 @@ import os
 from tkinter import Menu, IntVar, Toplevel
 from tkinter.ttk import Progressbar, Scale, Combobox
 from tkinter import Frame, Label
+from PIL import ImageTk
 
 from tkinter.filedialog import asksaveasfilename
 import queue
@@ -461,6 +462,14 @@ class StatusBar(Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         timer = TkTimer(widget=self, interval=200, active=False)
+        
+        self.__battery_images = battery_images = {}
+        image_dir = Path(Scripting.root_node.get_gui_image_path('battery'))
+        for image_name in ['10per', '25per', '50per', '75per', '100per',
+                           '10per_charge', '25per_charge', 
+                           '50per_charge', '75per_charge', '100per_charge']:
+            battery_images[image_name] = ImageTk.PhotoImage(
+                file=str(image_dir/(image_name+'.png')))
 
         balloon = Scripting.root_node.gui.balloon
                         
@@ -471,6 +480,9 @@ class StatusBar(Frame):
 Green: main-thread is available;
 Red:   main-thread is busy.''')
         self.__busy_lamp = busy_lamp
+        
+        battery_meter = Label(self)
+        battery_meter.pack(side='right', fill='y')
         
         self.__membar = IntVar(0)
         self.__cpubar = IntVar(0)
@@ -548,17 +560,35 @@ Red:   main-thread is busy.''')
         self.__lock = thread.allocate_lock()
         self.__busy = False
              
-        get_memory_usage = Scripting.root_node.interfaces.os.get_memory_usage
-        get_cpu_usage    = Scripting.root_node.interfaces.os.get_cpu_usage
-                    
-        @SimpleObserver
-        def check_cpu_mem():
+        os_node = Scripting.root_node.interfaces.os
+        get_memory_usage = os_node.get_memory_usage
+        get_cpu_usage    = os_node.get_cpu_usage
+        get_battery_status = os_node.get_battery_status
+                                
+        def check_cpu_mem_battery():
             with code_printer(print_=False):
-                # Important! Disable the code printer.
                 self.__membar.set(get_memory_usage())
                 self.__cpubar.set(get_cpu_usage())
-            
-        timer.divider(divide_by=10).add_observer(check_cpu_mem)
+                battery_status = get_battery_status()
+                percent = battery_status.percent
+                if percent > 75:
+                    percent = 100
+                elif percent > 50:
+                    percent = 75
+                elif percent > 25:
+                    percent = 50
+                elif percent > 10:
+                    percent = 25
+                else:
+                    percent = 10
+                
+                charge = '_charge' if battery_status.power_plugged else ''
+                image_name = f'{percent}per{charge}'
+                image = battery_images[image_name]
+                if battery_meter['image'] != image:
+                    battery_meter['image'] = image
+                
+        timer.divider(divide_by=10).add_observer(check_cpu_mem_battery)                
         timer.active = True
         # To Do: add several customizable lamps for users.
         

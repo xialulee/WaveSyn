@@ -325,9 +325,13 @@ try:
         
     def _get_cpu_percent():
         return psutil.cpu_percent()
+    
+    def _get_battery_status():
+        return psutil.sensors_battery()
 except ImportError:
     _get_mem_percent = None
     _get_cpu_percent = None
+    _get_battery_status = None
 
 
 
@@ -404,4 +408,14 @@ path: string or pathlib.Path. The path of the given directory or file.
     else:
         @Scripting.printable
         def get_cpu_usage(self):
-            return int(_get_cpu_percent())            
+            return int(_get_cpu_percent()) 
+
+
+    if _get_battery_status is None:
+        @Scripting.printable
+        def get_battery_status(self):
+            return None
+    else:
+        @Scripting.printable
+        def get_battery_status(self):
+            return _get_battery_status()

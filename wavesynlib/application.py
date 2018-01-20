@@ -79,11 +79,14 @@ since the instance of Application is the first node created on the model tree.
         Scripting.namespace['locals'][Scripting.root_name] = self
         Scripting.namespace['globals'] = globals()
         Scripting.root_node = self
-        with self.attribute_lock:
-            self.homepage = 'https://github.com/xialulee/WaveSyn'
         
         file_path    = getsourcefile(type(self))
         dir_path     = os.path.split(file_path)[0]
+        with self.attribute_lock:
+            self.homepage = 'https://github.com/xialulee/WaveSyn'
+            self.file_path = file_path
+            self.dir_path = dir_path
+        
         
         # load config file
         config_file_path  = os.path.join(dir_path, 'config.json')
@@ -136,10 +139,7 @@ since the instance of Application is the first node created on the model tree.
                 xmlrpc_command_slot = CommandSlot(),
 
                 lang_center = LangCenterNode(),
-                            
-                file_path = file_path,
-                dir_path = dir_path,
-                
+                                            
                 config_file_path = config_file_path,
                 
                 image_display = DisplayLauncher()
