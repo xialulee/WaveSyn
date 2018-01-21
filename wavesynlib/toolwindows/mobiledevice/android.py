@@ -21,7 +21,8 @@ from PIL import ImageTk, Image
 import tkinter as tk
 import tkinter.ttk as ttk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.guicomponents.tk import json_to_tk, ScrolledCanvas, ScrolledText, LabeledEntry, PILImageFrame
+from wavesynlib.guicomponents.tk import json_to_tk, \
+    ScrolledCanvas, ScrolledText, ScrolledList, LabeledEntry, PILImageFrame
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
 from wavesynlib.misc.socketutils import AbortException, InterruptHandler
@@ -127,22 +128,34 @@ if action == "read":
 ]},
 
 {'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Manage'}, 'children':[
-    {'class':'LabeledEntry', 'name':'qr_size', 
-         'balloonmsg':'Size (pixels) of the generated QR code.',
-         'setattr':{
-             'label_text':'QR Size', 
-             'label_width':7, 
-             'entry_width':4,
-             'entry_text':str(default_qr_size),
-             'checker_function':self.root_node.gui.value_checker.check_int}},
-    {'class':'Button', 'config':{'text':'Ok'}},
-    {'class':'Button', 'config':{'text':'Abort', 'command':self.__on_abort}}
+    {'class':'Frame', 'pack':{'side':'left', 'fill':'y'}, 'children':[
+        {'class':'LabeledEntry', 'name':'qr_size', 
+             'balloonmsg':'Size (pixels) of the generated QR code.',
+             'setattr':{
+                 'label_text':'QR Size', 
+                 'label_width':7, 
+                 'entry_width':4,
+                 'entry_text':str(default_qr_size),
+                 'checker_function':self.root_node.gui.value_checker.check_int}},
+        {'class':'Button', 'config':{'text':'Ok'}},
+        {'class':'Button', 'config':{'text':'Abort', 'command':self.__on_abort}}
+    ]},
+    {'class':'Frame', 'pack':{'side':'left'}, 'children':[
+        {'class':'ScrolledList', 'name':'ip_list', 'pack':{}}
+    ]}
 ]}
 ]
 
         balloon = self.root_node.gui.balloon
         tab = tk.Frame(tool_tabs)
         self.__widgets = widgets = json_to_tk(tab, widgets_desc, balloon=balloon)
+        ip_list = widgets['ip_list']
+        ip_list.list.config(height=4, width=15)
+        addrlist = socket.gethostbyname_ex('')[2]
+        for ip in addrlist:
+            ip_list.append(ip)
+        ip_list.selection_set(0)
+        
         tool_tabs.add(tab, text='Data')
         
         tk_object = self.tk_object        
@@ -210,12 +223,13 @@ if action == "read":
         sockobj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         abort_event = self.__abort_event
         abort_event.clear()
+        self_ip = self.__widgets['ip_list'].current_data[0]
 
         try:
             port = 10000
             while True:
                 try:
-                    sockobj.bind(('', port))
+                    sockobj.bind((self_ip, port))
                 except socket.error:
                     port += 1
                     if port > 65535:
@@ -223,7 +237,6 @@ if action == "read":
                 else:
                     break
     
-            self_ip = socket.gethostbyname(socket.gethostname())
             self_port = port
             with self.__lock:
                 self.__ip_port = (self_ip, self_port)

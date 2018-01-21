@@ -739,6 +739,12 @@ class ScrolledList(Frame):
         return self.__list.curselection()
     
     
+    @property
+    def current_data(self):
+        retval = [self.list.get(index) for index in self.current_selection]
+        return retval
+    
+    
     def append(self, item):
         self.__list.insert('end', item)
         
