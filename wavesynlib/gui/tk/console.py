@@ -4,12 +4,7 @@ Created on Sun Aug 28 02:49:38 2016
 
 @author: Feng-cong Li
 """
-# Some console functionalities are implemented by idlelib
-##########################
-#from idlelib.AutoComplete import AutoComplete
-#import idlelib.AutoCompleteWindow
-#idlelib.AutoCompleteWindow.KEYPRESS_SEQUENCES = ()
-##########################
+
 import os
 from tkinter import Menu, IntVar, Toplevel
 from tkinter.ttk import Progressbar, Scale, Combobox
@@ -277,6 +272,7 @@ class ConsoleText(ModelNode, ScrolledText):
                 1 if evt.keysym in ('Up', 'KP_Up') 
                 else -1)
             self.text.insert('end', code)
+            self.__syntax_highlight(r)
             return 'break'     
         # End Support History
             
