@@ -245,9 +245,13 @@ class ConsoleText(ModelNode, ScrolledText):
         script = jedi.api.Interpreter(
             current_code,
             [Scripting.namespace['locals'], Scripting.namespace['globals']])
-        cs = script.goto_assignments()
-        if cs:
-            self.__encounter_func_callback(cs)
+        try:
+            cs = script.goto_assignments()
+        except:
+            pass
+        else:
+            if cs:
+                self.__encounter_func_callback(cs)
             
         
 
