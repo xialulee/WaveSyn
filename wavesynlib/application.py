@@ -388,7 +388,7 @@ and generate a dialog which helps user to input parameters.'''
             elif item['type'] == 'pil_image':
                 text    = self.gui.console.text                
                 text.insert('end', '\n')
-                pil_frame    = PILImageFrame(text, pil_image=item['content'])
+                pil_frame = PILImageFrame(text, pil_image=item['content'], balloon=self.gui.balloon)
                 text.window_create('end', window=pil_frame)
                 text.insert('end', '\n')
                 stream_manager.write('\n')

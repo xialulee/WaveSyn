@@ -27,7 +27,8 @@ from PIL import Image
 
 from functools import partial
 
-from wavesynlib.languagecenter.utils import MethodDelegator, FunctionChain
+from wavesynlib.languagecenter.utils import (
+        MethodDelegator, FunctionChain, get_caller_dir)
 from wavesynlib.languagecenter.designpatterns import Observable
 
 __DEBUG__ = False
@@ -365,11 +366,22 @@ class ArgEntry(Frame):
 class PILImageFrame(Frame):
     def __init__(self, *args, **kwargs):
         pil_image = kwargs.pop('pil_image')
+        balloon = None
+        if 'balloon' in kwargs:
+            balloon = kwargs.pop('balloon')
         photo = ImageTk.PhotoImage(pil_image)
         self.__photo = photo
         self.__origin_image = pil_image
         self.__zoomed_image = pil_image
-        Frame.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+        
+        self.__icons = icons = {}
+        image_dir = get_caller_dir() / 'images'
+
+        for name in ('save', 'savezoom', 'copy'):
+            icon_path = image_dir / (name+'.png')
+            icon = ImageTk.PhotoImage(file=str(icon_path))
+            icons[name] = icon
 
         frame = Frame(self)
         frame.pack(fill='x')
@@ -384,18 +396,29 @@ class PILImageFrame(Frame):
                 image.save(filename)
         
         Label(frame, text=f'id={id(self)}').pack(side='left')
-        Button(frame, 
-               text='Save Origin', 
-               command=lambda:on_save(self.__origin_image)).pack(side='left')
-        Button(frame, 
-               text='Save Zoomed', 
-               command=lambda:on_save(self.__zoomed_image)).pack(side='left')
+        save_btn = Button(frame, 
+               image=icons['save'], 
+               command=lambda:on_save(self.__origin_image))
+        save_btn.pack(side='left')
+        if balloon:
+            balloon.bind_widget(save_btn, balloonmsg='Save image.')
+        
+        savezoom_btn = Button(frame, 
+               image=icons['savezoom'], 
+               command=lambda:on_save(self.__zoomed_image))
+        savezoom_btn.pack(side='left')
+        if balloon:
+            balloon.bind_widget(savezoom_btn, balloonmsg='Save zoomed image.')
+        
         if platform.system().lower() == 'windows':
             from wavesynlib.interfaces.os.windows.clipboard import clipb
             
             def on_copy():
                 clipb.image_file_to_clipboard(self.__origin_image)
-            Button(frame, text='Copy', command=on_copy).pack(side='left')
+            copy_btn = Button(frame, image=icons['copy'], command=on_copy)
+            copy_btn.pack(side='left')
+            if balloon:
+                balloon.bind_widget(copy_btn, balloonmsg='Copy image.')
 
         scale = Scale(frame, from_=0, to=100, orient='horizontal', value=100)
         scale.pack(side='left')

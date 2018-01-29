@@ -386,7 +386,10 @@ IP: {addr[0]}
                             scrolled_text = self.__scrolled_text
                             show_head(device_code=device_code, addr=addr, read=True)
                             scrolled_text.append_text('\n'*2)
-                            pil_frame = PILImageFrame(scrolled_text.text, pil_image=img)
+                            pil_frame = PILImageFrame(
+                                scrolled_text.text, 
+                                pil_image=img, 
+                                balloon=self.root_node.gui.balloon)
                             scrolled_text.text.window_create('end', window=pil_frame)
                             scrolled_text.append_text('\n'*4)
                             scrolled_text.see('end')
