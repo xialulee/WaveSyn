@@ -414,7 +414,7 @@ class PILImageFrame(Frame):
             from wavesynlib.interfaces.os.windows.clipboard import clipb
             
             def on_copy():
-                clipb.image_file_to_clipboard(self.__origin_image)
+                clipb.image_to_clipboard(self.__origin_image)
             copy_btn = Button(frame, image=icons['copy'], command=on_copy)
             copy_btn.pack(side='left')
             if balloon:

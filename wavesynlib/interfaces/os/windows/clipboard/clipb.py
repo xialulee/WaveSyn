@@ -133,6 +133,19 @@ EndFragment:{3: 13d}
     return exitcode
 
 
+def image_to_clipboard(image):
+    bio = BytesIO()
+    image.convert('RGB').save(bio, 'BMP')
+    data = bio.getvalue()[14:]
+    bio.close()
+    win32clipboard.OpenClipboard()
+    try:
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+    finally:
+        win32clipboard.CloseClipboard()
+
+
 def image_file_to_clipboard(fileObj, is_psd=False):
     '''Read an image file and write the image data into clipboard.
 See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
@@ -144,16 +157,7 @@ See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-
         image = fileObj
     else:
         image = Image.open(fileObj)
-    bio = BytesIO()
-    image.convert('RGB').save(bio, 'BMP')
-    data = bio.getvalue()[14:]
-    bio.close()
-    win32clipboard.OpenClipboard()
-    try:
-        win32clipboard.EmptyClipboard()
-        win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    finally:
-        win32clipboard.CloseClipboard()
+    image_to_clipboard(image)
         
         
 def clipboard_to_image_file(file_path):
