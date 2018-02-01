@@ -4,9 +4,6 @@ Created on Sat May 13 15:37:20 2017
 
 @author: Feng-cong Li
 """
-
-from __future__ import print_function, division, unicode_literals
-
 from wavesynlib.languagecenter.glsl import Function
 
 
