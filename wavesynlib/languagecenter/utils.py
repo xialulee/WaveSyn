@@ -152,7 +152,7 @@ class property_with_args:
         return self.Property(instance, self.__func)
     
     
-    
+        
 import ctypes
 
 def build_struct(f):

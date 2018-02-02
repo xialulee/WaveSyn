@@ -542,6 +542,19 @@ class MSOffice(NodeDict, Observable):
         )
         app_name = app_name.lower()
         return self._generate_object(app_name, client.CreateObject)
+    
+    
+    @Scripting.printable
+    def read_excel_clipboard(self, map_func=None):
+        table = self.root_node.lang_center.html_utils.get_tables(
+            html_code=self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML)[0]
+        if map_func:
+            self.root_node.lang_center.python.table_utils.map(map_func, table)
+        return table
+    
+    
+    def write_excel_clipboard(self, table):
+        self.root_node.interfaces.os.clipboard.write(content=table, table=True)
         
     
     def _on_app_quit(self, app_obj):

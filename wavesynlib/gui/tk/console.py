@@ -27,7 +27,7 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from wavesynlib.languagecenter.utils import call_immediately, FunctionChain
 from wavesynlib.languagecenter import templates
-from wavesynlib.languagecenter.python import prog as prog_pattern
+from wavesynlib.languagecenter.python.pattern import prog as prog_pattern
 from wavesynlib.status import busy_doing
 
 
@@ -152,14 +152,9 @@ class ConsoleText(ModelNode, ScrolledText):
         self.__true_delete = redir.register('delete', self.__delete_hook)        
         # End syntax highlight
 
-        
-        # Auto complete is implemented by idlelib
-        #############################################################
         self.indentwidth    = 4
         self.tabwidth       = 4
         self.context_use_ps1    = '>>> '
-        #self.__auto_complete = AutoComplete(self)  
-        #############################################################
                                       
         self.prompt_symbol = '>>> '  
         self.__history = History()
@@ -507,11 +502,12 @@ Red:   main-thread is busy.''')
         topmost_button.pack(side='right')
         
         def on_click():
-            tk_root = Scripting.root_node.gui.root
-            b = bool(tk_root.wm_attributes('-topmost'))
+            console =Scripting.root_node.gui.console
+            b = console.is_topmost
             fg = 'black' if b else 'lime green'
             topmost_button['fg'] = fg
-            tk_root.wm_attributes('-topmost', not b)
+            with code_printer(True):
+                console.set_topmost(not b)
             
         topmost_button['command'] = on_click
         balloon.bind_widget(topmost_button, balloonmsg='Set the console as a topmost window.')
@@ -791,14 +787,21 @@ class ConsoleWindow(ModelNode):
             
 
     def set_window_attributes(self, *args, **kwargs):
-        return self.root_node.tk_root.wm_attributes(*args, **kwargs)  
+        return self.root_node.gui.root.wm_attributes(*args, **kwargs)  
       
-        
+     
+    @Scripting.printable
     def set_topmost(self, b):
-        tk_root = self.root_node.tk_root
+        tk_root = self.root_node.gui.root
         if b == 'flip':
-            b = False if tk_root.wm_attributes('-topmost') else True
+            b = False if self.is_topmost else True
         tk_root.wm_attributes('-topmost', b)
+        
+        
+    @property
+    def is_topmost(self):
+        tk_root = self.root_node.gui.root
+        return bool(tk_root.wm_attributes('-topmost'))
         
         
     def set_transparency(self, transparency):
