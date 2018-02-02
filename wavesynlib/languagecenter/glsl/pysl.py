@@ -30,6 +30,15 @@ def unary_to_glsl(node):
 
 
 
+def call_to_glsl(node):
+    func_name = node.func.id
+    arg_list = []
+    for arg in node.args:
+        arg_list.append(expr_to_glsl(arg))
+    return f'{func_name}({", ".join(arg_list)})'
+
+
+
 def binop_to_glsl(node):
     opmap = {
         ast.Add: '+',
@@ -97,6 +106,7 @@ def expr_to_glsl(node, indent=-1):
         ast.Name: name_to_glsl,
         ast.Num: num_to_glsl,
         ast.UnaryOp: unary_to_glsl,
+        ast.Call: call_to_glsl,
         ast.BinOp: binop_to_glsl,
         ast.BoolOp: boolop_to_glsl,
         ast.Compare: compare_to_glsl,
@@ -163,7 +173,10 @@ def func_to_glsl(func, delta_indent=4):
     code_list = [] # This list of the generated GLSL code strings.
     indent = 0
     
-    source = inspect.getsource(func)
+    if isinstance(func, str):
+        source = func
+    else:
+        source = inspect.getsource(func)
     mod_node = ast.parse(source)
     func_node = mod_node.body[0]
     signature = {'args':func_node.args, 'returns':func_node.returns}
@@ -180,3 +193,19 @@ def func_to_glsl(func, delta_indent=4):
     indent -= delta_indent
     code_list.append('}')
     return '\n'.join(code_list)
+
+
+
+if __name__ == '__main__':
+    source = '''    
+def hit_circle(xy:vec2, center:vec2, radius:float, tol:float)->float:
+    d:float = distance(center, xy)
+    lower:float = radius - tol
+    upper:float = radius + tol
+    if lower < d < upper:
+        return (tol-abs(d-radius)) / tol
+    else:
+        return 0.0
+'''
+
+    print(func_to_glsl(source))
