@@ -81,16 +81,36 @@ def compare_to_glsl(node):
 
 
 
-def expr_to_glsl(node):
+
+def ifexp_to_glsl(node):
+    test_str = expr_to_glsl(node.test)
+    body_str = expr_to_glsl(node.body)
+    orelse_str = expr_to_glsl(node.orelse)
+    return f'{test_str} ? {body_str} : {orelse_str}'
+
+
+
+def expr_to_glsl(node, indent=-1):
+    if isinstance(node, ast.Expr):
+        node = node.value
     typemap = {
         ast.Name: name_to_glsl,
         ast.Num: num_to_glsl,
         ast.UnaryOp: unary_to_glsl,
         ast.BinOp: binop_to_glsl,
         ast.BoolOp: boolop_to_glsl,
-        ast.Compare: compare_to_glsl}
+        ast.Compare: compare_to_glsl,
+        ast.IfExp: ifexp_to_glsl}
     expr_str = typemap[type(node)](node)
+    if indent >= 0:
+        expr_str = ' '*indent + expr_str
     return expr_str
+
+
+
+def annassign_to_glsl(node, indent):
+    expr_str = expr_to_glsl(node.value)
+    return f'{" "*indent}{node.annotation.id} {node.target.id} = {expr_str};'
 
 
 
@@ -131,8 +151,10 @@ def if_to_glsl(node, indent, el=False):
 
 def stat_to_glsl(node, indent):
     typemap = {
+        ast.AnnAssign: annassign_to_glsl,
         ast.If: if_to_glsl,
-        ast.Return: return_to_glsl}
+        ast.Return: return_to_glsl,
+        ast.Expr: expr_to_glsl}
     return typemap[type(node)](node, indent)
 
 
