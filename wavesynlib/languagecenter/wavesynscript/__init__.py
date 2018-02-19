@@ -543,7 +543,6 @@ class Scripting(ModelNode):
              self.namespace['locals'])
 
         
-                
     @classmethod    
     def printable(cls, method):
         def func(self, *args, **kwargs):
@@ -565,6 +564,12 @@ class Scripting(ModelNode):
         func.__doc__    = method.__doc__
         func.__name__   = method.__name__
         return PrintableDescriptor(func, method)
+    
+    
+    @classmethod
+    def debug_print(cls, *args, **kwargs):
+        cls.root_node.gui.console.debug_window.print(*args, **kwargs)
+    
 
 
 class CodePrinter:

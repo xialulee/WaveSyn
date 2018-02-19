@@ -50,7 +50,7 @@ Properties inherited from ModelNode:
                                                 method_name_map[method_name])
 
 
-    def close_callback(self):
+    def _close_callback(self):
         pass        
 
        
@@ -60,7 +60,7 @@ Properties inherited from ModelNode:
         if hasattr(self.parent_node, 'on_window_close'):
             self.parent_node.on_window_close(self)
         # For Toplevel objects, use destroy rather than quit.
-        if not self.close_callback():
+        if not self._close_callback():
             self.__tk_object.destroy() 
         
         

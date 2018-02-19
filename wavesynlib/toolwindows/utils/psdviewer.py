@@ -243,9 +243,9 @@ class PSDViewer(TkToolWindow):
         os.remove(tfile.name)
         
         
-    def close_callback(self):
+    def _close_callback(self):
         self.__timer.active = False
-        super().close_callback()
+        super()._close_callback()
         
         
         

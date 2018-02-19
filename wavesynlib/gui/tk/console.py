@@ -6,6 +6,7 @@ Created on Sun Aug 28 02:49:38 2016
 """
 
 import os
+from io import StringIO
 from tkinter import Menu, IntVar, Toplevel
 from tkinter.ttk import Progressbar, Scale, Combobox
 from tkinter import Frame, Label
@@ -526,6 +527,19 @@ Red:   main-thread is busy.''')
         balloon.bind_widget(docbtn, balloonmsg='Show document window.')
         #} End Doc Window        
         
+        # Debug Button {
+        debbtn = tkinter.Button(self, text='DEB', relief='groove')
+        debbtn.pack(side='right')
+        
+        def on_click():
+            debwin = Scripting.root_node.gui.console.debug_window
+            with code_printer(True):
+                debwin.show_window()
+                
+        debbtn['command'] = on_click
+        balloon.bind_widget(debbtn, balloonmsg='Show debug window.')
+        #} End Debug Button
+        
         #{ Window Combo
         window_combo = Combobox(self, value=[], takefocus=1, stat='readonly')
         def on_selected(event):
@@ -656,7 +670,7 @@ class DocWindow(TkToolWindow):
         self.__scrolledtext.set_text(content)
         
         
-    def close_callback(self):
+    def _close_callback(self):
         self.tk_object.withdraw()
         self.__visible = False
         return True
@@ -667,16 +681,48 @@ class DocWindow(TkToolWindow):
         return self.__visible
     
     
-    @visible.setter
-    def visible(self, val):
+    @Scripting.printable
+    def show_window(self):
         self.tk_object.update()
         self.tk_object.deiconify()
         self.__visible = True
         
         
+        
+class DebugWindow(TkToolWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tk_object.title('Debug')
+        self._make_window_manager_tab()
+        self.__scrolledtext = stext = ScrolledText(self.tk_object)
+        stext.pack(expand='yes', fill='both')
+        self.__visible = True
+        
+        
+    def print(self, *args, **kwargs):
+        sio = StringIO()
+        kwargs['file'] = sio
+        print(*args, **kwargs)
+        content = sio.getvalue()
+        self.__scrolledtext.append_text(content)
+            
+            
+    def _close_callback(self):
+        self.tk_object.withdraw()
+        self.__visible = False
+        return True
+        
+        
+    @property
+    def visible(self):
+        return self.__visible
+    
+    
     @Scripting.printable
     def show_window(self):
-        self.visible = True
+        self.tk_object.update()
+        self.tk_object.deiconify()
+        self.__visible = True
         
 
         
@@ -738,7 +784,12 @@ class ConsoleWindow(ModelNode):
         self.doc_window = ModelNode(
             is_lazy=True, 
             module_name='wavesynlib.gui.tk.console', 
-            class_name='DocWindow')            
+            class_name='DocWindow')       
+        
+        self.debug_window = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.gui.tk.console',
+            class_name='DebugWindow')
     
         
     @property
