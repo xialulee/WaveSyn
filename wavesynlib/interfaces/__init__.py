@@ -7,6 +7,7 @@ Created on Fri Aug 08 16:00:43 2014
 import platform
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode
+from wavesynlib.interfaces.editor.externaleditor import EditorDict
 
 
 
@@ -35,6 +36,8 @@ communicating with different software applications and hardware devices.
             module_name='wavesynlib.interfaces.dotnet',
             class_name='DotNet'
         )
+        
+        self.editors = EditorDict()
             
         if platform.system().lower() == 'windows':
             # For nodes who can only run on Windows OS. 

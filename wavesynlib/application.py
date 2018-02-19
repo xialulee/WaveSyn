@@ -33,7 +33,6 @@ import json
 
 
 from wavesynlib.guicomponents.tk import PILImageFrame, ArgEntry, ScrolledText
-from wavesynlib.interfaces.editor.externaleditor import EditorDict, EditorNode
 from wavesynlib.interfaces import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.threadtools import ThreadManager
@@ -152,7 +151,7 @@ since the instance of Application is the first node created on the model tree.
         self.timer_manager.every = timeutils.TimerActionNode(type_='every')        
         # End Timer utils
                         
-        self.editors    = EditorDict()
+        # self.editors    = EditorDict()
         
         
         ## Begin: The command system of WaveSyn
@@ -186,14 +185,28 @@ since the instance of Application is the first node created on the model tree.
         ## End.
         
         
-        @self.editors.manager.add_observer
+        @self.interfaces.editors.manager.add_observer
         def editor_observer(editor):
             code = editor.code
             if not code:
                 return
-            self.stream_manager.write(f'WaveSyn: executing code from editor {id(editor)} listed as follows:\n', 'TIP')
-            self.stream_manager.write(code, 'HISTORY')
-            self.stream_manager.write('\n')
+                
+            def on_copy(*args, **kwargs):
+                self.interfaces.os.clipboard.write(code)
+                
+            def on_edit_default(*args, **kwargs):
+                self.interfaces.editors.launch(code=code)
+                
+            def on_edit_gvim(*args, **kwargs):
+                self.interfaces.editors.launch_gvim(code=code)
+            
+            self.print_tip([
+                {'type':'text', 'content': f'executing code from editor {id(editor)} listed as follows:'},
+                {'type':'link', 'content':'[COPY]', 'command':on_copy, 'end':' '},
+                {'type':'link', 'content':'[EDIT(DEFAULT)]', 'command':on_edit_default, 'end':' '},
+                {'type':'link', 'content':'[EDIT(GVIM)]', 'command':on_edit_gvim},
+                {'type':'text', 'content':''},
+                {'type':'text', 'content': code}])
             self.execute(code)            
         
 
@@ -201,7 +214,7 @@ since the instance of Application is the first node created on the model tree.
             self.monitor_timer = self.create_timer(interval=100, active=False)
             
         # Make wavesyn.editors.manager check wavesyn.editors every 100ms
-        self.monitor_timer.add_observer(self.editors.manager) 
+        self.monitor_timer.add_observer(self.interfaces.editors.manager) 
         
         # Check std streams every 100ms
         self.monitor_timer.add_observer(self.stream_manager)
@@ -221,14 +234,6 @@ since the instance of Application is the first node created on the model tree.
         extra_path.append(path_string)
         path_string = os.path.pathsep.join(extra_path)
         os.environ['PATH'] = path_string
-        
-        
-    def launch_editor(self, editor_path=None):
-        if editor_path is None:
-            editor_path  = self.editor_info['Path']
-        editor_id    = self.editors.add(EditorNode(editor_path=editor_path))
-        self.editors[editor_id].launch()
-        return editor_id
         
         
     def create_timer(self, interval=100, active=False):
@@ -373,8 +378,10 @@ and generate a dialog which helps user to input parameters.'''
         return_list = []            
             
         for item in contents:
+            end = item.pop('end', '\n')
             if item['type'] == 'text':
-                stream_manager.write(''.join((item['content'],'\n')), 'TIP')
+#                stream_manager.write(''.join((item['content'], end)), 'TIP')
+                stream_manager.write(f'{item["content"]}{end}', 'TIP')
                 return_list.append(None)
             elif item['type'] == 'link':
                 command = item['command']
@@ -383,7 +390,7 @@ and generate a dialog which helps user to input parameters.'''
                 text = self.gui.console.text
                 #r, c = text.index(END).split('.')
                 config_link_tag(text, tag_name, command, self.gui.console.default_cursor)                                
-                stream_manager.write('\n')
+                stream_manager.write(end)
                 return_list.append(None)
             elif item['type'] == 'pil_image':
                 text    = self.gui.console.text                
@@ -391,7 +398,7 @@ and generate a dialog which helps user to input parameters.'''
                 pil_frame = PILImageFrame(text, pil_image=item['content'], balloon=self.gui.balloon)
                 text.window_create('end', window=pil_frame)
                 text.insert('end', '\n')
-                stream_manager.write('\n')
+                stream_manager.write(end)
                 return_list.append(id(pil_frame))
             elif item['type'] == 'file_list':
                 file_list = item['content']
@@ -422,7 +429,7 @@ and generate a dialog which helps user to input parameters.'''
                     config_link_tag(text, browse_tag_name, browse_func, self.gui.console.default_cursor)                    
                     stream_manager.write(' ')
                     
-                    stream_manager.write(f'{file_path}\n')
+                    stream_manager.write(f'{file_path}{end}')
                 return_list.append(None)
         return return_list
                                             

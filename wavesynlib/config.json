@@ -32,7 +32,8 @@
 	    {
 		"Name":"Script", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"Load and Run Script File", "UnderLine":0, "Command":"0"},
-		    {"Name":"Edit Script Using External Editor and Run",    "UnderLine":0,  "Command":"wavesyn.launch_editor()",	"Print":true}
+		    {"Name":"Entering Code Using Default Editor and Run", "UnderLine":0,  "Command":"wavesyn.interfaces.editors.launch()", "Print":true},
+		    {"Name":"Entering Code Using GVIM and Run", "UnderLine":0, "Command":"wavesyn.interfaces.editors.launch_gvim()", "Print":true}
 		]
 	    },
 
