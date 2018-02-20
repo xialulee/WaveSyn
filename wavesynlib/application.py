@@ -76,8 +76,8 @@ since the instance of Application is the first node created on the model tree.
         # The instance of this class is the root of the model tree. Thus is_root is set to True
         super().__init__(node_name=Scripting.root_name, is_root=True)
             
-        Scripting.namespace['locals'][Scripting.root_name] = self
-        Scripting.namespace['globals'] = globals()
+        Scripting.namespaces['globals'] = Scripting.namespaces['locals'] = globals()
+        Scripting.namespaces['globals'][Scripting.root_name] = self
         Scripting.root_node = self
         
         file_path    = getsourcefile(type(self))
@@ -320,10 +320,10 @@ and generate a dialog which helps user to input parameters.'''
         with self.exec_thread_lock:
             try:
                 with busy_doing:
-                    ret = eval(expr, Scripting.namespace['globals'], Scripting.namespace['locals'])
+                    ret = eval(expr, Scripting.namespaces['globals'], Scripting.namespaces['locals'])
             except KeyboardInterrupt:
                 self.stream_manager.write('The mission has been aborted.\n', 'TIP')
-            Scripting.namespace['locals']['_']  = ret
+            Scripting.namespaces['locals']['_']  = ret
             return ret
             
         
@@ -346,7 +346,7 @@ and generate a dialog which helps user to input parameters.'''
                 except SyntaxError:
                     with busy_doing:
                         try:
-                            exec(code, Scripting.namespace['globals'], Scripting.namespace['locals'])
+                            exec(code, Scripting.namespaces['globals'], Scripting.namespaces['locals'])
                         except KeyboardInterrupt:
                             self.stream_manager.write('WaveSyn: The mission has been aborted.\n', 'TIP')
             except SystemExit:
@@ -442,8 +442,8 @@ command: system command in string form. '''
             return
         
         if is_var_name:
-            f_locals = Scripting.namespace['locals']
-            f_globals = Scripting.namespace['globals']
+            f_locals = Scripting.namespaces['locals']
+            f_globals = Scripting.namespaces['globals']
             if var in f_locals:
                 var = f_locals[var]
             else:

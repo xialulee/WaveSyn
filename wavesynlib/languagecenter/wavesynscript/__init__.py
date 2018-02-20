@@ -506,7 +506,8 @@ class Scripting(ModelNode):
     
     root_name = 'wavesyn' # The name of the object model tree's root
     root_node = None
-    namespace = {'locals':{}, 'globals':{}}
+    _namespace = {}
+    namespaces = {'locals':_namespace, 'globals':_namespace}
     
     _print_code_flag = False
     
@@ -540,8 +541,8 @@ class Scripting(ModelNode):
             
     def executeFile(self, filename):
         exec(compile(open(filename, "rb").read(), filename, 'exec'), 
-             self.namespace['globals'], 
-             self.namespace['locals'])
+             self.namespaces['globals'], 
+             self.namespaces['locals'])
 
         
     @classmethod    

@@ -268,7 +268,7 @@ class ConsoleText(ModelNode, ScrolledText):
         current_code = self.text.get(f'{r}.4', f'{r}.{c}')
         script = jedi.api.Interpreter(
             current_code,
-            [Scripting.namespace['locals'], Scripting.namespace['globals']])
+            [Scripting.namespaces['locals'], Scripting.namespaces['globals']])
         try:
             cs = script.goto_assignments()
         except:
@@ -315,8 +315,8 @@ class ConsoleText(ModelNode, ScrolledText):
                 r, c = self.get_cursor_pos('insert')
                 script = jedi.api.Interpreter(
                     self.text.get(f'{r}.4', 'end-1c'), 
-                    [Scripting.namespace['locals'], 
-                     Scripting.namespace['globals']])
+                    [Scripting.namespaces['locals'], 
+                     Scripting.namespaces['globals']])
     
                 if len(script.completions())==0:
                     return 'break'
