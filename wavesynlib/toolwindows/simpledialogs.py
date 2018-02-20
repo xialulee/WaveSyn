@@ -160,6 +160,6 @@ and the place where this constant holds will be replaced with the given slice.
         
     def report(self, message):
         showinfo('Message', message)
-        self.root_node.print_tip([{'type':'text', 'content':'\n'+message}])
+        self.root_node.stream_manager.write(f'\n{message}\n', 'TIP')
         
         

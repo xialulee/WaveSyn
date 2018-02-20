@@ -427,9 +427,10 @@ class Constants(object):
 
 
 def _print_replacement_of_constant(const, value):
-    Scripting.root_node.print_tip([{'type':'text', 'content':f'''
+    Scripting.root_node.stream_manager.write(f'''WaveSyn:
 The actual value of the place where {const.name} holds is
-  {repr(value)}'''}])
+  {repr(value)}
+''', 'TIP')
     
 
     

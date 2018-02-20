@@ -28,7 +28,7 @@ class ActionManager(ModelNode):
         try:
             action = self.current_actions[action_id]
         except KeyError:
-            self.root_node.print_tip([
+            self.root_node.gui.console.show_tips([
                 {'type':'text', 
                  'content':'This action has already been finished or cancelled.'}])
         else:
@@ -149,14 +149,13 @@ class DoNode(ModelNode):
             with code_printer():
                 self.manager.cancel(action_id=id(self))
         
-        root.print_tip([
+        root.gui.console.show_tips([
             {'type':'text', 'content': f'\n  {self.node_path}'},
             {'type':'text', 'content': f'  ID: {id(self)}'},
             {'type':'text', 'content': f'  Type: {type_}'},
             {'type':'text', 'content': f'  Duration: {duration}ms'},
             {'type':'link', 'content': 'Click here to Cancel This Action.',
-             'command':on_cancel_click}
-        ])
+             'command':on_cancel_click}])
         
         self.__do(func, iterables)  
         

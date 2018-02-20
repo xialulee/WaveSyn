@@ -221,7 +221,7 @@ class EditGroup(Group):
         beamParams = self.__paramlist.list.get(0, 'end')
         if not beamParams:
             self._app.print_error('An error occurred!')
-            self._app.print_tip(
+            self._app.gui.console.show_tips(
                 [
                     {
                         'type':'text',
@@ -298,7 +298,7 @@ You can extract the data in Matlab using the following command:''')
 (Click the underlined Matlab command and copy it to the clipboard)'''
                 }
             ]
-            self._app.print_tip(tip)  
+            self._app.gui.console.show_tips(tip)  
 
 
 

@@ -7,6 +7,8 @@ Created on Sun Aug 28 02:49:38 2016
 
 import os
 from io import StringIO
+import importlib
+
 from tkinter import Menu, IntVar, Toplevel
 from tkinter.ttk import Progressbar, Scale, Combobox
 from tkinter import Frame, Label
@@ -21,15 +23,36 @@ import traceback
 
 import jedi
 
-from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText, ScrolledList
+from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText, ScrolledList, PILImageFrame
 from wavesynlib.guicomponents.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
-from wavesynlib.languagecenter.utils import call_immediately, FunctionChain
+from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately, FunctionChain
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter.python.pattern import prog as prog_pattern
 from wavesynlib.status import busy_doing
+
+
+
+_retvaldisp = {}
+
+@call_immediately
+def load_plugin():
+    selfdir = get_caller_dir()
+    retvaldisp = selfdir / 'plugins' / 'retvaldisp'
+    for file in retvaldisp.glob('*.py'):
+        if file.name == '__init__.py':
+            continue
+        mod_name = file.stem
+        mod_path = f'wavesynlib.gui.tk.plugins.retvaldisp.{mod_name}'
+        mod = importlib.import_module(mod_path)
+        plugin = mod.Plugin(Scripting.root_node)
+        _type = plugin._type
+        if _type not in _retvaldisp:
+            _retvaldisp[_type] = [plugin]
+        else:
+            _retvaldisp[_type].append(plugin)
 
 
 
@@ -214,7 +237,7 @@ class ConsoleText(ModelNode, ScrolledText):
         return self.__encounter_func_callback
                     
         
-    def update_content(self, tag, content):
+    def update_content(self, tag, content, extras=None):
         r, c    = self.get_cursor_pos('end')
         start   = 'end-5c'
         stop    = 'end-1c'
@@ -228,6 +251,16 @@ class ConsoleText(ModelNode, ScrolledText):
 
         self.text.insert('end', self.prompt_symbol, 'STDOUT')                
         self.text.see('end') 
+        
+        if tag == 'RETVAL':
+            if extras and 'obj' in extras:
+                ret = extras['obj']
+                plugins = []
+                for _type in _retvaldisp:
+                    if isinstance(ret, _type):
+                        plugins.extend(_retvaldisp[_type])
+                for plugin in plugins:
+                    plugin.action(ret)                        
         
         
     def on_key_release(self, evt):
@@ -437,10 +470,7 @@ class ConsoleText(ModelNode, ScrolledText):
                             except:
                                 traceback.print_exc()
                             if ret is not None:
-                                self.update_content(tag='RETVAL', content=repr(ret)+'\n')
-                                if isinstance(ret, Path):
-                                    self.root_node.print_tip([{'type':'file_list', 'content':(str(ret),)}])
-    
+                                self.update_content(tag='RETVAL', content=repr(ret)+'\n', extras={'obj':ret})    
                 finally:
                     self.text.mark_set('insert', 'end')
                     self.text.see('end')
@@ -778,7 +808,7 @@ class ConsoleWindow(ModelNode):
         make_menu(root, menu, json=True)
         self.__default_cursor = self.__stdstream_text.text['cursor']
         @self.root_node.stream_manager.add_observer
-        def observer(stream_type, content):
+        def observer(stream_type, content, extras):
             self.console_text.update_content(tag=stream_type, content=content)
             
         self.doc_window = ModelNode(
@@ -857,3 +887,69 @@ class ConsoleWindow(ModelNode):
         
     def set_transparency(self, transparency):
         self.root_node.gui.root.wm_attributes('-alpha', transparency)
+        
+        
+    def show_tips(self, contents):         
+        if self.root_node.no_tip:
+            return
+        
+        stream_manager = self.root_node.stream_manager
+        stream_manager.write('WaveSyn: \n', 'TIP')
+
+        if isinstance(contents, str):
+            stream_manager.write(contents+'\n', 'TIP')
+            return
+
+        return_list = []            
+
+        console_text = self.console_text
+        text = console_text.text
+            
+        for item in contents:
+            end = item.get('end', '\n')
+
+            if item['type'] == 'text':
+                stream_manager.write(f'{item["content"]}{end}', 'TIP')
+                return_list.append(None)
+            elif item['type'] == 'link':
+                command = item['command']
+                tag_name = console_text.create_link_tag(command, self.default_cursor)                
+                stream_manager.write(item['content'], tag_name)
+                #r, c = text.index(END).split('.')
+                stream_manager.write(end)
+                return_list.append(None)
+            elif item['type'] == 'pil_image':               
+                text.insert('end', '\n')
+                pil_frame = PILImageFrame(text, pil_image=item['content'], balloon=self.root_node.gui.balloon)
+                text.window_create('end', window=pil_frame)
+                text.insert('end', '\n')
+                stream_manager.write(end)
+                return_list.append(id(pil_frame))
+            elif item['type'] == 'file_list':
+                file_list = item['content']
+                def new_open_func(path):
+                    def open_func(*args):
+                        with code_printer():
+                            self.root_node.webbrowser_open(path)
+                    return open_func
+                    
+                def new_browse_func(path):
+                    def browse_func(*args):
+                        with code_printer():
+                            self.root_node.interfaces.os.win_open(path)
+                    return browse_func
+                    
+                for file_path in file_list:
+                    open_func = new_open_func(file_path)
+                    open_tag_name = console_text.create_link_tag(open_func, self.default_cursor)
+                    stream_manager.write('open', open_tag_name)
+                    stream_manager.write(' ')
+
+                    browse_func = new_browse_func(file_path)                    
+                    browse_tag_name = console_text.create_link_tag(browse_func, self.default_cursor)
+                    stream_manager.write('browse', browse_tag_name)                    
+                    stream_manager.write(' ')
+                    
+                    stream_manager.write(f'{file_path}{end}', 'TIP')
+                return_list.append(None)
+        return return_list        

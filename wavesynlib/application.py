@@ -52,7 +52,7 @@ def call_and_print_doc(func):
     def f(*args, **kwargs):
         ret = func(*args, **kwargs)
         if 'printDoc' in kwargs and kwargs['printDoc']:
-            Application.instance.print_tip(func.__doc__)
+            Application.instance.gui.console.show_tips(func.__doc__)
         return ret
     f.__doc__   = func.__doc__
     return f
@@ -200,13 +200,13 @@ since the instance of Application is the first node created on the model tree.
             def on_edit_gvim(*args, **kwargs):
                 self.interfaces.editors.launch_gvim(code=code)
             
-            self.print_tip([
+            self.gui.console.show_tips([
                 {'type':'text', 'content': f'executing code from editor {id(editor)} listed as follows:'},
                 {'type':'link', 'content':'[COPY]', 'command':on_copy, 'end':' '},
                 {'type':'link', 'content':'[EDIT(DEFAULT)]', 'command':on_edit_default, 'end':' '},
                 {'type':'link', 'content':'[EDIT(GVIM)]', 'command':on_edit_gvim},
                 {'type':'text', 'content':''},
-                {'type':'text', 'content': code}])
+                {'type':'text', 'content': code}])    
             self.execute(code)            
         
 
@@ -312,11 +312,7 @@ and generate a dialog which helps user to input parameters.'''
             self.stream_manager.write(expr+'\n', 'HISTORY')               
             ret = self.eval(expr)
             if ret is not None:
-                self.stream_manager.write(str(ret)+'\n', 'RETVAL')
-                
-                if isinstance(ret, Path):
-                    self.print_tip([{'type':'file_list', 'content':(str(ret),)}])
-                    
+                self.stream_manager.write(str(ret)+'\n', 'RETVAL', extras={'obj':ret})
             return ret    
             
                               
@@ -326,7 +322,7 @@ and generate a dialog which helps user to input parameters.'''
                 with busy_doing:
                     ret = eval(expr, Scripting.namespace['globals'], Scripting.namespace['locals'])
             except KeyboardInterrupt:
-                self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
+                self.stream_manager.write('The mission has been aborted.\n', 'TIP')
             Scripting.namespace['locals']['_']  = ret
             return ret
             
@@ -352,88 +348,12 @@ and generate a dialog which helps user to input parameters.'''
                         try:
                             exec(code, Scripting.namespace['globals'], Scripting.namespace['locals'])
                         except KeyboardInterrupt:
-                            self.print_tip([{'type':'text', 'content':'The mission has been aborted.'}])
+                            self.stream_manager.write('WaveSyn: The mission has been aborted.\n', 'TIP')
             except SystemExit:
                 self._on_exit()
             return ret
             
             
-    def print_tip(self, contents): # To Do: Move the main logic to the console.
-        # To Do: Use the new create_link_tag method of ScrolledText
-        def config_link_tag(widget, tag_name, command, original_cursor):
-            widget.tag_config(tag_name, underline=1, foreground='blue')
-            widget.tag_bind(tag_name, '<Button-1>', command)
-            widget.tag_bind(tag_name, '<Enter>', lambda dumb: text.config(cursor='hand2'))
-            widget.tag_bind(tag_name, '<Leave>', lambda dumb: text.config(cursor=original_cursor))
-        
-        if self.no_tip:
-            return
-        stream_manager = self.stream_manager
-        stream_manager.write('WaveSyn: \n', 'TIP')
-
-        if isinstance(contents, str):
-            stream_manager.write(contents+'\n', 'TIP')
-            return
-
-        return_list = []            
-            
-        for item in contents:
-            end = item.pop('end', '\n')
-            if item['type'] == 'text':
-#                stream_manager.write(''.join((item['content'], end)), 'TIP')
-                stream_manager.write(f'{item["content"]}{end}', 'TIP')
-                return_list.append(None)
-            elif item['type'] == 'link':
-                command = item['command']
-                tag_name = 'link' + str(id(command))
-                stream_manager.write(item['content'], tag_name)
-                text = self.gui.console.text
-                #r, c = text.index(END).split('.')
-                config_link_tag(text, tag_name, command, self.gui.console.default_cursor)                                
-                stream_manager.write(end)
-                return_list.append(None)
-            elif item['type'] == 'pil_image':
-                text    = self.gui.console.text                
-                text.insert('end', '\n')
-                pil_frame = PILImageFrame(text, pil_image=item['content'], balloon=self.gui.balloon)
-                text.window_create('end', window=pil_frame)
-                text.insert('end', '\n')
-                stream_manager.write(end)
-                return_list.append(id(pil_frame))
-            elif item['type'] == 'file_list':
-                file_list = item['content']
-                def new_open_func(path):
-                    def open_func(*args):
-                        with code_printer():
-                            self.webbrowser_open(path)
-                    return open_func
-                    
-                def new_browse_func(path):
-                    def browse_func(*args):
-                        with code_printer():
-                            self.interfaces.os.win_open(path)
-                    return browse_func
-                    
-                for file_path in file_list:
-                    text = self.gui.console.text                    
-                    
-                    open_func = new_open_func(file_path)
-                    open_tag_name = 'link' + str(id(open_func))
-                    stream_manager.write('open', open_tag_name)
-                    config_link_tag(text, open_tag_name, open_func, self.gui.console.default_cursor)
-                    stream_manager.write(' ')
-
-                    browse_func = new_browse_func(file_path)                    
-                    browse_tag_name = 'link' + str(id(browse_func))
-                    stream_manager.write('browse', browse_tag_name)
-                    config_link_tag(text, browse_tag_name, browse_func, self.gui.console.default_cursor)                    
-                    stream_manager.write(' ')
-                    
-                    stream_manager.write(f'{file_path}{end}')
-                return_list.append(None)
-        return return_list
-                                            
-                
     def print_error(self, text):
         self.stream_manager.write(text+'\n', 'STDERR')
         

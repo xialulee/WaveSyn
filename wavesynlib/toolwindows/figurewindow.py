@@ -1094,12 +1094,8 @@ class FigureExportGroup(Group): # To Do: Use observer protocol.
             return
         with code_printer():
             self.__topwin.figure_book.export_matlab_script(filename)
-        self._app.print_tip(
-            auto_subs(
-                '''A Matlab script file has been saved as $filename.
-By running this script, Matlab will literally "re-plot" the curves shown here.'''
-            )
-        ) 
+        self._app.gui.console.show_tips(f'''A Matlab script file has been saved as {filename}.
+By running this script, Matlab will literally "re-plot" the curves shown here.''') 
             
                 
                 

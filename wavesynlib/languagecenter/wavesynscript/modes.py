@@ -75,13 +75,14 @@ class ModesNode(ModelNode):
                 break
         
         if right_mode:
-            Scripting.root_node.print_tip([{'type':'text', 'content':\
-f'''The mode of the code is recognized as {right_mode.info.name}. 
+            Scripting.root_node.stream_manager.write(f'''WaveSyn:
+The mode of the code is recognized as {right_mode.info.name}. 
 The actual code executed is listed as follows:
 
 {right_mode.translate(code)}
 
-'''}]) # To Do: The output is stored in ...
+
+''', 'TIP') # To Do: The output is stored in ...
             right_mode.run(code)
         else:
             raise TypeError('The mode of the code is unrecognizable.')

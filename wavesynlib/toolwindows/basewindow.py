@@ -44,6 +44,5 @@ class WindowDict(NodeDict, Observable):
         NodeDict.pop(self, key)
         
     def on_window_close(self, window):
-        self.root_node.print_tip(
-                f'{window.node_path} is closed, and its ID becomes defunct for scripting system hereafter.')
+        self.root_node.stream_manager.write(f'WaveSyn:\n{window.node_path} is closed, and its ID becomes defunct for scripting system hereafter.\n', 'TIP')
         self.pop(id(window))

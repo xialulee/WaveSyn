@@ -152,11 +152,12 @@ if platform.system().lower() == 'windows':
             try:
                 import qrcode
             except ImportError:
-                self.root_node.print_tip([{'type':'text', 'content':'This functionality depends on qrcode. Please use "pip install qrcode" to install it.'}])
+                self.root_node.gui.console.show_tips([{'type':'text', 'content':'This functionality depends on qrcode. Please use "pip install qrcode" to install it.'}])
             string  = self.read()
             image   = qrcode.make(string)
-            self.root_node.print_tip([{'type':'pil_image', 'content':image},
-                                      {'type':'text', 'content':'The QR code of the text stored by clipboard is shown above.'}])
+            self.root_node.gui.console.show_tips([
+                {'type':'pil_image', 'content':image},
+                {'type':'text', 'content':'The QR code of the text stored by clipboard is shown above.'}])
             
     
         @Scripting.printable
@@ -165,8 +166,9 @@ if platform.system().lower() == 'windows':
             from PIL import ImageGrab
             image = ImageGrab.grabclipboard()
             if image:
-                return_list = self.root_node.print_tip([{'type':'pil_image', 'content':image},
-                                                        {'type':'text', 'content':'Image in clipboard is shown above.'}])
+                return_list = self.root_node.gui.console.show_tips([
+                    {'type':'pil_image', 'content':image},
+                    {'type':'text', 'content':'Image in clipboard is shown above.'}])
                 return return_list[0]
             else:
                 raise TypeError('Data in clipboard is not an image.')
@@ -175,15 +177,17 @@ if platform.system().lower() == 'windows':
         @Scripting.printable
         def to_console_file_list(self):
             '''Get the file list on the clipboard, and display it on the console of WaveSyn.'''
-            self.root_node.print_tip([{'type':'text', 'content':'The files in clipboard are listed as follows:'},
-                                      {'type':'file_list', 'content':clipb.get_clipboard_file_list()}])
+            self.root_node.gui.console.show_tips([
+                {'type':'text', 'content':'The files in clipboard are listed as follows:'},
+                {'type':'file_list', 'content':clipb.get_clipboard_file_list()}])
                 
                 
         @Scripting.printable
         def to_console(self):
             '''Display the content of the clipboard on the console of WaveSyn.'''
             def for_text():
-                self.root_node.print_tip([{'type':'text', 'content':'\n'.join(('The text in clipboard is listed as follows', self.read()))}])
+                self.root_node.gui.console.show_tips([
+                    {'type':'text', 'content': f'The text in clipboard is listed as follows:\n{self.read()}'}])
                 
             def for_image():
                 return self.to_console_image()

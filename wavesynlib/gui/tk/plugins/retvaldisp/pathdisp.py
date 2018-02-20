@@ -25,5 +25,5 @@ class Plugin:
         
     def action(self, data):
         if self.test_data(data):
-            self.__root.print_tip([{'type':'file_list', 'content':(str(data),)}])
+            self.__root.gui.console.show_tips([{'type':'file_list', 'content':(str(data),)}])
             
