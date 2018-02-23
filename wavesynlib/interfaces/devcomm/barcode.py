@@ -5,7 +5,6 @@ Created on Thu Nov 05 10:58:33 2015
 @author: Feng-cong Li
 """
 
-from __future__ import print_function
 import sys
 import getopt
 
@@ -13,7 +12,7 @@ ERROR_NOERROR, ERROR_PARAM = range(2)
 
 import qrcode # pip install qrcode
 
-from Tkinter import *
+from tkinter import Tk, Label
 from PIL import ImageTk
 
 def main(argv):
@@ -58,8 +57,7 @@ def main(argv):
     if decode:
         content = content.decode(decode)
         
-    if isinstance(content, unicode):
-        content = content.encode(encode)
+    content.encode('utf-8')
         
     qrImage = qrcode.make(content)
     
