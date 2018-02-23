@@ -433,6 +433,8 @@ class PILImageFrame(Frame):
             width, height = self.__origin_image.size
             width = int(width * val / 100)
             height = int(height * val / 100)
+            if width<=0 or height<=0:
+                return
             zoomed_image = self.__origin_image.resize((width, height), 
                                                       Image.ANTIALIAS)
             self.__zoomed_image = zoomed_image
