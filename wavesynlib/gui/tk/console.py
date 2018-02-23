@@ -27,7 +27,6 @@ from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText, ScrolledList
 from wavesynlib.guicomponents.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
-from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately, FunctionChain
 from wavesynlib.languagecenter import templates
 from wavesynlib.languagecenter.python.pattern import prog as prog_pattern

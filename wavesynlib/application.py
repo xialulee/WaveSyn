@@ -261,7 +261,7 @@ and generate a dialog which helps user to input parameters.'''
         argmap = OrderedDict()
         annotations = func.__annotations__
         defaults = func.__defaults__
-        defcount = len(defaults)
+        defcount = len(defaults) if defaults else 0
         argcount = func.__code__.co_argcount
         defstart = argcount - defcount
         for idx, name in enumerate(func.__code__.co_varnames[:argcount]):
