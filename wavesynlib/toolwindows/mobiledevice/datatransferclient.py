@@ -115,6 +115,7 @@ def pick_photo():
 
 
 def send_photo(path, ip, port, password):
+    path = path.encode('utf-8')
     with open(path, 'rb') as image_file:
         data = image_file.read()
         sockobj = init_and_send_head(ip, port, password, datalen=len(data))
