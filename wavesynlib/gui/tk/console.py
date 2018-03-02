@@ -520,10 +520,10 @@ Red:   main-thread is busy.''')
 
         # Transparent Scale {
         def on_scale(val):
-            Scripting.root_node.gui.console.set_transparency(val)
+            Scripting.root_node.gui.console.set_opacity(val)
         trans_scale = Scale(self, from_=0.2, to=1.0, orient='horizontal', value=1, command=on_scale)
         trans_scale.pack(side='right')
-        balloon.bind_widget(trans_scale, balloonmsg='Set the transparency of the console.')
+        balloon.bind_widget(trans_scale, balloonmsg='Set the opacity of the console.')
         # } End Transparent Scale
 
         # Topmost Button {
@@ -884,8 +884,8 @@ class ConsoleWindow(ModelNode):
         return bool(tk_root.wm_attributes('-topmost'))
         
         
-    def set_transparency(self, transparency):
-        self.root_node.gui.root.wm_attributes('-alpha', transparency)
+    def set_opacity(self, opacity):
+        self.root_node.gui.root.wm_attributes('-alpha', opacity)
         
         
     def show_tips(self, contents):         

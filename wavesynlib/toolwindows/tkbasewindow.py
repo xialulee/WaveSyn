@@ -107,7 +107,7 @@ class WindowManager(ModelNode, WindowComponent):
         self.__gui_images.append(copy_path_icon)
         
         def on_scale(val):
-            self.set_transparency(val)        
+            self.set_opacity(val)        
             
         widgets_desc = [
 {"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "children":[
@@ -119,7 +119,7 @@ class WindowManager(ModelNode, WindowComponent):
 {"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Attributes"}, "children":[
     {"class":"Checkbutton", "config":{"text":"Topmost", "variable":topmost, "command":self._on_topmost_click}},
     {"class":"Scale", "config":{"from_":0.2, "to":1.0, "orient":"horizontal", "value":1.0, "command":on_scale}},
-    {"class":"Label", "config":{"text":"Transparency"}}]
+    {"class":"Label", "config":{"text":"Opacity"}}]
 }
 ]
 
@@ -160,8 +160,8 @@ class WindowManager(ModelNode, WindowComponent):
 
 
     @Scripting.printable
-    def set_transparency(self, transparency):
-        self.window_node.tk_object.wm_attributes('-alpha', transparency)                
+    def set_opacity(self, opacity):
+        self.window_node.tk_object.wm_attributes('-alpha', opacity)
 
 
  

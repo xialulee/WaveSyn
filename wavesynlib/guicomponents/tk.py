@@ -90,10 +90,10 @@ if win7plus:
             SetWindowLongA(self._handle, GWL_EXSTYLE, WS_EX_LAYERED)
             return self._handle
             
-        def set_transparency(self, transparency):
-            transparency = ct.c_ubyte(transparency)
+        def set_opacity(self, opacity):
+            opacity = ct.c_ubyte(opacity)
             handle = self._get_window_handle()
-            SetLayeredWindowAttributes(handle, 0, transparency, LWA_ALPHA)
+            SetLayeredWindowAttributes(handle, 0, opacity, LWA_ALPHA)
             
 else:
     class TaskbarIcon(object):
