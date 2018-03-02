@@ -64,20 +64,20 @@ class WindowDict(NodeDict, Observable):
             raise TypeError(f"{self.node_path} only accepts instance of BaseWindowNode's subclasses.")
         if key != id(val):
             raise ValueError('The key should be identical to the ID of the window.')
-        NodeDict.__setitem__(self, key, val)
+        super().__setitem__(key, val)
         self.notify_observers(val, 'new')
         
         
     def __getitem__(self, key):
         if isinstance(key, WindowID):
             key = key.node_id
-        return NodeDict.__getitem__(self, key)
+        return super().__getitem__(key)
     
     
     def __delitem__(self, key):
         if isinstance(key, WindowID):
             key = key.node_id
-        return NodeDict.__delitem__(self, key)
+        return super().__delitem__(key)
         
         
     @Scripting.printable
@@ -95,7 +95,7 @@ class WindowDict(NodeDict, Observable):
         if isinstance(key, WindowID):
             key = key.node_id
         self.notify_observers(self[key], 'del')
-        NodeDict.pop(self, key)
+        super().pop(key)
         
         
     def on_window_close(self, window):
