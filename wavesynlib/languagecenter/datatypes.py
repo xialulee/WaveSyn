@@ -7,6 +7,7 @@ Created on Sat Dec 26 21:10:54 2015
 import sys
 import json
 from collections import OrderedDict
+from abc import ABC, abstractmethod
 
 
 
@@ -92,6 +93,12 @@ class Table:
         
     def print_head(self):
         print(*self.head, sep='\t')
+        
+        
+        
+class TypeLinks(ABC):
+    @abstractmethod
+    def get_link_info(self): pass
         
         
 

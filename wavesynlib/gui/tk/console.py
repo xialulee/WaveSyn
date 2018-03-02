@@ -255,9 +255,11 @@ class ConsoleText(ModelNode, ScrolledText):
             if extras and 'obj' in extras:
                 ret = extras['obj']
                 plugins = []
+                
                 for _type in _retvaldisp:
                     if isinstance(ret, _type):
                         plugins.extend(_retvaldisp[_type])
+
                 for plugin in plugins:
                     plugin.action(ret)                        
         
@@ -416,8 +418,7 @@ class ConsoleText(ModelNode, ScrolledText):
             return 'break'
         # End
             
-            
-        ##############################################################
+
         # Using keycode is not a good practice here, because for the same key,
         # the keycode may change on different machines and operating systems.
         #if evt.keysym not in ('Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R',  'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Next', 'Prior'):
@@ -808,7 +809,7 @@ class ConsoleWindow(ModelNode):
         self.__default_cursor = self.__stdstream_text.text['cursor']
         @self.root_node.stream_manager.add_observer
         def observer(stream_type, content, extras):
-            self.console_text.update_content(tag=stream_type, content=content)
+            self.console_text.update_content(tag=stream_type, content=content, extras=extras)
             
         self.doc_window = ModelNode(
             is_lazy=True, 
