@@ -71,6 +71,8 @@
                       {"Name":"Launch CPU meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('cpumeter.pyw')", "Print":true},
                       {"Name":"Launch disk IO meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('diskiometer.pyw')", "Print":true},
                       {"Name":"Launch battery meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('batterymeter.pyw')", "Print":true},
+                      {"Name":"Launch NumLock indicator", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('numlock.pyw')", "Print":true},
+                      {"Name":"Launch CapsLock indicator", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.launch('capslock.pyw')", "Print":true},
                       {"Name":"Create new GUID", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.create_guid()", "Print":true},
                       {"Name":"WMI query", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.wmi.query(wql=wavesyn.lang_center.wavesynscript.constants.ASK_STRING, output_format='python')"}
                   ]
