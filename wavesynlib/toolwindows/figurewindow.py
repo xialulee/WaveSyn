@@ -16,7 +16,8 @@ import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.ticker import MultipleLocator
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 import matplotlib.pyplot as pyplot
 
 from numpy import deg2rad, rad2deg
@@ -130,10 +131,10 @@ class DataFigure(ModelNode, Observable):
         figure = Figure(figure_size, dpi)
         
         canvas = FigureCanvasTkAgg(figure, master=master)
-        canvas.show()
+        canvas.draw()
         
         self.__canvas = canvas
-        toolbar = NavigationToolbar2TkAgg(canvas, master)
+        toolbar = NavigationToolbar2Tk(canvas, master)
         toolbar.update()
         canvas.get_tk_widget().pack(side='top', fill='both', expand='yes')
         toolbar.pack()       
@@ -256,7 +257,7 @@ class DataFigure(ModelNode, Observable):
 
     @Scripting.printable    
     def update(self):
-        self.__canvas.show()
+        self.__canvas.draw()
         self.notify_observers()
         
 

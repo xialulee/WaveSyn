@@ -67,7 +67,7 @@ class RectSelector:
             self.__peakpos = peak_pos
             circle      = Circle(peak_pos, 4, **self.indicatorProps)
             ax.add_patch(circle)
-            self.__canvas.show()
+            self.__canvas.draw()
             
         self.callback(self.__rect, self.__peakpos)
         
@@ -92,7 +92,7 @@ class ImageFrame(Frame):
         canvas = FigureCanvasTkAgg(figure, master=master)
         canvas.mpl_connect('button_press_event', self._on_click)
         canvas.mpl_connect('key_press_event',self._on_keypress)
-        canvas.show()
+        canvas.draw()
         self.__canvas  = canvas
         toolbar    = NavigationToolbar2TkAgg(canvas, master)
         toolbar.update()
