@@ -4,16 +4,16 @@ Created on Tue Jan 26 10:18:01 2016
 
 @author: Feng-cong Li
 """
-from __future__ import print_function, division, unicode_literals
 
-import six.moves.tkinter as tk
-import six.moves.tkinter_ttk as ttk
-from six.moves import queue
+import tkinter as tk
+from tkinter import ttk
+import queue
 
 from wavesynlib.interfaces.timer.tk import TkTimer
 
 
-class MainPanel(tk.Frame, object):
+
+class MainPanel(tk.Frame):
     def __init__(self, *args, **kwargs):
         messages_from_interrupter = kwargs.pop('messages_from_interrupter')
         messages_to_interrupter = kwargs.pop('messages_to_interrupter')
@@ -31,6 +31,7 @@ If you want to abort this mission, you can click the button below.
     def _on_abort(self):
         command = {'type':'command', 'command':'interrupt_main_thread', 'args':''}
         self.__messages_from_interrupter.put(command)
+        
         
               
 def main(messages_from_interrupter, messages_to_interrupter):
@@ -59,8 +60,6 @@ def main(messages_from_interrupter, messages_to_interrupter):
     root.mainloop()
 
 
-
-    
 
 if __name__ == '__main__':
     main(None)
