@@ -85,22 +85,6 @@ class Windows(ModelNode):
         
     
     @Scripting.printable
-    def launch(self, app_name, *args):
-        if app_name in app_paths:
-            app_path = app_paths[app_name]
-        else:
-            app_path = str(get_caller_dir() / 'apps' / app_name)
-        
-        if args:
-            cmd = ['python', app_path]
-            args = [str(arg) for arg in args]
-            cmd.extend(args)
-            Popen(cmd)
-        else:
-            webbrowser.open(app_path)
-            
-            
-    @Scripting.printable
     def create_guid(self):
         return str(comtypes.GUID.create_new())
         

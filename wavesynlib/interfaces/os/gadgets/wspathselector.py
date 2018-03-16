@@ -4,10 +4,8 @@ Created on Sat Nov 07 15:20:19 2015
 
 @author: Feng-cong Li
 """
-from __future__ import print_function
-
-from Tkinter import Tk
-from tkFileDialog import askdirectory, askopenfilenames
+from tkinter import Tk
+from tkinter.filedialog import askdirectory, askopenfilenames
 import sys
 import getopt
 
@@ -17,7 +15,6 @@ def usage():
     pass
 
 def main(argv):
-    encoding = sys.getfilesystemencoding()
     try:
         opts, args = getopt.getopt(argv[1:],\
             'd',\
@@ -42,21 +39,17 @@ def main(argv):
     root = Tk()
     root.withdraw()            
             
-    path = None
+    path_list = None
     if directory:
-        path = askdirectory()
+        path_list = (askdirectory(),)
     else:
         param = {}
         if filetype:
             param['filetypes'] = [(typename, filetype)]
-        path = askopenfilenames(**param)
+        path_list = askopenfilenames(**param)
         
-    if not path:
+    if not path_list:
         print('No file/directory selected.', file=sys.stderr)
-        
-    path = path.encode(encoding)
-    
-    path_list = root.tk.splitlist(path)
     
     for path in path_list:
         print(path)

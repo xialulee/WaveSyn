@@ -9,6 +9,7 @@ from __future__ import print_function
 import sys
 import platform
 import getopt
+from comtypes import client
 
 
 platformName    = platform.python_implementation().lower() 
@@ -16,8 +17,10 @@ platformName    = platform.python_implementation().lower()
 if platformName == 'cpython':
     def query(wqlString):
         from wavesynlib.interfaces.os.windows.wmi import WQL
-        q = WQL().query(wqlString)
-        return [i.commandline for i in q]        
+        loc = client.CreateObject('WbemScripting.SWbemLocator')
+        services = loc.ConnectServer('.')        
+        q = WQL(services).query(wqlString, output_format='python')
+        return [i['CommandLine'] for i in q]        
 elif platformName == 'ironpython':
     def query(wqlString):
         import clr

@@ -9,13 +9,14 @@ import sys
 import importlib
 import subprocess as sp
 import multiprocessing as mp
-import inspect
 
+import inspect
 from tkinter import Toplevel, Tk
 from tkinter.ttk import Button
 from six.moves.tkinter import Frame
 
 from wavesynlib.widgets.tk import ScrolledTree
+
 
 
 class ClassSelector:

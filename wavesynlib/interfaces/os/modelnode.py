@@ -362,6 +362,10 @@ provided by the Operating System.'''
         self.clipboard = ModelNode(is_lazy=True, class_object=Clipboard)
         self.mouse = ModelNode(is_lazy=True, class_object=Mouse)
         self.desktop_wallpaper = ModelNode(is_lazy=True, class_object=DesktopWallpaper)
+        self.gadgets = ModelNode(
+                is_lazy=True, 
+                module_name='wavesynlib.interfaces.os.gadgets.modelnode',
+                class_name='Gadgets')
         
         if platform.system().lower() == 'windows':
             from wavesynlib.interfaces.os.windows.modelnode import Windows

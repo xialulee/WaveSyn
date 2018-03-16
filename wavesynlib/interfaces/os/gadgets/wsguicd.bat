@@ -3,4 +3,4 @@
 @rem The directory of pathselector.py:
 @rem   wavesynlib\widgets\
 
-@for /f %%h in ('%~dp0\..\..\..\widgets\pathselector.py --dir') do @cd /d %%h
+@for /f %%h in ('%~dp0\wspathselector.py --dir') do @cd /d %%h
