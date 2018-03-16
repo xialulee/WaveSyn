@@ -18,6 +18,6 @@ setup(
         # If any package contains *.json/png/pyw files, include them:
         # .m files for Matlab functions and scripts.
         # .ps1 files for PowerShell scripts.
-        '': ['*.json', '*.png', '*.dll', '*.pyw', '*.ps1', '*.m']
+        '': ['*.json', '*.png', '*.ico', '*.dll', '*.pyw', '*.ps1', '*.m']
       }
 )
