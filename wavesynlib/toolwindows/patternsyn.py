@@ -16,7 +16,7 @@ from scipy.io import savemat
 import _thread as thread
 
 from wavesynlib.toolwindows.figurewindow import FigureWindow
-from wavesynlib.guicomponents.tk import Group, LabeledEntry, ScrolledList
+from wavesynlib.widgets.tk import Group, LabeledEntry, ScrolledList
 from wavesynlib.languagecenter.utils import auto_subs, set_attributes
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.algorithms import pattern2corrmtx

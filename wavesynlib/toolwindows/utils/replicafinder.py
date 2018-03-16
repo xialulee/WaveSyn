@@ -15,7 +15,7 @@ import hashlib
 
 from PIL import ImageTk
 
-from wavesynlib.guicomponents.tk import ScrolledTree, Group, DirIndicator
+from wavesynlib.widgets.tk import ScrolledTree, Group, DirIndicator
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, code_printer

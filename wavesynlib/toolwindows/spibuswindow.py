@@ -25,7 +25,7 @@ from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.devcomm.oneasyb.spi import USBSPIConverter
-from wavesynlib.guicomponents.tk import Group
+from wavesynlib.widgets.tk import Group
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 
 

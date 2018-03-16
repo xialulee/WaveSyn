@@ -9,7 +9,7 @@ from ttk                             import *
 from openpyxl.reader.excel           import load_workbook
 from copy                            import copy
 
-from wavesynlib.guicomponents        import ScrolledList
+from wavesynlib.widgets import ScrolledList
 from wavesynlib.languagecenter.utils import MethodDelegator
 
 def selectSheet(workBook, ignoreBlankSheet=True, label_text='Select a sheet'):

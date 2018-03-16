@@ -32,7 +32,7 @@ import subprocess
 import json
 
 
-from wavesynlib.guicomponents.tk import PILImageFrame, ArgEntry, ScrolledText
+from wavesynlib.widgets.tk import PILImageFrame, ArgEntry, ScrolledText
 from wavesynlib.interfaces import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.threadtools import ThreadManager

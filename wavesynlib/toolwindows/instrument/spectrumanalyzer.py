@@ -9,7 +9,7 @@ import numpy as np
 
 import tkinter as tk
 
-from wavesynlib.guicomponents.tk import json_to_tk
+from wavesynlib.widgets.tk import json_to_tk
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.interfaces.devcomm.instruments.visainterface import get_resource_manager

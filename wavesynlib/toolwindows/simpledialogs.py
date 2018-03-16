@@ -11,7 +11,7 @@ from tkinter.simpledialog import askstring, askinteger
 from tkinter.messagebox import showinfo, askyesno
 from tkinter.filedialog import asksaveasfilename, askopenfilename, askopenfilenames, askdirectory
 
-from wavesynlib.guicomponents.tk import ask_list_item
+from wavesynlib.widgets.tk import ask_list_item
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, constant_handler, code_printer
 

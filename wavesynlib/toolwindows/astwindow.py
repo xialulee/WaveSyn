@@ -4,7 +4,7 @@ Created on Mon Feb  5 00:45:09 2018
 
 @author: Feng-cong Li
 """
-from wavesynlib.guicomponents.tk import ScrolledText, ScrolledTree
+from wavesynlib.widgets.tk import ScrolledText, ScrolledTree
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 
 

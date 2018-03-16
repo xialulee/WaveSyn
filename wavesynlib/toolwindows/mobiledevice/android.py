@@ -21,7 +21,7 @@ from PIL import ImageTk, Image
 import tkinter as tk
 import tkinter.ttk as ttk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.guicomponents.tk import json_to_tk, \
+from wavesynlib.widgets.tk import json_to_tk, \
     ScrolledCanvas, ScrolledText, ScrolledList, LabeledEntry, PILImageFrame
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately

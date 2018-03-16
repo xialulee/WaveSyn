@@ -24,9 +24,9 @@ class ProgressBarReader(object):
 
 
 
-from Tkinter                                  import Tk
-from wavesynlib.guicomponents                 import tk as tktools
-from wavesynlib.interfaces.timer.tk           import TkTimer
+from tkinter import Tk
+from wavesynlib.widgets import tk as tktools
+from wavesynlib.interfaces.timer.tk import TkTimer
 import sys
 
 

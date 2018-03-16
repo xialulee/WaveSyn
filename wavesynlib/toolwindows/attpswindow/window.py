@@ -9,7 +9,7 @@ from __future__ import print_function, division, unicode_literals
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 
-from wavesynlib.guicomponents.tk import Group, IQSlider
+from wavesynlib.widgets.tk import Group, IQSlider
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode

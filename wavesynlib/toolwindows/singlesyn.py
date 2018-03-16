@@ -9,8 +9,8 @@ from tkinter import Frame, IntVar
 from tkinter.ttk import Button, Checkbutton, Progressbar, Combobox
 
 
-from wavesynlib.guicomponents.tk import Group, LabeledEntry
-from wavesynlib.guicomponents.classselector import ask_class_name
+from wavesynlib.widgets.tk import Group, LabeledEntry
+from wavesynlib.widgets.classselector import ask_class_name
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer

@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from wavesynlib.interfaces.os.windows import disablekeys
-from wavesynlib.guicomponents.tk import Group
+from wavesynlib.widgets.tk import Group
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import code_printer, Scripting
 

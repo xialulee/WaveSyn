@@ -9,7 +9,7 @@ from tkinter import Tk, Label
 from ctypes import windll
 GetKeyState = windll.user32.GetKeyState
 
-from wavesynlib.guicomponents import tk as tktools
+from wavesynlib.widgets import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.process import singleton

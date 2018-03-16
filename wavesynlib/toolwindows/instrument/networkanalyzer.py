@@ -11,7 +11,7 @@ from skrf.io.touchstone import Touchstone
 
 import six.moves.tkinter as tk
 
-from wavesynlib.guicomponents.tk import json_to_tk
+from wavesynlib.widgets.tk import json_to_tk
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 

@@ -15,7 +15,7 @@ from tkinter import Toplevel, Tk
 from tkinter.ttk import Button
 from six.moves.tkinter import Frame
 
-from wavesynlib.guicomponents.tk import ScrolledTree
+from wavesynlib.widgets.tk import ScrolledTree
 
 
 class ClassSelector:

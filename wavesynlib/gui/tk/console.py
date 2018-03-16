@@ -23,8 +23,8 @@ import traceback
 
 import jedi
 
-from wavesynlib.guicomponents.tk import CWDIndicator, ScrolledText, ScrolledList, PILImageFrame
-from wavesynlib.guicomponents.tkredirector import WidgetRedirector
+from wavesynlib.widgets.tk import CWDIndicator, ScrolledText, ScrolledList, PILImageFrame
+from wavesynlib.widgets.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately, FunctionChain

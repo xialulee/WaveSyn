@@ -9,7 +9,7 @@ from tkinter import Tk, Label
 import ctypes as ct
 import time
 
-from wavesynlib.guicomponents import tk as tktools
+from wavesynlib.widgets import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 

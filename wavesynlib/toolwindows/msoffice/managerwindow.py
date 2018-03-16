@@ -7,7 +7,7 @@ Created on Mon Mar 27 15:33:03 2017
 import tkinter as tk
 from tkinter import ttk
 
-from wavesynlib.guicomponents.tk import ScrolledTree, Group, json_to_tk
+from wavesynlib.widgets.tk import ScrolledTree, Group, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver

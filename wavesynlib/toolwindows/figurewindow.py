@@ -28,7 +28,7 @@ from wavesynlib.languagecenter.utils import (
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeList, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
-from wavesynlib.guicomponents.tk import (
+from wavesynlib.widgets.tk import (
     Group, LabeledEntry, ScrolledList, LabeledScale)
 
 color_map = {
