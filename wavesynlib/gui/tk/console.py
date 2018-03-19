@@ -420,7 +420,7 @@ class ConsoleText(ModelNode, ScrolledText):
             
 
         # Using keycode is not a good practice here, because for the same key,
-        # the keycode may change on different machines and operating systems.
+        # the keycode may vary on different machines and operating systems.
         #if evt.keysym not in ('Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R',  'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Next', 'Prior'):
         if (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
            (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
@@ -436,8 +436,11 @@ class ConsoleText(ModelNode, ScrolledText):
                 return 'break'
             rend, cend  = self.get_cursor_pos('end-1c')
             if r < rend:
-                return 'break'                
-            if evt.keysym == 'Return': # Return
+                return 'break'  
+            
+            block_finished = False
+            # Return
+            if evt.keysym == 'Return': 
                 app = Scripting.root_node
                 code = self.text.get(f'{r}.4', f'{r}.end')
                 self.__history.put(code)
@@ -454,11 +457,14 @@ class ConsoleText(ModelNode, ScrolledText):
                             # A blank line ends a block.
                             code = '\n'.join(code_list)
                             del code_list[:]
+                            block_finished = True
                         stripped_code = code.strip()
                         if stripped_code == '':
                             self.prompt_symbol   = '>>> '
                             self.update_content(tag='', content='\n') 
-                        elif code_list or stripped_code[-1] in (':', '\\') or stripped_code[0] in ('@',): # Threre is a bug here for decorators! To do: Solve it.
+                        elif code_list or \
+                                 stripped_code[-1] in (':', '\\') or \
+                                 (stripped_code[0] in ('@',) and not block_finished):
                             code_list.append(code)
                             self.prompt_symbol   = '... '
                             self.update_content(tag='', content='\n')
