@@ -5,11 +5,11 @@ Created on Fri Nov 06 09:30:21 2015
 
 @author: Feng-cong Li
 """
-from __future__ import print_function
 
 import os
 import sys
 import getopt
+import pathlib
 import platform
 
 from itertools import product
@@ -23,13 +23,49 @@ ERROR_NOERROR, ERROR_NOTFOUND, ERROR_PARAM = range(3)
 
 def usage():
     pass # TODO
+    
+    
+
+def which(name, all_=False, cwd=False):
+    p = pathlib.Path(name)
+    suffixes = p.suffixes
+    ext = suffixes[-1] if suffixes else ''
+    paths = os.environ['PATH'].split(os.path.pathsep)
+    if platform.system() == 'Windows':
+        exts = os.environ['PATHEXT'].split(os.path.pathsep)
+        if ext:
+            if ext.upper() not in [e.upper() for e in exts]:
+                raise TypeError(f'The file {name} is not executable.')
+            else:
+                exts = [ext]
+    else:
+        if ext:
+            exts = [ext]
+        else:
+            exts = ['']
+    if cwd:
+        paths.insert(0, '.')
+    
+    file_paths = OrderedDict()    
+    
+    for path, ext in product(paths, exts):
+        path = pathlib.Path(path)
+        test_path = path / f'{str(name)}{ext}'
+        if test_path.exists():
+            abs_test_path = test_path.absolute()
+            file_paths[abs_test_path] = True
+            if not all_:
+                break        
+    
+    return tuple(file_paths)
+    
 
 
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], \
             'a',\
-            ['all', 'winopen', 'jsontable', 'order=']\
+            ['all', 'winopen', 'jsontable', 'cwd', 'order=']\
         ) # TODO
     except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
@@ -40,6 +76,7 @@ def main(argv):
     wopen = False
     json_output = False
     cmd_order = -1
+    cwdfirst = False
     for o, a in opts:
         if o in ('-a', '--all'):
             all_cmd = True
@@ -47,43 +84,18 @@ def main(argv):
             wopen   = True
         if o == '--jsontable':
             json_output = True
+        if o == '--cwd':
+            cwdfirst = True
         if o == '--order':
             cmd_order = int(a)
             all_cmd = True
     
     name = args[0]
-    name, ext = os.path.splitext(name)
-    paths = os.environ['PATH'].split(os.path.pathsep)
-    if platform.system() is 'Windows':
-        exts = os.environ['PATHEXT'].split(os.path.pathsep)
-        if ext: 
-            if ext.upper() not in [e.upper() for e in exts]:
-                print('The file {} is not executable.'.format(args[0]), file=sys.stderr)        
-                return ERROR_NOTFOUND
-            else:
-                exts = [ext]
-    else:
-        if ext:
-            exts = [ext]
-        else:
-            exts = ['']
-    
-
-
-    paths.insert(0, '.')
-    
-    file_paths = OrderedDict()
-        
-    for path, ext in product(paths, exts):
-        testPath = ''.join([os.path.join(path, name), ext])
-        if os.path.exists(testPath):
-            abs_test_path    = os.path.abspath(testPath)
-            #if abs_test_path not in file_paths: 
-            # Prevent redundant output
-            abs_test_path = os.path.normcase(abs_test_path) 
-            file_paths[abs_test_path] = True
-            if not all_cmd:
-                break        
+    try:
+        file_paths = which(name, all_=all_cmd, cwd=cwdfirst)
+    except TypeError as err:
+        print('The file {} is not executable.'.format(args[0]), file=sys.stderr) 
+        return ERROR_NOTFOUND
             
     if file_paths:
         table = Table(['order', 'path'])
@@ -92,11 +104,12 @@ def main(argv):
                 if not json_output:
                     print(file_path)
                 else:
-                    table.print_row((order, file_path))
+                    table.print_row((order, str(file_path)))
                 if wopen:
                     winopen(file_path)
     else:
-        print('wswhich.py: no {} in ({})'.format(name, os.path.pathsep.join(paths)), file=sys.stderr)
+        print(f'wswhich.py: no {name} in ({os.environ["PATH"]})', 
+              file=sys.stderr)
         return ERROR_NOTFOUND
     return ERROR_NOERROR
     
