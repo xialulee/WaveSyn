@@ -15,16 +15,24 @@ class EditorNode(ModelNode):
         self.__thread   = None
         self.code       = None
 
-    def launch(self, code=''):
+    def launch(self, code='', file_path=None, run_on_exit=True):
         if self.__thread is not None:
             raise Exception('Editor has already been launched.')
-        fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
-        with os.fdopen(fd, 'w') as f:
-            # Close the temp file, consequently the external editor can edit it without limitations.
-            if code:
-                f.write(code)
+            
+        self.__run_on_exit = run_on_exit
+            
+        if not file_path:
+            fd, filename    = tempfile.mkstemp(suffix='.py', text=True)
+            with os.fdopen(fd, 'w') as f:
+                # Close the temp file, consequently the external editor can edit it without limitations.
+                if code:
+                    f.write(code)
+            self.__is_temp = True
+        else:
+            self.__is_temp = False
+            filename = file_path
         with self.attribute_lock:
-            self.filename   = filename
+            self.filename = filename
 
         @self.root_node.thread_manager.create_thread_object
         def editor_thread():
@@ -33,15 +41,26 @@ class EditorNode(ModelNode):
         self.__thread = editor_thread
         self.__thread.start()
         
+        
+    @property
+    def is_temp_file(self):
+        return self.__is_temp
+    
+    
+    @property
+    def run_on_exit(self):
+        return self.__run_on_exit
+        
 
     def is_alive(self):
         alive   = self.__thread.is_alive()
         if not alive and self.code is None:
             try:
                 with open(self.filename, 'r') as f:
-                    self.code    = f.read()
+                    self.code = f.read()
             finally:
-                os.remove(self.filename)
+                if self.is_temp_file:
+                    os.remove(self.filename)
         return alive
 
 
@@ -80,17 +99,17 @@ class EditorDict(NodeDict):
     
     
     @Scripting.printable
-    def launch(self, editor_path=None, code=''):
+    def launch(self, editor_path=None, code='', file_path=None, run_on_exit=True):
         '''Launch a specified editor. When the editor terminated, it will notify the observer of .manager.
   editor_path: String. Specify the path of the editor. If None is given, it will launch the one specified in config.json.
   code: String. The code to be edited'''
         if not editor_path:
             editor_path = self.root_node.editor_info['Path']
         editor_id = self.add(EditorNode(editor_path=editor_path))
-        self[editor_id].launch(code=code)
+        self[editor_id].launch(code=code, file_path=file_path, run_on_exit=run_on_exit)
         return editor_id
     
     
     @Scripting.printable
-    def launch_gvim(self, code=''):
-        return self.launch(editor_path='gvim', code=code)
+    def launch_gvim(self, code='', file_path=None, run_on_exit=True):
+        return self.launch(editor_path='gvim', code=code, file_path=file_path, run_on_exit=run_on_exit)
