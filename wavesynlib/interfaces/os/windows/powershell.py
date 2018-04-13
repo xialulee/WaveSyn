@@ -5,6 +5,7 @@ Created on Tue Dec 29 12:14:21 2015
 @author: Feng-cong Li
 """
 import json
+import chardet
 import subprocess as sp
 from wavesynlib.languagecenter.powershell import ExprTranslator
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
@@ -140,7 +141,10 @@ class Command(ModelNode):
         com = ' '.join(temp_list)
         com = f'{com} | ConvertTo-Json'
         stdout, stderr, errorlevel = execute(com)
-        return json.loads(stdout), stderr, errorlevel
+        coding = chardet.detect(stdout)['encoding']
+        stdout = stdout.decode(coding)
+        stderr = stderr.decode(coding)
+        return {'stdout':json.loads(stdout), 'stderr':stderr, 'errorlevel':errorlevel}
     
     
     

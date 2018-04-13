@@ -476,7 +476,11 @@ class ConsoleText(ModelNode, ScrolledText):
                             except:
                                 traceback.print_exc()
                             if ret is not None:
-                                self.update_content(tag='RETVAL', content=repr(ret)+'\n', extras={'obj':ret})    
+                                repr_ret = repr(ret)
+                                maxlen = 1000
+                                if len(repr_ret) > maxlen:
+                                    repr_ret = f'{repr_ret[:maxlen-10]}\n\n...\n\n{repr_ret[-10:]}'
+                                self.update_content(tag='RETVAL', content=f'{repr_ret}\n', extras={'obj':ret})    
                 finally:
                     self.text.mark_set('insert', 'end')
                     self.text.see('end')
