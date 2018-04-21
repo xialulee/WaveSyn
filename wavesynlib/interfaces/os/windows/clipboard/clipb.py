@@ -170,6 +170,7 @@ def clipboard_to_image_file(file_path):
         
         
 def get_clipboard_file_list():
+    file_list = None
     win32clipboard.OpenClipboard()
     try:
         file_list = win32clipboard.GetClipboardData(win32clipboard.CF_HDROP)

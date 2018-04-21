@@ -13,7 +13,7 @@ from six.moves import xrange
 from PyPDF2 import PdfFileReader, PdfFileWriter
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, FileManager, FileManipulator, FileList, Scripting
-from wavesynlib.languagecenter.utils import eval_format
+
 
 
 class Pages(ModelNode):
@@ -42,6 +42,7 @@ class Pages(ModelNode):
             self.__range = xrange(*param)
                     
         self.__filename = filename
+        
             
     @property
     def node_path(self):
@@ -52,7 +53,8 @@ class Pages(ModelNode):
         else:
             name = '{}:{}'.format(self.__start, self.__stop)
         
-        return eval_format('{self.parent_node.node_path}[{name}]')
+        return f'{self.parent_node.node_path}[{name}]'
+    
         
     @Scripting.printable
     def write(self, filename, reverse=False):
@@ -89,7 +91,8 @@ class PDFFileManipulator(FileManipulator):
             
     @property
     def node_path(self):
-        return eval_format('{self.parent_node.node_path}["{self.filename}"]')
+        return f'{self.parent_node.node_path}["{self.filename}"]'
+    
             
     # To Do: This kind of node is short-lived, and need not to notify model_tree_monitor
     def __getitem__(self, page_index):
@@ -101,11 +104,13 @@ class PDFFileManipulator(FileManipulator):
         object.__setattr__(pages, 'parent_node', self)
         pages.lock_attribute('parent_node')
         return pages
+    
 
 
 class PDFFileList(FileList):
     def __init__(self, *args, **kwargs):
-        FileList.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+        
         
     @Scripting.printable
     def merge(self, filename):
@@ -123,6 +128,7 @@ class PDFFileList(FileList):
                 writer.addPage(reader.getPage(k))
         with open(filename, 'wb') as output:
             writer.write(output)
+            
 
 
 class PDFFileManager(FileManager):
@@ -130,5 +136,5 @@ class PDFFileManager(FileManager):
         kwargs['filetypes'] = [('PDF Files', '*.pdf'), ('All Files', '*.*')]
         kwargs['manipulator_class'] = PDFFileManipulator
         kwargs['list_class'] = PDFFileList
-        FileManager.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
             

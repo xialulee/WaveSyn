@@ -4,6 +4,7 @@ from wavesynlib.languagecenter.designpatterns import Observable
 import subprocess
 import tempfile
 import os
+import collections
 
 
         
@@ -30,7 +31,7 @@ class EditorNode(ModelNode):
             self.__is_temp = True
         else:
             self.__is_temp = False
-            filename = file_path
+            filename = str(file_path)
         with self.attribute_lock:
             self.filename = filename
 
@@ -99,17 +100,24 @@ class EditorDict(NodeDict):
     
     
     @Scripting.printable
-    def launch(self, editor_path=None, code='', file_path=None, run_on_exit=True):
+    def launch(self, editor_path=None, code='', file_path=None, run_on_exit=False):
         '''Launch a specified editor. When the editor terminated, it will notify the observer of .manager.
   editor_path: String. Specify the path of the editor. If None is given, it will launch the one specified in config.json.
   code: String. The code to be edited'''
         if not editor_path:
             editor_path = self.root_node.editor_info['Path']
-        editor_id = self.add(EditorNode(editor_path=editor_path))
-        self[editor_id].launch(code=code, file_path=file_path, run_on_exit=run_on_exit)
-        return editor_id
+        file_path = self.root_node.interfaces.os.clipboard.get_clipboard_path_list(file_path)
+        if isinstance(file_path, str):
+            # To do: handle multiple files. 
+            file_path = [file_path]
+        id_list = []
+        for path in file_path:
+            editor_id = self.add(EditorNode(editor_path=editor_path))
+            self[editor_id].launch(code=code, file_path=path, run_on_exit=run_on_exit)
+            id_list.append(editor_id)
+        return id_list
     
     
     @Scripting.printable
-    def launch_gvim(self, code='', file_path=None, run_on_exit=True):
+    def launch_gvim(self, code='', file_path=None, run_on_exit=False):
         return self.launch(editor_path='gvim', code=code, file_path=file_path, run_on_exit=run_on_exit)

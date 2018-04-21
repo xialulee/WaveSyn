@@ -22,6 +22,18 @@ class TkClipboard(ModelNode):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
+        
+    @constant_handler(print_replacement=False)
+    def get_clipboard_text(self, arg, **kwargs):
+        '''Get the text on the clipboard.'''
+        return self.read()
+    
+    
+    @constant_handler(print_replacement=True)
+    def get_clipboard_path_list(self, arg, **kwargs):
+        '''Get the path list on the clipboard.'''
+        return self.read_path_list()
+        
        
     @Scripting.printable
     def clear(self):
@@ -43,7 +55,21 @@ class TkClipboard(ModelNode):
         '''Read a string from the clipboard if the content of the clipboard is text.'''
         return self.root_node.gui.root.clipboard_get()
     
-        
+    
+    @Scripting.printable
+    def read_path_list(self, sep='\n'):
+        text = self.read()
+        li = text.split(sep)
+        ret = []
+        for item in li:
+            if platform.system().lower() == 'windows':
+                item = item.replace('"', '')
+            p = Path(item)
+            if p.exists():
+                ret.append(p)
+        return ret
+                
+            
     @Scripting.printable
     def remove_text_formatting(self):
         '''This method removes the fomatting of the clipboard's text,
@@ -95,6 +121,7 @@ if platform.system().lower() == 'windows':
     
     class Clipboard(TkClipboard):
         '''The advanced clipboard node for Windows OS.'''
+        
         @constant_handler(print_replacement=False)
         def get_clipboard_html(self, arg, **kwargs):
             '''Get the HTML code of the formatted text on clipboard.'''
@@ -145,6 +172,18 @@ if platform.system().lower() == 'windows':
                 clipb.clipboard_to_stream(stream, mode=None, code=code, null=None, html=html)
                 stream.seek(0)
                 return stream.read()
+            
+            
+        @Scripting.printable
+        def read_path_list(self, sep='\n'):
+            try:
+                path_list = clipb.get_clipboard_file_list()
+            except:
+                path_list = None
+            if path_list:
+                return [Path(path) for path in path_list]
+            else:
+                return super().read_path_list(sep=sep)
                 
             
         @Scripting.printable
