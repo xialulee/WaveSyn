@@ -16,16 +16,14 @@ import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.ticker import MultipleLocator
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk 
 import matplotlib.pyplot as pyplot
 
 from numpy import deg2rad, rad2deg
 
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting
-from wavesynlib.languagecenter.utils import (
-    auto_subs, eval_format, set_attributes)
+from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeList, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
@@ -164,7 +162,7 @@ class DataFigure(ModelNode, Observable):
     @property
     def node_path(self):
         if isinstance(self.parent_node, FigureList):
-            return eval_format('{self.parent_node.node_path}[{self.index}]')
+            return f'{self.parent_node.node_path}[{self.index}]'
         else:
             return ModelNode.node_path  
              
@@ -336,7 +334,7 @@ class FigureList(NodeList):
         
     def append(self, val):        
         if not isinstance(val, DataFigure):
-            raise TypeError(eval_format('{self.node_path} only accepts instance of DataFigure or of its subclasses.'))
+            raise TypeError(f'{self.node_path} only accepts instance of DataFigure or of its subclasses.')
         NodeList.append(self, val)
         
         
