@@ -37,6 +37,12 @@ communicating with different software applications and hardware devices.
             class_name='DotNet'
         )
         
+        self.imagemagick = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.interfaces.imagemagick',
+            class_name='ImageMagickNode'
+        )
+        
         self.editors = EditorDict()
             
         if platform.system().lower() == 'windows':
