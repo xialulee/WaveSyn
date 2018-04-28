@@ -83,12 +83,12 @@ class Windows(ModelNode):
         
     
     @Scripting.printable
-    def create_guid(self):
+    def create_guid(self)->str:
         return str(comtypes.GUID.create_new())
     
     
     @Scripting.printable
-    def convert_to_uow_path(self, path):
+    def convert_to_uow_path(self, path:(Path, str))->str:
         '''Windows 10 supports Ubuntu subsystem named UoW. This subsystem can access
 Windows file system. For example:
 "C:\\lab" is "/mnt/c/lab" on UoW.
@@ -98,6 +98,6 @@ return value: the corresponding UoW path.'''
         path = Path(path)
         parts = path.parts
         drive = parts[0][:parts[0].find(':')]
-        return (Path('/mnt') / drive).joinpath(*parts[1:])
+        return (Path('/mnt') / drive).joinpath(*parts[1:]).as_posix()
         
         
