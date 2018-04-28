@@ -5,9 +5,14 @@ Created on Thu Mar 02 22:41:20 2017
 @author: Feng-cong Li
 """
 
+import sys
 import comtypes
 from comtypes import client
 from pathlib import Path
+import subprocess as sp
+import PIL
+import pylab
+from io import BytesIO
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.interfaces.os.windows.wmi import WQL
@@ -17,6 +22,72 @@ app_paths = {
     'cmd': 'cmd',
     'powershell': 'powershell'
 }
+
+
+
+class UoW(ModelNode):
+    '''Windows 10 supports the so-called Ubuntu on Windows (UoW), and this node
+provides interfaces for calling useful tools on UoW.'''
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        
+    def call_tesseract(self, image, lang=None, on_finish='print'):
+        def save_image_to_stream(image, save_func):
+            bio = BytesIO()
+            save_func(bio, image)
+            bio.seek(0)
+            return bio
+        
+        if isinstance(image, PIL.ImageFile.ImageFile):
+            image = save_image_to_stream(
+                    image, 
+                    lambda bio, image: image.save(bio, 'png'))
+        elif isinstance(image, pylab.ndarray):
+            image = save_image_to_stream(
+                    image, 
+                    lambda bio, image: pylab.imsave(bio, image, format='png'))
+        elif isinstance(image, (str, Path)):
+            with open(image, 'rb') as f:
+                data = f.read()
+            image = save_image_to_stream(
+                    data, 
+                    lambda bio, data: bio.write(data))
+        if on_finish == 'print':
+            def print_(retval):
+                if retval[0]:
+                    print(retval[0].decode('utf-8'))
+                if retval[1]:
+                    print(retval[1].decode('utf-8'), sys.stderr)
+            on_finish = print_
+        
+        command = ['bash', '-c', 'tesseract stdin stdout']
+        if lang:
+            command[-1] = f'{command[-1]} -l {lang}'
+        p = sp.Popen(command, 
+                     stdin=sp.PIPE, 
+                     stdout=sp.PIPE)
+        image_data = image.read()
+        @self.root_node.thread_manager.new_thread_do
+        def call():
+            retval = p.communicate(input=image_data)
+            @self.root_node.thread_manager.main_thread_do(block=False)
+            def finish():
+                on_finish(retval)
+                
+                
+    @Scripting.printable
+    def convert_to_uow_path(self, path:(Path, str))->str:
+        '''Windows 10 supports Ubuntu subsystem named UoW. This subsystem can access
+Windows file system. For example:
+"C:\\lab" is "/mnt/c/lab" on UoW.
+
+path: a path on Windows.
+return value: the corresponding UoW path.'''
+        path = Path(path)
+        parts = path.parts
+        drive = parts[0][:parts[0].find(':')]
+        return (Path('/mnt') / drive).joinpath(*parts[1:]).as_posix()                
 
 
 
@@ -72,6 +143,7 @@ class Windows(ModelNode):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.wmi = WMI()
+        self.uow = UoW()
         self.battery = ModelNode(
             is_lazy=True, 
             module_name='wavesynlib.interfaces.os.windows.battery',
@@ -87,17 +159,6 @@ class Windows(ModelNode):
         return str(comtypes.GUID.create_new())
     
     
-    @Scripting.printable
-    def convert_to_uow_path(self, path:(Path, str))->str:
-        '''Windows 10 supports Ubuntu subsystem named UoW. This subsystem can access
-Windows file system. For example:
-"C:\\lab" is "/mnt/c/lab" on UoW.
 
-path: a path on Windows.
-return value: the corresponding UoW path.'''
-        path = Path(path)
-        parts = path.parts
-        drive = parts[0][:parts[0].find(':')]
-        return (Path('/mnt') / drive).joinpath(*parts[1:]).as_posix()
         
         
