@@ -5,12 +5,10 @@ Created on Thu Mar 02 22:41:20 2017
 @author: Feng-cong Li
 """
 
-from subprocess import Popen
-import webbrowser
 import comtypes
 from comtypes import client
+from pathlib import Path
 
-from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.interfaces.os.windows.wmi import WQL
 
@@ -87,5 +85,19 @@ class Windows(ModelNode):
     @Scripting.printable
     def create_guid(self):
         return str(comtypes.GUID.create_new())
+    
+    
+    @Scripting.printable
+    def convert_to_uow_path(self, path):
+        '''Windows 10 supports Ubuntu subsystem named UoW. This subsystem can access
+Windows file system. For example:
+"C:\\lab" is "/mnt/c/lab" on UoW.
+
+path: a path on Windows.
+return value: the corresponding UoW path.'''
+        path = Path(path)
+        parts = path.parts
+        drive = parts[0][:parts[0].find(':')]
+        return (Path('/mnt') / drive).joinpath(*parts[1:])
         
         
