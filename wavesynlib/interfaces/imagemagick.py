@@ -75,6 +75,11 @@ class Command(ModelNode):
         return self
     
     
+    def monochrome(self):
+        self.__args.append('-monochrome')
+        return self
+    
+    
     def equalize(self):
         self.__args.append('-equalize')
         return self

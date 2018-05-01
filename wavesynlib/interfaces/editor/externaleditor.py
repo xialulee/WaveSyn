@@ -107,7 +107,9 @@ class EditorDict(NodeDict):
         if not editor_path:
             editor_path = self.root_node.editor_info['Path']
         file_path = self.root_node.interfaces.os.clipboard.get_clipboard_path_list(file_path)
-        if isinstance(file_path, str):
+        if file_path is None:
+            file_path = [None]
+        elif isinstance(file_path, str):
             # To do: handle multiple files. 
             file_path = [file_path]
         id_list = []
