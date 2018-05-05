@@ -190,21 +190,21 @@ since the instance of Application is the first node created on the model tree.
             code = editor.code
             if (not code) or (not editor.run_on_exit):
                 return
-                
+                            
             def on_copy(*args, **kwargs):
                 self.interfaces.os.clipboard.write(code)
                 
             def on_edit_default(*args, **kwargs):
-                self.interfaces.editors.launch(code=code)
+                self.interfaces.editors.launch(code=code, run_on_exit=True)
                 
             def on_edit_gvim(*args, **kwargs):
-                self.interfaces.editors.launch_gvim(code=code)
+                self.interfaces.editors.launch_gvim(code=code, run_on_exit=True)
             
             self.gui.console.show_tips([
                 {'type':'text', 'content': f'executing code from editor {id(editor)} listed as follows:'},
                 {'type':'link', 'content':'[COPY]', 'command':on_copy, 'end':' '},
-                {'type':'link', 'content':'[EDIT(DEFAULT)]', 'command':on_edit_default, 'end':' '},
-                {'type':'link', 'content':'[EDIT(GVIM)]', 'command':on_edit_gvim},
+                {'type':'link', 'content':'[EDIT(DEFAULT) and RUN]', 'command':on_edit_default, 'end':' '},
+                {'type':'link', 'content':'[EDIT(GVIM) and RUN]', 'command':on_edit_gvim},
                 {'type':'text', 'content':''},
                 {'type':'text', 'content': code}])    
             self.execute(code)            
