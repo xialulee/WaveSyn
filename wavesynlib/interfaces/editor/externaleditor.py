@@ -103,9 +103,14 @@ class EditorDict(NodeDict):
     def launch(self, editor_path=None, code='', file_path=None, run_on_exit=False):
         '''Launch a specified editor. When the editor terminated, it will notify the observer of .manager.
   editor_path: String. Specify the path of the editor. If None is given, it will launch the one specified in config.json.
-  code: String. The code to be edited'''
+  code: A string representing the code to be edited, or the GET_CLIPBOARD_TEXT const.
+  file_path: a path of a file or a list of paths of several files, or the GET_CLIPBOARD_PATH_LIST const.
+  run_on_exit: run the content of the editor while the editor terminates.'''
         if not editor_path:
             editor_path = self.root_node.editor_info['Path']
+        # Handling the GET_CLIPBOARD_TEXT const.
+        code = self.root_node.interfaces.os.clipboard.get_clipboard_text(code)
+        # Handling the GET_CLIPBOARD_PATH_LIST const. 
         file_path = self.root_node.interfaces.os.clipboard.get_clipboard_path_list(file_path)
         if file_path is None:
             file_path = [None]
