@@ -470,6 +470,12 @@ class ScrolledTree(Frame):
             self.__on_item_double_click(item_id, item_properties)
         self.tree.bind('<Double-1>', dbclick_callback)
         
+        
+    def clear(self):
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+        
+        
     @property
     def on_item_double_click(self):
         return self.__on_item_double_click
