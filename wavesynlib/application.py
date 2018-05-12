@@ -142,7 +142,7 @@ since the instance of Application is the first node created on the model tree.
                                             
                 config_file_path = config_file_path,
                 
-                image_display = DisplayLauncher()
+                image_viewer = DisplayLauncher()
             )  
             
         # Timer utils

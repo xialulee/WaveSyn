@@ -7,11 +7,12 @@ Created on Sat Jan 28 22:14:32 2017
 __DEBUG__ = False
 
 from sys import argv
-import socket
-from io import BytesIO
+import os
+
+from PIL import Image
 
 import numpy as np
-#from scipy.ndimage import imread
+from scipy.ndimage import imread
 from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
@@ -137,26 +138,19 @@ class Canvas(app.Canvas):
         set_viewport(offset.real, offset.imag, si.real, si.imag)
         
 
-def recv_data(port):
-    sockobj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sockobj.connect(('localhost', port))
-    bio = BytesIO()
-    while True:
-        data = sockobj.recv(4096)
-        if not data: 
-            break
-        bio.write(data)
-    retval = bio.getvalue()
-    bio.close()
-    return retval
+def get_image_data(path):
+    with open(path, 'rb') as f:
+        image = Image.open(f)
+        rgba_image = Image.new('RGBA', image.size)
+        rgba_image.paste(image)    
+    os.remove(path)        
+    ret = np.array(rgba_image, dtype=np.float32)
+    ret /= 255.0
+    return ret
 
 
 if __name__ == '__main__':
-    port = int(argv[1])
-    width = int(argv[2])
-    height = int(argv[3])
-    data = recv_data(port)
-    mat = np.fromstring(data, dtype=np.float32)
-    mat.shape = (height, width, 4)
+    path = argv[1]
+    mat = get_image_data(path)
     canvas = Canvas(image=mat)
     app.run()

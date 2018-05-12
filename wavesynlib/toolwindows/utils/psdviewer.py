@@ -197,8 +197,8 @@ class PSDViewer(TkToolWindow):
         
     @Scripting.printable
     def launch_viewer(self):
-        rgb_matrix = np.array(self.__pil_image)
-        self.root_node.image_display.launch(rgb_matrix)
+        #rgb_matrix = np.array(self.__pil_image)
+        self.root_node.image_viewer.launch(self.__pil_image)
         
 
     def _on_load_psd(self):
