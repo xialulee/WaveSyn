@@ -55,6 +55,10 @@ class LayerTree:
                 self._add_layer(child, parent=tree_node)
                 
                 
+    def clear(self):
+        self.__tree_view.clear()
+                
+                
     @property
     def psd_image(self):
         return self.__psd_image
@@ -63,6 +67,7 @@ class LayerTree:
     @psd_image.setter
     def psd_image(self, image):
         self.__psd_image = image
+        self.clear()
         for layer in image.layers:
             self._add_layer(layer)
             
