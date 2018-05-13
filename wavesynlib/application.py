@@ -42,7 +42,6 @@ from wavesynlib.languagecenter.designpatterns import Singleton
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import timeutils, datatypes
-from wavesynlib.toolwindows.imagedisplay.modelnode import DisplayLauncher
 from wavesynlib.status import busy_doing
 
 
@@ -140,9 +139,7 @@ since the instance of Application is the first node created on the model tree.
 
                 lang_center = LangCenterNode(),
                                             
-                config_file_path = config_file_path,
-                
-                image_viewer = DisplayLauncher()
+                config_file_path = config_file_path
             )  
             
         # Timer utils
@@ -150,10 +147,12 @@ since the instance of Application is the first node created on the model tree.
         self.timer_manager.after = timeutils.TimerActionNode(type_='after')
         self.timer_manager.every = timeutils.TimerActionNode(type_='every')        
         # End Timer utils
+        
+        self.gadgets = ModelNode(
+                is_lazy=True, 
+                module_name='wavesynlib.gadgets.modelnode',
+                class_name='Gadgets')        
                         
-        # self.editors    = EditorDict()
-        
-        
         ## Begin: The command system of WaveSyn
         with self.attribute_lock:
             # The below one is the core of the new command system:
@@ -230,7 +229,7 @@ since the instance of Application is the first node created on the model tree.
     def _add_env_path(self):
         path_string = os.environ['PATH']        
         self_path = get_caller_dir()
-        extra_path = [str(self_path / 'interfaces/os/gadgets')]
+        extra_path = [str(self_path / 'gadgets')]
         extra_path.append(path_string)
         path_string = os.path.pathsep.join(extra_path)
         os.environ['PATH'] = path_string

@@ -668,16 +668,16 @@ Red:   main-thread is busy.''')
 
         def on_progbar_dbclick(app):
             with code_printer():
-                Scripting.root_node.interfaces.os.windows.launch(app)
+                Scripting.root_node.gadgets.launch(app)
         
         mem_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
         mem_progbar.pack(side='right', fill='y')
-        mem_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('memmeter.pyw'))
+        mem_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('wsmemmeter.pyw'))
         balloon.bind_widget(mem_progbar, balloonmsg='Total memory usage.')
         
         cpu_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__cpubar)
         cpu_progbar.pack(side='right', fill='y')
-        cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('cpumeter.pyw'))
+        cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('wscpumeter.pyw'))
         balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage.')        
 
 

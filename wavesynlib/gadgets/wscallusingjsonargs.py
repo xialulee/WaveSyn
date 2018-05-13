@@ -6,7 +6,7 @@ import subprocess
 
 from numpy import byte
 
-from wavesynlib.interfaces.os.gadgets.wswhich import which
+from wavesynlib.gadgets.wswhich import which
 
 
 

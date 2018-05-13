@@ -6,13 +6,12 @@ Created on Sat Jan 28 22:14:32 2017
 """
 __DEBUG__ = False
 
-from sys import argv
 import os
+import argparse
 
 from PIL import Image
 
 import numpy as np
-from scipy.ndimage import imread
 from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
@@ -52,7 +51,6 @@ class Canvas(app.Canvas):
         app.Canvas.__init__(self, title='WaveSyn-ImageViewer', size=(512, 512),
                             keys='interactive')
                             
-        #image = imread(r"C:\Users\xialulee\Pictures\1-4.jpg", mode='RGBA').astype('float32') / 255.0
         height, width, dumb = image.shape        
         self.__image_ratio = width / height
         self.__image_size = width + 1j*height
@@ -143,14 +141,18 @@ def get_image_data(path):
         image = Image.open(f)
         rgba_image = Image.new('RGBA', image.size)
         rgba_image.paste(image)    
-    os.remove(path)        
     ret = np.array(rgba_image, dtype=np.float32)
     ret /= 255.0
     return ret
 
 
 if __name__ == '__main__':
-    path = argv[1]
-    mat = get_image_data(path)
+    parser = argparse.ArgumentParser(description='Display a given image file.')
+    parser.add_argument('filename', metavar='filename', type=str, help='The filename of the given image.')
+    parser.add_argument('--delete', help='Delete image file.', action='store_true')
+    args = parser.parse_args()
+    mat = get_image_data(args.filename)
+    if args.delete:
+        os.remove(args.filename)
     canvas = Canvas(image=mat)
     app.run()

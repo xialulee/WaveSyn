@@ -6,6 +6,7 @@ Created on Fri Mar 16 18:25:53 2018
 """
 from subprocess import Popen
 import webbrowser
+import tempfile
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
 from wavesynlib.languagecenter.utils import get_caller_dir
@@ -36,3 +37,9 @@ class Gadgets(ModelNode):
             Popen(cmd)
         else:
             webbrowser.open(gadget_path)
+            
+            
+    def display_image(self, image):
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tfile:
+            image.save(tfile, 'png')
+        self.launch('wsdisplay.py', tfile.name, '--delete')        
