@@ -4,8 +4,6 @@ Created on Mon May 08 22:17:47 2017
 
 @author: Feng-cong Li
 """
-from __future__ import division, print_function
-
 __DEBUG__ = False
 
 
@@ -17,7 +15,7 @@ from vispy.gloo import clear, set_clear_color, set_viewport, Program
 from jinja2 import Template
 from wavesynlib.languagecenter.glsl.utils import hit_circle, hit_line
 from wavesynlib.languagecenter.glsl.constants import pi as PI_STR
-from six import binary_type
+
 
 
 vertex = """
@@ -34,7 +32,7 @@ void main(){
 """
 
 
-fragment = binary_type(Template("""
+fragment = Template("""
 #version 420
 
 #define PI {{pi}}
@@ -80,7 +78,7 @@ void main(){
 """).render(
     pi=PI_STR,
     hit_circle=hit_circle.partial('hit_circle', center='vec2(0.0,0.0)').to_code(),
-    hit_line=hit_line.to_code()))
+    hit_line=hit_line.to_code())
 
 
 
@@ -105,7 +103,7 @@ class Canvas(app.Canvas):
         self.__last_pos = 0+1j*0
         self.__offset = 0+1j*0
         
-        self._timer = app.Timer(1/60, connect=self._on_timer, start=True)
+        self._timer = app.Timer(1/30, connect=self._on_timer, start=True)
 
         self.show()
         
