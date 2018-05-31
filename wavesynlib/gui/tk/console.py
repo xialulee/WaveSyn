@@ -673,12 +673,14 @@ Red:   main-thread is busy.''')
         mem_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__membar)
         mem_progbar.pack(side='right', fill='y')
         mem_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('wsmemmeter.pyw'))
-        balloon.bind_widget(mem_progbar, balloonmsg='Total memory usage.')
+        membar_tip = balloon.bind_widget(mem_progbar, balloonmsg='Total memory usage:')
+        membar_tip.show_callback = lambda: f' {Scripting.root_node.interfaces.os.get_memory_usage()}%.'
         
         cpu_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__cpubar)
         cpu_progbar.pack(side='right', fill='y')
         cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('wscpumeter.pyw'))
-        balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage.')        
+        cpubar_tip = balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage: ')        
+        cpubar_tip.show_callback = lambda: f' {Scripting.root_node.interfaces.os.get_cpu_usage()}%.'
 
 
 

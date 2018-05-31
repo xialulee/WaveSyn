@@ -152,11 +152,14 @@ Based on this post: http://www.voidspace.org.uk/python/weblog/arch_d7_2006_07_01
             self.tip_widget = None
             self.parent = parent
             self.text = text
+            self.show_callback = None
         
         
         def show(self):
             parent = self.parent
             text = self.text
+            if callable(self.show_callback):
+                text += self.show_callback()
             x, y, cx, cy = parent.bbox('insert')
             x = x + parent.winfo_rootx() + 27
             y = y + cy + parent.winfo_rooty() +27
@@ -190,6 +193,8 @@ Based on this post: http://www.voidspace.org.uk/python/weblog/arch_d7_2006_07_01
             
         widget.bind('<Enter>', enter)
         widget.bind('<Leave>', leave)
+        
+        return tip
         
         
                         
