@@ -46,48 +46,6 @@ class ASTView:
         self.__tree_view.clear()
     
     
-#    def _add_node(self, obj, prop_name='', parent=''):
-#        type_obj = type(obj)
-#        lineno = getattr(obj, 'lineno', '')
-#        
-#        if hasattr(obj, 'id'):
-#            values = (f'id: {obj.id}', prop_name, lineno)
-#        elif hasattr(obj, 'name'):
-#            values = (f'name: {obj.name}', prop_name, lineno)
-#        elif hasattr(obj, 'n'):
-#            values = (f'n: {obj.n}', prop_name, lineno)
-#        elif hasattr(obj, 's'): # Str
-#            values = (f's: {obj.s}', prop_name, lineno)
-#        elif hasattr(obj, 'op'):
-#            values = (f'op: {opmap[type(obj.op)]}', prop_name, lineno)
-#        else:
-#            values = ('', prop_name, lineno)
-#        
-#        tree_node = self.__tree_view.insert(
-#            parent,
-#            'end',
-#            text=type_obj.__name__,
-#            values=values)
-#        
-#        # Childs
-#        for attr_name in ('func', 'args', 'target', 
-#                        'bases',
-#                        'annotation',
-#                        'iter', 'test', 'body', 
-#                        'targets', 'orelse', 'left', 'right', 
-#                        'ops', 'comparators', 'value', 'values', 
-#                        'elts', 'keys'):
-#            if hasattr(obj, attr_name):
-#                attr = getattr(obj, attr_name)
-#                if isinstance(attr, list):
-#                    for idx, item in enumerate(attr):
-#                        self._add_node(item, 
-#                                       prop_name=f'{attr_name}[{idx}]', 
-#                                       parent=tree_node)
-#                else:
-#                    self._add_node(attr, prop_name=attr_name, parent=tree_node)
-                    
-                    
     def _add_node(self, obj, name=None, parent=None):
         type_name = type(obj).__name__
         lineno = getattr(obj, 'lineno', '')
@@ -107,8 +65,9 @@ class ASTView:
                 self._add_node(elm, f'{name}[{idx}]', tree_node)
             
         # Childs
-        for attr_name in ('id', 'name', 'n', 's', 'op',
+        for attr_name in ('id', 'name', 'names', 'asname', 'module', 'n', 's', 'op',
                         'func', 'args', 'target', 
+                        'attr', 
                         'bases',
                         'annotation',
                         'iter', 'test', 'body', 
