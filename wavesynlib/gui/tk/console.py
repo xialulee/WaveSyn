@@ -524,6 +524,8 @@ Red:   main-thread is busy.''')
         
         battery_meter = Label(self)
         battery_meter.pack(side='right', fill='y')
+        battery_meter_tip = balloon.bind_widget(battery_meter, balloonmsg='Battery: ')
+        battery_meter_tip.show_callback = lambda: f'{Scripting.root_node.interfaces.os.get_battery_status().percent}%.'
         
         self.__membar = IntVar(0)
         self.__cpubar = IntVar(0)
@@ -681,7 +683,7 @@ Red:   main-thread is busy.''')
         cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('wscpumeter.pyw'))
         cpubar_tip = balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage: ')        
         cpubar_tip.show_callback = lambda: f' {Scripting.root_node.interfaces.os.get_cpu_usage()}%.'
-
+        
 
 
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
