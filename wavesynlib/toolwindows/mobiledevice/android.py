@@ -186,7 +186,7 @@ if action == "read":
                 
         scrolled_text.on_url_link_click = on_url_link_click
         
-        data_book.add(scrolled_text, text='Text')
+        data_book.add(scrolled_text, text='History')
         
         data_book.pack(expand='yes', fill='both')
         
