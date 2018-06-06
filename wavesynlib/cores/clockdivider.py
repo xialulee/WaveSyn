@@ -107,5 +107,5 @@ def Test(factor):
 import sys
 
 if __name__ == '__main__':
-    inst = Test(int(sys.argv[1]))
-    inst.run_sim()
+    test = Test(int(sys.argv[1]))
+    test.run_sim()
