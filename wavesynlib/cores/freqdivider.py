@@ -72,7 +72,7 @@ def _DividerOdd(out, in_, factor):
                 
     @always_comb
     def or_gate():
-        out.next = out1 | out2
+        out.next = out1 or out2
         
     return on_posedge, on_negedge, or_gate
     
