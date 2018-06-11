@@ -6,7 +6,7 @@ Created on Fri Oct 09 14:00:27 2015
 """
 from wavesynlib.mathtools import Algorithm, Expression
 from wavesynlib.mathtools import Parameter as algo_param
-import wavesynlib.interfaces.gpu.cuda as wavesyncuda
+from wavesynlib.interfaces.gpu.factories import FFTFactory
 
 import numpy as np
 
@@ -65,7 +65,7 @@ class DIAC(Algorithm):
         
     def __get_procs(self, thr, N):
         if N not in self.__cache:
-            fft = wavesyncuda.FFTFactory.create_fft_proc(thr, (N,), compile_=False)
+            fft = FFTFactory.create(thr, (N,), compile_=False)
             unimod_trans = Transformation(
                 [Parameter('output', Annotation(Type(np.complex128, N), 'o')),
                 Parameter('input', Annotation(Type(np.complex128, N), 'i'))],
@@ -88,7 +88,7 @@ class DIAC(Algorithm):
                  K: algo_param(int, 'Maximum iteration number')): 
         thr = self.cuda_worker.reikna_thread
         twoN = 2 * N
-        fft = wavesyncuda.FFTFactory[(thr, (twoN,))]
+        fft = FFTFactory[(thr, (twoN,))]
         
         mask        = np.ones((2*N,))
         mask[Qr]    = 0; mask[-Qr]   = 0

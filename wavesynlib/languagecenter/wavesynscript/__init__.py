@@ -72,6 +72,8 @@ class ModelNode:
             self.__module_name = kwargs.pop('module_name', None)
             self.__class_name = kwargs.pop('class_name', None)
             self.__class_object = kwargs.pop('class_object', None)
+            self.__init_args = kwargs.pop('init_args', [])
+            self.__init_kwargs = kwargs.pop('init_kwargs', {})
         self.node_name = node_name
         #self.attribute_auto_lock   = False
         
@@ -119,9 +121,9 @@ then node will have a property named 'a', which cannot be re-assigned.
             if self.__class_object is None:
                 #mod = __import__(self.__module_name, globals(), locals(), [self.__class_name], -1)
                 mod = import_module(self.__module_name)
-                node = getattr(mod, self.__class_name)()
+                node = getattr(mod, self.__class_name)(*self.__init_args, **self.__init_kwargs)
             else:
-                node = self.__class_object()
+                node = self.__class_object(*self.__init_args, **self.__init_kwargs)
         return node
 
         

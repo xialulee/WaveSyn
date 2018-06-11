@@ -6,7 +6,7 @@ Created on Tue Jun 20 21:24:25 2017
 """
 
 from wavesynlib.mathtools import Algorithm, Expression, Parameter
-import wavesynlib.interfaces.gpu.cuda as wavesyncuda
+from wavesynlib.interfaces.gpu.factories import FFTFactory, MatrixMulFactory, EntrywiseNormFactory
 
 from math import sqrt
 import numpy as np
@@ -63,12 +63,12 @@ class WeCAN(Algorithm):
         fnorm = gpuarray.zeros((2*N, 1), dtype=np.double)
         fnormmat = gpuarray.zeros((2*N, N), dtype=np.double)
         
-        fft = wavesyncuda.FFTFactory[(thr, (2*N, N), (0,))]
-        outer = wavesyncuda.MatrixMulFactory[(thr, (N, 1), (1, N))]
-        rep = wavesyncuda.MatrixMulFactory[(thr, (2*N, 1), (1, N), np.double)]
-        sum_ = wavesyncuda.MatrixMulFactory[(thr, (N, N), (N, 1))]
-        rownorm = wavesyncuda.EntrywiseNormFactory[(thr, (2*N, N), (1,))]
-        vecnorm = wavesyncuda.EntrywiseNormFactory[(thr, (N,))]
+        fft = FFTFactory[(thr, (2*N, N), (0,))]
+        outer = MatrixMulFactory[(thr, (N, 1), (1, N))]
+        rep = MatrixMulFactory[(thr, (2*N, 1), (1, N), np.double)]
+        sum_ = MatrixMulFactory[(thr, (N, N), (N, 1))]
+        rownorm = EntrywiseNormFactory[(thr, (2*N, N), (1,))]
+        vecnorm = EntrywiseNormFactory[(thr, (N,))]
         
         
         for k in range(K):
