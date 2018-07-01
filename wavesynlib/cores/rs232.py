@@ -20,8 +20,8 @@ def RS232(
         tx_start, # posedge for staring a transmitting process.
         rx_reg, # output, 8bit
         tx_reg, # input, 8bit
-        clk,
-        rst,
+        clk, # input, clock signal
+        rst, # input, reset signal
         baud_rate, # parameter, Hz
         clk_freq, # parameter, Hz
     ):
@@ -38,9 +38,9 @@ def RS232(
     
     # Signal for detecting RX level change. 
     rx_event = Signal(bool(0))
-            
+    rx_buf = Signal(intbv(0)[10:])
     rx_clk_counter = Signal(intbv(0, min=0, max=bit_interval))
-    rx_bit_counter = Signal(intbv(0, min=0, max=10))
+    rx_bit_counter = Signal(intbv(0, min=0, max=12))
     samp_pulse = Signal(bool(0))
     receiving = Signal(bool(0))
     
@@ -71,19 +71,26 @@ def RS232(
         else:
             rx_clk_counter.next = rx_clk_counter + 1
                         
-        if samp_pulse and not rx_delay0 and not receiving:
-            receiving.next = True
-        elif receiving and rx_bit_counter==9 and samp_pulse:
-            receiving.next = False
+        if rx_delay1 and not rx_delay0 and not receiving:
+            receiving.next = 1
+            rx_buf.next = 0
+            rx_clk_counter.next = 0
+        elif receiving and rx_bit_counter==10 and samp_pulse:
+            receiving.next = 0
+            rx_bit_counter.next = 0
             
-#        if receiving:
-#            if samp_pulse:
-#                rx_bit_counter.next = rx_bit_counter + 1
-#                rx_reg.next = (rx_reg >>1) | (rx_delay0<<7)
-#        else:
-#            rx_bit_counter.next = 0
+        if receiving:
+            if samp_pulse:
+                rx_bit_counter.next = rx_bit_counter + 1
+                rx_buf.next = (rx_buf >>1) | (rx_delay0<<9)
+        else:
+            rx_bit_counter.next = 0
             
-        rx_finish.next = receiving and samp_pulse and (rx_bit_counter==9)
+        if receiving and samp_pulse and (rx_bit_counter==10):
+            rx_finish.next = 1
+            rx_reg.next = rx_buf[9:1]
+        else:
+            rx_finish.next = 0
         
         # For transmitting
         if tx_available:
@@ -117,7 +124,7 @@ def RS232(
 
 
 @block
-def Test():
+def Test(direction):
     rx = Signal(bool(0))
     tx = Signal(bool(1))
     rx_finish = Signal(bool(0))
@@ -128,15 +135,35 @@ def Test():
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     baud_rate = 9600
-    clk_freq = 9600*4    
+    factor = 16
+    clk_freq = 9600*factor  
     
     inst = RS232(rx, tx, rx_finish, tx_occupy, tx_start, rx_reg, tx_reg, clk, rst, baud_rate=baud_rate, clk_freq=clk_freq)  
         
-    @instance
-    def stimulus():
-        for k in range(100):
-            yield delay(10)
-            clk.next = not clk    
+    if direction == 'tx':
+        @instance
+        def stimulus():
+            rx.next = 1            
+            for k in range(1000):
+                yield delay(10)
+                clk.next = not clk    
+    else:
+        @instance
+        def stimulus():
+            rx.next = 1
+            for k in range(factor):
+                clk.next = not clk
+                yield delay(10)
+                clk.next = not clk
+                yield delay(10)
+
+            for k in range(200):
+                if k % factor == 0:
+                    rx.next = not rx
+                clk.next = not clk
+                yield delay(10)
+                clk.next = not clk
+                yield delay(10)
     return instances()        
 
 
@@ -165,6 +192,6 @@ if __name__ == '__main__':
     if sys.argv[1] == 'convert':
         test_convert(hdl=sys.argv[2])
     elif sys.argv[1] == 'simulate':
-        tb = Test()
+        tb = Test(sys.argv[2])
         tb.config_sim(trace=True)
         tb.run_sim()
