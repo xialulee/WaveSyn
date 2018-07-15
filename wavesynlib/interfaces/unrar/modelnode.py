@@ -11,4 +11,5 @@ import subprocess as sp
 
 def test(path):
     p = sp.Popen(['unrar', 'lta', path], stdout=sp.PIPE, stderr=sp.PIPE)
+    outs, errs = p.communicate()
     
