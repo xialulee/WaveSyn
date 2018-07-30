@@ -10,8 +10,8 @@ from myhdl import Signal, intbv, always_comb, instance, instances, block, delay
 
 
 @block
-def Bin8ToBCD(bcd, binary):
-    assert len(bcd)==12
+def UByteToBCD(bcd, binary):
+    assert len(bcd)==10
     assert len(binary)==8
     
     @always_comb
@@ -20,9 +20,13 @@ def Bin8ToBCD(bcd, binary):
         # Iterate from 7 to 0 is more appropriate,
         # but MyHDL only supports loop with step larger than zero. 
         for i in range(8):
-            for j in range(3):
-                if temp[4*(j+1):4*j] >= 5:
-                    temp[4*(j+1):4*j] += 3
+            # Cannot use loops for following code,
+            # since range must be bounded by constant expressions.
+            if temp[4:0] >= 5:
+                temp[4:0] += 3
+            if temp[8:4] >= 5:
+                temp[8:4] += 3
+                    
             temp[:] <<= 1
             temp[0] = binary[7-i]
                             
@@ -33,11 +37,37 @@ def Bin8ToBCD(bcd, binary):
 
 
 @block
-def Test():
-    binary = Signal(intbv(0)[8:])
-    bcd = Signal(intbv(0)[12:])
+def ByteToBCD(sign, bcd, binary):
+    assert len(bcd)==9
+    assert len(binary)==8
     
-    bin2bcd = Bin8ToBCD(bcd, binary)
+    abs_ = Signal(intbv(0)[8:])
+    
+    @always_comb
+    def calc():
+        if binary[7]:
+            abs_.next = ~binary + 1
+        else:
+            abs_.next = binary
+            
+    uout = Signal(intbv(0)[10:])
+    uconverter = UByteToBCD(uout, abs_)
+    
+    @always_comb
+    def generate_output():
+        sign.next = binary[7]
+        bcd.next = uout[9:]
+        
+    return instances()
+
+
+
+@block
+def TestUByte():
+    binary = Signal(intbv(0)[8:])
+    bcd = Signal(intbv(0)[10:])
+    
+    ubyte2bcd = UByteToBCD(bcd, binary)
     
     @instance
     def stimulus():
@@ -53,10 +83,39 @@ def Test():
 
 
 
-def convert_test(target):
+@block
+def TestByte():
+    binary = Signal(intbv(0, min=-128, max=128))
+    bcd = Signal(intbv(0)[9:])
+    sign = Signal(bool(0))
+    
+    byte2bcd = ByteToBCD(sign, bcd, binary)
+    
+    @instance
+    def stimulus():
+        print('sign\tbcd\tinput')
+        for k in range(-128, 128):
+            binary.next = k
+            yield delay(10)
+            print(sign, bcd, int(binary), sep='\t')
+            
+    return instances()
+
+
+
+def convert_ubyte(target):
     binary = Signal(intbv(0)[8:])
-    bcd = Signal(intbv(0)[12:])
-    bin2bcd = Bin8ToBCD(bcd, binary)
+    bcd = Signal(intbv(0)[10:])
+    bin2bcd = UByteToBCD(bcd, binary)
+    bin2bcd.convert(hdl=target)
+    
+    
+    
+def convert_byte(target):
+    binary = Signal(intbv(0)[8:])
+    bcd = Signal(intbv(0)[9:])
+    sign = Signal(bool(0))
+    bin2bcd = ByteToBCD(sign, bcd, binary)
     bin2bcd.convert(hdl=target)
 
 
@@ -65,7 +124,13 @@ import sys
 
 if __name__ == '__main__':
     if sys.argv[1] == 'simulate':
-        test = Test()
+        if sys.argv[2] == 'ubyte':
+            test = TestUByte()
+        elif sys.argv[2] == 'byte':
+            test = TestByte()
         test.run_sim()
     elif sys.argv[1] == 'convert':
-        convert_test(target=sys.argv[2])
+        if sys.argv[2] == 'ubyte':
+            convert_ubyte(target=sys.argv[3])
+        elif sys.argv[2] == 'byte':
+            convert_byte(target=sys.argv[3])
