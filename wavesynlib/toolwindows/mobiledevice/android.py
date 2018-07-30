@@ -30,7 +30,8 @@ from wavesynlib.misc.socketutils import AbortException, InterruptHandler
 
 
 _plugins = {'locationsensor':[], 'file':[], 'text':[]}
-MAXDEVCODELEN = 16
+from wavesynlib.toolwindows.mobiledevice import datatransferclient
+MAXDEVCODELEN = datatransferclient.MAXDEVCODELEN
 
 
 
