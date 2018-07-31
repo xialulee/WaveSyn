@@ -16,12 +16,16 @@ if __name__ == '__main__':
     import time
     import os
     import urllib
+    import tempfile
     
-    import androidhelper as android
+    import androidhelper
     from jnius import autoclass
+    from android import mActivity
     
-    droid = android.Android()
+    droid = androidhelper.Android()
     Build = autoclass('android.os.Build') 
+    Media = autoclass('android.provider.MediaStore$Images$Media')
+    Environment = autoclass('android.os.Environment')
     
     
     _device_code = '{} {}'.format(Build.MANUFACTURER, Build.MODEL)
@@ -167,28 +171,45 @@ if __name__ == '__main__':
         
         
         
+    def view_photo(path):
+        uri = Media.insertImage(mActivity.getContentResolver(), path, None, None)
+        droid.view(str(uri))
+        
+        
+        
+    def get_download_path():
+        return str(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath())
+        
+        
+        
     def recv_file(dir_, name, ip, port, password):
-        name = name.encode('utf-8')
-        app_path = os.environ['ANDROID_APP_PATH']
-        #file_path = os.path.join(app_path, '..', dir_, name)
-        app_path_list = app_path.split('/')
-        app_path_list = app_path_list[:app_path_list.index('qpython')]
-        app_path_list.extend([dir_, name])
-        file_path = '/'.join(app_path_list)
-        for k in range(10000):
-            if os.path.exists(file_path):
-                file_path = os.path.join(app_path, '..', dir_, '[{}]{}'.format(k, name))
-            else:
-                break
-        print(os.path.abspath(file_path))
-        with open(file_path, 'wb') as f:
+        def recv_data(f):
             sockobj = init_and_send_head(ip, port, password, 0)
             while True:
                 buf = sockobj.recv(32768)
                 if not buf:
                     break
                 f.write(buf)
-            sockobj.close()
+            sockobj.close()        
+        
+        name = name.encode('utf-8')
+        
+        ext = os.path.splitext(name)[-1].lower()
+        if ext in ('.jpg', '.jpeg', '.png', '.gif'):
+            with tempfile.NamedTemporaryFile(suffix=ext) as f:
+                recv_data(f)
+                view_photo(f.name)
+        else:
+            download_path = get_download_path()
+            name_cnt = 0
+            while True:
+                file_path = os.path.join(download_path, '[{}]{}'.format(name_cnt, name))
+                if not os.path.exists(file_path):
+                    break
+                name_cnt += 1  
+            with open(file_path, 'wb') as f:
+                recv_data(f)
+        
     
     
     ip, port, password, command = read_qr()
