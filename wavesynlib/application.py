@@ -86,6 +86,8 @@ since the instance of Application is the first node created on the model tree.
             self.file_path = file_path
             self.dir_path = dir_path
         
+        with open('path.txt', 'r') as f:
+            self.__config_and_data_path = Path(f.readline())
         
         # load config file
         config_file_path  = os.path.join(dir_path, 'config.json')
@@ -112,7 +114,7 @@ since the instance of Application is the first node created on the model tree.
 
         
         # To Do: WaveSyn will have a uniform command slot system.
-        from wavesynlib.interfaces.xmlrpc.server import CommandSlot                
+        #from wavesynlib.interfaces.xmlrpc.server import CommandSlot                
                 
         with self.attribute_lock:
             set_attributes(self,
@@ -135,7 +137,7 @@ since the instance of Application is the first node created on the model tree.
                 model_tree_monitor = model_tree_monitor,
 
                 # To Do: WaveSyn will have a uniform command slot system.
-                xmlrpc_command_slot = CommandSlot(),
+                #xmlrpc_command_slot = CommandSlot(),
 
                 lang_center = LangCenterNode(),
                                             
@@ -233,6 +235,13 @@ since the instance of Application is the first node created on the model tree.
         extra_path.append(path_string)
         path_string = os.path.pathsep.join(extra_path)
         os.environ['PATH'] = path_string
+        
+        
+    def get_cache_path(self):
+        p = self.__config_and_data_path / 'cache'
+        if not p.exists():
+            p.mkdir()
+        return p
         
         
     def create_timer(self, interval=100, active=False):
@@ -387,27 +396,27 @@ and generate a dialog which helps user to input parameters.'''
         cls.instance.gui.root.update()
         
         
-    def start_xmlrpc_server(self, addr='localhost', port=8000):
-        from wavesynlib.interfaces.xmlrpc.server    import start_xmlrpc_server
-        start_xmlrpc_server(addr, port)        
-        def check_command():
-            command = self.xmlrpc_command_slot.command
-            convert_args_to_str  = Scripting.convert_args_to_str
-            try:
-                if command is not None:
-                    node_path, method_name, args, kwargs  = command
-                    ret, err    = None, None
-                    try:
-                        ret = self.print_and_eval(f'{node_path}.{method_name}({convert_args_to_str(*args, **kwargs)})') # paramToStr used here
-                    except Exception as error:
-                        err = error
-                    ret = 0 if ret is None else ret
-                    self.xmlrpc_command_slot.return_value    = (ret, err)
-            finally:
-                # Make sure that at any circumstance the check_command will be called repeatedly.
-                self.gui.root.after(100, self.xmlrpc_check_command)
-        self.xmlrpc_check_command = check_command
-        self.gui.root.after(100, check_command) # To Do: Use TkTimer instead of after
+#    def start_xmlrpc_server(self, addr='localhost', port=8000):
+#        from wavesynlib.interfaces.xmlrpc.server    import start_xmlrpc_server
+#        start_xmlrpc_server(addr, port)        
+#        def check_command():
+#            command = self.xmlrpc_command_slot.command
+#            convert_args_to_str  = Scripting.convert_args_to_str
+#            try:
+#                if command is not None:
+#                    node_path, method_name, args, kwargs  = command
+#                    ret, err    = None, None
+#                    try:
+#                        ret = self.print_and_eval(f'{node_path}.{method_name}({convert_args_to_str(*args, **kwargs)})') # paramToStr used here
+#                    except Exception as error:
+#                        err = error
+#                    ret = 0 if ret is None else ret
+#                    self.xmlrpc_command_slot.return_value    = (ret, err)
+#            finally:
+#                # Make sure that at any circumstance the check_command will be called repeatedly.
+#                self.gui.root.after(100, self.xmlrpc_check_command)
+#        self.xmlrpc_check_command = check_command
+#        self.gui.root.after(100, check_command) # To Do: Use TkTimer instead of after
         
         
     @Scripting.printable
