@@ -218,3 +218,4 @@ pip-log.txt
 *.dll
 *.jar
 
+wavesynlib/path.txt
