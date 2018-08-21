@@ -627,23 +627,24 @@ Red:   main-thread is busy.''')
                 self.__membar.set(get_memory_usage())
                 self.__cpubar.set(get_cpu_usage())
                 battery_status = get_battery_status()
-                percent = battery_status.percent
-                if percent > 75:
-                    percent = 100
-                elif percent > 50:
-                    percent = 75
-                elif percent > 25:
-                    percent = 50
-                elif percent > 10:
-                    percent = 25
-                else:
-                    percent = 10
-                
-                charge = '_charge' if battery_status.power_plugged else ''
-                image_name = f'{percent}per{charge}'
-                image = battery_images[image_name]
-                if battery_meter['image'] != image:
-                    battery_meter['image'] = image
+                if battery_status:
+                    percent = battery_status.percent
+                    if percent > 75:
+                        percent = 100
+                    elif percent > 50:
+                        percent = 75
+                    elif percent > 25:
+                        percent = 50
+                    elif percent > 10:
+                        percent = 25
+                    else:
+                        percent = 10
+                    
+                    charge = '_charge' if battery_status.power_plugged else ''
+                    image_name = f'{percent}per{charge}'
+                    image = battery_images[image_name]
+                    if battery_meter['image'] != image:
+                        battery_meter['image'] = image
                 
         timer.divider(divide_by=10).add_observer(check_cpu_mem_battery)                
         timer.active = True

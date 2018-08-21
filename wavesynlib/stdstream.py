@@ -4,14 +4,38 @@ Created on Sun Oct 26 21:06:35 2014
 
 @author: Feng-cong Li
 """
-
-from wavesynlib.languagecenter.designpatterns import  Observable
+import sys
 import queue
 import _thread as thread
+from contextlib import contextmanager
 
-import sys
+from wavesynlib.languagecenter.designpatterns import  Observable
+
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
+
+
+
+class DumbStream:
+    def write(self, content):
+        pass
+    
+    def flush(self):
+        pass
+    
+    
+    
+@contextmanager
+def dumb_stream():
+    backup_out = sys.stdout
+    backup_err = sys.stderr
+    sys.stdout = DumbStream()
+    sys.stderr = DumbStream()
+    try:
+        yield
+    finally:
+        sys.stdout = backup_out
+        sys.stderr = backup_err
 
 
 

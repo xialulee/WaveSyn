@@ -16,6 +16,7 @@ from tkinter.ttk import Button
 from six.moves.tkinter import Frame
 
 from wavesynlib.widgets.tk import ScrolledTree
+from wavesynlib.stdstream import dumb_stream
 
 
 
@@ -31,7 +32,11 @@ class ClassSelector:
         
         self.__tree = tree = ScrolledTree(window)
         tree.pack()
-        classes = self.load_modules()
+        # If a module print something while being loaded, the stdout of this
+        # script will be contaminated. 
+        # The dumb_stream prevents the contamination. 
+        with dumb_stream():
+            classes = self.load_modules()
         for package in classes:
             packageNode = tree.insert('', 'end', text=package)
             for class_name in classes[package]:
