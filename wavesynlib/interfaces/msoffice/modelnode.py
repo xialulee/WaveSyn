@@ -315,18 +315,28 @@ class WordUtils(ModelNode):
             relative_path = info['relative_path']
             comment = info['comment']
             resize = info['resize']
+            
+            # Get psd file path. 
+            # The alt text of every image inserted by self.insert_psd_image 
+            # contains the abspath and relpath of the file.
+            # If relative_first is True, 
+            #   the procedure will check the availability of the relpath;
+            # else,
+            #   it will check the abspath first. 
+            # Finally, the first available path will be the file_path below.             
+            p1 = os.path.abspath(os.path.join(self.__com_handle.ActiveDocument.Path, relative_path))
+            p2 = file_path
+            if not relative_first:
+                p1, p2 = p2, p1
+            if os.path.exists(p1):
+                file_path = p1
+            else:
+                file_path = p2            
+                
             mtime = os.path.getmtime(file_path)
             if mtime > insert_time:
                 rng = shape.Range
                 shape.Delete()
-                p1 = os.path.abspath(os.path.join(self.__com_handle.ActiveDocument.Path, relative_path))
-                p2 = file_path
-                if not relative_first:
-                    p1, p2 = p2, p1
-                if os.path.exists(p1):
-                    file_path = p1
-                else:
-                    file_path = p2
                 self.insert_psd_image(file_path, resize=resize, comment=comment, range_=rng)
                 
                 
