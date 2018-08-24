@@ -32,7 +32,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:],\
             'gc:',\
-            [])
+            ['gvim', 'tempext='])
     except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
         return ERROR_PARAM
@@ -40,9 +40,15 @@ def main(argv):
     vim_name = 'vim'
     
     opt_list = []
+    tempext = None
     for o, a in opts:
-        if o == '-g':
+        if o in ('-g', '--gvim'):
             vim_name = 'gvim'
+        elif o == '--tempext':
+            ext = a
+            if not ext.startswith('.'):
+                ext = '.' + ext
+            tempext = ext
         else:
             opt_list.append(o)
             if a:
@@ -61,7 +67,10 @@ def main(argv):
     if not is_temp:
         filename = args[0]
     else:
-        fd, filename = tempfile.mkstemp(text=True)
+        mkstemp_kwargs = {'text':True}
+        if tempext:
+            mkstemp_kwargs['suffix'] = tempext
+        fd, filename = tempfile.mkstemp(**mkstemp_kwargs)
         args.append(filename)        
         with os.fdopen(fd, 'w') as f:
             # Close the temp file and consequently the external editor can edit
