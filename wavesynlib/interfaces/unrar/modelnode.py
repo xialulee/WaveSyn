@@ -6,10 +6,11 @@ Created on Sun Jul 15 17:28:37 2018
 """
 import locale
 import subprocess as sp
+import os
 
 
 
-def list_contents(path):
+def list_content(path):
     p = sp.Popen(['unrar', 'lta', path], stdout=sp.PIPE, stderr=sp.PIPE)
     outs, errs = p.communicate()
     outs = outs.decode(locale.getpreferredencoding())
@@ -26,9 +27,35 @@ def list_contents(path):
                     results[-1][key] = value
                 
     return results
+
+
+
+def get_content_tree(contents_list):
+    root = {'children':{}}
+    for item in contents_list:
+        dir_ptr = root
+        path = item['Name']
+        path_items = path.split(os.path.sep)
+        for path_item in path_items[:-1]:
+            if path_item not in dir_ptr['children']:
+                dir_ptr['children'][path_item] = {'children':{}}
+            dir_ptr = dir_ptr['children'][path_item]
+
+        path_item = path_items[-1]            
+        if path_item not in dir_ptr['children']:
+            dir_ptr['children'][path_item] = {}
+        new_node = dir_ptr['children'][path_item]
+        if item['Type'] == 'Directory' and 'children' not in new_node:
+            new_node['children'] = {}
+           
+        for key in item:
+            if key == 'Name':
+                new_node['path'] = item['Name']
+                continue
+            new_node[key] = item[key]
+    return root
     
     
     
-if __name__ == '__main__':
-    import sys
-    print(list_contents(sys.argv[1]))
+
+    

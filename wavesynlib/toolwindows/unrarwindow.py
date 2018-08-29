@@ -7,18 +7,18 @@ Created on Tue Jul 17 20:38:27 2018
 import os
 
 from wavesynlib.widgets.tk import ScrolledTree
-from wavesynlib.interfaces.unrar.modelnode import list_contents
+from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
+from wavesynlib.interfaces.unrar.modelnode import list_content, get_content_tree
 
 
 
 class ContentTree:
     def __init__(self, *args, **kwargs):
         self.__tree_view = tree_view = ScrolledTree(*args, **kwargs)
-        tree_view.tree['columns'] = ('ratio', 'crc')
+        tree_view.tree['columns'] = ('ratio', 'crc', 'path')
         tree_view.heading('ratio', text='Ratio')
         tree_view.heading('crc', text='CRC')
-        self.__dir = {}
-        self.__contents = None
+        tree_view.heading('path', text='Path')
         
         
     @property
@@ -27,23 +27,35 @@ class ContentTree:
     
     
     def load(self, path):
-        self.__contents = contents = list_contents(path)
-        for item in contents:
-            pass
+        content_root = get_content_tree(list_content(path))
+        content_root['Type'] = 'Directory'
+        content_root['path'] = os.path.sep
+        self._add_item('Archive', content_root)
+            
         
+    def _add_item(self, node_name, node, parent=''):
+        if node['Type'] == 'Directory':
+            values = ('', '', node['path'])
+        else:
+            values = (node['Ratio'], node['CRC32'], node['path'])
+            
+        node_id = self.tree_view.insert(
+            parent, 
+            'end', 
+            text=node_name, 
+            values=values)
         
-    def _add_item(self, item):
-        name = item['name']
-        path_item = os.path.split(name)
-        tree_node = self.tree_view.insert(
-            parent,
-            'end',
-            text=name,
-            values=(item['Ratio'], item['CRC']))
+        if 'children' in node:
+            for child in node['children']:
+                self._add_item(child, node['children'][child], parent=node_id)
+
     
+
+class UnrarWindow(TkToolWindow):
+    window_name = 'WaveSyn-UnRarWindow'
     
-    def _get_dir_node(self, path):
-        node_dict = self.__dir
-        for d in path:
-            if d not in node_dict:
-                pass
+    def __init__(self):
+        super().__init__()
+        tk_object = self.tk_object
+        self.__treeview = treeview = ContentTree(tk_object)
+        treeview.tree_view.pack(expand='yes', fill='both')
