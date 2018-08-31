@@ -190,6 +190,7 @@ if __name__ == '__main__':
                 if not buf:
                     break
                 f.write(buf)
+            f.flush() # Important! Make sure "view_photo" can get a flushed image file.
             sockobj.close()        
         
         name = name.encode('utf-8')
