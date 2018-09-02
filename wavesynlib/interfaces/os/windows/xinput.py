@@ -7,7 +7,7 @@ Created on Fri Oct 13 23:26:46 2017
 import ctypes
 from ctypes import byref
 from ctypes.wintypes import BOOL, WORD, DWORD, BYTE, SHORT
-from wavesynlib.languagecenter.utils import build_struct
+from wavesynlib.languagecenter.utils import ctype_build
 
 
 
@@ -42,7 +42,7 @@ XINPUT_GAMEPAD_Y = WORD(0x8000)
 
 
 
-@build_struct
+@ctype_build('struct')
 def XINPUT_GAMEPAD(
     wButtons: WORD,
     bLeftTrigger: BYTE,
@@ -55,7 +55,7 @@ def XINPUT_GAMEPAD(
         
         
 
-@build_struct
+@ctype_build('struct')
 def XINPUT_STATE(
     dwPacketNumber: DWORD,
     Gamepad: XINPUT_GAMEPAD
@@ -63,7 +63,7 @@ def XINPUT_STATE(
         
         
         
-@build_struct
+@ctype_build('struct')
 def XINPUT_VIBRATION(
     wLeftMotorSpeed: WORD,
     wRightMotorSpeed: WORD
@@ -71,7 +71,7 @@ def XINPUT_VIBRATION(
         
         
         
-@build_struct
+@ctype_build('struct')
 def XINPUT_BATTERY_INFORMATION(
     BatteryType: BYTE,
     BatteryLevel: BYTE
