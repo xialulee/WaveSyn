@@ -144,10 +144,17 @@ class Windows(ModelNode):
         super().__init__(*args, **kwargs)
         self.wmi = WMI()
         self.uow = UoW()
+        
         self.battery = ModelNode(
             is_lazy=True, 
             module_name='wavesynlib.interfaces.os.windows.battery',
             class_name='Battery')
+        
+        self.commands = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.interfaces.os.windows.commands',
+            class_name='Commands')
+        
         self.powershell = ModelNode(
             is_lazy=True,
             module_name='wavesynlib.interfaces.os.windows.powershell',
