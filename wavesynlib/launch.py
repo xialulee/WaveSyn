@@ -6,22 +6,17 @@ Created on Fri May 23 10:56:05 2014
 """
 import os
 import sys
-from inspect import getsourcefile
 
-class WaveSynPath(object):
-    def __init__(self):
-        pass
-    
-    def get_path(self): 
-        file_path    = getsourcefile(type(self))
-        dir_path     = os.path.split(file_path)[0]
-        return os.path.abspath(os.path.join(dir_path, '..'))
         
 
-wavesynPath = WaveSynPath()
-sys.path.insert(0, wavesynPath.get_path())
+wavesyn_directory = os.path.split(__file__)[0]
+sys.path.insert(0, wavesyn_directory)
 
 from wavesynlib import application
 
-if __name__ == '__main__':
+def main():
     application.mainloop()
+    
+
+if __name__ == '__main__':
+    main()
