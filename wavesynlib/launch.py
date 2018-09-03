@@ -9,7 +9,7 @@ import sys
 
         
 
-wavesyn_directory = os.path.split(__file__)[0]
+wavesyn_directory = os.path.join(os.path.split(__file__)[0], '..')
 sys.path.insert(0, wavesyn_directory)
 
 from wavesynlib import application

@@ -261,7 +261,9 @@ class ConsoleText(ModelNode, ScrolledText):
                         plugins.extend(_retvaldisp[_type])
 
                 for plugin in plugins:
-                    plugin.action(ret)                        
+                    plugin.action(ret)     
+        
+        self.text.update()
         
         
     def on_key_release(self, evt):
@@ -750,6 +752,7 @@ class DebugWindow(TkToolWindow):
         print(*args, **kwargs)
         content = sio.getvalue()
         self.__scrolledtext.append_text(content)
+        self.tk_object.update()
             
             
     def _close_callback(self):

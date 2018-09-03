@@ -10,6 +10,7 @@ import _thread as thread
 from contextlib import contextmanager
 
 from wavesynlib.languagecenter.designpatterns import  Observable
+from wavesynlib.languagecenter.wavesynscript import ModelNode
 
 REALSTDOUT = sys.stdout
 REALSTDERR = sys.stderr
@@ -74,13 +75,18 @@ class StreamChain:
             
             
 
-class StreamManager(Observable):
+class StreamManager(ModelNode, Observable):
     class Stream:
         def __init__(self, manager, stream_type):
             self.__manager = manager
             self.__stream_type = stream_type
         def write(self, content, extras=None):
             self.__manager.queue.put((self.__stream_type, content, extras))
+            
+            # If the write is called by code in main thread, 
+            # notify observers immediately. 
+            if thread.get_ident() == self.__manager.root_node.thread_manager.main_thread_id:
+                self.__manager.update()
             
             
     def __init__(self):
