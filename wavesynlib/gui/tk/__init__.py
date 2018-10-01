@@ -5,6 +5,7 @@ Created on Fri Apr 07 17:08:49 2017
 @author: Feng-cong Li
 """
 import tkinter
+import ctypes
 
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
@@ -41,7 +42,12 @@ WaveSyn components.
             self.value_checker = ValueChecker(self.root)
             self.console = ConsoleWindow(root=self.root, menu=self.__console_menu, tag_defs=self.__tag_defs)
         
-        
+
+    @property
+    def root_handle(self):
+        return ctypes.windll.user32.GetParent(self.root.winfo_id())
+
+    
     @Scripting.printable
     def get_gui_name(self):
         return 'tk'

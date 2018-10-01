@@ -16,6 +16,7 @@ from io import BytesIO
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.interfaces.os.windows.wmi import WQL
+from wavesynlib.interfaces.os.windows import wsscriptconstants
 
 
 app_paths = {
@@ -144,6 +145,7 @@ class Windows(ModelNode):
         super().__init__(*args, **kwargs)
         self.wmi = WMI()
         self.uow = UoW()
+        self.wsscriptconstants = wsscriptconstants.WSScriptConstants()
         
         self.battery = ModelNode(
             is_lazy=True, 
@@ -159,6 +161,11 @@ class Windows(ModelNode):
             is_lazy=True,
             module_name='wavesynlib.interfaces.os.windows.powershell',
             class_name='Powershell')
+        
+        self.appcommand = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.interfaces.os.windows.appcommand.modelnode',
+            class_name='AppCommand')
         
     
     @Scripting.printable
