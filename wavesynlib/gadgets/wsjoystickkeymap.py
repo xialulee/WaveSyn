@@ -44,11 +44,13 @@ def do(keymap):
             if button_consts[name].value & buttons:
                 if name not in current:
                     current.add(name)
-                    sendinput.send_key_input(keymap[name], press=True)
+                    if name in keymap:
+                        sendinput.send_key_input(keymap[name], press=True)
             else:
                 if name in current:
                     current.remove(name)
-                    sendinput.send_key_input(keymap[name], release=True)
+                    if name in keymap:
+                        sendinput.send_key_input(keymap[name], release=True)
                     
                     
                     
@@ -58,12 +60,6 @@ if __name__ == '__main__':
         'XINPUT_GAMEPAD_DPAD_DOWN': 0x53, #s
         'XINPUT_GAMEPAD_DPAD_LEFT': 0x41, #a
         'XINPUT_GAMEPAD_DPAD_RIGHT': 0x44, #d
-        'XINPUT_GAMEPAD_START': None,
-        'XINPUT_GAMEPAD_BACK': None,
-        'XINPUT_GAMEPAD_LEFT_THUMB': None,
-        'XINPUT_GAMEPAD_RIGHT_THUMB': None,
-        'XINPUT_GAMEPAD_LEFT_SHOULDER': None,
-        'XINPUT_GAMEPAD_RIGHT_SHOULDER': None,
         'XINPUT_GAMEPAD_A': 0x48, #h
         'XINPUT_GAMEPAD_B': 0x4c, #l
         'XINPUT_GAMEPAD_X': 0x4a, #j
