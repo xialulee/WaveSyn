@@ -25,13 +25,10 @@ class AppCommand(ModelNode):
     
     def _method_generator(command):
         def method(self, handle):
-#            if handle == 'foreground':
-#                handle = windll.GetForegroundWindow()
-#            elif handle == 'arbitrary':
-#                handle = self.root_node.gui.root_handle
-                
-            handle = self.root_node.interfaces.os.windows.wsscriptconstants.hwnd_arbitrary(handle)
-            handle = self.root_node.interfaces.os.windows.wsscriptconstants.hwnd_foreground(handle)
+            constants = self.root_node.interfaces.os.windows.wsscriptconstants
+            handle = constants.hwnd_arbitrary(handle)
+            handle = constants.hwnd_foreground(handle)
+            handle = constants.hwnd_from_cursor_pos(handle)
             self._send_command(handle, command)
         return method
         
