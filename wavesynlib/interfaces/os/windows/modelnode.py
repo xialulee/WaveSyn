@@ -16,7 +16,7 @@ from io import BytesIO
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.interfaces.os.windows.wmi import WQL
-from wavesynlib.interfaces.os.windows import wsscriptconstants
+from wavesynlib.interfaces.os.windows.shell.windowhandlegetter.modelnode import WindowHandleGetter
 
 
 app_paths = {
@@ -145,7 +145,7 @@ class Windows(ModelNode):
         super().__init__(*args, **kwargs)
         self.wmi = WMI()
         self.uow = UoW()
-        self.wsscriptconstants = wsscriptconstants.WSScriptConstants()
+        self.window_handle_getter = WindowHandleGetter()
         
         self.battery = ModelNode(
             is_lazy=True, 

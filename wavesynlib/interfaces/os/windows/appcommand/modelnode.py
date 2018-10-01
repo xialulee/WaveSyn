@@ -25,10 +25,10 @@ class AppCommand(ModelNode):
     
     def _method_generator(command):
         def method(self, handle):
-            constants = self.root_node.interfaces.os.windows.wsscriptconstants
+            constants = self.root_node.interfaces.os.windows.window_handle_getter.constants
             handle = constants.hwnd_arbitrary(handle)
             handle = constants.hwnd_foreground(handle)
-            handle = constants.hwnd_from_cursor_pos(handle)
+            handle = constants.hwnd_window_from_cursor_pos(handle)
             self._send_command(handle, command)
         return method
         
