@@ -12,7 +12,10 @@ selfpath = pathlib.Path(os.path.realpath(__file__))
 dirpath = selfpath.parent
 
 try:
+    import tkinter
     from tkinter.filedialog import askdirectory
+    root = tkinter.Tk()
+    root.withdraw()
     def ask_config_dir():
         return askdirectory(title='Select the directory for storing config, cache, and history files.')
 except:

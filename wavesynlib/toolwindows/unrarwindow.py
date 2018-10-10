@@ -59,3 +59,7 @@ class UnrarWindow(TkToolWindow):
         tk_object = self.tk_object
         self.__treeview = treeview = ContentTree(tk_object)
         treeview.tree_view.pack(expand='yes', fill='both')
+        
+        
+    def load(self, rar_file:str): # TO DO: support io.IOBase
+        self.__treeview.load(rar_file)
