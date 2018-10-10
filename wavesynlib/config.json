@@ -110,6 +110,11 @@
               ]
               },
               {
+              "Name":"Rar Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
+                  {"Name":"Rar Viewer", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.unrarwindow', class_name='UnrarWindow')"}
+              ]
+              },
+              {
               "Name":"Language", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"Python AST Visualization", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.astwindow', class_name='ASTDisplay')"}
               ]

@@ -8,6 +8,17 @@ import locale
 import subprocess as sp
 import os
 
+from pathlib import Path
+
+
+
+def unpack(rar_file:(str, Path), dir_path:(str, Path))->(str, str):
+    p = sp.Popen(['unrar', 'x', rar_file, dir_path], stdout=sp.PIPE, stderr=sp.PIPE)
+    outs, errs = p.communicate()
+    outs = outs.decode(locale.getpreferredencoding())
+    errs = errs.decode(locale.getpreferredencoding())
+    return outs, errs
+
 
 
 def list_content(path):
