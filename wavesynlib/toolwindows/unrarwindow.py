@@ -93,3 +93,7 @@ class UnrarWindow(TkToolWindow):
         
     def unpack(self, dir_path:(str, Path)):
         unpack_rar(self.__path, dir_path)
+        
+        
+    def _on_unpack(self):
+        pass
