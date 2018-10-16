@@ -9,6 +9,7 @@ import tkinter
 from pathlib import Path
 
 from wavesynlib.widgets.tk import ScrolledTree, json_to_tk
+from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.interfaces.unrar.modelnode import list_content, get_content_tree
 from wavesynlib.interfaces.unrar.modelnode import unpack as unpack_rar
@@ -81,19 +82,29 @@ class UnrarWindow(TkToolWindow):
         treeview.tree_view.pack(expand='yes', fill='both')
         self.__path = None
         
-        
+       
+    @Scripting.printable
     def load(self, rar_file:(str, Path)): # TO DO: support io.IOBase
+        rar_file = self.root_node.gui.dialogs.ask_open_filename(
+            rar_file,
+            filetypes=[('Rar Files', '*.rar'), ('All Files', '*.*')])
+        
         self.__treeview.load(rar_file)
-        self.__path = rar_file
+        self.__path = Path(rar_file)
         
         
     def _on_load(self):
-        pass
+        with code_printer():
+            self.load(rar_file=self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
         
         
     def unpack(self, dir_path:(str, Path)):
-        unpack_rar(self.__path, dir_path)
+        dir_path = self.root_node.gui.dialogs.ask_directory(
+            dir_path,
+            initialdir=str(self.__path.parent))
+        unpack_rar(str(self.__path), dir_path)
         
         
     def _on_unpack(self):
-        pass
+        with code_printer():
+            self.unpack(self.root_node.lang_center.wavesynscript.constants.ASK_DIRECTORY)
