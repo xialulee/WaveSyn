@@ -46,10 +46,11 @@ def generate(text,
         return cw, ch
     
     for char in text:
-        char_font_filename = f'{char}.svg'
-        char_font_filepath = os.path.join(fontlibs[rand_font_idx()], char_font_filename)
-        if not os.path.exists(char_font_filepath):
-            raise ValueError(f'{char} not exists in {fontlibs[rand_font_idx()]}')
+        if char != ' ':
+            char_font_filename = f'{char}.svg'
+            char_font_filepath = os.path.join(fontlibs[rand_font_idx()], char_font_filename)
+            if not os.path.exists(char_font_filepath):
+                raise ValueError(f'{char} not exists in {fontlibs[rand_font_idx()]}')
 
         cw, ch = rand_char_size()
         
@@ -57,20 +58,17 @@ def generate(text,
             x_offset = origin[0]
             y_offset += char_height*(1+char_height_jitter)        
 
-        group = etree.Element('g', attrib={'transform':f'''\
+        if char != ' ':
+            group = etree.Element('g', attrib={'transform':f'''\
 translate({x_offset} {y_offset}) scale({cw/char_width*char_width_scale} {ch/char_height*char_height_scale})'''})
-        root.append(group)
-        char_paths = xml.etree.ElementTree.parse(char_font_filepath).getroot().findall('*/{http://www.w3.org/2000/svg}path')
-        for path in char_paths:
-            path_el = etree.Element('path', attrib={'d':path.get('d'), 'style':path.get('style')})
-            group.append(path_el)
+            root.append(group)
+            char_paths = xml.etree.ElementTree.parse(char_font_filepath).getroot().findall('*/{http://www.w3.org/2000/svg}path')
+            for path in char_paths:
+                path_el = etree.Element('path', attrib={'d':path.get('d'), 'style':path.get('style')})
+                group.append(path_el)
             
 
-        x_offset += cw            
-#        x_count += 1
-#        if (x_count+1)*char_width > width:
-#            x_count = 0
-#            y_count += 1    
+        x_offset += cw              
     with open(svg_filename, 'w') as f:
         f.write(etree.tostring(root, pretty_print=True).decode('utf-8'))
         
