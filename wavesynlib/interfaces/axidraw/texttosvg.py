@@ -6,6 +6,7 @@ Created on Thu Nov  1 10:42:20 2018
 """
 import os
 from random import random
+from operator import itemgetter
 from lxml import etree
 import xml.etree.ElementTree
 
@@ -72,3 +73,24 @@ translate({x_offset} {y_offset}) scale({cw/char_width*char_width_scale} {ch/char
     with open(svg_filename, 'w') as f:
         f.write(etree.tostring(root, pretty_print=True).decode('utf-8'))
         
+        
+        
+def fontlib_check(text, fontlib):
+    missing = []
+    for char in text:
+        char_path = os.path.join(fontlib, f'{char}.svg')
+        if not os.path.exists(char_path):
+            missing.append(char)
+    return missing
+        
+        
+
+def char_freq(text):
+    freq = {}
+    for char in text:
+        if char in freq:
+            freq[char] += 1
+        else:
+            freq[char] = 0
+    return sorted(freq.items(), key=itemgetter(1))
+    
