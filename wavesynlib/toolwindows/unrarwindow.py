@@ -19,15 +19,20 @@ from wavesynlib.interfaces.unrar.modelnode import unpack as unpack_rar
 class ContentTree:
     def __init__(self, *args, **kwargs):
         self.__tree_view = tree_view = ScrolledTree(*args, **kwargs)
-        tree_view.tree['columns'] = ('ratio', 'crc', 'path')
+        tree_view.tree['columns'] = ('ratio', 'crc', 'path', 'type')
         tree_view.heading('ratio', text='Ratio')
         tree_view.heading('crc', text='CRC')
         tree_view.heading('path', text='Path')
+        tree_view.heading('type', text='Type')
         
         
     @property
     def tree_view(self):
         return self.__tree_view
+    
+    
+    def clear(self):
+        self.tree_view.clear()
     
     
     def load(self, path):
@@ -38,10 +43,11 @@ class ContentTree:
             
         
     def _add_item(self, node_name, node, parent=''):
-        if node['Type'] == 'Directory':
-            values = ('', '', node['path'])
-        else:
-            values = (node['Ratio'], node['CRC32'], node['path'])
+#        if node['Type'] == 'Directory':
+#            values = ('', '', node['path'])
+#        else:
+#            values = (node['Ratio'], node.get('CRC32', ''), node['path'])
+        values = (node.get('Ratio', ''), node.get('CRC32', ''), node.get('path', ''), node.get('Type', ''))
             
         node_id = self.tree_view.insert(
             parent, 
@@ -85,6 +91,7 @@ class UnrarWindow(TkToolWindow):
        
     @Scripting.printable
     def load(self, rar_file:(str, Path)): # TO DO: support io.IOBase
+        self.__treeview.clear()
         rar_file = self.root_node.gui.dialogs.ask_open_filename(
             rar_file,
             filetypes=[('Rar Files', '*.rar'), ('All Files', '*.*')])
