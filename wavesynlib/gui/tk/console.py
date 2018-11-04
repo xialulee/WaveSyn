@@ -473,10 +473,7 @@ class ConsoleText(ModelNode, ScrolledText):
                         else:
                             self.prompt_symbol   = '>>> '
                             self.update_content(tag='', content='\n')
-                            try:
-                                ret = app.execute(code)
-                            except:
-                                traceback.print_exc()
+                            ret = app.execute(code)
                             if ret is not None:
                                 repr_ret = repr(ret)
                                 maxlen = 1000

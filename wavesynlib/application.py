@@ -211,12 +211,10 @@ since the instance of Application is the first node created on the model tree.
                 {'type':'link', 'content':'[EDIT(DEFAULT) and RUN]', 'command':on_edit_default, 'end':' '},
                 {'type':'link', 'content':'[EDIT(GVIM) and RUN]', 'command':on_edit_gvim},
                 {'type':'text', 'content':''},
-                {'type':'text', 'content': code}])    
+                {'type':'text', 'content': code}])   
+    
+            self.execute(code)
             
-            try:
-                self.execute(code)   
-            except:
-                traceback.print_exc()
                 
         with self.attribute_lock:
             self.monitor_timer = self.create_timer(interval=100, active=False)
@@ -366,6 +364,8 @@ and generate a dialog which helps user to input parameters.'''
                             self.stream_manager.write('WaveSyn: The mission has been aborted.\n', 'TIP')
             except SystemExit:
                 self._on_exit()
+            except:
+                traceback.print_exc()
             return ret
             
             
