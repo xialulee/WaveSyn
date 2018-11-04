@@ -11,8 +11,8 @@ from pathlib import Path
 from wavesynlib.widgets.tk import ScrolledTree, json_to_tk
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.interfaces.unrar.modelnode import list_content, get_content_tree
-from wavesynlib.interfaces.unrar.modelnode import unpack as unpack_rar
+from wavesynlib.interfaces.unrar import list_content, get_content_tree
+from wavesynlib.interfaces.unrar import unpack as unpack_rar
 
 
 
