@@ -33,13 +33,16 @@ class Utils(ModelNode):
         
     @Scripting.printable
     def get_tables(self, html_code=None, stream=None, file_path=None, encoding=None):
-        '''Translate <table>s in HTML code into Python nested lists.
+        '''\
+Translate <table>s in HTML code into Python nested lists.
 On Windows platform, it can also retrive tables in clipboard, since MSOffice
 put tables in clipboard using CF_HTML format.
 
-html_code: the HTML code as a string.
+html_code: the HTML code as a string (support GET_CLIPBOARD_HTML const if the
+        clipboard of the OS has the HTML mode).
     Default: None.
-stream: if html_code is None and stream provided, the HTML code will be obtained from this stream.
+stream: if html_code is None and stream provided, the HTML code will be 
+        obtained from this stream.
     Default: None.
 file_path: if html_code and stream are None and file_path provided,
     the HTML code will be obtained by reading the provided file.

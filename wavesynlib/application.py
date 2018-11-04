@@ -13,6 +13,7 @@ import sys
 import locale
 import tkinter
 import pickle
+import traceback
 from pathlib import Path
 
 from collections import OrderedDict
@@ -171,14 +172,17 @@ since the instance of Application is the first node created on the model tree.
                     # No blocking, or the main thread will not 
                     # responds to other events. 
                     
-                    if command_slot.source == 'local':
-                        node = command_slot.node_list[-1]
-                        if callable(node):
-                            node(*command_slot.args, **command_slot.kwargs)
-                        elif isinstance(node, ModelNode):
-                            getattr(node, command_slot.method_name)(*command_slot.args, **command_slot.kwargs)
-                        else:
-                            raise TypeError('The given object is not a ModelNode.')
+                    try:
+                        if command_slot.source == 'local':
+                            node = command_slot.node_list[-1]
+                            if callable(node):
+                                node(*command_slot.args, **command_slot.kwargs)
+                            elif isinstance(node, ModelNode):
+                                getattr(node, command_slot.method_name)(*command_slot.args, **command_slot.kwargs)
+                            else:
+                                raise TypeError('The given object is not a ModelNode.')
+                    except:
+                        traceback.print_exc()
             except queue.Empty:
                 return
                 
@@ -191,7 +195,7 @@ since the instance of Application is the first node created on the model tree.
             code = editor.code
             if (not code) or (not editor.run_on_exit):
                 return
-                            
+            
             def on_copy(*args, **kwargs):
                 self.interfaces.os.clipboard.write(code)
                 
@@ -208,9 +212,12 @@ since the instance of Application is the first node created on the model tree.
                 {'type':'link', 'content':'[EDIT(GVIM) and RUN]', 'command':on_edit_gvim},
                 {'type':'text', 'content':''},
                 {'type':'text', 'content': code}])    
-            self.execute(code)            
-        
-
+            
+            try:
+                self.execute(code)   
+            except:
+                traceback.print_exc()
+                
         with self.attribute_lock:
             self.monitor_timer = self.create_timer(interval=100, active=False)
             
