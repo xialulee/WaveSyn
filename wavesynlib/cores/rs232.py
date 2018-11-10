@@ -4,6 +4,7 @@ Created on Sat Jun 23 14:47:57 2018
 
 @author: Feng-cong Li
 """
+from argparse import ArgumentParser
 
 from myhdl import block, Signal, modbv, intbv, instance, instances, always_comb, always_seq, delay
 from wavesynlib.cores.shiftreg import DelayReg
@@ -189,9 +190,16 @@ def test_convert(hdl):
 import sys
     
 if __name__ == '__main__':
-    if sys.argv[1] == 'convert':
-        test_convert(hdl=sys.argv[2])
-    elif sys.argv[1] == 'simulate':
-        tb = Test(sys.argv[2])
+    parser = ArgumentParser(description='Generate synthesizable uart module in Verilog/VHDL, or run simulation of the uart module.')
+    parser.add_argument('--convert', help='Generate synthesizable uart module in Verilog/VHDL.', choices=['verilog', 'vhdl'])
+    parser.add_argument('--simulate', help='Run simulation of the uart module.', choices=['tx', 'rx'])
+
+    args = parser.parse_args()
+    
+    if args.simulate:
+        tb = Test(args.simulate)
         tb.config_sim(trace=True)
         tb.run_sim()
+    else: # convert
+        test_convert(hdl=args.convert)
+
