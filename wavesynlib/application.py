@@ -4,6 +4,7 @@ Created on Fri May 02 15:48:27 2014
 
 @author: Feng-cong Li. xialulee@sina.com
 """
+import hy # For modules written in Hy. 
 import threading
 import queue
 

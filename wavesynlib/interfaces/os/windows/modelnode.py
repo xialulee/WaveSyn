@@ -19,6 +19,7 @@ from wavesynlib.interfaces.os.windows.wmi import WQL
 from wavesynlib.interfaces.os.windows.shell.windowhandlegetter.modelnode import WindowHandleGetter
 
 
+
 app_paths = {
     'cmd': 'cmd',
     'powershell': 'powershell'
@@ -166,6 +167,12 @@ class Windows(ModelNode):
             is_lazy=True,
             module_name='wavesynlib.interfaces.os.windows.appcommand.modelnode',
             class_name='AppCommand')
+        
+        self.global_hotkey_manager = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.interfaces.os.windows.globalhotkey',
+            class_name='GlobalHotkeyManager')
+
         
     
     @Scripting.printable
