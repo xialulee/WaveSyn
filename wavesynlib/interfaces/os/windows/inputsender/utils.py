@@ -13,6 +13,7 @@ user32 = ctypes.windll.user32
 ULONG_PTR = ctypes.wintypes.WPARAM # See https://stackoverflow.com/a/13615802.
 
 from wavesynlib.languagecenter.utils import ctype_build
+from wavesynlib.interfaces.os.windows.inputsender.constants import *
 
 
 
@@ -27,12 +28,7 @@ def MOUSEINPUT(
 ):pass
         
         
-        
-KEYEVENTF_EXTENDEDKEY	=0x0001
-KEYEVENTF_KEYUP	=0x0002
-KEYEVENTF_SCANCODE	=0x0008
-KEYEVENTF_UNICODE	=0x0004
-        
+                
 @ctype_build('struct')
 def KEYBDINPUT(
     wVk: WORD,
@@ -62,10 +58,6 @@ def _DUMMYUNIONNAME(
 ):pass
 
 
-
-INPUT_MOUSE = 0
-INPUT_KEYBOARD = 1
-INPUT_HARDWARE = 2
 
 @ctype_build('struct', doc='''\
 According to Microsoft, INPUT is used by SendInput to store information for 

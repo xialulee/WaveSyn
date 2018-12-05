@@ -4,11 +4,9 @@ Created on Sun Sep  2 17:16:04 2018
 
 @author: Feng-cong Li
 """
-#import sys
-import hy
-#from wavesynlib.interfaces.os.windows import xinput
 from wavesynlib.interfaces.os.windows.xinput.utils import *
-from wavesynlib.interfaces.os.windows import sendinput
+from wavesynlib.interfaces.os.windows.xinput.constants import *
+from wavesynlib.interfaces.os.windows.inputsender.utils import send_key_input
 
 
 
@@ -46,12 +44,12 @@ def do(keymap):
                 if name not in current:
                     current.add(name)
                     if name in keymap:
-                        sendinput.send_key_input(keymap[name], press=True)
+                        send_key_input(keymap[name], press=True)
             else:
                 if name in current:
                     current.remove(name)
                     if name in keymap:
-                        sendinput.send_key_input(keymap[name], release=True)
+                        send_key_input(keymap[name], release=True)
                     
                     
                     
