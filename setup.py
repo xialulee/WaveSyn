@@ -17,10 +17,13 @@ try:
     root = tkinter.Tk()
     root.withdraw()
     def ask_config_dir():
-        return askdirectory(title='Select the directory for storing config, cache, and history files.')
+        return askdirectory(title='''\
+Select the directory for storing config, cache, and history files.''')
 except:
     def ask_config_dir():
-        return input('Please input the path of the directory for storing config, cache, and history files:\n')
+        return input('''\
+Please input the path of the directory for storing config, \
+cache, and history files:\n''')
 
 specpath = ask_config_dir()
 
@@ -39,6 +42,7 @@ setup(
         # If any package contains *.json/png/pyw files, include them:
         # .m files for Matlab functions and scripts.
         # .ps1 files for PowerShell scripts.
-        '': ['*.json', '*.png', '*.ico', '*.dll', '*.pyw', '*.ps1', '*.bat', '*.m', '*.txt']
+        '': ['*.json', '*.png', '*.ico', '*.dll', '*.pyw', 
+             '*.hy', '*.ps1', '*.bat', '*.m', '*.txt']
       }
 )
