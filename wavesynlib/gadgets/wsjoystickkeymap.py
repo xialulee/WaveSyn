@@ -5,27 +5,28 @@ Created on Sun Sep  2 17:16:04 2018
 @author: Feng-cong Li
 """
 #import sys
-
-from wavesynlib.interfaces.os.windows import xinput
+import hy
+#from wavesynlib.interfaces.os.windows import xinput
+from wavesynlib.interfaces.os.windows.xinput.utils import *
 from wavesynlib.interfaces.os.windows import sendinput
 
 
 
 button_consts = {
-    'XINPUT_GAMEPAD_DPAD_UP':	    xinput.XINPUT_GAMEPAD_DPAD_UP,
-    'XINPUT_GAMEPAD_DPAD_DOWN':	    xinput.XINPUT_GAMEPAD_DPAD_DOWN,
-    'XINPUT_GAMEPAD_DPAD_LEFT':	    xinput.XINPUT_GAMEPAD_DPAD_LEFT,
-    'XINPUT_GAMEPAD_DPAD_RIGHT':	xinput.XINPUT_GAMEPAD_DPAD_RIGHT,
-    'XINPUT_GAMEPAD_START':	        xinput.XINPUT_GAMEPAD_START,
-    'XINPUT_GAMEPAD_BACK':	        xinput.XINPUT_GAMEPAD_BACK,
-    'XINPUT_GAMEPAD_LEFT_THUMB':	xinput.XINPUT_GAMEPAD_LEFT_THUMB,
-    'XINPUT_GAMEPAD_RIGHT_THUMB':	xinput.XINPUT_GAMEPAD_RIGHT_THUMB,
-    'XINPUT_GAMEPAD_LEFT_SHOULDER':	xinput.XINPUT_GAMEPAD_LEFT_SHOULDER,
-    'XINPUT_GAMEPAD_RIGHT_SHOULDER':xinput.XINPUT_GAMEPAD_RIGHT_SHOULDER,
-    'XINPUT_GAMEPAD_A':	            xinput.XINPUT_GAMEPAD_A,
-    'XINPUT_GAMEPAD_B':	            xinput.XINPUT_GAMEPAD_B,
-    'XINPUT_GAMEPAD_X':	            xinput.XINPUT_GAMEPAD_X,
-    'XINPUT_GAMEPAD_Y':	            xinput.XINPUT_GAMEPAD_Y
+    'XINPUT_GAMEPAD_DPAD_UP':	    XINPUT_GAMEPAD_DPAD_UP,
+    'XINPUT_GAMEPAD_DPAD_DOWN':	    XINPUT_GAMEPAD_DPAD_DOWN,
+    'XINPUT_GAMEPAD_DPAD_LEFT':	    XINPUT_GAMEPAD_DPAD_LEFT,
+    'XINPUT_GAMEPAD_DPAD_RIGHT':	XINPUT_GAMEPAD_DPAD_RIGHT,
+    'XINPUT_GAMEPAD_START':	        XINPUT_GAMEPAD_START,
+    'XINPUT_GAMEPAD_BACK':	        XINPUT_GAMEPAD_BACK,
+    'XINPUT_GAMEPAD_LEFT_THUMB':	XINPUT_GAMEPAD_LEFT_THUMB,
+    'XINPUT_GAMEPAD_RIGHT_THUMB':	XINPUT_GAMEPAD_RIGHT_THUMB,
+    'XINPUT_GAMEPAD_LEFT_SHOULDER':	XINPUT_GAMEPAD_LEFT_SHOULDER,
+    'XINPUT_GAMEPAD_RIGHT_SHOULDER':XINPUT_GAMEPAD_RIGHT_SHOULDER,
+    'XINPUT_GAMEPAD_A':	            XINPUT_GAMEPAD_A,
+    'XINPUT_GAMEPAD_B':	            XINPUT_GAMEPAD_B,
+    'XINPUT_GAMEPAD_X':	            XINPUT_GAMEPAD_X,
+    'XINPUT_GAMEPAD_Y':	            XINPUT_GAMEPAD_Y
 }
 
 
@@ -34,7 +35,7 @@ def do(keymap):
     current = set()
     packet_number = -1
     while True:
-        state = xinput.get_state(0)
+        state = get_state(0)
         if packet_number == state.dwPacketNumber:
             continue
         else:

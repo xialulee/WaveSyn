@@ -172,9 +172,13 @@ class Windows(ModelNode):
             is_lazy=True,
             module_name='wavesynlib.interfaces.os.windows.globalhotkey',
             class_name='GlobalHotkeyManager')
-
         
-    
+        self.xinput = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.interfaces.os.windows.xinput.modelnode',
+            class_name='XInput')
+
+            
     @Scripting.printable
     def create_guid(self)->str:
         return str(comtypes.GUID.create_new())

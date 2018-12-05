@@ -158,6 +158,21 @@ import ctypes
 
 
 def ctype_build(type_, doc=''):
+    '''\
+This decorator is a helper for defining C struct/union datatypes.
+
+An example:
+@ctype_build('struct')
+def XINPUT_GAMEPAD(
+    wButtons: WORD,
+    bLeftTrigger: BYTE,
+    bRightTrigger: BYTE,
+    sThumbLX: SHORT,
+    sThumbLY: SHORT,
+    sThumbRX: SHORT,
+    sThumbRY: SHORT
+):pass    
+'''
     type_ = type_.lower()
     
     def the_decorator(f):
