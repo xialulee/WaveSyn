@@ -87,7 +87,7 @@ since the instance of Application is the first node created on the model tree.
             self.file_path = file_path
             self.dir_path = dir_path
         
-        with open('path.txt', 'r') as f:
+        with open(Path(__file__).parent/'path.txt', 'r') as f:
             self.__config_and_data_path = Path(f.readline())
         
         # load config file
