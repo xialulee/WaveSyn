@@ -7,81 +7,28 @@ Created on Sun Sep  2 12:04:33 2018
 
 import ctypes
 from ctypes import byref, sizeof
-from ctypes.wintypes import WORD, DWORD, LONG
+
 
 user32 = ctypes.windll.user32
-ULONG_PTR = ctypes.wintypes.WPARAM # See https://stackoverflow.com/a/13615802.
 
-from wavesynlib.languagecenter.utils import ctype_build
-from wavesynlib.interfaces.os.windows.inputsender.constants import *
+from wavesynlib.interfaces.os.windows.inputsender.constants import (
+    KEYEVENTF_KEYUP, INPUT_KEYBOARD)
 
-
-
-@ctype_build('struct')
-def MOUSEINPUT(
-    dx: LONG,
-    dy: LONG,
-    mouseData: DWORD,
-    dwFlags: DWORD,
-    time: DWORD,
-    dwExtraInfo: ULONG_PTR
-):pass
-        
-        
-                
-@ctype_build('struct')
-def KEYBDINPUT(
-    wVk: WORD,
-    wScan: WORD,
-    dwFlags: DWORD,
-    time: DWORD,
-    dwExtraInfo: ULONG_PTR
-):pass
-        
-        
-
-    
-@ctype_build('struct')
-def HARDWAREINPUT(
-    uMsg: DWORD,
-    wParamL: WORD,
-    wParamH: WORD
-):pass
-        
-        
-        
-@ctype_build('union')
-def _DUMMYUNIONNAME(
-    mi: MOUSEINPUT,
-    ki: KEYBDINPUT,
-    hi: HARDWAREINPUT
-):pass
+# The following code generates the bytecode file of the 
+# structdef.hy which is written in Hy.
+# If we import a module written in hy directly in wavesyn,
+# it will fail, and I cannot figure out why. 
+import os
+from pathlib import Path
+structdef_path = Path(__file__).parent / 'structdef.hy'
+os.system(f'hyc {structdef_path}')
+# After the bytecode file generated, we can import the module written by hy.
+import hy
+from wavesynlib.interfaces.os.windows.inputsender.structdef import ( 
+    INPUT, KEYBDINPUT)
 
 
 
-@ctype_build('struct', doc='''\
-According to Microsoft, INPUT is used by SendInput to store information for 
-synthesizing input events such as keystrokes, mouse movement, and mouse clicks.
-
-Fields:
-    type: DWORD. The type of the input event.
-        0: (INPUT_MOUSE) The event is a mouse event. Corresponding to the mi 
-            field.
-        1: (INPUT_KEYBOARD) The event is a keyboard event. Corresponding to the
-            ki field.
-        2: (INPUT_HARDWARE) The event is a hardware event. Corresponding to the 
-            hi field.
-    mi: MOUSEINPUT. The information about a simulated mouse event.
-    ki: KEYBDINPUT. The information about a simulated keyboard event.
-    hi: HARDWAREINPUT. The information about a simulated hardware event. 
-''')
-def INPUT(
-    type: DWORD,
-    dummy: (_DUMMYUNIONNAME, 'anonymous')
-):pass
-
-
-    
 def send_key_input(code, press=False, release=False):
     def _generate_keybd_event(code, release=False):
         ki_args = {'wVk':code}

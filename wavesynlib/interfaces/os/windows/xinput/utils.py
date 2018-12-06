@@ -15,8 +15,9 @@ from ctypes.wintypes import BOOL, DWORD, BYTE
 import os
 from pathlib import Path
 structdef_path = Path(__file__).parent / 'structdef.hy'
-os.system(f'hy {structdef_path}')
+os.system(f'hyc {structdef_path}')
 # After the bytecode file generated, we can import the module written by hy.
+import hy
 from wavesynlib.interfaces.os.windows.xinput.structdef import (
     XINPUT_STATE, XINPUT_VIBRATION, XINPUT_BATTERY_INFORMATION)
 
