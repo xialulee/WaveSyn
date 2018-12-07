@@ -48,6 +48,12 @@ Valid motor usage percent should be in [0, 100].''')
         return self.__button_names
     
     
+    def button_to_key(self, user_index, button_name, key_name, modifiers=None):
+        action = {'type':'key', 'name':key_name, 'modifiers':modifiers}
+        for type_ in ('press', 'release'):
+            self.set_button_map(user_index, button_name, type_, action)
+    
+    
     def set_button_map(self, user_index, button, type_, action):
         '''\
 Map the specified button to an action.
