@@ -6,7 +6,7 @@ Created on Sun Mar 05 20:20:24 2017
 """
 
 # The following code generates the bytecode file of the 
-# structdef.hy which is written in Hy.
+# utils.hy which is written in Hy.
 # If we import a module written in hy directly in wavesyn,
 # it will fail, and I cannot figure out why. 
 import os
