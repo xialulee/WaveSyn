@@ -2,19 +2,30 @@
 
 (defmacro compound [type-name name fields]
     (setv class-fields [])
-    (if (coll? type-name) (do ;if not symbol, should be a list.
-        (for [k (range 1 (len type-name) 2)]
-            (if (= (str (nth type-name k)) "pack")
-                (class-fields.extend ['-pack- (nth type-name (inc k))])))
+    (if (coll? type-name) (do 
+        ; If not symbol, should be a collection.
+        ; If type-name is a collection,
+        ; the first item is a symbol represents the type (Structure/Union),
+        ; the rest are property name property value pairs;
+	; e.g. [Structure pack 32]
+	(for [[prop-name prop-value] (-> type-name (rest) (partition))]
+            (if (= prop-name "pack")
+                (class-fields.extend ['-pack- prop-value])))
         (setv type-name (first type-name))))
     (setv field-list [])
     (setv anonymous-list [])
-    (for [k (range 0 (len fields) 2)]
-        (setv type-obj (nth fields k))
-        (setv field-name (-> (nth fields (inc k)) (str) (mangle)))
+
+    ; Analyzing fields
+    (for [[type-obj field-name] (partition fields)]
+        (setv field-name (-> field-name (str) (mangle)))
         (setv field-width 0)
         (if (coll? type-obj) (do
-            ; if not symbol, should be a list or expression.
+            ; If not symbol, should be a collection or an expression.
+	    ; If type-obj is a collection, it includes field type
+	    ; and extra information;
+	    ; e.g. [anonymous -U] represents the field is type -U
+	    ; and this field is an anonymous field, and
+	    ; [c_int 16]
             (if (= (type type-obj) (type '())) 
 	        ; An expression.
                 (setv type-obj `(~@type-obj))
