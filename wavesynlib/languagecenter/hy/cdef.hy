@@ -1,17 +1,23 @@
 
 
-(defmacro compound [type-name name fields]
+(defmacro compound [type-name name &rest args]
     (setv class-fields [])
-    (if (coll? type-name) (do 
-        ; If not symbol, should be a collection.
-        ; If type-name is a collection,
-        ; the first item is a symbol represents the type (Structure/Union),
-        ; the rest are property name property value pairs;
-	; e.g. [Structure pack 32]
-	(for [[prop-name prop-value] (-> type-name (rest) (partition))]
-            (if (= prop-name "pack")
-                (class-fields.extend ['-pack- prop-value])))
-        (setv type-name (first type-name))))
+
+    (if-not (symbol? name)
+        (raise (TypeError "Name of a struct should be a symbol.")))
+    
+    (setv len-args (len args))
+    (cond ; Do not have struct properties such as pack.
+          ; The first item of args is fields.
+          [(= len-args 1) (setv props [] fields (first args))]
+	  ; len args == 2 means
+	  ; the first item is struct property
+	  ; and the second one is the fields.
+          [(= len-args 2) (setv props (first args) fields (second args))])
+
+    (for [[prop-name prop-value] (partition props)]
+        (if (= prop-name "pack")
+            (class-fields.extend ['-pack- prop-value])))
     (setv field-list [])
     (setv anonymous-list [])
 
@@ -56,7 +62,7 @@
 ;    c_int y])
 ;
 ;; Setting _pack_
-; compound [Structure pack 32] Point [
+; compound Structure [pack 32] Point [
 ;    c_int x
 ;    c_int y])
 ;
@@ -74,6 +80,48 @@
 ; compound Structure TYPEDESC [
 ;    [anonymous -U] u
 ;    VARTYPE vt])
+
+
+
+; The following macros provide more convenient way
+; for defining structs and unions.
+
+(defmacro/g! -aux-compound [type-name name &rest args]
+    (setv len-args (len args))
+
+    (cond [(= len-args 1) (setv props [] fields (first args))]
+          [(= len-args 2) (setv props (first args) fields (second args))])
+
+    (setv type-name (str type-name))
+
+    (for [[prop-name prop-value] (partition props)]
+        (if (= prop-name 'endian) 
+            (setv type-name (str.join 
+                "" 
+                [(-> prop-value 
+                    (str) 
+                    (str.capitalize)) 
+                "Endian" 
+                type-name]))))
+    `(do
+        (setv ~g!ct (--import-- "ctypes"))
+        (setv ~g!tn (getattr ~g!ct ~type-name))
+        (require wavesynlib.languagecenter.hy.cdef)
+        (wavesynlib.languagecenter.hy.cdef.compound ~g!tn ~name ~#*args)))
+
+
+
+(defmacro struct [name &rest args]
+    `(do
+        (require wavesynlib.languagecenter.hy.cdef)
+        (wavesynlib.languagecenter.hy.cdef.-aux-compound "Structure" ~name ~#*args)))
+
+
+
+(defmacro union [name &rest args]
+    `(do
+        (require wavesynlib.languagecenter.hy.cdef)
+        (wavesynlib.languagecenter.hy.cdef.-aux-compound "Union" ~name ~#*args)))
 
 
 

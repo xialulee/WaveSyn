@@ -1,4 +1,4 @@
-(require [wavesynlib.languagecenter.hy.cdef [compound]])
+(require [wavesynlib.languagecenter.hy.cdef [struct union]])
 (import [ctypes [Structure Union]])
 (import [ctypes.wintypes [WORD DWORD LONG WPARAM]])
 
@@ -7,7 +7,7 @@
 
 
 
-(compound Structure MOUSEINPUT [
+(struct MOUSEINPUT [
     LONG dx
     LONG dy
     DWORD mouseData
@@ -17,7 +17,7 @@
 
 
 
-(compound Structure KEYBDINPUT [
+(struct KEYBDINPUT [
     WORD wVk
     WORD wScan
     DWORD dwFlags
@@ -26,14 +26,14 @@
 
 
 
-(compound Structure HARDWAREINPUT [
+(struct HARDWAREINPUT [
     DWORD uMsg
     WORD wParamL
     WORD wParamH])
 
 
 
-(compound Union -DUMMYUNIONNAME [
+(union -DUMMYUNIONNAME [
     MOUSEINPUT mi
     KEYBDINPUT ki
     HARDWAREINPUT hi])
@@ -54,6 +54,6 @@
 ;    mi: MOUSEINPUT. The information about a simulated mouse event.
 ;    ki: KEYBDINPUT. The information about a simulated keyboard event.
 ;    hi: HARDWAREINPUT. The information about a simulated hardware event. 
-(compound Structure INPUT [
+(struct INPUT [
     DWORD type
     [anonymous -DUMMYUNIONNAME] dummy])

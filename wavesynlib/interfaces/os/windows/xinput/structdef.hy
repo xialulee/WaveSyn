@@ -1,10 +1,9 @@
-(require [wavesynlib.languagecenter.hy.cdef [compound]])
-(import [ctypes [Structure]])
+(require [wavesynlib.languagecenter.hy.cdef [struct]])
 (import [ctypes.wintypes [BOOL WORD DWORD BYTE SHORT]])
 
 
 
-(compound Structure XINPUT-GAMEPAD [
+(struct XINPUT-GAMEPAD [
     WORD wButtons
     BYTE bLeftTrigger
     BYTE bRightTrigger
@@ -14,17 +13,17 @@
     SHORT sThumbRY])
 
 
-(compound Structure XINPUT-STATE [
+(struct XINPUT-STATE [
     DWORD dwPacketNumber
     XINPUT-GAMEPAD Gamepad])
 
 
-(compound Structure XINPUT-VIBRATION [
+(struct XINPUT-VIBRATION [
     WORD wLeftMotorSpeed
     WORD wRightMotorSpeed])
 
 
-(compound Structure XINPUT-BATTERY-INFORMATION [
+(struct XINPUT-BATTERY-INFORMATION [
     BYTE BatteryType
     BYTE BatteryLevel])
 
