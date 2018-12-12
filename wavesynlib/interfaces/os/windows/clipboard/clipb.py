@@ -6,10 +6,9 @@ import win32clipboard
 import getopt
 import re
 import msvcrt
-import six
 from io import BytesIO
-from PIL        import Image, ImageGrab
-from psd_tools  import PSDImage
+from PIL import Image, ImageGrab
+
 
 
 # --2009.10.16 PM 04:00 Created by xialulee--
@@ -47,9 +46,8 @@ NEWLINE = re.compile(r'(?<!\r)\n')
 CF_HTML = win32clipboard.RegisterClipboardFormat('HTML Format')
 
 def clipboard_to_stream(stream, mode, code, null, html=False):
-    if not six.PY2:
-        if not code:
-            code = '@' # Automatic mode.
+    if not code:
+        code = '@' # Automatic mode.
     exitcode = ERROR_NOERROR
     win32clipboard.OpenClipboard(0)
     try:
@@ -66,11 +64,9 @@ def clipboard_to_stream(stream, mode, code, null, html=False):
                     code = 'utf-8'
                 else: # using sys.getfilesystemencoding().
                     code = sys.getfilesystemencoding()            
-            if six.PY2:                
-                s = s.encode(code, 'ignore')
             else:
                 # For Python 3, we cannot put bytes object to streams. 
-                if not isinstance(s, six.text_type):
+                if not isinstance(s, str):
                     s = s.decode(code, 'ignore')
         if null:
             s = s[:s.index('\x00')]
@@ -117,11 +113,11 @@ EndFragment:{3: 13d}
                 template_length,
                 template_length+len(s)
         )
-        if not six.PY2:
-            # On Python 3, bytes object does not have format method.
-            # Hence, template_head is str type.
-            # Here we have to convert it to bytes object.
-            template_head = template_head.encode('utf-8')
+
+        # On Python 3, bytes object does not have format method.
+        # Hence, template_head is str type.
+        # Here we have to convert it to bytes object.
+        template_head = template_head.encode('utf-8')
         html_string = b''.join((template_head, s, template_tail))
         win32clipboard.SetClipboardData(CF_HTML, html_string)
     else: # not html
@@ -150,6 +146,8 @@ def image_file_to_clipboard(fileObj, is_psd=False):
     '''Read an image file and write the image data into clipboard.
 See http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
 '''
+    from psd_tools  import PSDImage
+
     if is_psd:
         psd = PSDImage.from_stream(fileObj)
         image = psd.as_PIL()
