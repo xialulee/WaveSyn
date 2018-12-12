@@ -1,16 +1,16 @@
 (defn table-to-code [table &optional head]
-    (if-not head (do
-        (setv head (first table))
-	(setv table (rest table))))
+    (if-not head 
+        (setv head (first table) 
+              table (rest table)))
     (setv head-code (->> head
         (map str)
-	(str.join "|")))
+	(.join "|")))
     (setv split-code (->> (len head)
         (* ["---"])
-	(str.join "|")))
+	(.join "|")))
     (setv rows [head-code split-code])
     (rows.extend 
         (gfor row table (->> row 
 	    (map str) 
-	    (str.join "|"))))
-    (str.join "\n" rows))
+	    (.join "|"))))
+    (.join "\n" rows))

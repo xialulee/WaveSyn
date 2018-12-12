@@ -60,7 +60,7 @@
     (defn row-to-str [row start-tag stop-tag]
         (setv row-str (.join " " (map 
             (comp
-                (fn [item] (.join "" [start-tag item stop-tag]))
+                #%(.join "" [start-tag %1 stop-tag])
                 html.escape
                 str) 
             row)))
