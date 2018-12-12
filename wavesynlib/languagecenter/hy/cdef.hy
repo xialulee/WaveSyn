@@ -9,15 +9,18 @@
     (setv len-args (len args))
     (cond ; Do not have struct properties such as pack.
           ; The first item of args is fields.
-          [(= len-args 1) (setv props [] fields (first args))]
+          [(= len-args 1) (setv props [] 
+                                fields (first args))]
 	  ; len args == 2 means
 	  ; the first item is struct property
 	  ; and the second one is the fields.
-          [(= len-args 2) (setv props (first args) fields (second args))])
+          [(= len-args 2) (setv props (first args) 
+                                fields (second args))])
 
     (for [[prop-name prop-value] (partition props)]
         (if (= prop-name "pack")
             (class-fields.extend ['-pack- prop-value])))
+
     (setv field-list [])
     (setv anonymous-list [])
 
@@ -89,15 +92,16 @@
 (defmacro/g! -aux-compound [type-name name &rest args]
     (setv len-args (len args))
 
-    (cond [(= len-args 1) (setv props [] fields (first args))]
-          [(= len-args 2) (setv props (first args) fields (second args))])
+    (cond [(= len-args 1) (setv props [] 
+                                fields (first args))]
+          [(= len-args 2) (setv props (first args) 
+                                fields (second args))])
 
     (setv type-name (str type-name))
 
     (for [[prop-name prop-value] (partition props)]
         (if (= prop-name 'endian) 
-            (setv type-name (str.join 
-                "" 
+            (setv type-name (.join "" 
                 [(-> prop-value 
                     (str) 
                     (str.capitalize)) 
