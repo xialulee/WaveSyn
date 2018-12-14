@@ -14,6 +14,17 @@ from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.interfaces.unrar import list_content, get_content_tree
 from wavesynlib.interfaces.unrar import unpack as unpack_rar
 
+# The following code generates the bytecode file of the 
+# widgets.hy which is written in Hy.
+# If we import a module written in hy directly in wavesyn,
+# it will fail, and I cannot figure out why. 
+widgets_path = Path(__file__).parent / 'widgets.hy'
+os.system(f'hyc {widgets_path}')
+# After the bytecode file generated, we can import the module written by hy.
+import hy
+from wavesynlib.toolwindows.unrar.widgets import (
+        load_grp, unpack_grp)
+
 
 
 class ContentTree:
@@ -43,10 +54,6 @@ class ContentTree:
             
         
     def _add_item(self, node_name, node, parent=''):
-#        if node['Type'] == 'Directory':
-#            values = ('', '', node['path'])
-#        else:
-#            values = (node['Ratio'], node.get('CRC32', ''), node['path'])
         values = (node.get('Ratio', ''), node.get('CRC32', ''), node.get('path', ''), node.get('Type', ''))
             
         node_id = self.tree_view.insert(
@@ -68,17 +75,12 @@ class UnrarWindow(TkToolWindow):
         super().__init__()
         
         tool_tabs = self._tool_tabs
-        widgets_desc = [
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Load'}, 'children':[
-    {'class':'Button', 'config':{'text':'Load', 'command':self._on_load}}]
-},
 
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Unpack'}, 'children':[
-    {'class':'Button', 'config':{'text':'Unpack', 'command':self._on_unpack}}]
-}
-]
+        widgets_desc = [load_grp, unpack_grp]
         tab = tkinter.Frame(tool_tabs)
         widgets = json_to_tk(tab, widgets_desc)
+        widgets['load_btn']['command'] = self._on_load 
+        widgets['unpack_btn']['command'] = self._on_unpack         
         tool_tabs.add(tab, text='Unrar')
 
         self._make_window_manager_tab()
