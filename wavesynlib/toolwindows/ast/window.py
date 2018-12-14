@@ -11,6 +11,18 @@ from wavesynlib.widgets.tk import ScrolledText, ScrolledTree, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 
+import os
+from pathlib import Path
+# The following code generates the bytecode file of the 
+# widgets.hy which is written in Hy.
+# If we import a module written in hy directly in wavesyn,
+# it will fail, and I cannot figure out why. 
+widgets_path = Path(__file__).parent / 'widgets.hy'
+os.system(f'hyc {widgets_path}')
+# After the bytecode file generated, we can import the module written by hy.
+import hy
+from wavesynlib.toolwindows.ast.widgets import source_grp
+
 
 
 opmap = {
@@ -89,13 +101,11 @@ class ASTDisplay(TkToolWindow):
         
         tool_tabs = self._tool_tabs
         
-        widgets_desc = [
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Source'}, 'children':
-    [{'class':'Button', 'config':{'text':'Parse', 'command':self._on_parse}}]}
-]
+        widgets_desc = [source_grp]
             
         tab = tk.Frame(tool_tabs)
-        json_to_tk(tab, widgets_desc)
+        widgets = json_to_tk(tab, widgets_desc)
+        widgets['parse_btn']['command'] = self._on_parse
         tool_tabs.add(tab, text='Code')
         
         self._make_window_manager_tab()
