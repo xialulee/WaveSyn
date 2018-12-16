@@ -2,9 +2,8 @@
 
 (import [xml.etree [ElementTree]])
 (import html)
-(import [html [parser]])
 
-
+(require [wavesynlib.languagecenter.hy.htmldef [traveller]])
 
 ; See http://stackoverflow.com/a/9662410
 (defn remove-tags [html-code]
@@ -14,45 +13,35 @@
         (.join "")))
 
 
-(defclass -TableTextExtractor [parser.HTMLParser]
-    (defn --init-- [self tables]
-        (.--init-- (super))
-        (setv self.--tables tables)
-        (setv self.--current-table None)
-        (setv self.--current-row None)
-        (setv self.--in-td-tag False))
-	
-    (defn handle-starttag [self tag attrs]
-        (cond [(= tag "table") (do
-                  (setv table [])
-                  (setv self.--current-table table)
-                  (self.--tables.append table))]
-              [(= tag "tr") (do
-                  (setv row [])
-                  (self.--current-table.append row)
-                  (setv self.--current-row row))]
-              [(= tag "td") (do
-                  (setv self.--in-td-tag True)
-                  (self.--current-row.append ""))]
-              [(= tag "p") (ap-if (. self --current-row [-1])
-                      (setv (. self --current-row [-1]) 
-                            (+ it "\n")))]))
+
+(traveller get-table-text [
+    (shared tables        []
+            current-table None
+            current-row   None
+            in-td-flag    False)
     
-    (defn handle-endtag [self tag]
-        (if (= tag "td")
-            (setv self.--in-td-tag False)))
+    (on-enter table 
+        (setv current-table [])
+        (tables.append current-table))
+	
+	(on-enter tr 
+            (setv current-row [])
+            (current-table.append current-row))
 	    
-    (defn handle-data [self data]
-        (if self.--in-td-tag
-            (+= (. self --current-row [-1]) data))))
+            (on-enter td
+                (setv in-td-flag True)
+                (current-row.append ""))
+             
+                (on-enter p 
+                    (ap-if (. current-row [-1])
+                        (setv (. current-row [-1]) (+ it "\n"))))
 
-
-
-(defn get-table-text [html-code]
-    (setv retval [])
-    (setv extractor (-TableTextExtractor retval))
-    (extractor.feed html-code)
-    retval)
+                (on-data (if in-td-flag 
+                    (+= (. current-row [-1]) data)))
+            
+            (on-leave td (setv in-td-flag False))
+	    
+    (on-finish tables)])
 
 
 
