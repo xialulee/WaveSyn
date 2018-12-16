@@ -12,8 +12,6 @@ import tkinter as tk
 from tkinter import ttk
 import psd_tools
 
-import numpy as np
-
 from PIL import Image
 from PIL import ImageTk
 
@@ -22,6 +20,19 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.utils import MethodDelegator
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+
+
+# The following code generates the bytecode file of the 
+# widgets.hy which is written in Hy.
+# If we import a module written in hy directly in wavesyn,
+# it will fail, and I cannot figure out why. 
+widgets_path = Path(__file__).parent / 'widgets.hy'
+os.system(f'hyc {widgets_path}')
+# After the bytecode file generated, we can import the module written by hy.
+import hy
+from wavesynlib.toolwindows.psdview.widgets import (
+        load_grp, export_grp, resize_grp,
+        external_viewer_grp, wallpaper_grp)
 
 
 
@@ -92,36 +103,24 @@ class PSDViewer(TkToolWindow):
         tool_tabs = self._tool_tabs
         
         widgets_desc = [
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Load'}, 'children':[
-    {'class':'Button', 'config':{'text':'Load', 'command':self._on_load_psd}}]
-},
-
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Export'}, 'children':[
-    {'class':'Button', 'config':{'text':'All Layers', 'command':self._on_export_all}, 'pack':{'fill':'x'}},
-    {'class':'Button', 'config':{'text':'Selected Layer/Group', 'command':self._on_export_selected}}]
-},
-
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Resize'}, 'children':[
-    {'class':'Scale', 'name':'image_scale', 'config':{'from_':5, 'to':100, 'orient':'horizontal', 'value':100, 'command':self._on_scale}},
-    {'class':'Label', 'name':'scale_label', 'config':{'text':'100%'}}]
-},
-
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Viewer'}, 'children':[
-    {'class':'Button', 'config':{'text':'Launch', 'command':self._on_launch_viewer}}]
-},
-
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Wallpaper'}, 'children':[
-    {'class':'Button', 'config':{'text':'Set', 'command':self._on_set_wallpaper}},
-    {'class':'Combobox', 'name':'wallpaper_position', 'config':{'stat':'readonly', 'values':['Center', 'Tile', 'Stretch', 'Fit', 'Fill', 'Span']}}]
-}
-]
+load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
 
         tab = tk.Frame(tool_tabs)
         widgets = json_to_tk(tab, widgets_desc)
         self.__scale_label = widgets['scale_label']
         self.__image_scale = widgets['image_scale']
-        self.__wallpaper_position = widgets['wallpaper_position']        
+        self.__image_scale['command'] = self._on_scale
+        self.__wallpaper_position = widgets['wallpaper_position_combo']        
         self.__wallpaper_position.current(0)
+        
+        widgets['load_btn']['command'] =self._on_load_psd
+        
+        widgets['export_all_btn']['command'] = self._on_export_selected
+        widgets['export_selected_btn']['command'] = self._on_export_selected
+        
+        widgets['launch_viewer_btn']['command'] = self._on_launch_viewer
+        
+        widgets['set_wallpaper_btn']['command'] = self._on_set_wallpaper
         tool_tabs.add(tab, text='PSD Files')
         
         tk_object = self.tk_object

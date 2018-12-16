@@ -2,7 +2,7 @@
     (setv retval {})
     (for [[key value] (partition args)]
         (if (keyword? key)
-            (setv key (name key)))
+            (setv key (-> key (name) (mangle))))
         (assoc retval key value))
     retval)
 
