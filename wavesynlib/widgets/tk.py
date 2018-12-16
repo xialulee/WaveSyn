@@ -1599,9 +1599,10 @@ class ArrayRenderMixin(object):
 
 
 def json_to_tk(parent, json_code, balloon=None):
-    '''
+    '''\
 Example: [
-    {"name":"alert_button", "class":"Button", "module":"ttk", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
+    {"name":"alert_button", "class":"Button", "module":"ttk", 
+    "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
 ]
     '''
     import tkinter as tk
@@ -1610,16 +1611,15 @@ Example: [
     if isinstance(json_code, str):
         json_obj = json.loads(json_code)
     else:
-        # To Do: copy the object, since json_to_tk will change the input. 
         json_obj = json_code
     retval = {}
 
     for item in json_obj:
         try:
-            class_name = item.pop('class')
+            class_name = item.get('class')
         except KeyError:
-            class_name = item.pop('class_')
-        mod = item.pop('module', None)
+            class_name = item.get('class_')
+        mod = item.get('module', None)
         if mod:
             mod = locals()[mod]
             cls = getattr(mod, class_name)            
@@ -1633,27 +1633,27 @@ Example: [
             else:
                 cls = tk.__dict__[class_name]
         
-        widget = cls(parent, **item.pop('config', {}))
+        widget = cls(parent, **item.get('config', {}))
         if 'grid' in item:
-            widget.grid(**item.pop('grid', {}))        
+            widget.grid(**item.get('grid', {}))        
         else:
-            widget.pack(**item.pop('pack', {}))
+            widget.pack(**item.get('pack', {}))
         
         if 'balloonmsg' in item and balloon is not None:
-            balloon.bind_widget(widget, balloonmsg=item.pop('balloonmsg'))
+            balloon.bind_widget(widget, balloonmsg=item.get('balloonmsg'))
         
         if 'children' in item:
-            sub_widgets = json_to_tk(widget, item.pop('children'), balloon=balloon)
+            sub_widgets = json_to_tk(widget, item.get('children'), balloon=balloon)
             for sub_widget in sub_widgets:
                 if sub_widget in retval:
                     raise ValueError('Multiple widgets have a same name.')
                 retval[sub_widget] = sub_widgets[sub_widget]
         if 'setattr' in item:
-            attr_map = item.pop('setattr')
+            attr_map = item.get('setattr')
             for attr_name in attr_map:
                 setattr(widget, attr_name, attr_map[attr_name])
         if 'name' in item:
-            retval[item.pop('name')] = widget
+            retval[item.get('name')] = widget
     return retval
 
         
