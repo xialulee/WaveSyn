@@ -42,8 +42,8 @@ if platform.system() == 'Windows':
         win7plus = True
 
 if win7plus:
-    from wavesynlib.interfaces.os.windows.shell.taskbarmanager import (
-        ITaskbarList4, GUID_CTaskbarList)
+    from wavesynlib.interfaces.os.windows.shell.taskbarmanager.definitions \
+        import ITaskbarList4, GUID_CTaskbarList
     from comtypes import CoCreateInstance
     import ctypes as ct
     from win32con import GWL_EXSTYLE, WS_EX_LAYERED, LWA_ALPHA

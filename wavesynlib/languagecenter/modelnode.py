@@ -27,3 +27,4 @@ class LangCenterNode(ModelNode):
             is_lazy=True,
             module_name='wavesynlib.languagecenter.markdown.modelnode',
             class_name='Utils')
+        
