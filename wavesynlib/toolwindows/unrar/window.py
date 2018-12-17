@@ -18,12 +18,17 @@ from wavesynlib.interfaces.unrar import unpack as unpack_rar
 # widgets.hy which is written in Hy.
 # If we import a module written in hy directly in wavesyn,
 # it will fail, and I cannot figure out why. 
-widgets_path = Path(__file__).parent / 'widgets.hy'
-os.system(f'hyc {widgets_path}')
+
 # After the bytecode file generated, we can import the module written by hy.
 import hy
-from wavesynlib.toolwindows.unrar.widgets import (
-        load_grp, unpack_grp)
+try:
+    from wavesynlib.toolwindows.unrar.widgets import (
+            load_grp, unpack_grp)
+except hy.errors.HyCompileError:
+    widgets_path = Path(__file__).parent / 'widgets.hy'
+    os.system(f'hyc {widgets_path}')    
+    from wavesynlib.toolwindows.unrar.widgets import (
+            load_grp, unpack_grp)    
 
 
 

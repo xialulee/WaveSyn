@@ -31,7 +31,7 @@ def call_immediately(func):
 
 class EvalFormatter(Formatter):
     def __init__(self, level=1):
-        super(EvalFormatter, self).__init__()
+        super().__init__()
         self.caller = None # Will be set by method "format".
         self.level  = level
         

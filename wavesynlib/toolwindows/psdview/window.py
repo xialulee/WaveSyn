@@ -26,13 +26,18 @@ from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 # widgets.hy which is written in Hy.
 # If we import a module written in hy directly in wavesyn,
 # it will fail, and I cannot figure out why. 
-widgets_path = Path(__file__).parent / 'widgets.hy'
-os.system(f'hyc {widgets_path}')
-# After the bytecode file generated, we can import the module written by hy.
 import hy
-from wavesynlib.toolwindows.psdview.widgets import (
-        load_grp, export_grp, resize_grp,
-        external_viewer_grp, wallpaper_grp)
+try:
+    from wavesynlib.toolwindows.psdview.widgets import (
+            load_grp, export_grp, resize_grp,
+            external_viewer_grp, wallpaper_grp)
+except hy.errors.HyCompileError:
+# After the bytecode file generated, we can import the module written by hy.    
+    widgets_path = Path(__file__).parent / 'widgets.hy'
+    os.system(f'hyc {widgets_path}')    
+    from wavesynlib.toolwindows.psdview.widgets import (
+            load_grp, export_grp, resize_grp,
+            external_viewer_grp, wallpaper_grp)
 
 
 

@@ -4,19 +4,24 @@ Created on Sun Mar 05 17:50:52 2017
 
 @author: Feng-cong Li
 """
+import os
+from pathlib import Path
+
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 
 # The following code generates the bytecode file of the 
 # utils.hy which is written in Hy.
 # If we import a module written in hy directly in wavesyn,
 # it will fail, and I cannot figure out why. 
-import os
-from pathlib import Path
-utils_path = Path(__file__).parent / 'utils.hy'
-os.system(f'hyc {utils_path}')
-# After the bytecode file generated, we can import the module written by hy.
 import hy
-from wavesynlib.languagecenter.html import utils
+try:
+    from wavesynlib.languagecenter.html import utils
+except hy.errors.HyCompileError:
+# After the bytecode file generated, we can import the module written by hy.    
+    utils_path = Path(__file__).parent / 'utils.hy'
+    os.system(f'hyc {utils_path}')
+    from wavesynlib.languagecenter.html import utils
+    
 
 
 class Utils(ModelNode):

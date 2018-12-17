@@ -4,6 +4,9 @@ Created on Fri Oct 13 23:26:46 2017
 
 @author: Feng-cong Li
 """
+import os
+from pathlib import Path
+
 import ctypes
 from ctypes import byref
 from ctypes.wintypes import BOOL, DWORD, BYTE
@@ -12,14 +15,16 @@ from ctypes.wintypes import BOOL, DWORD, BYTE
 # structdef.hy which is written in Hy.
 # If we import a module written in hy directly in wavesyn,
 # it will fail, and I cannot figure out why. 
-import os
-from pathlib import Path
-structdef_path = Path(__file__).parent / 'structdef.hy'
-os.system(f'hyc {structdef_path}')
-# After the bytecode file generated, we can import the module written by hy.
 import hy
-from wavesynlib.interfaces.os.windows.xinput.structdef import (
-    XINPUT_STATE, XINPUT_VIBRATION, XINPUT_BATTERY_INFORMATION)
+try:
+    from wavesynlib.interfaces.os.windows.xinput.structdef import (
+        XINPUT_STATE, XINPUT_VIBRATION, XINPUT_BATTERY_INFORMATION)
+except hy.errors.HyCompileError:
+# After the bytecode file generated, we can import the module written by hy.    
+    structdef_path = Path(__file__).parent / 'structdef.hy'
+    os.system(f'hyc {structdef_path}')
+    from wavesynlib.interfaces.os.windows.xinput.structdef import (
+        XINPUT_STATE, XINPUT_VIBRATION, XINPUT_BATTERY_INFORMATION)    
 
 from wavesynlib.interfaces.os.windows.xinput.constants import BATTERY_DEVTYPE_GAMEPAD
 
