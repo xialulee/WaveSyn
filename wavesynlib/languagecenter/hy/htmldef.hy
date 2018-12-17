@@ -1,5 +1,5 @@
 
-(defmacro traveller [name processes]
+(defmacro/g! traveller [name processes]
     (setv shared-vars []
           var-names []
           enter-procs []
@@ -49,8 +49,8 @@
                   (target.append `(if ~expr ((fn [] ~@actions)))))]))
 
     `(setv ~name ((fn []
-        (import [html.parser [HTMLParser]])
-        (defclass Traveller [HTMLParser]
+        (import html.parser)
+        (defclass ~g!Traveller [html.parser.HTMLParser]
             (defn --init-- [self]
                 (.--init-- (super))
                 (for [[name val] [~@shared-vars]] 
@@ -67,7 +67,7 @@
             (defn -get-result [self]
                 ~finish-proc))
         (fn [code]
-            (setv obj (Traveller))
+            (setv obj (~g!Traveller))
             (obj.feed code)
             (obj.-get-result)) )) ) )
 

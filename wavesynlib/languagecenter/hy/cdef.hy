@@ -89,7 +89,7 @@
 ; The following macros provide more convenient way
 ; for defining structs and unions.
 
-(defmacro -aux-compound [type-name name &rest args]
+(defmacro/g! -aux-compound [type-name name &rest args]
     (setv len-args (len args))
 
     (cond [(= len-args 1) (setv props [] 
@@ -111,8 +111,8 @@
         (import ctypes)
         (setv type- (getattr ctypes ~type-name))
         (require wavesynlib.languagecenter.hy.cdef)
-        (wavesynlib.languagecenter.hy.cdef.compound type- TheStruct ~#*args)
-        TheStruct))))
+        (wavesynlib.languagecenter.hy.cdef.compound type- ~g!TheStruct ~#*args)
+        ~g!TheStruct))))
 
 
 
