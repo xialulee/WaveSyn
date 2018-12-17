@@ -1,7 +1,3 @@
-(import [comtypes [STDMETHOD COMMETHOD]])
-
-
-
 (defn handle-stdmethod-args [sexpr]
     [(first sexpr) ; Return Type
      (-> sexpr (second) (str) (mangle))  ; Method Name
