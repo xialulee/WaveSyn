@@ -4,6 +4,9 @@ Created on Mon Mar 27 15:33:03 2017
 
 @author: Feng-cong Li
 """
+import os
+from pathlib import Path
+
 import tkinter as tk
 from tkinter import ttk
 
@@ -11,6 +14,23 @@ from wavesynlib.widgets.tk import ScrolledTree, Group, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
+
+
+
+# The following code generates the bytecode file of the 
+# widgets.hy which is written in Hy.
+# If we import a module written in hy directly in wavesyn,
+# it will fail, and I cannot figure out why. 
+import hy
+try:
+    from wavesynlib.toolwindows.msoffice.widgets import (
+            connect_grp, window_grp, utils_grp)
+except hy.errors.HyCompileError:
+# After the bytecode file generated, we can import the module written by hy.    
+    widgets_path = Path(__file__).parent / 'widgets.hy'
+    os.system(f'hyc {widgets_path}')    
+    from wavesynlib.toolwindows.msoffice.widgets import (
+            connect_grp, window_grp, utils_grp)
 
 
 
@@ -59,44 +79,18 @@ class OfficeController(TkToolWindow):
         self._gui_images = []
         tool_tabs = self._tool_tabs
         
-        widgets_desc = [
-{'class':Group, 
-     'pack':{'side':'left', 'fill':'y'},
-    'setattr':{'name':'Connect'},
-    'children':[
-        {'class':ttk.Button,
-             'config':{'text':'Get Active', 'command':self.__on_get_active}
-        },
-        {'class':ttk.Button,
-             'config':{'text':'Create', 'command':self.__on_create}
-        }
-    ]
-},
-
-{'class':Group,
-    'pack':{'side':'left', 'fill':'y'},
-    'setattr':{'name':'Window'},
-    'children':[
-        {'class':ttk.Button,
-             'config':{'text':'Foreground', 'command':self.__on_foreground}
-        },
-        {'class':ttk.Button,
-             'config':{'text':'Copy Path', 'command':self.__on_copy_path}
-        }
-    ]
-},
-
-{'class':Group,
-    'name':'utils_group',
-    'pack':{'side':'left', 'fill':'y'},
-    'setattr':{'name':'Utils'}
-}
-]
-        
+        widgets_desc = [connect_grp, window_grp, utils_grp]
+      
         tab = tk.Frame(tool_tabs)
         widgets = json_to_tk(tab, widgets_desc)
+        
+        widgets['get_active_btn']['command'] = self.__on_get_active
+        widgets['create_btn']['command'] = self.__on_create
+        
+        widgets['foreground_btn']['command'] = self.__on_foreground
+        widgets['copypath_btn']['command'] = self.__on_copy_path
 
-        self.__utils_group = utils_group = widgets['utils_group']
+        self.__utils_group = utils_group = widgets['utils_grp']
         # Utils panel if no item is selected.
         self.__null_utils_frame = null_utils_frame = tk.Frame(utils_group)
         null_utils_frame.pack(fill='both')
