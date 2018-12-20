@@ -5,7 +5,6 @@ Created on Wed Feb 03 16:00:18 2016
 @author: Feng-cong Li
 """
 import tkinter as tk
-from tkinter import ttk
 
 import os
 import _thread as thread
@@ -14,9 +13,8 @@ import queue
 import hashlib
 
 from pathlib import Path
-from PIL import ImageTk
 
-from wavesynlib.widgets.tk import ScrolledTree, Group, DirIndicator, json_to_tk
+from wavesynlib.widgets.tk import ScrolledTree, DirIndicator, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, code_printer
@@ -32,13 +30,13 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 import hy
 try:
     from wavesynlib.toolwindows.replicafinder.widgets import (
-            finder_grp)
+            finder_grp, status_frm, _green_light_icon, _red_light_icon)
 except hy.errors.HyCompileError:
 # After the bytecode file generated, we can import the module written by hy.    
     widgets_path = Path(__file__).parent / 'widgets.hy'
     os.system(f'hyc {widgets_path}')    
     from wavesynlib.toolwindows.replicafinder.widgets import (
-            finder_grp)
+            finder_grp, status_frm, _green_light_icon, _red_light_icon)
 
 
 
@@ -207,9 +205,7 @@ class ReplicaFinderWindow(TkToolWindow):
     
     def __init__(self):
         super().__init__()
-        
-        self._gui_images = []
-        
+                
         finder_tab = tk.Frame(self._tool_tabs)
         self._tool_tabs.add(finder_tab, text='Finder')
         
@@ -235,24 +231,17 @@ class ReplicaFinderWindow(TkToolWindow):
         treeview.pack(expand='yes', fill='both')
         self.replica_finder.add_observer(treeview)
         self.replica_finder.add_observer(self)  
-
-        # Start Status Bar {
-        status_bar = tk.Frame(self.tk_object)
-        status_bar.pack(fill='x')
-        image_red = ImageTk.PhotoImage(file=_image_dir / 'red_light.png')
-        self.__image_red_light = image_red
-        image_green = ImageTk.PhotoImage(file=_image_dir / 'green_light.png')
-        self.__image_green_light = image_green
-        self.__busy_light = ttk.Label(status_bar, image=image_green)
-        self.__busy_light.pack(side='right')     
-        self.__current_dir_label = ttk.Label(status_bar)
-        self.__current_dir_label.pack(side='right')
-        # } End   
+        
+        widgets_desc = [status_frm]
+        widgets = json_to_tk(self.tk_object, widgets_desc)
+        self.__busy_light = busy_light = widgets['light_lbl']
+        busy_light['image'] = _green_light_icon
+        self.__current_dir_label = widgets['current_dir_lbl']
               
         
     def update(self, md5, path, current_dir, stop, laststate=[None]):
         if not stop: 
-            if current_dir is not None:
+            if current_dir:
                 self.__current_dir_label['text'] = current_dir
         else:
             self.__current_dir_label['text'] = ''
@@ -260,7 +249,7 @@ class ReplicaFinderWindow(TkToolWindow):
         if stop != laststate[0]:
             laststate[0] = stop            
             state = 'normal' if stop else 'disabled'
-            light = self.__image_green_light if stop else self.__image_red_light
+            light = _green_light_icon if stop else _red_light_icon
             self.__start_button['state'] = state
             self.__busy_light['image'] = light
             
@@ -268,7 +257,7 @@ class ReplicaFinderWindow(TkToolWindow):
     def _on_start_click(self):
         self.__treeview.clear()
         self.__start_button['state'] = 'disabled'
-        self.__busy_light['image'] = self.__image_red_light
+        self.__busy_light['image'] = _red_light_icon
         with code_printer():
             self.replica_finder.thread_run(self.__dir_indicator.directory)
             

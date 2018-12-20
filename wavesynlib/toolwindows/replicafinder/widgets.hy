@@ -2,7 +2,7 @@
 
 (import [tkinter [*]])
 (import [tkinter.ttk [
-    Button]])
+    Button Label]])
 (import [wavesynlib.widgets.tk [Group]])
 
 (import [PIL [ImageTk]])
@@ -13,6 +13,10 @@
     :file (/ -file-dir "images" "start_button.png")))
 (setv -stop-icon (ImageTk.PhotoImage 
     :file (/ -file-dir "images" "stop_button.png")))
+(setv -green-light-icon (ImageTk.PhotoImage
+    :file (/ -file-dir "images" "green_light.png")))
+(setv -red-light-icon (ImageTk.PhotoImage
+    :file (/ -file-dir "images" "red_light.png")))
 
 
 
@@ -27,4 +31,13 @@
         (child Button stop-btn [
             (config :image -stop-icon)
             (grid :row 0 :column 1)])])])
+
+
+
+(widget Frame status-frm [
+    (pack :fill X)
+    (child Label light-lbl [
+        (pack :side RIGHT)])
+    (child Label current-dir-lbl [
+        (pack :side RIGHT)])])
 
