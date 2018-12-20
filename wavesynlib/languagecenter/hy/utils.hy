@@ -1,5 +1,7 @@
 (require [hy.extra.anaphoric [*]])
 
+(import [pathlib [Path]])
+
 
 
 (setv -op-priority {

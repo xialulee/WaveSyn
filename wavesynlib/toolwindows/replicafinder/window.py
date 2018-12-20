@@ -13,14 +13,33 @@ import threading
 import queue
 import hashlib
 
+from pathlib import Path
 from PIL import ImageTk
 
-from wavesynlib.widgets.tk import ScrolledTree, Group, DirIndicator
+from wavesynlib.widgets.tk import ScrolledTree, Group, DirIndicator, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.interfaces.timer.tk import TkTimer
+
+
+
+# The following code generates the bytecode file of the 
+# widgets.hy which is written in Hy.
+# If we import a module written in hy directly in wavesyn,
+# it will fail, and I cannot figure out why. 
+import hy
+try:
+    from wavesynlib.toolwindows.replicafinder.widgets import (
+            finder_grp)
+except hy.errors.HyCompileError:
+# After the bytecode file generated, we can import the module written by hy.    
+    widgets_path = Path(__file__).parent / 'widgets.hy'
+    os.system(f'hyc {widgets_path}')    
+    from wavesynlib.toolwindows.replicafinder.widgets import (
+            finder_grp)
+
 
 
 _image_dir = get_caller_dir()/'images'
@@ -194,26 +213,12 @@ class ReplicaFinderWindow(TkToolWindow):
         finder_tab = tk.Frame(self._tool_tabs)
         self._tool_tabs.add(finder_tab, text='Finder')
         
-        # Start select group {
-        select_group = Group(finder_tab)
-        select_group.pack(side='left', fill='y')
-        select_group.name = 'Finder'
+        widgets_desc = [finder_grp]
+        widgets = json_to_tk(finder_tab, widgets_desc)
         
-        row = tk.Frame(select_group)
-        row.pack()
-        
-        image_start = ImageTk.PhotoImage(file=_image_dir/'start_button.png')
-        self._gui_images.append(image_start)
-        self.__start_button = start_button = ttk.Button(row, 
-                   image=image_start, 
-                   command=self._on_start_click)
-        start_button.pack(side='left', fill='y')
-        
-        image_stop = ImageTk.PhotoImage(file=_image_dir/'stop_button.png')
-        self._gui_images.append(image_stop)
-        ttk.Button(row, image=image_stop,
-                   command=self._on_stop_click).pack(side='left', fill='y')                   
-        # } End
+        widgets['start_btn']['command'] = self._on_start_click
+        widgets['stop_btn']['command'] = self._on_stop_click
+        self.__start_button = widgets['start_btn']
                    
         self._make_window_manager_tab()
 
