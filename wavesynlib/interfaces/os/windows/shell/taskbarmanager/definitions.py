@@ -15,13 +15,15 @@ from pathlib import Path
 
 import hy
 try:
-    from wavesynlib.interfaces.os.windows.shell.taskbarlist import (
+    from wavesynlib.interfaces.os.windows.shell.taskbarmanager.interfaces \
+    import (
         ITaskbarList, ITaskbarList2, ITaskbarList3, ITaskbarList4)
 except hy.errors.HyCompileError:
 # After the bytecode file generated, we can import the module written by hy.
     interfaces_path = Path(__file__).parent / 'interfaces.hy'
     os.system(f'hyc {interfaces_path}')    
-    from wavesynlib.interfaces.os.windows.shell.taskbarlist import (
+    from wavesynlib.interfaces.os.windows.shell.taskbarmanager.interfaces\
+    import (
         ITaskbarList, ITaskbarList2, ITaskbarList3, ITaskbarList4)
 
 
