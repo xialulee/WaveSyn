@@ -10,7 +10,7 @@
 
     (if (symbol? name) (setv name (str name)))
 
-    `(+ 
+    `(.join "" [ 
         (.format "<{}{}>" 
             ~name
             (if-not ~attr
@@ -22,5 +22,5 @@
                         (setv key (name key)))
                     (.format " {}=\"{}\"" key val)))))))) 
         (str.join "\n" ~child) 
-        (.format "</{}>" ~name)))
+        (.format "</{}>" ~name)]))
 
