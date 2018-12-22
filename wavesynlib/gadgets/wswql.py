@@ -9,7 +9,7 @@ from __future__ import print_function, division, unicode_literals
 
 import sys
 import getopt
-#from comtypes import client
+from comtypes import client
 from wavesynlib.interfaces.os.windows.wmi import WQL
 
 from wavesynlib.languagecenter.datatypes import Table
@@ -36,7 +36,9 @@ def main(argv):
 #    loc = client.CreateObject('WbemScripting.SWbemLocator')
 #    svc = loc.ConnectServer('.', 'root\\cimv2')
 #    items = svc.ExecQuery(wql_str)
-    wql = WQL()
+    loc = client.CreateObject('WbemScripting.SWbemLocator')
+    service = loc.ConnectServer('.')
+    wql = WQL(service)
     items = wql.query(wql_str)
     flag = True
 
