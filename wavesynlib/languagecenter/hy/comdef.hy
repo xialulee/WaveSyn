@@ -1,3 +1,7 @@
+(require [wavesynlib.languagecenter.hy.utils [modify-as]])
+
+
+
 (defn handle-stdmethod-args [sexpr]
     [(first sexpr) ; Return Type
      (-> sexpr (second) (str) (mangle))  ; Method Name
@@ -7,16 +11,16 @@
 
 
 (defn handle-commethod-args [sexpr]
-    (setv desc
-        [(first sexpr);  idflag
-         (second sexpr); Return Type
-         (-> (. sexpr [2]) (str) (mangle)) ; Method Name
-    ])
-    (setv arg-list [])
-    (for [[prop type- name] (-> sexpr (get 3) (partition 3))]
-        (arg-list.append `(, [~(str prop)] ~type- ~(-> name (str) (mangle)))))
-    (desc.extend arg-list)
-    desc)
+    ; sexpr = [idflag, Return type, Method name (symbol) 
+    ;             [Method definitions]]
+    ; idflag, Return Type, Method Name (Symbol).
+
+    ; Convert Method name from symbol to str.
+    (modify-as (. sexpr [2]) it (-> it (str) (mangle)))
+    (chain
+        (cut sexpr 0 3)
+        (gfor [prop type- name] (-> sexpr (get 3) (partition 3))
+            `(, [~(str prop)] ~type- ~(-> name (str) (mangle))))))
 
 
 

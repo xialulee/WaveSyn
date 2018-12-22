@@ -2,11 +2,9 @@
     (setv len-args (len args))
     (cond 
     [(= 1 len-args)
-        (setv attr  ""
-              child (first args))]
+        (setv [attr child] ["" (first args)])]
     [(= 2 len-args)
-        (setv attr  (first args)
-              child (second args))])
+        (setv [attr child] args)]
 
     (if (symbol? name) (setv name (str name)))
 

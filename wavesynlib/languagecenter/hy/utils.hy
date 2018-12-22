@@ -1,7 +1,5 @@
 (require [hy.extra.anaphoric [*]])
 
-(import [pathlib [Path]])
-
 
 
 (setv -op-priority {
@@ -65,7 +63,22 @@
         [left-expr right-expr]))
     retval)
 
-
-
 (defmacro infix [expr] (infix-to-prefix expr))
+
+
+
+(defn func-modify-as [target alias procs]
+    (defn replace-alias [sexpr]
+        ((type sexpr) (ap-map 
+            (cond [(coll? it) (replace-alias it)]
+                  [(and (symbol? it) (= alias it)) target]
+                  [True it])
+            sexpr)))
+
+    `(setv ~target (do ~@(replace-alias procs))))
+    
+
+
+(defmacro modify-as [target alias &rest procs]
+    (func-modify-as target alias procs))
 
