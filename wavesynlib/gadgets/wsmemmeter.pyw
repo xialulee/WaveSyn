@@ -5,7 +5,7 @@
 # win8 python27
 # Feng-cong Li
 
-import os
+#import os
 
 from tkinter import Tk, Label
 import ctypes as ct
@@ -15,31 +15,7 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.process import singleton
 from wavesynlib.languagecenter.utils import get_caller_dir
-
-
-
-class MEMORYSTATUS(ct.Structure):
-    _fields_    = [
-        ('dwLength',        ct.wintypes.DWORD),
-        ('dwMemoryLoad',    ct.wintypes.DWORD),
-        ('dwTotalPhys',     ct.c_size_t),
-        ('dwAvailPhys',     ct.c_size_t),
-        ('dwTotalPageFile', ct.c_size_t),
-        ('dwAvailPageFile', ct.c_size_t),
-        ('dwTotalVirtual',  ct.c_size_t),
-        ('dwAvailVirtual',  ct.c_size_t)
-    ]
-    
-    
-    
-def get_memory_usage():
-    memstat = MEMORYSTATUS()
-    memstat.dwLength = ct.sizeof(MEMORYSTATUS)    
-    ct.windll.kernel32.GlobalMemoryStatus(ct.byref(memstat))
-    memusage = memstat.dwMemoryLoad
-    return memusage      
-
-
+from wavesynlib.interfaces.os.windows.memstatus import get_memory_usage
 
 APPID = '129832A8-AA09-4416-8C6A-9945FAB4CDFA'
 
