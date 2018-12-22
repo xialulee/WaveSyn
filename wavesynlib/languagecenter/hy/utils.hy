@@ -1,4 +1,5 @@
 (require [hy.extra.anaphoric [*]])
+(import [hy.contrib.walk [postwalk]])
 
 
 
@@ -67,18 +68,12 @@
 
 
 
-(defn func-modify-as [target alias procs]
-    (defn replace-alias [sexpr]
-        ((type sexpr) (ap-map 
-            (cond [(coll? it) (replace-alias it)]
-                  [(and (symbol? it) (= alias it)) target]
-                  [True it])
-            sexpr)))
-
-    `(setv ~target (do ~@(replace-alias procs))))
-    
-
-
 (defmacro modify-as [target alias &rest procs]
-    (func-modify-as target alias procs))
+    `(setv ~target (do ~@(postwalk 
+        (fn [item]
+            (if (and (symbol? item) (= item alias))
+                target
+            ; else
+                item))
+        procs))))
 
