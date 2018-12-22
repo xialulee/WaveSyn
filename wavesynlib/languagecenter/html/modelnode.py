@@ -66,3 +66,8 @@ file_path: if html_code and stream are None and file_path provided,
 encoding: the encoding of the HTML code. '''
         html_code = self._get_html_code(html_code, stream, file_path, encoding)
         return utils.get_table_text(html_code)  
+    
+    
+    @Scripting.printable
+    def iterable_to_table(self, iterable, have_head=False):
+        return utils.iterable_to_table(iterable, have_head)

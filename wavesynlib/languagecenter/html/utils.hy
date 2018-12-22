@@ -2,6 +2,7 @@
 
 (import [xml.etree [ElementTree]])
 (import html)
+(import [itertools [chain]])
 
 (require [wavesynlib.languagecenter.hy.htmldef [traveller]])
 (require [wavesynlib.languagecenter.hy.xmldef [tag]])
@@ -50,10 +51,13 @@
     (defn escape [item]
         (-> item (str) (html.escape)))
 
-    (tag table (gfor [idx row] (enumerate iterable)
-        (tag tr (gfor item row
-            (if (and have-head (not idx))
-                (tag th [(escape item)])
-            ;else
-                (tag td [(escape item)])))))))
+    (defn row-to-str [row tag-name]
+        (tag tr (gfor item row 
+            (tag (eval tag-name) [(escape item)]))))
+
+    (setv first-row-tag (if have-head "th" "td"))
+
+    (tag table (chain
+        [(row-to-str (first iterable) first-row-tag)]
+        (ap-map (row-to-str it "td") (rest iterable)))))
 
