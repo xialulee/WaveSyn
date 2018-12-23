@@ -39,7 +39,7 @@ class ThreadManager(ModelNode, metaclass=Singleton):
         
         
     def only_main_thread(self, block=True):
-        pass
+        raise NotImplementedError('Not implemented yet.')
         
         
     def main_thread_do(self, block=True):

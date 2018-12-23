@@ -177,7 +177,7 @@ class Windows(ModelNode):
             is_lazy=True,
             module_name='wavesynlib.interfaces.os.windows.inputsender.modelnode',
             class_name='InputSenders')
-        
+                
         self.xinput = ModelNode(
             is_lazy=True,
             module_name='wavesynlib.interfaces.os.windows.xinput.modelnode',
