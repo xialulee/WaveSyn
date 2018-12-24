@@ -77,3 +77,8 @@
                 item))
         procs))))
 
+
+
+(defmacro call= [obj f]
+    `(setv ~obj (~f ~obj)))
+

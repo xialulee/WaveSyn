@@ -1,3 +1,5 @@
+(require [wavesynlib.languagecenter.hy.utils [call=]])
+
 (import ctypes)
 (import [ctypes [byref]])
 (import [ctypes.wintypes [UINT MSG]])
@@ -72,7 +74,7 @@
         (deepcopy self.--hotkey-info)))
         
     (defn register [self modifiers vk func &optional [call-in-main-thread True]]
-        (setv modifiers (-modifier-names-to-obj modifiers))
+        (call= modifiers -modifier-names-to-obj)
         (if call-in-main-thread
             (defn f [] ((.main-thread-do self.root-node.thread-manager :block True) func))
             (setv f func))
@@ -86,7 +88,7 @@
         
     (defn unregister [self &optional modifiers vk id-]
         (when modifiers
-            (setv modifiers (-modifier-names-to-obj modifiers)))
+            (call= modifiers -modifier-names-to-obj))
         (unless id-
             (for [[key val] (.items self.--hotkey-info)]
                 (when (and (= (first val) modifiers) (= (second val) vk))
