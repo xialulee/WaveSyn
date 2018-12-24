@@ -6,6 +6,7 @@ Created on Tue Jan 17 14:05:12 2017
 """
 import _thread as thread
 import threading
+from queue import Queue, Empty
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib.languagecenter.designpatterns import Singleton
@@ -21,6 +22,50 @@ class _ThreadObj(threading.Thread):
     
     def run(self):
         self.__func()
+        
+        
+        
+class _RepeaterThread(threading.Thread):
+    def __init__(self, func):
+        self.__repeat_func = func
+        self.__queue = Queue()
+        self.__call_once_finished = threading.Event()
+        self.__call_once_retval = None
+        super().__init__()
+        
+        
+    def do_once(self, func):
+        finished = self.__call_once_finished
+        finished.clear()
+        self.__queue.put(func)
+        finished.wait()
+        retval = self.__call_once_retval
+        if isinstance(retval, Exception):
+            raise retval
+        else:
+            return retval
+    
+    
+    def run(self):
+        queue = self.__queue
+        repeat_func = self.__repeat_func
+        while True:
+            try:
+                while True:
+                    call_once_func = queue.get_nowait()
+                    try:
+                        retval = call_once_func()
+                    except Exception as err:
+                        self.__call_once_retval = err
+                    else:
+                        self.__call_once_retval = retval
+                    finally:
+                        self.__call_once_finished.set()
+            except Empty:
+                pass
+            
+            repeat_func()
+        
 
 
 # Only one thread manager for a process. 
@@ -85,4 +130,8 @@ the rest code will not be executed util do_something() returned.
         
     def create_thread_object(self, func):
         return _ThreadObj(func)
+    
+    
+    def create_repeater_thread(self, func):
+        return _RepeaterThread(func)
         

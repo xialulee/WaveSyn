@@ -170,7 +170,7 @@ class Windows(ModelNode):
         
         self.global_hotkey_manager = ModelNode(
             is_lazy=True,
-            module_name='wavesynlib.interfaces.os.windows.globalhotkey',
+            module_name='wavesynlib.interfaces.os.windows.globalhotkey.modelnode',
             class_name='GlobalHotkeyManager')
         
         self.input_senders = ModelNode(
