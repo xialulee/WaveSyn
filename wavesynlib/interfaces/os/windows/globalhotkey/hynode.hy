@@ -1,8 +1,6 @@
-(require [hy.extra.anaphoric [*]])
-
 (import ctypes)
 (import [ctypes [byref]])
-(import [ctypes.wintypes [MSG]])
+(import [ctypes.wintypes [UINT MSG]])
 (import [win32con [WM-HOTKEY PM-REMOVE]])
 (setv -user32 ctypes.windll.user32)
 (import [copy [deepcopy]])
@@ -10,6 +8,36 @@
 (import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
 
 (setv -ID-UPPER-BOUND (inc 0xBFFF))
+
+
+
+(defclass Modifiers [UINT]
+    (setv -attr-names [
+        [0 "alt"] [1 "ctrl"] [2 "shift"] [3 "win"] [14 "norepeat"]])
+    (for [[idx name] -attr-names]
+        (setv -temp (property (fn [self &optional [idx idx]] 
+            (& self.value (<< 1 idx)))))
+        (assoc (locals) name (.setter -temp (fn [self val &optional [idx idx]]
+            (if val 
+                (|= self.value (<< 1 idx))
+                (&= self.value (~ (<< 1 idx)))))))))
+
+
+
+(defn -modifier-name-convert [name]
+    (setv name (.lower name))
+    (cond 
+    [(in name ["alt" "menu"]) "alt"]
+    [(in name ["ctrl" "control"]) "ctrl"]
+    [(= name "shift") "shift"]))
+
+
+
+(defn -modifier-names-to-obj [modifiers]
+    (setv modobj (Modifiers 0))
+    (for [modifier modifiers]
+        (setattr modobj (-modifier-name-convert modifier) 1))
+    modobj)
 
 
 
@@ -44,6 +72,7 @@
         (deepcopy self.--hotkey-info)))
         
     (defn register [self modifiers vk func &optional [call-in-main-thread True]]
+        (setv modifiers (-modifier-names-to-obj modifiers))
         (if call-in-main-thread
             (defn f [] ((.main-thread-do self.root-node.thread-manager :block True) func))
             (setv f func))
@@ -56,6 +85,8 @@
         success)
         
     (defn unregister [self &optional modifiers vk id-]
+        (when modifiers
+            (setv modifiers (-modifier-names-to-obj modifiers)))
         (unless id-
             (for [[key val] (.items self.--hotkey-info)]
                 (when (and (= (first val) modifiers) (= (second val) vk))
