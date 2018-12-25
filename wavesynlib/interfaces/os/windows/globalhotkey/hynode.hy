@@ -1,4 +1,4 @@
-(require [wavesynlib.languagecenter.hy.utils [call=]])
+(require [wavesynlib.languagecenter.hy.utils [call= dyn-defprop defprop]])
 
 (import ctypes)
 (import [ctypes [byref]])
@@ -17,13 +17,16 @@
 (defclass Modifiers [UINT]
     (setv -attr-names [
         [0 "alt"] [1 "ctrl"] [2 "shift"] [3 "win"] [14 "norepeat"]])
-    (for [[idx name] -attr-names]
-        (setv -temp (property (fn [self &optional [idx idx]] 
-            (& self.value (<< 1 idx)))))
-        (assoc (locals) name (.setter -temp (fn [self val &optional [idx idx]]
-            (if val 
-                (|= self.value (<< 1 idx))
-                (&= self.value (~ (<< 1 idx)))))))))
+    (for [[bitpos name] -attr-names]
+        (dyn-defprop name
+            ; getter
+            (fn [self &optional [bitpos bitpos]]
+                (& self.value (<< 1 bitpos)))
+            ; setter
+            (fn [self val &optional [bitpos bitpos]]
+                (if val
+                    (|= self.value (<< 1 bitpos))
+                    (&= self.value (~ (<< 1 bitpos))))))))
 
 
 
@@ -73,9 +76,10 @@
             (.start self.--repeater))
         self.--repeater))
                             
-    #@(property
-    (defn hotkey-info [self]
-        (deepcopy self.--hotkey-info)))
+    (defprop hotkey-info
+        ; getter
+        (fn [self]
+            (deepcopy self.--hotkey-info)))
         
     (defn register [self modifiers vk func &optional [call-in-main-thread True]]
         (call= modifiers -modifier-names-to-obj)

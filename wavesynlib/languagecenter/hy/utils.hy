@@ -82,3 +82,21 @@
 (defmacro call= [obj f]
     `(setv ~obj (~f ~obj)))
 
+
+
+(defmacro dyn-setv [name sexpr]
+    `(assoc (locals) (mangle ~name) ~sexpr))
+
+(defmacro dyn-defn [name args &rest body]
+    `(assoc (locals) (mangle ~name) (fn ~args ~@body)))
+
+(defmacro dyn-defprop [name getter &optional setter]
+    (setv sexpr `(property ~getter))
+    (when setter (setv sexpr `(.setter ~sexpr ~setter)))
+    `(assoc (locals) (mangle ~name) ~sexpr))
+
+(defmacro defprop [name getter &optional setter]
+    `(do
+        (require wavesynlib.languagecenter.hy.utils)
+        (wavesynlib.languagecenter.hy.utils.dyn-defprop ~(str name) ~getter ~setter)))
+
