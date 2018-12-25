@@ -17,11 +17,30 @@ from wavesynlib.languagecenter import datatypes
 class _ThreadObj(threading.Thread):
     def __init__(self, func):
         self.__func = func
-        threading.Thread.__init__(self)
+        super().__init__()
     
     
     def run(self):
         self.__func()
+        
+        
+
+# Will be used for GPU Worker. 
+class _WaiterThread(threading.Thread):
+    def __init__(self):
+        self.__queue = Queue()
+        super().__init__()
+        
+        
+    def do(self, func):
+        self.__queue.put(func)
+    
+    
+    def run(self):
+        queue = self.__queue
+        while True:
+            func = queue.get()
+            func()
         
         
         
