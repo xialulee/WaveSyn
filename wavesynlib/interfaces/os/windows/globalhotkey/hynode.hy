@@ -6,6 +6,7 @@
 (import [win32con [WM-HOTKEY PM-REMOVE]])
 (setv -user32 ctypes.windll.user32)
 (import [copy [deepcopy]])
+(import [threading [RLock]])
 
 (import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
 
@@ -47,12 +48,14 @@
     (defn --init-- [self &rest args &kwargs kwargs]
         (.--init-- (super) #* args #** kwargs)
         (setv self.--hotkey-info {})
+        (setv self.--hotkey-info-lock (RLock))
         (setv self.--repeater None))
         
     (defn --get-new-id [self]
         (for [i (range 1 -ID-UPPER-BOUND)]
-            (when (not-in i self.--hotkey-info)
-                (return i))))
+            (with [self.--hotkey-info-lock]
+                (when (not-in i self.--hotkey-info)
+                    (return i)))))
                 
     #@(property 
     (defn -repeater [self]
@@ -63,7 +66,8 @@
                     (when (and 
                             (-user32.PeekMessageW (byref msg) -1 0 0 PM-REMOVE)
                             (= msg.message WM-HOTKEY))
-                        (setv info (.get self.--hotkey-info msg.wParam (fn [] None)))
+                        (with [self.--hotkey-info-lock]
+                            (setv info (.get self.--hotkey-info msg.wParam (fn [] None))))
                         ((. info [-1]))))))
             (setv self.--repeater.daemon True)
             (.start self.--repeater))
@@ -83,7 +87,8 @@
             self.-repeater
             (fn [] (-user32.RegisterHotKey None id- modifiers vk))))
         (when success
-            (assoc self.--hotkey-info id- (, modifiers vk f)))
+            (with [self.--hotkey-info-lock]
+                (assoc self.--hotkey-info id- (, modifiers vk f))))
         success)
         
     (defn unregister [self &optional modifiers vk id-]
@@ -99,7 +104,8 @@
                 self.-repeater 
                 (fn []
                     (-user32.UnregisterHotKey None id-)))
-            (del (get self.--hotkey-info id-))))
+            (with [self.--hotkey-info-lock]
+                (del (get self.--hotkey-info id-)))))
             
     (defn unregister-all [self]
         (for [id- (tuple (.keys self.--hotkey-info))]
