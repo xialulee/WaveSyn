@@ -1,4 +1,4 @@
-(require [wavesynlib.languagecenter.hy.utils [call= dyn-defprop defprop]])
+(require [wavesynlib.languagecenter.hy.utils [call= dyn-defprop defprop freeze]])
 
 (import ctypes)
 (import [ctypes [byref]])
@@ -17,16 +17,18 @@
 (defclass Modifiers [UINT]
     (setv -attr-names [
         [0 "alt"] [1 "ctrl"] [2 "shift"] [3 "win"] [14 "norepeat"]])
-    (for [[bitpos name] -attr-names]
-        (dyn-defprop name
+    (for [[bitpos name] -attr-names] 
+        (dyn-defprop name 
             ; getter
-            (fn [self &optional [bitpos bitpos]]
-                (& self.value (<< 1 bitpos)))
+            (freeze [bitpos]
+            (fn [self]
+                (& self.value (<< 1 bitpos))))
             ; setter
-            (fn [self val &optional [bitpos bitpos]]
+            (freeze [bitpos]
+            (fn [self val]
                 (if val
                     (|= self.value (<< 1 bitpos))
-                    (&= self.value (~ (<< 1 bitpos))))))))
+                    (&= self.value (~ (<< 1 bitpos)))))))))
 
 
 
@@ -60,21 +62,22 @@
                 (when (not-in i self.--hotkey-info)
                     (return i)))))
                 
-    #@(property 
-    (defn -repeater [self]
-        (unless self.--repeater
-            (setv self.--repeater 
-                (.create_repeater_thread self.root-node.thread-manager (fn []
-                    (setv msg (MSG))
-                    (when (and 
-                            (-user32.PeekMessageW (byref msg) -1 0 0 PM-REMOVE)
-                            (= msg.message WM-HOTKEY))
-                        (with [self.--hotkey-info-lock]
-                            (setv info (.get self.--hotkey-info msg.wParam (fn [] None))))
-                        ((. info [-1]))))))
-            (setv self.--repeater.daemon True)
-            (.start self.--repeater))
-        self.--repeater))
+    (defprop -repeater
+        ; getter
+        (fn [self]
+            (unless self.--repeater
+                (setv self.--repeater 
+                    (.create_repeater_thread self.root-node.thread-manager (fn []
+                        (setv msg (MSG))
+                        (when (and 
+                                (-user32.PeekMessageW (byref msg) -1 0 0 PM-REMOVE)
+                                (= msg.message WM-HOTKEY))
+                            (with [self.--hotkey-info-lock]
+                                (setv info (.get self.--hotkey-info msg.wParam (fn [] None))))
+                            ((. info [-1]))))))
+                (setv self.--repeater.daemon True)
+                (.start self.--repeater))
+            self.--repeater))
                             
     (defprop hotkey-info
         ; getter

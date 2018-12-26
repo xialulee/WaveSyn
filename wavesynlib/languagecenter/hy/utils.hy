@@ -100,3 +100,18 @@
         (require wavesynlib.languagecenter.hy.utils)
         (wavesynlib.languagecenter.hy.utils.dyn-defprop ~(str name) ~getter ~setter)))
 
+
+
+(defmacro freeze [vars func]
+    (setv arglist
+        (list (chain
+            ['&optional]
+            (gfor var vars [var var]))))
+    (if (= (first func) 'defn) (do 
+        (.pop func 0)
+        (setv func-name (first func))
+        (setv (. func [0]) 'fn)
+        `(setv ~func-name ((fn ~arglist ~func))))
+    ; else
+        `((fn ~arglist ~func))))
+
