@@ -12,7 +12,8 @@
     (unless mutex
         (raise (ValueError "Mutex creation failed.")))
     (atexit.register (fn []
-        (-kernel32.CloseHandle mutex)))
+        (when mutex
+            (-kernel32.CloseHandle mutex))))
     (if (= ERROR-ALREADY-EXISTS (-kernel32.GetLastError))
         False
     ; else
