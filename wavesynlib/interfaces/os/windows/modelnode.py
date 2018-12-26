@@ -148,6 +148,11 @@ class Windows(ModelNode):
         self.uow = UoW()
         self.window_handle_getter = WindowHandleGetter()
         
+        self.processes = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.interfaces.os.windows.processes.modelnode',
+            class_name='Processes')
+        
         self.battery = ModelNode(
             is_lazy=True, 
             module_name='wavesynlib.interfaces.os.windows.battery',

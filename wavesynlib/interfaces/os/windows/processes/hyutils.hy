@@ -19,3 +19,10 @@
     ; else
         True))
 
+
+
+(defn get-pid-from-hwnd [hwnd]
+    (setv pid (DWORD))
+    (-user32.GetWindowThreadProcessId hwnd (byref pid))
+    pid.value)
+

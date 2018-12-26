@@ -34,10 +34,10 @@ import os
 from pathlib import Path
 import hy
 try:
-    from wavesynlib.interfaces.os.windows.process.hyutils \
-        import singleton
+    from wavesynlib.interfaces.os.windows.processes.hyutils \
+        import singleton, get_pid_from_hwnd
 except hy.errors.HyCompileError:
     hy_path = Path(__file__).parent / 'hyutils.hy'
     os.system(f'hyc {hy_path}')
-    from wavesynlib.interfaces.os.windows.process.hyutils \
-        import singleton   
+    from wavesynlib.interfaces.os.windows.processes.hyutils \
+        import singleton, get_pid_from_hwnd

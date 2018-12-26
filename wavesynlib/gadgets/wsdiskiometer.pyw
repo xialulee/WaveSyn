@@ -13,7 +13,7 @@ from wavesynlib.widgets import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.wmi import WQL
-from wavesynlib.interfaces.os.windows.process.utils import singleton
+from wavesynlib.interfaces.os.windows.processes.utils import singleton
 from wavesynlib.languagecenter.utils import get_caller_dir
 
     
