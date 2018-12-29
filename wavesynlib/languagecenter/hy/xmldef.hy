@@ -4,7 +4,7 @@
     [(= 1 len-args)
         (setv [attr child] ["" (first args)])]
     [(= 2 len-args)
-        (setv [attr child] args)]
+        (setv [attr child] args)])
 
     (if (symbol? name) (setv name (str name)))
 
