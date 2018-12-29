@@ -44,7 +44,7 @@
                 ~(-> arg (get 2) (handle-where)))]
         [True
             arg])]
-    [(instance? str arg)
+    [(string? arg)
         (wqlrepr arg)]
     [True 
         arg]))
