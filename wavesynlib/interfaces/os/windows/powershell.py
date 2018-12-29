@@ -8,7 +8,8 @@ import json
 import chardet
 import subprocess as sp
 from wavesynlib.languagecenter.powershell import ExprTranslator
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import (
+    Scripting, ModelNode, code_printer)
 
 
 
@@ -103,10 +104,10 @@ class Command(ModelNode):
             elif item[0] == 'sort':
                 temp_list.append(f'.sort({Scripting.convert_args_to_str(*item[1], **item[2])})')
         return ''.join(temp_list)
-        
-        
+    
+    
     @Scripting.printable
-    def run(self):
+    def get_command_string(self):
         temp_list = []
         for item in self._command_list:
             if item[0] in ('command', 'pipe'):
@@ -139,7 +140,14 @@ class Command(ModelNode):
                     expr = item[1]
                 temp_list.append(f'| foreach{{{expr}}}')
         com = ' '.join(temp_list)
-        com = f'{com} | ConvertTo-Json'
+        com = f'{com} | ConvertTo-Json'  
+        return com
+        
+        
+    @Scripting.printable
+    def run(self):
+        with code_printer(print_=False):
+            com = self.get_command_string()
         stdout, stderr, errorlevel = execute(com)
         coding = chardet.detect(stdout)['encoding']
         stdout = stdout.decode(coding)
