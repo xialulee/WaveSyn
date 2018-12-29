@@ -2,9 +2,9 @@
     (setv len-args (len args))
     (cond 
     [(= 1 len-args)
-        (setv [attr child] ["" (first args)])]
+        (setv [attr children] ["" (first args)])]
     [(= 2 len-args)
-        (setv [attr child] args)])
+        (setv [attr children] args)])
 
     (if (symbol? name) (setv name (str name)))
 
@@ -19,6 +19,6 @@
                     (if (keyword? key) 
                         (setv key (name key)))
                     (.format " {}=\"{}\"" key val)))))))) 
-        (str.join "\n" ~child) 
+        (str.join "\n" ~children) 
         (.format "</{}>" ~name)]))
 
