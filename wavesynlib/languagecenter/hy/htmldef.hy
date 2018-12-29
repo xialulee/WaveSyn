@@ -1,3 +1,6 @@
+(import [hy.contrib.walk [postwalk]])
+
+
 
 (defmacro/g! traveller [name processes]
     (setv shared-vars []
@@ -7,26 +10,26 @@
           data-procs []
           finish-proc None)
 
-    (defn subs-vars [li]
-        (for [k (-> li (len) (range))]
-            (setv item (get li k))
-            (cond 
-                [(symbol? item) 
-                    (setv dot-pos (.find item ".")
-                          sym-rest "")
-                    (if (> dot-pos 0) 
-                        (setv sym-rest (cut item (inc dot-pos) None)
-                              item (cut item 0 dot-pos)))
-                    (if (in item var-names) 
-                        (setv (get li k) (HySymbol (
-                            .join "" [
-                                "self.-" 
-                                item 
-                                (if sym-rest (+ "." sym-rest) "")]))))]
-                [(coll? item) (subs-vars item)])))
-
     (for [proc processes]
-        (subs-vars proc)
+        (setv proc (postwalk (
+            fn [item]
+                (cond 
+                [(symbol? item)
+                    (setv dot-pos  (.find item ".")
+                          sym-rest "")
+                    (when (pos? dot-pos)
+                        (setv sym-rest (cut item (inc dot-pos) None)
+                              item     (cut item 0 dot-pos)))
+                    (if (in item var-names)
+                        (HySymbol (.join "" [
+                            "self.-"
+                            item
+                            (if sym-rest (+ "." sym-rest) "")]))
+                    ; else
+                        item)]
+                [True item])) 
+            proc))
+
         (setv inst (first proc))
         (cond [(= 'shared inst) 
                   (for [[var-name var-value] (-> proc (rest) (partition))]
