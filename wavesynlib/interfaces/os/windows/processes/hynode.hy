@@ -1,3 +1,5 @@
+(require [wavesynlib.languagecenter.hy.wmidef [wql]])
+
 (import ctypes)
 
 (import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
@@ -16,7 +18,13 @@
         
     (defn get-execpath-from-pid [self pid]
         (setv wmi (. self root-node interfaces os windows wmi))
-        (setv result (.query wmi (.format "select ExecutablePath from win32_process where ProcessId={}" pid) "python"))
+        (setv result (.query 
+            wmi 
+            (wql 
+                SELECT ExecutablePath 
+                FROM Win32_Process 
+                WHERE (= ProcessId (eval pid))) 
+            "python"))
         (. result [0] ["ExecutablePath"]))
         
     (defn get-execpath-from-hwnd [self hwnd]
