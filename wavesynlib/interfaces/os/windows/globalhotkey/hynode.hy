@@ -1,3 +1,4 @@
+(require [hy.extra.anaphoric [*]])
 (require [wavesynlib.languagecenter.hy.utils [call= dyn-defprop defprop freeze]])
 
 (import ctypes)
@@ -6,9 +7,10 @@
 (import [win32con [WM-HOTKEY PM-REMOVE]])
 (setv -user32 ctypes.windll.user32)
 (import [copy [deepcopy]])
-(import [threading [RLock]])
+(import [queue [Queue Empty]])
 
 (import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
+(import [wavesynlib.languagecenter.designpatterns [Observable]])
 
 (setv -ID-UPPER-BOUND (inc 0xBFFF))
 
@@ -19,11 +21,11 @@
         [0 "alt"] [1 "ctrl"] [2 "shift"] [3 "win"] [14 "norepeat"]])
     (for [[bitpos name] -attr-names] 
         (dyn-defprop name 
-            ; getter
+            #_getter
             (freeze [bitpos]
             (fn [self]
                 (& self.value (<< 1 bitpos))))
-            ; setter
+            #_setter
             (freeze [bitpos]
             (fn [self val]
                 (if val
@@ -49,21 +51,42 @@
 
 
 
-(defclass GlobalHotkeyManager [ModelNode]
+(defclass GlobalHotkeyManager [ModelNode Observable]
     (defn --init-- [self &rest args &kwargs kwargs]
         (.--init-- (super) #* args #** kwargs)
         (setv self.--hotkey-info {})
-        (setv self.--hotkey-info-lock (RLock))
-        (setv self.--repeater None))
+        (setv self.--repeater None) 
+        (setv self.--queue (Queue))
+        (.add-observer self (fn [id- info]
+            (ap-if (. info [2]) (it) ) ) ) )
+
+    (defn on-connect [self]
+        (setv self.--timer (.create-timer self.root-node :interval 50) ) 
+        (.add-observer self.--timer (fn []
+            (try
+                (while True
+                    (setv id- (.get-nowait self.--queue) )
+                    (.notify-observers self 
+                        id- 
+                        (get self.--hotkey-info id-) ) #_while)
+            (except [Empty]) ) ) ) )
+
+    (defn set-timer-interval [self interval]
+        (setv self.--timer.interval interval) )
+
+    (defn start-timer [self]
+        (setv self.--timer.active True) )
+
+    (defn stop-timer [self]
+        (setv self.--timer.active False) )
         
     (defn --get-new-id [self]
         (for [i (range 1 -ID-UPPER-BOUND)]
-            (with [self.--hotkey-info-lock]
-                (when (not-in i self.--hotkey-info)
-                    (return i)))))
+            (when (not-in i self.--hotkey-info)
+                (return i) #_when) #_for) )
                 
     (defprop -repeater
-        ; getter
+        #_getter
         (fn [self]
             (unless self.--repeater
                 (setv self.--repeater 
@@ -72,30 +95,26 @@
                         (when (and 
                                 (-user32.PeekMessageW (byref msg) -1 0 0 PM-REMOVE)
                                 (= msg.message WM-HOTKEY))
-                            (with [self.--hotkey-info-lock]
-                                (setv info (.get self.--hotkey-info msg.wParam (fn [] None))))
-                            ((. info [-1]))))))
+                            (setv id- msg.wParam)
+                            (.put self.--queue id-) #_when) #_end-fn) #_create) #_setv)
                 (setv self.--repeater.daemon True)
-                (.start self.--repeater))
+                (.start self.--repeater) 
+                (.start-timer self) )
             self.--repeater))
                             
     (defprop hotkey-info
-        ; getter
+        #_getter
         (fn [self]
             (deepcopy self.--hotkey-info)))
         
-    (defn register [self modifiers vk func &optional [call-in-main-thread True]]
+    (defn register [self modifiers vk &optional func]
         (call= modifiers -modifier-names-to-obj)
-        (if call-in-main-thread
-            (defn f [] ((.main-thread-do self.root-node.thread-manager :block True) func))
-            (setv f func))
         (setv id- (.--get-new-id self))
         (setv success (.do-once 
             self.-repeater
             (fn [] (-user32.RegisterHotKey None id- modifiers vk))))
         (when success
-            (with [self.--hotkey-info-lock]
-                (assoc self.--hotkey-info id- (, modifiers vk f))))
+            (assoc self.--hotkey-info id- (, modifiers vk func)) )
         success)
         
     (defn unregister [self &optional modifiers vk id-]
@@ -111,8 +130,7 @@
                 self.-repeater 
                 (fn []
                     (-user32.UnregisterHotKey None id-)))
-            (with [self.--hotkey-info-lock]
-                (del (get self.--hotkey-info id-)))))
+                (del (get self.--hotkey-info id-)) #_when) )
             
     (defn unregister-all [self]
         (for [id- (tuple (.keys self.--hotkey-info))]

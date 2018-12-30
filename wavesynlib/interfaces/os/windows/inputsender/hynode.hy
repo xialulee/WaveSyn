@@ -72,6 +72,65 @@
 
 
 
+(defclass -Condition [])
+
+
+
+(defclass -DefaultCondition [-Condition])
+
+
+
+(defclass -ExecPathCondition [-Condition]
+    (defn --init-- [self exec-path]
+        (setv self.--exec-path exec-path) ) 
+        
+    #@(property
+    (defn exec-path [self]
+        self.--exec-path) ) )
+
+
+
+(defclass -Setting []
+    (defn --init-- [self] ) )
+
+
+
+(defclass -Profile []
+    (defn --init-- [self condition]
+        (setv 
+            self.--condition condition
+            self.--settings  []) ) 
+
+    #@(property
+    (defn condition [self]
+        self.--condition) )
+            
+    (defn add-setting [self setting]
+        (.append self.--settings setting) ) )
+
+
+
+(defclass MacroManager [ModelNode]
+    (defn --init-- [self &rest args &kwargs kwargs]
+        (.--init-- (super) #* args #** kwargs) 
+        (setv self.--profiles {}) )
+
+;    (defn on-connect [self]
+;        (.on-connect (super))
+;        (setv self.--timer (.create-timer self.root-node :interval 50))
+;        (.add-observer self.--timer (fn [&rest args &kwargs kwargs]) ) )
+;        
+;    (defn start-timer [self]
+;        (setv self.--timer.active True) )
+;
+;    (defn stop-timer [self]
+;        (setv self.--timer.active False) )
+;
+;    (defn add-profile [self profile]
+;        (assoc self.--profiles profile.condition profile) ) )
+
+
+
 (defclass InputSenders [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
         (.--init-- (super) #* args #** kwargs)
