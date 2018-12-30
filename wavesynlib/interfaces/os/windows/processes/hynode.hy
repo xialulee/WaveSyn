@@ -1,9 +1,10 @@
 (require [wavesynlib.languagecenter.hy.wmidef [wql]])
 
 (import ctypes)
+(setv GetForegroundWindow ctypes.windll.user32.GetForegroundWindow)
 
 (import [wavesynlib.languagecenter.wavesynscript [
-    ModelNode Scripting]])
+    ModelNode Scripting code-printer]])
 
 (import os)
 (import [pathlib [Path]])
@@ -41,7 +42,14 @@ Return Value (str): The path of the executable."
     
 Return Value (str): The path of the executable."
         (setv pid (get-pid-from-hwnd hwnd))
-        (.get-execpath-from-pid self pid))))
+        (with [(code-printer :print- False)] 
+            (.get-execpath-from-pid self pid) ) ))
+        
+    #@(Scripting.printable
+    (defn get-execpath-from-foreground [self]
+        (setv hwnd (GetForegroundWindow))
+        (with [(code-printer :print- False)]
+            (.get-execpath-from-hwnd self hwnd) ) )) )
 
 
 

@@ -1,7 +1,7 @@
 (import [time [sleep]])
 
 (import [wavesynlib.languagecenter.wavesynscript [
-    ModelNode]])
+    ModelNode code-printer]])
 (import [wavesynlib.interfaces.os.windows.inputsender [
     utils constants]])
 
@@ -113,26 +113,37 @@
 (defclass MacroManager [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
         (.--init-- (super) #* args #** kwargs) 
-        (setv self.--profiles {}) )
+        (setv 
+            self.--profiles {}
+            self.--current-profile None
+            self.--current-setting None) )
 
-;    (defn on-connect [self]
-;        (.on-connect (super))
-;        (setv self.--timer (.create-timer self.root-node :interval 50))
-;        (.add-observer self.--timer (fn [&rest args &kwargs kwargs]) ) )
-;        
-;    (defn start-timer [self]
-;        (setv self.--timer.active True) )
-;
-;    (defn stop-timer [self]
-;        (setv self.--timer.active False) )
-;
-;    (defn add-profile [self profile]
-;        (assoc self.--profiles profile.condition profile) ) )
+    (defn add-profile [self profile]
+        (assoc self.--profiles profile.condition profile) ) 
+
+    #@(property
+    (defn -current-profile [self]
+        (with [(code-printer :print- False)]
+            (setv exec-path (
+                .get-execpath-from-foreground 
+                self.root-node.interfaces.os.windows.processes.utils)) )
+        (setv condition (-ExecPathCondition exec-path)) 
+        (.get self.--profiles None) ))
+
+    #@(property
+    (defn -current-setting [self]
+        None))
+        
+    (defn set-trigger [self slot &optional hotkey] ) )
 
 
 
 (defclass InputSenders [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
         (.--init-- (super) #* args #** kwargs)
-        (setv self.key-sender (KeySender) ) ) )
+        (setv self.key-sender (KeySender) )
+        (setv self.macro-manager (
+            ModelNode
+                :is-lazy True
+                :class-object MacroManager)) ) )
 
