@@ -84,8 +84,9 @@
 
 
 
-(defmacro dyn-setv [name sexpr]
-    `(assoc (locals) (mangle ~name) ~sexpr))
+(defmacro dyn-setv [&rest args]
+    `(do ~@(gfor [name sexpr] (partition args)
+        `(assoc (locals) (mangle ~name) ~sexpr) ) ) )
 
 (defmacro dyn-defn [name args &rest body]
     `(assoc (locals) (mangle ~name) (fn ~args ~@body)))
@@ -114,4 +115,12 @@
         `(setv ~func-name ((fn ~arglist ~func))))
     ; else
         `((fn ~arglist ~func))))
+
+
+
+(defmacro bit-names [&rest names]
+    `(setv ~@(flatten
+        (gfor [idx name] (enumerate names)
+            :if (!= name 'None)
+            [name (<< 1 idx)]))))
 

@@ -1,36 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Dec  5 22:57:47 2018
+Created on Sun Dec 30 22:24:49 2018
 
 @author: Feng-cong Li
 """
 
-KEYEVENTF_EXTENDEDKEY   = 0x0001
-KEYEVENTF_KEYUP	        = 0x0002
-KEYEVENTF_SCANCODE      = 0x0008
-KEYEVENTF_UNICODE       = 0x0004
-
-INPUT_MOUSE = 0
-INPUT_KEYBOARD = 1
-INPUT_HARDWARE = 2
-
-VK_CONTROL = 0x11
-VK_CTRL = VK_CONTROL
-VK_LCONTROL = 0xA2
-VK_LCTRL = VK_LCONTROL
-VK_RCONTROL = 0xA3
-VK_RCTRL = VK_RCONTROL
-
-VK_MENU = 0x12
-VK_ALT = VK_MENU
-VK_LMENU = 0xA4
-VK_LALT = VK_LMENU
-VK_RMENU = 0xA5
-VK_RALT = VK_RMENU
-
-VK_SHIFT = 0x10
-VK_LSHIFT = 0xA0
-VK_RSHIFT = 0xA1
-
-for k in range(24):
-    locals()[f'VK_F{k+1}'] = 0x70 + k
+import os
+from pathlib import Path
+import hy
+try:
+    from wavesynlib.interfaces.os.windows.inputsender.hyconstants import *
+except hy.errors.HyCompileError:
+    hy_path = Path(__file__).parent / 'hyconstants.hy'
+    os.system(f'hyc {hy_path}')
+    from wavesynlib.interfaces.os.windows.inputsender.hyconstants import *
+    
