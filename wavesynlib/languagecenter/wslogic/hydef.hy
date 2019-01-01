@@ -1,25 +1,54 @@
+(import math)
 (import [sympy [*]])
 (import [sympy.logic.boolalg [BooleanFalse BooleanTrue]])
 (import uuid)
 
 
 
+(defn -int-to-bits [i]
+    (setv ord-0 (ord "0"))
+    (gfor c (cut (.format "{:b}" i) None None -1) 
+        (- (ord c) ord-0) ) )
+
+
+
+(defn -full-adder [A B Cin]
+    (,
+        (reduce ^ [A B Cin]) 
+        (| 
+            (& A B) 
+            (&
+                Cin 
+                (^ A B) ) ) ) )
+
+
+
 (defclass BoolVector []
-    (defn --init-- [self &optional name length field-names expressions]
+    (defn --init-- [self &optional name length field-names expressions integer]
         (unless name
             (setv 
                 name
                     (.format 
                         "temp_boolvector_{}" 
                         (.replace (str (uuid.uuid1)) "-" "_")) ) )
+        (when (and (is-not integer None) (is length None) ) 
+            (setv length (math.ceil (math.log2 integer) ) ) )
         (cond
         [length 
-            (setv 
-                self.--symbols 
-                    (lfor k (range length)
-                        (Symbol (.format "{}_{}" name k)) )
-                self.--field-names
-                    [])]
+            (if (is integer None)
+                (setv 
+                    self.--symbols 
+                        (lfor k (range length)
+                            (Symbol (.format "{}_{}" name k)) )
+                    self.--field-names
+                        []) 
+            #_else
+                (setv 
+                    self.--symbols
+                        (lfor k (-int-to-bits integer)
+                            (if k True #_else False) )
+                    self.--field-names
+                        []) )]
         [expressions
             (setv 
                 self.--symbols     (list expressions)
@@ -57,7 +86,19 @@
     (defn --or-- [self y]
         (.elementwise self | y))
 
+    (defn --add-- [self y]
+        (setv 
+            exprs []
+            C     False)
+        (for [[A B] (zip-longest self y :fillvalue False)]
+            (setv [S C] (-full-adder A B C) ) 
+            (.append exprs S) ) 
+        (.append exprs C) 
+        (BoolVector :expressions exprs) )
+
     (defn --ne-- [self y]
+        (when (integer? y)
+            (setv y (BoolVector :integer y) ) )
         (.any (^ self y)) )
 
     (defn --eq-- [self y]
@@ -69,13 +110,10 @@
     (defn elementwise [self func &optional y]
         (when (and (coll? func) (!= (len self) (len func)))
             (raise (ValueError "The function list and self should have same length.")) )
-        (when (and y (!= (len self) (len y)))
-            (raise (ValueError "The two vectors should have same length.")) )
-
         (unless (coll? func)
             (setv func (repeat func (len self)) ) )
         (if y
-            (BoolVector :expressions (gfor [f a b] (zip func self y) (f a b)) ) 
+            (BoolVector :expressions (gfor [f a b] (zip-longest func self y :fillvalue False) (f a b)) ) 
         #_else
             (BoolVector :expressions (gfor [f a] (zip func self) (f a) ))) )
 
@@ -92,17 +130,8 @@
                     (~ symbol) ) ) ) ) ) ) 
                     
     (defn within-domain [self domain]
-        (setv ord-0 (ord "0"))
-        (setv fstr (.join "" ["{:0" (str (len self)) "b}"]))
-        (defn chr-to-num [chr]
-            (- (ord chr) ord-0) )
-        (defn reverse [s]
-            (cut s None None -1) )
-        (defn binlist [num]
-            (gfor bit (reverse (.format fstr num)) 
-                (chr-to-num bit) ) )
         (| #* (gfor num domain 
-            (& #* (gfor [bit var] (zip (binlist num) self)
+            (& #* (gfor [bit var] (zip-longest (-int-to-bits num) self :fillvalue False)
                 (if bit
                     var
                 #_else
