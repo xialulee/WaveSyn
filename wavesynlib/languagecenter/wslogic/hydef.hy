@@ -1,6 +1,8 @@
 (import math)
 (import [sympy [*]])
-(import [sympy.logic.boolalg [BooleanFalse BooleanTrue]])
+(import [sympy.logic.boolalg [
+    BooleanFalse BooleanTrue Xor Not to-cnf]])
+(import [pycosat [itersolve]])
 (import uuid)
 
 
@@ -14,12 +16,35 @@
 
 (defn -full-adder [A B Cin]
     (,
-        (reduce ^ [A B Cin]) 
-        (| 
-            (& A B) 
-            (&
-                Cin 
-                (^ A B) ) ) ) )
+        (& (| A B Cin) (| A (~ B) (~ Cin)) (| B (~ A) (~ Cin)) (| Cin (~ A) (~ B)))
+        (& (| A B) (| A Cin) (| B Cin) ) ) )
+
+
+
+(defn -to-pycosat [expr]
+    (setv expr (to-cnf expr) )
+    (setv clauses expr.args) 
+    (setv syms (.atoms expr) ) 
+    (setv syms-dict (dfor [idx sym] (enumerate syms) [sym (inc idx)]) ) 
+    (setv idx-dict (-> syms (enumerate :start 1) (dict) ) )
+    [(lfor clause clauses (
+        lfor term clause.args
+            (if (instance? Not term) 
+                (- (. syms-dict [(. term args [0])] ) ) 
+            #_else
+                (. syms-dict [term]) ) ) ) 
+    idx-dict] )
+
+
+
+(defn -pycosat-itersolve [expr]
+    (setv [expr idx-dict] (-to-pycosat expr)) 
+    (for [sol (itersolve expr)]
+        (setv result {}) 
+        (for [term sol]
+            (setv tf (if (pos? term) True False) ) 
+            (assoc result (. idx-dict [(abs term)]) tf) ) 
+        (yield result) ) )
 
 
 
@@ -51,7 +76,7 @@
                         []) )]
         [expressions
             (setv 
-                self.--symbols     (list expressions)
+                self.--symbols     (list expressions )
                 self.--field-names [])]
         [field-names
             (setv 
@@ -99,10 +124,10 @@
     (defn --ne-- [self y]
         (when (integer? y)
             (setv y (BoolVector :integer y) ) )
-        (.any (^ self y)) )
+        (.any (^ self y) ) ) 
 
     (defn --eq-- [self y]
-        (~ (!= self y)))
+        (~ (!= self y) ) ) 
 
     (defn --not-- [self]
         (.elementwise self ~))
@@ -118,7 +143,7 @@
             (BoolVector :expressions (gfor [f a] (zip func self) (f a) ))) )
 
     (defn any [self] 
-        (| #* self.--symbols) )
+        (| #* self.--symbols) ) 
 
     (defn card [self n]
         (setv length (len self))
@@ -162,6 +187,6 @@
 
 
 (defn all-different [&rest args]
-    (& #* (gfor [x y] (combinations args 2)
-        (!= x y) ) ) )
+    (to-cnf (& #* (gfor [x y] (combinations args 2)
+        (!= x y) ) ) ) )
 
