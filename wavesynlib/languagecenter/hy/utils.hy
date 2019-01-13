@@ -113,7 +113,7 @@
         (setv func-name (first func))
         (setv (. func [0]) 'fn)
         `(setv ~func-name ((fn ~arglist ~func))))
-    ; else
+    #_else
         `((fn ~arglist ~func))))
 
 
@@ -123,4 +123,14 @@
         (gfor [idx name] (enumerate names)
             :if (!= name 'None)
             [name (<< 1 idx)]))))
+
+
+
+(defmacro/g! on-exit [&rest exprs]
+    `(do
+        (setv ~g!mod (--import-- "atexit") )
+        (setv ~g!reg (getattr ~g!mod "register") ) 
+        (~g!reg (fn []
+            ~@exprs) ) 
+        None) )
 
