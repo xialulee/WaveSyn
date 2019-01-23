@@ -15,6 +15,7 @@ def convert(out_stream, in_stream):
     hdlcode = b'''\
 (require [wavesynlib.languagecenter.hyhdl.macros [HYHDL-INIT]])
 (HYHDL-INIT)
+(import wavesynlib.languagecenter.hyhdl.importer)
 '''    
     hdlcode += in_stream.read()
     hy2py = Popen(['hy2py', '-'], stdin=PIPE, stdout=PIPE)
