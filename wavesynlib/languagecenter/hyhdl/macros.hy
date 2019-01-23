@@ -8,19 +8,19 @@
 
 (defmacro HYHDL-INIT []
     `(do 
-        (import [myhdl [*]]) 
-        (require [macros [*]]) ) )
+        (import [myhdl :as MYHDL-NAMESPACE]) 
+        (require [wavesynlib.languagecenter.hyhdl.macros [*]]) ) )
 
 
 
 (defmacro MODULE [&rest args]
-    `(with-decorator block
-        (defn ~@args (return (instances) ) ) ) ) 
+    `(with-decorator MYHDL-NAMESPACE.block
+        (defn ~@args (return (MYHDL-NAMESPACE.instances) ) ) ) ) 
 
 
 
 (defmacro/g! ALWAYS-COMB [&rest args]
-    `(with-decorator always-comb
+    `(with-decorator MYHDL-NAMESPACE.always-comb
         (defn ~g!comb-func [] ~@args) ) )
 
 
@@ -49,7 +49,7 @@
 
 
 (defmacro IF-STMT [condition true-procs &optional false-procs]
-    `(if condition (do
+    `(if ~condition (do
         ~true-procs
         (--HYHDL-STMT-RETVAL) ) 
     #_else ~(if false-procs `(do ~false-procs (--HYHDL-STMT-RETVAL) ) (--HYHDL-STMT-RETVAL) ) ) )
@@ -63,4 +63,14 @@
 
 (defmacro SETBV [bv val]
     `(setv (cut bv None None) val) )
+
+
+
+(defmacro NEXT [&rest args]
+    (setv new-args [])
+    (for [[lhs rhs] (partition args)]
+        (doto new-args
+            (.append `(. ~lhs next))
+            (.append rhs) ) )
+    `(setv ~@new-args) )
 

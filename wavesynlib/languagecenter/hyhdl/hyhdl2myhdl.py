@@ -11,19 +11,35 @@ from subprocess import Popen, PIPE
 
 
 
+def convert(out_stream, in_stream):
+    hdlcode = b'''\
+(require [wavesynlib.languagecenter.hyhdl.macros [HYHDL-INIT]])
+(HYHDL-INIT)
+'''    
+    hdlcode += in_stream.read()
+    hy2py = Popen(['hy2py', '-'], stdin=PIPE, stdout=PIPE)
+    out, err = hy2py.communicate(hdlcode)
+    if hy2py.returncode:
+        return hy2py.returncode, err
+    out = re.sub(rb"(?:[_a-zA-Z][_a-zA-Z0-9]*)\s*=\s*['\"]HYHDL-STMT-RETVAL['\"]", b"pass", out)    
+    out_stream.write(out)
+    return 0, ""
+
+
+
 def main(args):
     hy_path = args[1]
     py_path = args[2]
-    hy2py = Popen(['hy2py', hy_path], stdout=PIPE)
-    out, err = hy2py.communicate()
-    if err:
-        print(err)
-    if out:
-        out = re.sub(rb"(?:[_a-zA-Z][_a-zA-Z0-9]*)\s*=\s*['\"]HYHDL-STMT-RETVAL['\"]", b"pass", out)
-    with open(py_path, 'wb') as py_file:
-        py_file.write(out)
     
+    with open(hy_path, 'rb') as hy_file, open(py_path, 'wb') as py_file:
+        retcode, stderr = convert(py_file, hy_file)
+    if retcode:
+        print(stderr)
+        return retcode
+    else:
+        return 0
+
     
     
 if __name__ == "__main__":
-    main(sys.argv)
+    sys.exit(main(sys.argv))
