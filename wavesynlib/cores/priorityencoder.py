@@ -5,12 +5,16 @@ Created on Thu Jun  7 00:22:19 2018
 @author: Feng-cong Li
 """
 
-from myhdl import block, Signal, delay, modbv, always_comb, instance
+from myhdl import block, Signal, delay, modbv, always_comb, instance, instances
 
 
 
 @block
-def PriorityEncoder(code, valid, in_):
+def PriorityEncoder(
+        code,  # Output
+        valid, # Output
+        in_    # Input
+    ):
     L = len(in_)
     @always_comb
     def search():
@@ -38,7 +42,7 @@ def Test():
             in_.next = k
             yield delay(10)
             print(code, valid, f'{int(in_):04b}', sep='\t')
-    return encoder, stimulus
+    return instances()
 
 
 
