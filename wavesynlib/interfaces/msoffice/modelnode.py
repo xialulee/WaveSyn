@@ -210,7 +210,37 @@ class ExcelUtils(ModelNode):
             variant = self.set_variant_matrix(data)
             sheet.Range(self._get_addr(top_left_x, top_left_y),
                         self._get_addr(top_left_x+col_num-1, top_left_y+row_num-1)).Value[:] = variant
-            return                
+            return          
+        
+        
+    @Scripting.printable
+    def read_range(self, top_left, bottom_right, workbook=None, sheet=None):
+        if workbook is None:
+            workbook = self.__com_handle.ActiveWorkbook
+        else:
+            workbook = self.__com_handle.Workbooks[workbook]
+            
+        if sheet is None:
+            sheet = workbook.ActiveSheet
+        else:
+            sheet = workbook.Sheets(sheet)
+        
+        tl_x, tl_y = self._get_xy(top_left)  
+        br_x, br_y = self._get_xy(bottom_right)
+        
+        return sheet.Range(
+                    self._get_addr(tl_x, tl_y), 
+                    self._get_addr(br_x, br_y)).Value[:]
+        
+        
+        
+    @Scripting.printable
+    def browser_fill_by_id(self, driver, ids, top_left, bottom_right, 
+                           workbook=None, sheet=None):
+        data = self.read_range(top_left, bottom_right, workbook, sheet)
+        for id_row, data_row in zip(ids, data):
+            for id_, item in zip(id_row, data_row):
+                driver.find_element_by_id(id_).send_keys(str(item))
             
             
             
