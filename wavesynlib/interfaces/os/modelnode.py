@@ -160,7 +160,7 @@ if platform.system().lower() == 'windows':
                 
                 
         @Scripting.printable
-        def read(self, html=None, code=None):
+        def read(self, html=None, code='@'):
             '''Get the content of the clipboard.
             
     html: BOOL. Whether to get the raw HTML code of the fomatted text on clipboard.

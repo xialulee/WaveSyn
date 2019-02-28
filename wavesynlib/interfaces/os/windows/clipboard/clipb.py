@@ -64,10 +64,9 @@ def clipboard_to_stream(stream, mode, code, null, html=False):
                     code = 'utf-8'
                 else: # using sys.getfilesystemencoding().
                     code = sys.getfilesystemencoding()            
-            else:
-                # For Python 3, we cannot put bytes object to streams. 
-                if not isinstance(s, str):
-                    s = s.decode(code, 'ignore')
+
+            if not isinstance(s, str):
+                s = s.decode(code, 'ignore')
         if null:
             s = s[:s.index('\x00')]
         if mode == 't':
