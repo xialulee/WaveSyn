@@ -69,9 +69,8 @@ def UIntToFloat(
     
     float_sig = ConcatSignal(bool(0), biased_exponent, fraction)
     
-    # Concat exponent and fraction
     @always_comb
-    def concat():
+    def make_output():
         if uint_input == 0:
             float_output.next = 0
         else:
