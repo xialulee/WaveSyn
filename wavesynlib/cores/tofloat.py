@@ -67,15 +67,15 @@ def UIntToFloat(
     fraction_calculator = UIntToFraction(
             fraction, uint_input, unbiased_exponent)
     
+    float_sig = ConcatSignal(bool(0), biased_exponent, fraction)
+    
     # Concat exponent and fraction
     @always_comb
     def concat():
         if uint_input == 0:
             float_output.next = 0
         else:
-            float_output.next = \
-                (biased_exponent << fraction_width) | \
-                fraction
+            float_output.next = float_sig
         
             
     return instances()
@@ -103,11 +103,11 @@ def IntToFloat(
             abs_float, abs_int, 
             exponent_width, fraction_width, exponent_bias)
     
+    signed_float = ConcatSignal(sign, abs_float(FLOAT_WIDTH-1, 0))
+    
     @always_comb
-    def make_signed_float():
-        float_output.next = \
-            (sign << exponent_width+fraction_width) | \
-            abs_float[(FLOAT_WIDTH-1):]
+    def make_output():
+        float_output.next = signed_float
         
     return instances()
     
