@@ -7,6 +7,8 @@ Created on Mon Jul 30 18:10:50 2018
 
 from myhdl import Signal, intbv, always_comb, instance, instances, block, delay
 
+from wavesynlib.cores.abs import Abs
+
 
 
 @block
@@ -42,13 +44,7 @@ def ByteToBCD(sign, bcd, binary):
     assert len(binary)==8
     
     abs_ = Signal(intbv(0)[8:])
-    
-    @always_comb
-    def calc():
-        if binary[7]:
-            abs_.next = ~binary + 1
-        else:
-            abs_.next = binary
+    abs_calculator = Abs(abs_, binary)
             
     uout = Signal(intbv(0)[10:])
     uconverter = UByteToBCD(uout, abs_)
