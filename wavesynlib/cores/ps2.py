@@ -86,7 +86,7 @@ def TestKB():
             clk.next = 0
             yield delay(10)
             clk.next = 1
-            print(bit, f'{int(code):09b}', finish, sep='\t')
+            print(bit, f'{int(code):09b}', int(finish), sep='\t')
 
     return instances()
 
