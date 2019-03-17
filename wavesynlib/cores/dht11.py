@@ -16,7 +16,9 @@ def DHT11(
         line_in, # Input line
         read_dev, # INPUT
         clk, 
-        clk_freq # Parameter Hz
+        reset,
+        clk_freq, # Parameter Hz
+        state_out=None # Output, for debugging.
     ):
     States = enum(
         'START_SIGNAL_LOW', 
@@ -25,21 +27,26 @@ def DHT11(
         'WAIT_RESPONSE_HIGH',
         'WAIT_BIT_LOW',
         'WAIT_BIT_HIGH',
-        'WAIT_DAT_BIT',
+        'WAIT_BIT_DAT',
         'IDLE')
 
     READ_LINE = 0
     WRITE_LINE = 1
 
     state = Signal(States.IDLE)
-    
-    timeout18ms = Signal(bool(0))
-    rst18ms = Signal(bool(0))
-    delay18ms = Delayer(timeout18ms, clk, rst18ms, 18e-3, clk_freq)
 
-    timeout40us = Signal(bool(0))
-    rst40us = Signal(bool(0))
-    delay40us = Delayer(timeout40us, clk, rst40us, 40e-6, clk_freq)
+    if state_out is not None:
+        @always_comb
+        def set_state_out():
+            state_out.next = state
+    
+    timeout_20ms = Signal(bool(0))
+    rst_20ms = Signal(bool(0))
+    delay20ms = Delayer(timeout_20ms, clk, rst_20ms, 20e-3, clk_freq)
+
+    timeout_40us = Signal(bool(0))
+    rst_40us = Signal(bool(0))
+    delay40us = Delayer(timeout_40us, clk, rst_40us, 40e-6, clk_freq)
 
     shift_reg = [Signal(bool(0)) for k in range(40)]
     bit_counter = intbv(0, min=0, max=41)
@@ -47,28 +54,29 @@ def DHT11(
 
     @always(clk.posedge)
     def transmitting():
-        if state == States.IDLE:
-            if read_dev:
+        if reset:
+            state.next = States.IDLE
+        elif state == States.IDLE:
+            if not read_dev:
+                inout_state.next = READ_LINE
+            else:
                 bit_counter[:] = 0
-                state.next = States.START_SIGNAL_LOW
-                rst18ms.next = 1
+                rst_20ms.next = 1
                 inout_state.next = WRITE_LINE
-            else:
-                inout_state.next = READ_LINE
+                state.next = States.START_SIGNAL_LOW
         elif state == States.START_SIGNAL_LOW:
-            if timeout18ms:
-                state.next = States.START_SIGNAL_HIGH
-                rst40us.next = 1
-            else:
-                rst18ms.next = 0
+            if not timeout_20ms:
+                rst_20ms.next = 0
                 line_out.next = 0
-        elif state == States.START_SIGNAL_HIGH:
-            if timeout40us:
-                state.next = States.WAIT_RESPONSE_LOW
-                inout_state.next = READ_LINE
             else:
-                rst40us.next = 0
-                line_out.next = 1
+                rst_40us.next = 1
+                inout_state.next = READ_LINE
+                state.next = States.START_SIGNAL_HIGH
+        elif state == States.START_SIGNAL_HIGH:
+            if not timeout_40us:
+                rst_40us.next = 0
+            else:
+                state.next = States.WAIT_RESPONSE_LOW
         elif state == States.WAIT_RESPONSE_LOW:
             if line_in == 0:
                 state.next = States.WAIT_RESPONSE_HIGH
@@ -80,10 +88,12 @@ def DHT11(
                 state.next = States.WAIT_BIT_HIGH
         elif state == States.WAIT_BIT_HIGH:
             if line_in == 1:
-                state.next = States.WAIT_DAT_BIT
-                rst40us.next = 1
-        elif state == States.WAIT_DAT_BIT:
-            if timeout40us:
+                rst_40us.next = 1
+                state.next = States.WAIT_BIT_DAT
+        elif state == States.WAIT_BIT_DAT:
+            if not timeout_40us:
+                rst_40us.next = 0
+            else:
                 for k in range(39):
                     shift_reg[k].next = shift_reg[k+1]
                 shift_reg[39].next = line_in
@@ -92,9 +102,8 @@ def DHT11(
                     valid.next = 1
                     dat.next = dat_sig
                     state.next = States.IDLE
-                rst40us.next = 1
-            else:
-                rst40us.next = 0
+                else:
+                    state.next = States.WAIT_BIT_LOW
 
     return instances()
 
@@ -108,9 +117,11 @@ def convert_block(target):
     inout_state = Signal(bool(0))
     read_dev = Signal(bool(0))
     clk = Signal(bool(0))
+    reset = Signal(bool(0))
     clk_freq = 100e6
+    state = Signal(intbv(0)[4:])
 
-    inst = DHT11(dat, valid, inout_state, line_in, line_out, read_dev, clk, clk_freq)
+    inst = DHT11(dat, valid, inout_state, line_in, line_out, read_dev, clk, reset, clk_freq, state)
     inst.convert(hdl=target)
 
 
