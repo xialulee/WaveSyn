@@ -1,0 +1,591 @@
+{
+    "board name": "HR240B",
+    "IDE": "Quartus",
+    "pin info": [
+        {
+            "name": "PIN_12",
+            "alias": "GCLK0",
+            "description": "Clock input."
+        },
+
+
+
+        {
+            "name": "PIN_71",
+            "alias": "Seg",
+            "index": 0,
+            "description": "7 seg: a."
+        },
+        {
+            "name": "PIN_72",
+            "alias": "Seg",
+            "index": 1,
+            "description": "7 seg: b."
+        },
+        {
+            "name": "PIN_73",
+            "alias": "Seg",
+            "index": 2,
+            "description": "7 seg: c."
+        },
+        {
+            "name": "PIN_74",
+            "alias": "Seg",
+            "index": 3,
+            "description": "7 seg: d."
+        },
+        {
+            "name": "PIN_75",
+            "alias": "Seg",
+            "index": 4,
+            "description": "7 seg: e."
+        },
+        {
+            "name": "PIN_76",
+            "alias": "Seg",
+            "index": 5,
+            "description": "7 seg: f."
+        },
+        {
+            "name": "PIN_77",
+            "alias": "Seg",
+            "index": 6,
+            "description": "7 seg: g."
+        },
+        {
+            "name": "PIN_78",
+            "alias": "Seg",
+            "index": 7,
+            "description": "7 seg: dp."
+        },
+
+        {
+            "name": "PIN_83",
+            "alias": "SEL",
+            "index": 0,
+            "description": "7 seg: select bit 0"
+        },
+        {
+            "name": "PIN_82",
+            "alias": "SEL",
+            "index": 1,
+            "description": "7 seg: select bit 1"
+        },
+        {
+            "name": "PIN_81",
+            "alias": "SEL",
+            "index": 2,
+            "description": "7 seg: select bit 2"
+        },
+
+
+
+        {
+            "name": "PIN_40",
+            "alias": "LED",
+            "index": 0,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_41",
+            "alias": "LED",
+            "index": 1,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_42",
+            "alias": "LED",
+            "index": 2,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_43",
+            "alias": "LED",
+            "index": 3,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_47",
+            "alias": "LED",
+            "index": 4,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_48",
+            "alias": "LED",
+            "index": 5,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_49",
+            "alias": "LED",
+            "index": 6,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_50",
+            "alias": "LED",
+            "index": 7,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_51",
+            "alias": "LED",
+            "index": 8,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_52",
+            "alias": "LED",
+            "index": 9,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_53",
+            "alias": "LED",
+            "index": 10,
+            "description": "LED Array."
+        },
+        {
+            "name": "PIN_54",
+            "alias": "LED",
+            "index": 11,
+            "description": "LED Array."
+        },
+
+
+
+        {
+            "name": "PIN_17",
+            "alias": "S",
+            "index": 0,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_16",
+            "alias": "S",
+            "index": 1,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_15",
+            "alias": "S",
+            "index": 2,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_14",
+            "alias": "S",
+            "index": 3,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_8",
+            "alias": "S",
+            "index": 4,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_7",
+            "alias": "S",
+            "index": 5,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_6",
+            "alias": "S",
+            "index": 6,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_5",
+            "alias": "S",
+            "index": 7,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_4",
+            "alias": "S",
+            "index": 8,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_3",
+            "alias": "S",
+            "index": 9,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_2",
+            "alias": "S",
+            "index": 10,
+            "description": "Button Array."
+        },
+        {
+            "name": "PIN_1",
+            "alias": "S",
+            "index": 11,
+            "description": "Button Array."
+        },
+
+
+
+        {
+            "name": "PIN_70",
+            "alias": "K",
+            "index": 0,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_69",
+            "alias": "K",
+            "index": 1,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_68",
+            "alias": "K",
+            "index": 2,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_67",
+            "alias": "K",
+            "index": 3,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_66",
+            "alias": "K",
+            "index": 4,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_64",
+            "alias": "K",
+            "index": 5,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_62",
+            "alias": "K",
+            "index": 6,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_61",
+            "alias": "K",
+            "index": 7,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_58",
+            "alias": "K",
+            "index": 8,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_57",
+            "alias": "K",
+            "index": 9,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_56",
+            "alias": "K",
+            "index": 10,
+            "description": "Switch Array."
+        },
+        {
+            "name": "PIN_55",
+            "alias": "K",
+            "index": 11,
+            "description": "Switch Array."
+        },
+
+
+
+        {
+            "name": "PIN_85",
+            "alias": "RXD",
+            "description": "UART RX"
+        },
+        {
+            "name": "PIN_84",
+            "alias": "TXD",
+            "description": "UART TX"
+        },
+
+
+
+        {
+            "name": "PIN_100",
+            "alias": "PS2_DAT",
+            "description": "PS2 data line."
+        },
+        {
+            "name": "PIN_99",
+            "alias": "PS2_CLK",
+            "description": "PS2 clock line."
+        },
+
+
+
+        {
+            "name": "PIN_90",
+            "alias": "VGA_R",
+            "description": "VGA Red."
+        },
+        {
+            "name": "PIN_89",
+            "alias": "VGA_G",
+            "description": "VGA Green."
+        },
+        {
+            "name": "PIN_88",
+            "alias": "VGA_B",
+            "description": "VGA Blue."
+        },
+        {
+            "name": "PIN_86",
+            "alias": "VGA_HS",
+            "description": "VGA Horizontal Sync."
+        },
+        {
+            "name": "PIN_87",
+            "alias": "VGA_VS",
+            "description": "VGA Vertical Sync."
+        },
+
+
+
+        {
+            "name": "PIN_96",
+            "alias": "DA1_CS",
+            "description": "DAC1 Chip select."
+        },
+        {
+            "name": "PIN_97",
+            "alias": "DA1_CLK",
+            "description": "DAC1 Clock."
+        },
+        {
+            "name": "PIN_98",
+            "alias": "DA1_DIN",
+            "description": "DAC1 Data input."
+        },
+        {
+            "name": "PIN_91",
+            "alias": "DA2_CS",
+            "description": "DAC2 Chip select."
+        },
+        {
+            "name": "PIN_92",
+            "alias": "DA2_CLK",
+            "description": "DAC2 Clock."
+        },
+        {
+            "name": "PIN_95",
+            "alias": "DA2_DIN",
+            "description": "DAC2 Data input."
+        },
+
+
+
+        {
+            "name": "PIN_18",
+            "alias": "JP3",
+            "index": 3,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_19",
+            "alias": "JP3",
+            "index": 4,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_20",
+            "alias": "JP3",
+            "index": 5,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_21",
+            "alias": "JP3",
+            "index": 6,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_26",
+            "alias": "JP3",
+            "index": 7,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_27",
+            "alias": "JP3",
+            "index": 8,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_28",
+            "alias": "JP3",
+            "index": 9,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_29",
+            "alias": "JP3",
+            "index": 10,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_30",
+            "alias": "JP3",
+            "index": 11,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_33",
+            "alias": "JP3",
+            "index": 12,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_34",
+            "alias": "JP3",
+            "index": 13,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_35",
+            "alias": "JP3",
+            "index": 14,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_36",
+            "alias": "JP3",
+            "index": 15,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_37",
+            "alias": "JP3",
+            "index": 16,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_38",
+            "alias": "JP3",
+            "index": 17,
+            "description": "JP3 GPIO."
+        },
+        {
+            "name": "PIN_39",
+            "alias": "JP3",
+            "index": 18,
+            "description": "JP3 GPIO."
+        },
+
+
+
+        {
+            "name": "PIN_100",
+            "alias": "JP4",
+            "index": 3,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_99",
+            "alias": "JP4",
+            "index": 4,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_98",
+            "alias": "JP4",
+            "index": 5, 
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_97",
+            "alias": "JP4",
+            "index": 6,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_96",
+            "alias": "JP4",
+            "index": 7, 
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_95",
+            "alias": "JP4",
+            "index": 8,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_92",
+            "alias": "JP4",
+            "index": 9,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_91",
+            "alias": "JP4",
+            "index": 10,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_90",
+            "alias": "JP4",
+            "index": 11,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_89",
+            "alias": "JP4",
+            "index": 12,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_88",
+            "alias": "JP4",
+            "index": 13,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_87",
+            "alias": "JP4",
+            "index": 14,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_86",
+            "alias": "JP4",
+            "index": 15,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_85",
+            "alias": "JP4",
+            "index": 16,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_84",
+            "alias": "JP4",
+            "index": 17,
+            "description": "JP4 GPIO."
+        },
+        {
+            "name": "PIN_83",
+            "alias": "JP4",
+            "index": 18,
+            "description": "JP4 GPIO."
+        }
+    ]
+}
