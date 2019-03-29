@@ -1,3 +1,6 @@
+from argparse import ArgumentParser
+from pathlib import Path 
+
 from myhdl import (
     block, Signal, enum, intbv,
     ConcatSignal,
@@ -7,8 +10,13 @@ from wavesynlib.cores.delayer import Delayer
 
 
 
+READ_LINE = 0
+WRITE_LINE = 1
+
+
+
 @block
-def DHT11(
+def PyDHT11(
         dat, # Received data, Output
         valid, # Output
         inout_state, # Output, low for input, high for output
@@ -30,9 +38,6 @@ def DHT11(
         'WAIT_BIT_DAT',
         'OUTPUT_DAT',
         'IDLE')
-
-    READ_LINE = 0
-    WRITE_LINE = 1
 
     state = Signal(States.IDLE)
 
@@ -115,7 +120,51 @@ def DHT11(
 
 
 
-def convert_block(target):
+DHT11_VERILOG_CODE = f'''\
+`include "PyDHT11.v"
+
+
+module DHT11(
+    output [7:0] humidity0,
+    output [7:0] humidity1,
+    output [7:0] temperature0,
+    output [7:0] temperature1,
+    output [7:0] checksum,
+    output valid,
+    output [3:0] state,
+    inout dat_line,
+    input read,
+    input reset,
+    input clk);
+
+    `define READ_LINE {READ_LINE}
+    `define WRITE_LINE {WRITE_LINE}
+
+    wire line_in;
+    wire line_out;
+    wire inout_state;
+
+    // IN-OUT control.
+    assign dat_line = inout_state==`READ_LINE ? 1'bz : line_out;
+    assign line_in  = inout_state==`READ_LINE ? dat_line : 1'bz;
+
+    PyDHT11 pydht11(
+        .dat({{humidity0, humidity1, temperature0, temperature1, checksum}}), 
+        .valid(valid),
+        .inout_state(inout_state),
+        .line_out(line_out),
+        .line_in(line_in),
+        .read_dev(read),
+        .clk(clk),
+        .reset(reset),
+        .state_out(state));
+endmodule
+'''
+
+
+
+
+def to_verilog(clk_freq):
     dat = Signal(intbv(0)[40:])
     valid = Signal(bool(0))
     line_in = Signal(bool(0))
@@ -124,14 +173,37 @@ def convert_block(target):
     read_dev = Signal(bool(0))
     clk = Signal(bool(0))
     reset = Signal(bool(0))
-    clk_freq = 100e6
     state = Signal(intbv(0)[4:])
 
-    inst = DHT11(dat, valid, inout_state, line_in, line_out, read_dev, clk, reset, clk_freq, state)
-    inst.convert(hdl=target)
+    inst = PyDHT11(
+        dat, 
+        valid, 
+        inout_state, 
+        line_out, 
+        line_in, 
+        read_dev, 
+        clk, 
+        reset, 
+        clk_freq, 
+        state)
+    inst.convert(hdl="verilog")
 
 
 
 if __name__ == '__main__':
-    convert_block(target='verilog')
+    parser = ArgumentParser(description='''\
+Generate two modules for reading the DHT11 sensor.
+    ''')
+    parser.add_argument(
+        '--clk-freq',
+        help='Input clock frequency (Hz).',
+        type=float)
+
+    args = parser.parse_args()
+
+    to_verilog(clk_freq=args.clk_freq)
+    vpath = Path(__file__).parent / "dht11.v"
+    with open(vpath, 'w') as vfile:
+        vfile.write(DHT11_VERILOG_CODE)
+
 
