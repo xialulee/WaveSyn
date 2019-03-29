@@ -28,6 +28,7 @@ def DHT11(
         'WAIT_BIT_LOW',
         'WAIT_BIT_HIGH',
         'WAIT_BIT_DAT',
+        'OUTPUT_DAT',
         'IDLE')
 
     READ_LINE = 0
@@ -49,7 +50,7 @@ def DHT11(
     delay40us = Delayer(timeout_40us, clk, rst_40us, 40e-6, clk_freq)
 
     shift_reg = [Signal(bool(0)) for k in range(40)]
-    bit_counter = intbv(0, min=0, max=41)
+    bit_counter = Signal(intbv(0, min=0, max=41))
     dat_sig = ConcatSignal(*shift_reg)
 
     @always(clk.posedge)
@@ -60,9 +61,10 @@ def DHT11(
             if not read_dev:
                 inout_state.next = READ_LINE
             else:
-                bit_counter[:] = 0
+                bit_counter.next = 0
                 rst_20ms.next = 1
                 inout_state.next = WRITE_LINE
+                valid.next = 0
                 state.next = States.START_SIGNAL_LOW
         elif state == States.START_SIGNAL_LOW:
             if not timeout_20ms:
@@ -97,13 +99,17 @@ def DHT11(
                 for k in range(39):
                     shift_reg[k].next = shift_reg[k+1]
                 shift_reg[39].next = line_in
-                bit_counter[:] = bit_counter + 1
-                if bit_counter == 40:
-                    valid.next = 1
-                    dat.next = dat_sig
-                    state.next = States.IDLE
+                if bit_counter == 39:
+                    state.next = States.OUTPUT_DAT
                 else:
+                    bit_counter.next = bit_counter + 1
                     state.next = States.WAIT_BIT_LOW
+        elif state == States.OUTPUT_DAT:
+            valid.next = 1
+            dat.next = dat_sig
+            state.next = States.IDLE
+        else:
+            state.next = States.IDLE
 
     return instances()
 

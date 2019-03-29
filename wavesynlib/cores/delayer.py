@@ -12,19 +12,19 @@ def Delayer(
     ):
     COUNTER_MAX = int(interval * clk_freq)
 
-    counter = intbv(0, min=0, max=COUNTER_MAX+1)
+    counter = Signal(intbv(0, min=0, max=COUNTER_MAX+1))
     
-    @always(clk.posedge)
+    @always(clk.posedge, rst.posedge)
     def do():
         if rst:
             counter[:] = 0
             timeout.next = 0
         else:
-            if counter >= COUNTER_MAX:
+            if counter >= COUNTER_MAX-1:
                 timeout.next = 1
             else:
                 timeout.next = 0
-                counter[:] = counter + 1
+                counter.next = counter + 1
 
     return instances()
 
