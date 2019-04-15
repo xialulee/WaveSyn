@@ -49,6 +49,18 @@ def PyDHT11(
     timeout_20ms = Signal(bool(0))
     timeout_40us = Signal(bool(0))
     delayer_rst = Signal(bool(0))
+    
+    read_dev_tap = [Signal(bool(0)), Signal(bool(0))]
+    read_dev_posedge = Signal(bool(0))
+    
+    @always_comb
+    def read_dev_posedge_detector():
+        read_dev_posedge.next = read_dev_tap[0] & (~read_dev_tap[1])
+        
+    @always(clk.posedge)
+    def connect_read_dev_tap():
+        read_dev_tap[0].next = read_dev
+        read_dev_tap[1].next = read_dev_tap[0]        
 
     delayer = DualDelayer(
         timeout_short=timeout_40us, 
@@ -62,14 +74,14 @@ def PyDHT11(
 
     shift_reg = [Signal(bool(0)) for k in range(40)]
     bit_counter = Signal(intbv(0, min=0, max=41))
-    dat_sig = ConcatSignal(*shift_reg)
+    shift_reg_sig = ConcatSignal(*shift_reg)
 
     @always(clk.posedge)
-    def transmitting():
+    def transmitting():        
         if reset:
             state.next = States.IDLE
         elif state == States.IDLE:
-            if not read_dev:
+            if not read_dev_posedge:
                 inout_state.next = READ_LINE
             else:
                 bit_counter.next = 0
@@ -110,6 +122,7 @@ def PyDHT11(
                 for k in range(39):
                     shift_reg[k].next = shift_reg[k+1]
                 shift_reg[39].next = line_in
+                
                 if bit_counter == 39:
                     state.next = States.OUTPUT_DAT
                 else:
@@ -117,7 +130,7 @@ def PyDHT11(
                     state.next = States.WAIT_BIT_LOW
         elif state == States.OUTPUT_DAT:
             valid.next = 1
-            dat.next = dat_sig
+            dat.next = shift_reg_sig
             state.next = States.IDLE
         else:
             state.next = States.IDLE
