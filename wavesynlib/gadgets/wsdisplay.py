@@ -90,7 +90,10 @@ class Canvas(app.Canvas):
     def on_mouse_wheel(self, event):
         original_scale = self.scale
         delta_scale = 0.1*event.delta[1]
-        self.scale += delta_scale 
+        new_scale = original_scale + delta_scale
+        if new_scale < 0.1:
+            return
+        self.scale = new_scale
         
         mouse_pos = event.pos[0] + 1j*(self.size[1]-event.pos[1])
         mouse_pos -= self.__offset
@@ -131,7 +134,7 @@ class Canvas(app.Canvas):
             si = sc.imag * (ri + 1j)
         else:
             si = sc.real * (1 + 1j/ri)
-            
+                
         si *= scale
         set_viewport(offset.real, offset.imag, si.real, si.imag)
         
