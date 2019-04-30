@@ -222,6 +222,6 @@ def to_verilog():
     
     
 if __name__ == '__main__':
-    # to_verilog()
-    test()
+    to_verilog()
+    # test()
     
