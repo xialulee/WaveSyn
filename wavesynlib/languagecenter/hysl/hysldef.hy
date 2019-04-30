@@ -73,6 +73,7 @@
 (setv dispatch-dict {
     "attribute" (fn [indent args] (translate-pipe-vars indent args "attribute"))
     "out"       (fn [indent args] (translate-pipe-vars indent args "out"))
+    "vec2"      (fn [indent args] (translate-vec indent args "2" ""))
     "vec3"      (fn [indent args] (translate-vec indent args "3" ""))
     "vec4"      (fn [indent args] (translate-vec indent args "4" ""))
     "setv"      translate-setv
