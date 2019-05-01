@@ -13,12 +13,12 @@ from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
 from jinja2 import Template
-from wavesynlib.languagecenter.glsl.utils import hit_circle, hit_line
-from wavesynlib.languagecenter.glsl.constants import pi as PI_STR
+from wavesynlib.languagecenter.pysl.utils import hit_circle, hit_line
+from wavesynlib.languagecenter.pysl.constants import pi as PI_STR
 
 # The PyQt5 support of VisPy still has some problems.
 # Hence we use the GLFW backend here. 
-app.use_app(backend_name='GLFW')
+app.use_app(backend_name='glfw')
 
 
 

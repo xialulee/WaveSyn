@@ -4,7 +4,7 @@ Created on Sat May 13 15:37:20 2017
 
 @author: Feng-cong Li
 """
-from wavesynlib.languagecenter.glsl import Function
+from wavesynlib.languagecenter.pysl import Function
 
 
 hit_circle = Function(
