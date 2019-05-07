@@ -6,7 +6,9 @@ from argparse import ArgumentParser
 def reverse(fileobj, separator='\n'):
     data = fileobj.read()
     datalist = data.split(separator)
-    for idx in range(len(datalist))[::-1]:
+    if (datalist[-1]):
+        yield datalist[-1]
+    for idx in range(len(datalist)-1)[::-1]:
         yield datalist[idx]
 
 
