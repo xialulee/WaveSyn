@@ -6,6 +6,8 @@
 (require [hysldef [VertexShader FragmentShader]])
 
 
+(.use_app app :backend-name "glfw")
+
 
 (VertexShader vert
     (attribute 
