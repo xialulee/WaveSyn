@@ -13,7 +13,7 @@ from wavesynlib.cores.bitreduction import BitReduce
 
 
 @block
-def RS232(
+def UART(
         rx, # input, receive
         tx, # output, transmit
         rx_finish, # output, posedge presenting a receiving process is finished.
@@ -139,7 +139,7 @@ def Test(direction):
     factor = 16
     clk_freq = 9600*factor  
     
-    inst = RS232(rx, tx, rx_finish, tx_occupy, tx_start, rx_reg, tx_reg, clk, rst, baud_rate=baud_rate, clk_freq=clk_freq)  
+    inst = UART(rx, tx, rx_finish, tx_occupy, tx_start, rx_reg, tx_reg, clk, rst, baud_rate=baud_rate, clk_freq=clk_freq)  
         
     if direction == 'tx':
         @instance
@@ -169,7 +169,7 @@ def Test(direction):
 
 
 
-def test_convert(hdl):
+def test_convert(hdl, clk_freq):
     rx = Signal(bool(0))
     tx = Signal(bool(0))
     rx_finish = Signal(bool(0))
@@ -180,9 +180,8 @@ def test_convert(hdl):
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     baud_rate = 9600
-    clk_freq = 100000000
     
-    inst = RS232(rx, tx, rx_finish, tx_occupy, tx_start, rx_reg, tx_reg, clk, rst, baud_rate=baud_rate, clk_freq=clk_freq)
+    inst = UART(rx, tx, rx_finish, tx_occupy, tx_start, rx_reg, tx_reg, clk, rst, baud_rate=baud_rate, clk_freq=clk_freq)
     inst.convert(hdl=hdl)
     
     
@@ -193,6 +192,7 @@ if __name__ == '__main__':
     parser = ArgumentParser(description='Generate synthesizable uart module in Verilog/VHDL, or run simulation of the uart module.')
     parser.add_argument('--convert', help='Generate synthesizable uart module in Verilog/VHDL.', choices=['verilog', 'vhdl'])
     parser.add_argument('--simulate', help='Run simulation of the uart module.', choices=['tx', 'rx'])
+    parser.add_argument('--clock-freq', help='Input clock frequency (Hz).', type=int)
 
     args = parser.parse_args()
     
@@ -201,5 +201,5 @@ if __name__ == '__main__':
         tb.config_sim(trace=True)
         tb.run_sim()
     else: # convert
-        test_convert(hdl=args.convert)
+        test_convert(hdl=args.convert, clk_freq=args.clock_freq)
 
