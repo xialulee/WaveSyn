@@ -23,13 +23,14 @@ import traceback
 
 import jedi
 
-from wavesynlib.widgets.tk import CWDIndicator, ScrolledText, ScrolledList, PILImageFrame
+from wavesynlib.widgets.tk import (
+        CWDIndicator, ScrolledText, ScrolledList, PILImageFrame,
+        SyntaxHighlighter)
 from wavesynlib.widgets.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately, FunctionChain
 from wavesynlib.languagecenter import templates
-from wavesynlib.languagecenter.python.pattern import prog as prog_pattern
 from wavesynlib.status import busy_doing
 
 
@@ -170,6 +171,9 @@ class ConsoleText(ModelNode, ScrolledText):
         self.text.bind('<KeyRelease>', self.on_key_release)
         
         # Begin syntax highlight
+        self.__syntax_highlighter = SyntaxHighlighter(
+            text_widget = self.text,
+            syntax_tags = self.__syntax_tags)
         self.__redir = redir = WidgetRedirector(self.text)
         self.__true_insert = redir.register('insert', self.__insert_hook)
         self.__true_delete = redir.register('delete', self.__delete_hook)        
@@ -187,6 +191,7 @@ class ConsoleText(ModelNode, ScrolledText):
         
         
     def __insert_hook(self, index, chars, tags=None):
+        highlight = self.__syntax_highlighter.highlight_one_row
         if tags:
             # All of the text inserted by WaveSyn has a tag (except the prompts). 
             self.__true_insert(index, chars, tags)            
@@ -194,7 +199,7 @@ class ConsoleText(ModelNode, ScrolledText):
             if len(chars) == 1 or '\n' not in chars:
                 self.__true_insert(index, chars)
                 r, c = self.get_cursor_pos(index)
-                self.__syntax_highlight(row=r)
+                highlight(row=r)
             else:
                 lines = chars.split('\n')
                 if not lines[-1]:
@@ -202,7 +207,7 @@ class ConsoleText(ModelNode, ScrolledText):
                 for line in lines:
                     self.__true_insert(index, line)
                     r, c = self.get_cursor_pos(index)
-                    self.__syntax_highlight(row=r)                    
+                    highlight(row=r)
                     self.on_key_press(KeyEventSim('Return'))
     
     
@@ -210,27 +215,9 @@ class ConsoleText(ModelNode, ScrolledText):
         self.__true_delete(index1, index2)
         r, c = self.get_cursor_pos('insert')
         if self.text.get(f'{r}.0', f'{r}.3') in ('>>>', '...'):
-            self.__syntax_highlight(row=r)        
+            self.__syntax_highlighter.highlight_one_row(row=r)        
         
         
-    def __syntax_highlight(self, row):
-        for tag in self.__syntax_tags:
-            self.text.tag_remove(tag, f'{row}.0', f'{row}.end')
-            
-        line = self.text.get(f'{row}.0', f'{row}.end')
-        start = 0
-        while True: 
-            m = prog_pattern.search(line, start)
-            if not m: 
-                break
-            start = m.end()
-            for key, value in m.groupdict().items():
-                if value:
-                    self.text.tag_add(key, 
-                                      f'{row}.{m.start()}',
-                                      f'{row}.{m.end()}')
-                    
-
     @property                    
     def encounter_func_callback(self):
         return self.__encounter_func_callback
@@ -304,7 +291,7 @@ class ConsoleText(ModelNode, ScrolledText):
                 1 if evt.keysym in ('Up', 'KP_Up') 
                 else -1)
             self.text.insert('end', code)
-            self.__syntax_highlight(r)
+            self.__syntax_highlighter.highlight_one_row(row=r)
             return 'break'     
         # End Support History
             
