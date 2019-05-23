@@ -511,7 +511,13 @@ Red:   main-thread is busy.''')
         battery_meter = Label(self)
         battery_meter.pack(side='right', fill='y')
         battery_meter_tip = balloon.bind_widget(battery_meter, balloonmsg='Battery: ')
-        battery_meter_tip.show_callback = lambda: f'{Scripting.root_node.interfaces.os.get_battery_status().percent}%.'
+        def battery_meter_tip_show_callback():
+            battery_status = Scripting.root_node.interfaces.os.get_battery_status()
+            if battery_status is None:
+                return 'No battery detected.'
+            else:
+                return f'{battery_status.percent}%'
+        battery_meter_tip.show_callback = battery_meter_tip_show_callback
         
         self.__membar = IntVar(0)
         self.__cpubar = IntVar(0)
