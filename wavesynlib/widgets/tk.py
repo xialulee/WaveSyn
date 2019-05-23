@@ -1615,10 +1615,16 @@ Example: [
     retval = {}
 
     for item in json_obj:
-        try:
-            class_name = item.get('class')
-        except KeyError:
-            class_name = item.get('class_')
+#        try:
+#            class_name = item.get('class')
+#        except KeyError:
+#            class_name = item.get('class_')
+            
+        if 'class' in item:
+            class_name = item['class']
+        else:
+            class_name = item['class_']
+
         mod = item.get('module', None)
         if mod:
             mod = locals()[mod]
@@ -1668,19 +1674,19 @@ if __name__ == '__main__':
     #    print (ask_font())
     #    window.mainloop()
 
-    root    = Tk()
-    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
-    iq.pack(expand='yes', fill='both')
-    root.mainloop()
-
-#    root = Tk()
-#    json_code = '''[
-#    {"name":"alert_button", "class":"Button", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
-#]
-#    '''
-#    widgets = json_to_tk(root, json_code)
-#    widgets['alert_button']['command'] = lambda: print('Alert!')
+#    root    = Tk()
+#    iq      = IQSlider(root, i_range=512, q_range=512, relief='raised')
+#    iq.pack(expand='yes', fill='both')
 #    root.mainloop()
+
+    root = Tk()
+    json_code = '''[
+    {"name":"alert_button", "class":"Button", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
+]
+    '''
+    widgets = json_to_tk(root, json_code)
+    widgets['alert_button']['command'] = lambda: print('Alert!')
+    root.mainloop()
     
 #    root = tix.Tk()
 #    cl = CheckTree(root)
