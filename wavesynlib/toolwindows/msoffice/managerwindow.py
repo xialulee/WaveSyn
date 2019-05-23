@@ -6,6 +6,7 @@ Created on Mon Mar 27 15:33:03 2017
 """
 import os
 from pathlib import Path
+from comtypes import COMError
 
 import tkinter as tk
 from tkinter import ttk
@@ -180,7 +181,14 @@ class OfficeController(TkToolWindow):
         kwargs = {}
         if app_name == 'word' and not is_parent:
             kwargs['index'] = txt
-        office[id_].set_foreground(**kwargs)
+        with code_printer(print_=True):
+            try:
+                office[id_].set_foreground(**kwargs)
+            except COMError as err:
+                tk.messagebox.showerror(
+                    title = 'Office Error',
+                    message = 
+                        '\n'.join([str(item) for item in err.details]))
                 
                 
     def __on_select(self, event):
