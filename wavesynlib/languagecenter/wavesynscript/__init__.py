@@ -5,6 +5,7 @@ Created on Sat Aug 27 23:07:59 2016
 @author: Feng-cong Li
 """
 import sys
+from pathlib import Path
 from importlib import import_module
 
 import collections
@@ -408,14 +409,15 @@ constant_names = []
              
 class Constants(object): 
     name_value_pairs = (                
-        ('KEYSYM_MODIFIERS', {'Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R'}),
+        ('KEYSYM_MODIFIERS', {
+            'Alt_L', 'Alt_R', 
+            'Control_L', 'Control_R', 
+            'Shift_L', 'Shift_R'}),
         ('KEYSYM_CURSORKEYS', {
             'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 
             'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 
             'Left', 'Right', 'Up', 'Down', 
-            'Home', 'End', 'Next', 'Prior'                
-        })
-    )
+            'Home', 'End', 'Next', 'Prior'}) )
     
     for name, value in name_value_pairs:
         locals()[name] = Constant(name, value)      
@@ -429,10 +431,18 @@ class Constants(object):
 
 
 def _print_replacement_of_constant(const, value):
-    Scripting.root_node.stream_manager.write(f'''WaveSyn:
+    show_tips = Scripting.root_node.gui.console.show_tips
+    show_tips([
+        {'type':'text', 'content':f'''\
 The actual value of the place where {const.name} holds is
-  {repr(value)}
-''', 'TIP')
+'''}])
+    if isinstance(value, Path):
+        if value.is_dir():
+            show_tips([{'type':'directories', 'content':[str(value)]}], prompt=False)
+        else:
+            show_tips([{'type':'file_list', 'content':[str(value)]}], prompt=False)
+    else:
+        show_tips([{'type':'text', 'content':repr(value)}], prompt=False)
     
 
     

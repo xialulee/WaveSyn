@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 def unpack(rar_file:(str, Path), dir_path:(str, Path))->(str, str):
-    p = sp.Popen(['unrar', 'x', rar_file, dir_path], stdout=sp.PIPE, stderr=sp.PIPE)
+    p = sp.Popen(['unrar', 'x', str(rar_file), str(dir_path)], stdout=sp.PIPE, stderr=sp.PIPE)
     outs, errs = p.communicate()
     outs = outs.decode(locale.getpreferredencoding())
     errs = errs.decode(locale.getpreferredencoding())
@@ -23,6 +23,7 @@ def unpack(rar_file:(str, Path), dir_path:(str, Path))->(str, str):
 
 
 def list_content(path):
+    path = str(path)
     p = sp.Popen(['unrar', 'lta', path], stdout=sp.PIPE, stderr=sp.PIPE)
     outs, errs = p.communicate()
     outs = outs.decode(locale.getpreferredencoding())

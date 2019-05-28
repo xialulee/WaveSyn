@@ -5,6 +5,7 @@ Created on Thu Aug 18 22:01:43 2016
 @author: Feng-cong Li
 """
 import os
+from pathlib import Path
 
 import tkinter
 from tkinter.simpledialog import askstring, askinteger
@@ -95,20 +96,20 @@ and the order of the filenames is preserved.
 and the place where this constant holds will be replaced with the selected directory.
 ''')
     def ask_directory(self, arg, **kwargs):
-        return askdirectory(**kwargs)
+        return Path(askdirectory(**kwargs))
         
     @constant_handler(doc='''Popup an open file dialog,
 and the place where this constant holds will be replaced with the selected filename.
 ''')
     def ask_open_filename(self, arg, **kwargs):
-        return askopenfilename(**kwargs)
+        return Path(askopenfilename(**kwargs))
     
         
     @constant_handler(doc='''Popup a saveas dialog,
 and the place where this constant holds will be replaced with the selected filename.
 ''')
     def ask_saveas_filename(self, arg, **kwargs):
-        return asksaveasfilename(**kwargs)
+        return Path(asksaveasfilename(**kwargs))
     
         
     @constant_handler('''Popup a dialog asking a slice (Python slice syntax),

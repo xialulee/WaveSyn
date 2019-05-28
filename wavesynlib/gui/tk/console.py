@@ -897,12 +897,13 @@ class ConsoleWindow(ModelNode):
         self.root_node.gui.root.wm_attributes('-alpha', opacity)
         
         
-    def show_tips(self, contents):         
+    def show_tips(self, contents, prompt=True):         
         if self.root_node.no_tip:
             return
         
         stream_manager = self.root_node.stream_manager
-        stream_manager.write('WaveSyn: \n', 'TIP')
+        if prompt:
+            stream_manager.write('WaveSyn: \n', 'TIP')
 
         if isinstance(contents, str):
             stream_manager.write(contents+'\n', 'TIP')
@@ -912,7 +913,21 @@ class ConsoleWindow(ModelNode):
 
         console_text = self.console_text
         text = console_text.text
+        
+        # For "open" link.
+        def new_open_func(path):
+            def open_func(*args):
+                with code_printer():
+                    self.root_node.webbrowser_open(path)
+            return open_func
             
+        # For "browse" link.
+        def new_browse_func(path):
+            def browse_func(*args):
+                with code_printer():
+                    self.root_node.interfaces.os.win_open(path)
+            return browse_func        
+                    
         for item in contents:
             end = item.get('end', '\n')
 
@@ -934,19 +949,7 @@ class ConsoleWindow(ModelNode):
                 stream_manager.write(end)
                 return_list.append(id(pil_frame))
             elif item['type'] == 'file_list':
-                file_list = item['content']
-                def new_open_func(path):
-                    def open_func(*args):
-                        with code_printer():
-                            self.root_node.webbrowser_open(path)
-                    return open_func
-                    
-                def new_browse_func(path):
-                    def browse_func(*args):
-                        with code_printer():
-                            self.root_node.interfaces.os.win_open(path)
-                    return browse_func
-                    
+                file_list = item['content']                 
                 for file_path in file_list:
                     open_func = new_open_func(file_path)
                     open_tag_name = console_text.create_link_tag(open_func, self.default_cursor)
@@ -960,4 +963,12 @@ class ConsoleWindow(ModelNode):
                     
                     stream_manager.write(f'{file_path}{end}', 'TIP')
                 return_list.append(None)
+            elif item['type'] == 'directories':
+                dir_list = item['content']
+                for dir_path in dir_list:
+                    browse_func = new_browse_func(dir_path)
+                    browse_tag_name = console_text.create_link_tag(browse_func, self.default_cursor)
+                    stream_manager.write('browse', browse_tag_name)
+                    stream_manager.write(' ')
+                    stream_manager.write(f'{dir_path}{end}', 'TIP')
         return return_list        
