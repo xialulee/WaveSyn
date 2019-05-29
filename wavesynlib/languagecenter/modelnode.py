@@ -18,6 +18,11 @@ class LangCenterNode(ModelNode):
             module_name='wavesynlib.languagecenter.python.modelnode',
             class_name='Python')
         
+        self.unicode_utils = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.languagecenter.unicode.modelnode',
+            class_name='UnicodeUtils')
+        
         self.html_utils = ModelNode(
             is_lazy=True,
             module_name='wavesynlib.languagecenter.html.modelnode',
