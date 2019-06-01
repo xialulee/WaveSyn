@@ -69,7 +69,7 @@ class Canvas(app.Canvas):
         self.__offset = 0+1j*0
 
         self.show()
-        
+
         
     @property
     def scale(self):
@@ -116,6 +116,11 @@ class Canvas(app.Canvas):
             self.__last_pos = pos
             self._set_viewport()
             self.update()
+            
+            
+    def on_key_press(self, event):
+        if event.key.name == 'Enter':
+            self.fullscreen = not self.fullscreen
                    
 
     def on_draw(self, event):
