@@ -511,7 +511,7 @@ IP: {addr[0]}
     
     @Scripting.printable    
     def write_device_clipboard(self):
-        self._launch_server(command={'action':'write', 'target':'clipboard'}) 
+        self._launch_server(command={'action':'write', 'source':'', 'target':'clipboard'}) 
         
     
     @Scripting.printable    
