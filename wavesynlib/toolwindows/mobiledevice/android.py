@@ -151,7 +151,7 @@ if action == "read":
         tab = tk.Frame(tool_tabs)
         self.__widgets = widgets = json_to_tk(tab, widgets_desc, balloon=balloon)
         ip_list = widgets['ip_list']
-        ip_list.list.config(height=4, width=15)
+        ip_list.list.config(height=4, width=15, exportselection=False)
         addrlist = socket.gethostbyname_ex('')[2]
         for ip in addrlist:
             ip_list.append(ip)
