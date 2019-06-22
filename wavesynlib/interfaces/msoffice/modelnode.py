@@ -308,8 +308,8 @@ class WordUtils(ModelNode):
                 relative_path = ''
             image.Title = self._SIGNATURE_
             image.AlternativeText = json.dumps({
-                'path':filename, 
-                'relative_path':relative_path,
+                'path':str(filename), 
+                'relative_path':str(relative_path),
                 'time':int(time.time()),
                 'resize':resize,
                 'comment':comment})
@@ -450,11 +450,24 @@ class ExcelObject(AppObject):
         
         
         
+class WordDocumentObject:
+    def __init__(self, parent, handle):
+        self.com_handle = handle
+        self._event_connection = None
+        self.parent = parent
+        
+        
+    def DocumentEvents2_Close(self, this):
+        self.parent.DocumentEvents2_Close(this, doc_wrapper=self)
+        
+        
+        
 class WordObject(AppObject):       
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.utils = WordUtils(com_handle=self.com_handle)
         self.__event_connection = None
+        self._doc_list = []
 
 
     @property
@@ -507,22 +520,52 @@ class WordObject(AppObject):
             
             
     def ApplicationEvents4_DocumentOpen(self, this, doc):
-        self.parent_node.notify_observers()
+        self.parent_node.notify_observers(
+                app='Word', 
+                source='Application', 
+                event='DocumentOpen', 
+                doc=doc)
+    
         
         
-    def ApplicationEvents4_NewDocument(self, this, doc):
-        self.parent_node.notify_observers()
-        
+    def ApplicationEvents4_NewDocument(self, this, doc):            
+        for doc_idx in range(self.com_handle.Documents.Count):
+            idx1 = doc_idx+1
+            if self.com_handle.Documents.Item(idx1) == doc:
+                doc = self.com_handle.Documents.Item(idx1)
+                doc_wrapper = WordDocumentObject(parent=self, handle=doc)
+                doc_wrapper._event_connection = client.GetEvents(doc, doc_wrapper)
+                self._doc_list.append(doc_wrapper)          
+        self.parent_node.notify_observers(
+                app='Word',
+                source='Application',
+                event='NewDocument', 
+                doc=doc)        
+                
         
     def ApplicationEvents4_WindowDeactivate(self, this, doc, win):
         # When a window loses focus or it is destroyed, 
         # this will be triggered. 
-        self.parent_node.notify_observers()
+        self.parent_node.notify_observers(
+                app='Word',
+                source='Application',
+                event='WindowDeactivate', 
+                doc=doc, win=win)
         
         
     def ApplicationEvents4_Quit(self, this):
         self.parent_node._on_app_quit(self)
-        self.parent_node.notify_observers()
+        self.parent_node.notify_observers(
+                app='Word',
+                source='Application',
+                event='Quit')
+        
+    def DocumentEvents2_Close(self, this, doc_wrapper):
+        self.parent_node.notify_observers(
+                app='Word',
+                source='Document',
+                event='Close')
+        self._doc_list.remove(doc_wrapper)
             
 
 
@@ -556,6 +599,17 @@ class MSOffice(NodeDict, Observable):
             # event sink will not be notified any more. 
             connection = client.GetEvents(wrapper.com_handle, wrapper)
             wrapper._event_connection = connection
+            # Set event handler for each document object.
+            for idx in range(com_handle.Documents.Count):
+                idx1 = idx + 1
+                doc_wrapper = WordDocumentObject(
+                        parent=wrapper, 
+                        handle=com_handle.Documents.Item(idx1))
+                doc_wrapper._event_connection = client.GetEvents(
+                        doc_wrapper.com_handle, 
+                        doc_wrapper)
+                wrapper._doc_list.append(doc_wrapper)
+                
 
         object_id = id(wrapper)
         self[object_id] = wrapper

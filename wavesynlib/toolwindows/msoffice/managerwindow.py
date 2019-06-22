@@ -126,7 +126,16 @@ class OfficeController(TkToolWindow):
                 time.sleep(2.5)
                 @self.root_node.thread_manager.main_thread_do(block=False)
                 def update_tree():
-                    treeview.update(app_dict)
+                    event_desc = ' '.join((
+                        kwargs['app'], 
+                        kwargs['source'], 
+                        kwargs['event']))
+                    if event_desc in {
+                            'Word Application NewDocument',
+                            'Word Application DocumentOpen',
+                            'Word Application Quit',
+                            'Word Document Close'}:
+                        treeview.update(app_dict)
             
         self.__app_observer = app_observer
             
