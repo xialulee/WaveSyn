@@ -1,4 +1,5 @@
 (require [hy.extra.anaphoric [*]])
+(import [hy.contrib.walk [postwalk]])
 
 (import [xml.etree [ElementTree]])
 (import html)
@@ -16,7 +17,7 @@
 
 
 
-(traveller get-table-text 
+(traveller TableExtractor 
     (shared 
         tables        []
         current-table None
@@ -36,6 +37,18 @@
                     (enter (+= (. current-row [-1]) "\n") ) ) 
                 (data (+= (. current-row [-1] ) data) ) ) ) ) 
     (finish tables) ) 
+
+
+
+(defn get-table-text [html-code &optional strip]
+    (setv strip-func (if strip str.strip identity))
+    (defn walking [item]
+        (if (instance? str item)
+            (strip-func item)
+        #_else
+            item) ) 
+    (setv tables (TableExtractor html-code))
+    (postwalk walking tables) )
 
 
 
