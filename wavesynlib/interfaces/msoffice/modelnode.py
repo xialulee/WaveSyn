@@ -640,8 +640,11 @@ class MSOffice(NodeDict, Observable):
     
     @Scripting.printable
     def read_excel_clipboard(self, map_func=None):
-        table = self.root_node.lang_center.html_utils.get_tables(
-            html_code=self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML)[0]
+        try:
+            table = self.root_node.lang_center.html_utils.get_tables(
+                html_code=self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML)[0]
+        except IndexError:
+            raise ValueError("No table in clipboard.")
         if map_func:
             self.root_node.lang_center.python.table_utils.map(map_func, table)
         return table
