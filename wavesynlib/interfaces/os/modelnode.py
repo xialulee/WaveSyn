@@ -10,6 +10,7 @@ import ctypes
 import re
 from importlib import import_module
 import webbrowser
+import itertools
 from pathlib import Path
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, constant_handler
@@ -428,6 +429,45 @@ path: string or pathlib.Path. The path of the given directory or file.
     def map_open(self, latitude, longitude):
         uri = f'bingmaps:?collection=point.{latitude}_{longitude}_Pin'
         webbrowser.open(uri)
+
+
+    @Scripting.printable
+    def correct_path_encoding(self, 
+        root: (str, Path), 
+        correct_encoding: str, 
+        incorrect_encoding: str):
+        '''\
+Correct the encoding of the files and directories in a given directory.
+
+While one copying files between different systems, sometimes the encoding
+of path got messed. This method can correct the encoding.
+
+Arguments:
+    root: the root directory of which the path of the items need correction;
+    correct_encoding: the correct encoding name;
+    incorrect_encoding: the incorrect encoding name.
+
+Return:
+    None.
+'''
+        root = self.root_node.gui.dialogs.ask_directory(root)
+
+        def correct(name):
+            return name\
+                .encode(incorrect_encoding, 'ignore')\
+                .decode(correct_encoding, 'ignore')
+
+        root = str(root)
+        for r, d, f in os.walk(root, topdown=False):
+            for name in itertools.chain(d, f):
+                new_name = correct(name) 
+                os.rename(
+                    os.path.join(r, name),
+                    os.path.join(r, new_name))
+        root_abs = os.path.abspath(root)
+        parent_name, root_name = os.path.split(root_abs)
+        new_name = correct(root_name)
+        os.rename(root_abs, os.path.join(parent_name, new_name))
         
         
     if _get_mem_percent is None:
