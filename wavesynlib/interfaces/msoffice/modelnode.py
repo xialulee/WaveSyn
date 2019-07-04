@@ -8,7 +8,8 @@ import re
 import win32con
 from comtypes import client
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, NodeDict
+from wavesynlib.languagecenter.wavesynscript import (
+    Scripting, ModelNode, NodeDict, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
 
 import copy
@@ -428,6 +429,23 @@ class AppObject(ModelNode):
     @Scripting.printable
     def change_caption(self, new_caption):
         self.com_handle.Caption = new_caption
+
+        
+    @Scripting.printable
+    def run_macro(self, macro_name, *args):
+        self.com_handle.run(macro_name, *args)  
+        
+        
+    @Scripting.printable
+    def foreground_run_macro(self, macro_name, *args):
+        self.set_foreground()
+        with code_printer(False):
+            ret = self.run_macro(macro_name, *args)
+        return ret
+
+
+    def set_foreground(self):
+        raise NotImplementedError()        
         
         
         
@@ -519,6 +537,16 @@ class WordObject(AppObject):
             window.Caption = old_caption
             
             
+    @Scripting.printable
+    def open(self, filename):
+        self.com_handle.Documents.Open(filename)
+        
+        
+    @Scripting.printable
+    def close_active_document(self):
+        self.com_handle.ActiveDocument.Close()
+            
+                      
     def ApplicationEvents4_DocumentOpen(self, this, doc):
         self.parent_node.notify_observers(
                 app='Word', 
