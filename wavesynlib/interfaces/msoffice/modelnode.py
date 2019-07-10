@@ -215,7 +215,13 @@ class ExcelUtils(ModelNode):
         
         
     @Scripting.printable
-    def read_range(self, top_left, bottom_right, workbook=None, sheet=None):
+    def read_range(self, 
+        top_left, 
+        bottom_right, 
+        workbook=None, 
+        sheet=None,
+        return_dataframe=False,
+        column_labels=None):
         if workbook is None:
             workbook = self.__com_handle.ActiveWorkbook
         else:
@@ -229,10 +235,18 @@ class ExcelUtils(ModelNode):
         tl_x, tl_y = self._get_xy(top_left)  
         br_x, br_y = self._get_xy(bottom_right)
         
-        return sheet.Range(
-                    self._get_addr(tl_x, tl_y), 
-                    self._get_addr(br_x, br_y)).Value[:]
-        
+        rng = sheet.Range(
+                self._get_addr(tl_x, tl_y), 
+                self._get_addr(br_x, br_y)).Value[:]
+
+        if return_dataframe:
+            if not column_labels:
+                column_labels = rng[0]
+                rng = rng[1:]
+            import pandas
+            rng = pandas.DataFrame(list(rng), columns=column_labels)
+
+        return rng
         
         
     @Scripting.printable
@@ -667,14 +681,25 @@ class MSOffice(NodeDict, Observable):
     
     
     @Scripting.printable
-    def read_excel_clipboard(self, map_func=None):
+    def read_excel_clipboard(self, 
+        map_func=None,
+        strip_cells=False,
+        return_dataframe=False,
+        column_labels=None):
         try:
             table = self.root_node.lang_center.html_utils.get_tables(
-                html_code=self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML)[0]
+                html_code=self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML,
+                strip_cells=strip_cells)[0]
         except IndexError:
             raise ValueError("No table in clipboard.")
         if map_func:
             self.root_node.lang_center.python.table_utils.map(map_func, table)
+        if return_dataframe:
+            if not column_labels:
+                column_labels = table[0]
+                table = table[1:]
+            import pandas
+            table = pandas.DataFrame(table, columns=column_labels)
         return table
     
     
