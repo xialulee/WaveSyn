@@ -93,6 +93,20 @@ class Table:
         
     def print_head(self):
         print(*self.head, sep='\t')
+
+
+
+class LookupTable:
+    def __init__(self, data, key_index, value_index):
+        self.__data = data
+        self.__key_index = key_index
+        self.__value_index = value_index
+
+
+    def lookup(self, key):
+        for row in self.__data:
+            if row[self.__key_index] == key:
+                return row[self.__value_index]
         
         
         
