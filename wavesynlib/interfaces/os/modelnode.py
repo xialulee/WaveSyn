@@ -13,7 +13,7 @@ import webbrowser
 import itertools
 from pathlib import Path
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, constant_handler
+from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer, ModelNode, constant_handler
 from wavesynlib.languagecenter import datatypes
 
 
@@ -185,6 +185,14 @@ if platform.system().lower() == 'windows':
                 return [Path(path) for path in path_list]
             else:
                 return super().read_path_list(sep=sep)
+            
+            
+        @Scripting.printable
+        def read_tables(self, strip_cells=False):
+            with code_printer(False):
+                clipboard = self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML
+                ret = self.root_node.lang_center.html_utils.get_tables(clipboard, strip_cells=strip_cells)
+            return ret
                 
             
         @Scripting.printable
