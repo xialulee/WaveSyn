@@ -6,19 +6,13 @@ Created on Fri Jun  7 21:57:39 2019
 """
 
 import sys
-import hashlib
 from argparse import ArgumentParser
 
+from wavesynlib.fileutils import calc_hash
 
 
-def calc_file_sha256(given_file):
-    m = hashlib.sha256()
-    while True:
-        data = given_file.read(1048576)
-        if not data:
-            break
-        m.update(data)
-    return m.hexdigest()
+
+calc_file_sha256 = lambda given_file: calc_hash(given_file, 'sha256')
 
 
 

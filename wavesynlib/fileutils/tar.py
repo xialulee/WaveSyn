@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Aug 28 00:38:46 2016
+Created on Sat Sep 28 00:36:34 2019
 
 @author: Feng-cong Li
 """
@@ -51,18 +51,3 @@ class TarFileManager(ModelNode):
         object.__setattr__(manipulator, 'parent_node', self)
         manipulator.lock_attribute('parent_node')
         return manipulator
-        
-
-class FileUtils(ModelNode):
-    def __init__(self, *args, **kwargs):
-        ModelNode.__init__(self, *args, **kwargs)                
-        self.pdf_files = ModelNode(
-            is_lazy=True, 
-            module_name='wavesynlib.interfaces.pdf.modelnode', 
-            class_name='PDFFileManager')
-        self.touchstone_files = ModelNode(
-            is_lazy=True, 
-            module_name='wavesynlib.interfaces.devcomm.touchstone.modelnode', 
-            class_name='TouchstoneFileManager')
-        self.tar_files = ModelNode(is_lazy=True, class_object=TarFileManager)
-        

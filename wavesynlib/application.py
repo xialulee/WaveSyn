@@ -125,7 +125,7 @@ since the instance of Application is the first node created on the model tree.
                                                                 
                 file_utils = ModelNode(
                     is_lazy=True,
-                    module_name='wavesynlib.fileutils', 
+                    module_name='wavesynlib.fileutils.modelnode', 
                     class_name='FileUtils'),
                 
                 # Thread related
