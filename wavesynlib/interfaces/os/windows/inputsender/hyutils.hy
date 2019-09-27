@@ -3,8 +3,7 @@
 
 (setv user32 ctypes.windll.user32)
 
-(import [wavesynlib.interfaces.os.windows.inputsender.constants [
-    KEYEVENTF_KEYUP INPUT_KEYBOARD]])
+(import [wavesynlib.interfaces.os.windows.inputsender.constants [*]])
 (import [wavesynlib.interfaces.os.windows.inputsender.structdef [
     INPUT KEYBDINPUT]])
 
@@ -29,4 +28,17 @@
     [True
         (generate-keybd-event code)
         (generate-keybd-event code :release True)]))
+
+
+
+;(defn send-mouse-input [dx dy button &optional absolute press release]
+    ;(setv mi-args {"dx" dx "dy" dy})
+    ;(setv dw-flags 0)
+    ;(when absolute
+        ;(|= dw-flags MOUSEEVENTF_ABSOLUTE) ) 
+    ;(setv button (.upper button)) 
+
+    ;(cond 
+    ;[(not (or press release)) 
+        ;]) )
 

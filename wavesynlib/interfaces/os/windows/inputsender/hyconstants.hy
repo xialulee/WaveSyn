@@ -37,3 +37,21 @@
         (.format "VK_F{}" (inc k)) 
         (+ k 0x70) ) )
 
+(setv MOUSEEVENTF_ABSOLUTE        0x8000)
+(setv MOUSEEVENTF_HWHEEL          0x1000)
+(setv MOUSEEVENTF_MOVE            0x0001)
+(setv MOUSEEVENTF_MOVE_NOCOALESCE 0x2000)
+(setv MOUSEEVENTF_LEFTDOWN        0x0002)
+(setv MOUSEEVENTF_LEFTUP          0x0004)
+(setv MOUSEEVENTF_RIGHTDOWN       0x0008)
+(setv MOUSEEVENTF_RIGHTUP         0x0010)
+(setv MOUSEEVENTF_MIDDLEDOWN      0x0020)
+(setv MOUSEEVENTF_MIDDLEUP        0x0040)
+(setv MOUSEEVENTF_VIRTUALDESK     0x4000)
+(setv MOUSEEVENTF_WHEEL           0x0800)
+(setv MOUSEEVENTF_XDOWN           0x0080)
+(setv MOUSEEVENTF_XUP             0x0100)
+
+(bit-names 
+    XBUTTON1
+    XBUTTON2)

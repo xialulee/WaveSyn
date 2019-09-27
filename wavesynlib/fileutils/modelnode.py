@@ -6,7 +6,7 @@ Created on Sat Sep 28 01:13:49 2019
 """
 
 from io import IOBase
-from pathlib import Path
+from pathlib import PurePath
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.fileutils.tar import TarFileManager
@@ -35,7 +35,7 @@ class FileUtils(ModelNode):
                 file, 
                 filetype=[('All Files', '*.*')])
                 
-        if isinstance(file, (str, Path)):
+        if isinstance(file, (str, PurePath)):
             with open(file, 'rb') as fileobj:
                 return calc_hash(fileobj, algorithm)
         elif isinstance(file, IOBase):
