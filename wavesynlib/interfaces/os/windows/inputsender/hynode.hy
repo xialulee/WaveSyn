@@ -36,6 +36,18 @@
 
 
 
+(defclass MouseSender [ModelNode]
+    (defn --init-- [self &rest args &kwargs kwargs]
+        (.--init-- (super) #* args #** kwargs))
+        
+    (defn click-repeatedly [self times &optional absolute [dx 0] [dy 0] [delay 0] [interval 0]]
+        (sleep delay) 
+        (for [k (range times)]
+            (utils.send-mouse-input dx dy "left" absolute)
+            (sleep interval) ) ) )
+
+
+
 (defclass KeySender [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
         (.--init-- (super) #* args #** kwargs))
@@ -142,6 +154,7 @@
     (defn --init-- [self &rest args &kwargs kwargs]
         (.--init-- (super) #* args #** kwargs)
         (setv self.key-sender (KeySender) )
+        (setv self.mouse-sender (MouseSender) )
         (setv self.macro-manager (
             ModelNode
                 :is-lazy True
