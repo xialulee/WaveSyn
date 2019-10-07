@@ -1,7 +1,7 @@
 (import [time [sleep]])
 
 (import [wavesynlib.languagecenter.wavesynscript [
-    ModelNode code-printer]])
+    ModelNode Scripting code-printer]])
 (import [wavesynlib.interfaces.os.windows.inputsender [
     utils constants]])
 
@@ -40,11 +40,20 @@
     (defn --init-- [self &rest args &kwargs kwargs]
         (.--init-- (super) #* args #** kwargs))
         
+    #@(Scripting.printable
     (defn click-repeatedly [self times &optional absolute [dx 0] [dy 0] [delay 0] [interval 0]]
+        "Left click several times.
+
+times:       how many times to click.
+absolute:    the given coordinate is absolute or not.
+dx:          x-coordinate.
+dy:          y-coordinate.
+delay(s):    the click will wait (delay) seconds.
+interval(s): the interval between clicks."
         (sleep delay) 
         (for [k (range times)]
             (utils.send-mouse-input dx dy "left" absolute)
-            (sleep interval) ) ) )
+            (sleep interval) ) ) ) ) 
 
 
 
