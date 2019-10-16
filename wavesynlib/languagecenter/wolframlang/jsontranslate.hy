@@ -13,17 +13,19 @@
 
 
 (defn list-to-expr [json-obj arg-set]
-    (setv items [(get -op-map (first json-obj))]) 
-    (for [i (rest json-obj) ]
-        (cond 
-        [(instance? list i) 
-            (.append items (list-to-expr i arg-set) )]
-        [(instance? str i)
-            (.append items (HySymbol i) )
-            (.add arg-set i)] 
-        [True 
-            (.append items i)] ) ) 
-    `(~@items) )
+    (setv head (get -op-map (first json-obj) ) )
+    (setv tail 
+        (ap-map (
+            cond
+                [(instance? list it)
+                    (list-to-expr it arg-set)]
+                [(instance? str it)
+                    (.add arg-set it)
+                    (HySymbol it)]
+                [True
+                    it]) 
+            (rest json-obj) ) )
+    `(~head ~@tail) )
 
 
 
