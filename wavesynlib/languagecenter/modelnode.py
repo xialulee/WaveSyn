@@ -33,3 +33,8 @@ class LangCenterNode(ModelNode):
             module_name='wavesynlib.languagecenter.markdown.modelnode',
             class_name='Utils')
         
+        self.wolframlang_utils = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.languagecenter.wolframlang.modelnode',
+            class_name='Utils')
+        
