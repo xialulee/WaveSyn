@@ -26,5 +26,6 @@ class Utils(ModelNode):
         
         
     def exprjson_to_func(self, expr_json):
+        expr_json = self.root_node.interfaces.os.clipboard.constant_handler_CLIPBOARD_TEXT(expr_json)
         return jsontranslate.create_func(expr_json)
         

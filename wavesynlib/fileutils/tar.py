@@ -24,7 +24,7 @@ class TarFileManipulator(ModelNode):
         
     @Scripting.printable
     def extract_all(self, directory):
-        directory = self.root_node.gui.dialogs.ask_directory(
+        directory = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(
             directory, 
             initialdir=os.getcwd())
         if not directory:
@@ -39,7 +39,7 @@ class TarFileManager(ModelNode):
         
         
     def __getitem__(self, filename):
-        filename = self.root_node.gui.dialogs.ask_open_filename(
+        filename = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             filename, 
             filetypes=[
                 ('TAR Files', ('*.tar', '*.tar.gz', '*.tgz')), 

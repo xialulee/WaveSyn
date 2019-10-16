@@ -331,9 +331,9 @@ class FileManager(ModelNode):
         
     def __getitem__(self, filename):
         dialogs = self.root_node.gui.dialogs
-        filename = dialogs.ask_open_filename(filename, filetypes=self.filetypes)
-        filename = dialogs.ask_ordered_files(filename, filetypes=self.filetypes)
-        filename = dialogs.ask_files(filename, filetypes=self.filetypes)        
+        filename = dialogs.constant_handler_ASK_OPEN_FILENAME(filename, filetypes=self.filetypes)
+        filename = dialogs.constant_handler_ASK_ORDERED_FILES(filename, filetypes=self.filetypes)
+        filename = dialogs.constant_handler_ASK_FILES(filename, filetypes=self.filetypes)        
         
         if not filename:
             return
@@ -451,9 +451,17 @@ def constant_handler(print_replacement=True, doc=None):
 It functionality is help methods handling constants by fill in the actual value
 hold by a constant.
 '''    
+    prefix = 'constant_handler_'
+
     def _constant_handler(func):
         # Automatic constants generation based on method names. 
-        constant_name = func.__name__.upper()
+        func_name = func.__name__
+        if not func_name.startswith(prefix):
+            raise NameError(f'The name of a method which handles a constant should starts with {prefix}')
+        constant_name = func_name[len(prefix):]
+        if constant_name != constant_name.upper():
+            raise NameError('The name of a constant should be upper case.')
+        
         Constants.append_new_constant(constant_name, doc=doc)
         constant = Constant(constant_name)
         #Wrapper function

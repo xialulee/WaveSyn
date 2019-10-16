@@ -274,7 +274,7 @@ class WordUtils(ModelNode):
         from PIL import Image
         from tempfile import NamedTemporaryFile
         
-        filename = self.root_node.gui.dialogs.ask_open_filename(
+        filename = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             filename, 
             filetypes=[('Photoshop Files', ('*.psd',))])    
         if not filename:
@@ -660,7 +660,7 @@ class MSOffice(NodeDict, Observable):
 
     @Scripting.printable        
     def get_active(self, app_name):
-        app_name = self.root_node.gui.dialogs.ask_list_item(
+        app_name = self.root_node.gui.dialogs.constant_handler_ASK_LIST_ITEM(
             app_name,
             the_list=['Word', 'Excel'],
             message='Which app you want to get?'
@@ -671,7 +671,7 @@ class MSOffice(NodeDict, Observable):
         
     @Scripting.printable
     def create(self, app_name):
-        app_name = self.root_node.gui.dialogs.ask_list_item(
+        app_name = self.root_node.gui.dialogs.constant_handler_ASK_LIST_ITEM(
             app_name,
             the_list=['Word', 'Excel'],
             message='Which app you want to create?'
@@ -688,7 +688,7 @@ class MSOffice(NodeDict, Observable):
         column_labels=None):
         try:
             table = self.root_node.lang_center.html_utils.get_tables(
-                html_code=self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML,
+                html_code=self.root_node.lang_center.wavesynscript.constants.CLIPBOARD_HTML,
                 strip_cells=strip_cells)[0]
         except IndexError:
             raise ValueError("No table in clipboard.")

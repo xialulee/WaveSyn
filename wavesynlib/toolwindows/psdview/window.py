@@ -169,7 +169,7 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
     def load(self, filename):
         self.__timer.active = False
         
-        filename = self.root_node.gui.dialogs.ask_open_filename(
+        filename = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             filename, 
             filetypes=[('PSD Files', '*.psd'), ('All Files', '*.*')])
         if not filename:

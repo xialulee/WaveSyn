@@ -449,7 +449,7 @@ command: system command in string form. '''
         is_var_name = True if isinstance(var, Constant) else False
             
         dialogs = self.gui.dialogs
-        var = dialogs.ask_string(var,
+        var = dialogs.constant_handler_ASK_STRING(var,
             title='Variable Name',
             prompt='Enter variable name here:')
         
@@ -464,7 +464,7 @@ command: system command in string form. '''
             else:
                 var = f_globals[var]
         
-        filename = dialogs.ask_saveas_filename(
+        filename = dialogs.constant_handler_ASK_SAVEAS_FILENAME(
             filename,
             filetypes=[('Pickle Files', '*.pkl')])
         
@@ -477,7 +477,7 @@ command: system command in string form. '''
             
     @Scripting.printable
     def load_var(self, filename):
-        filename = self.gui.dialogs.ask_open_filename(
+        filename = self.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             filename,
             filetypes=[('Pickle Files', '*.pkl'), ('All Files', '*.*')])
         
@@ -496,7 +496,7 @@ command: system command in string form. '''
     style_name: string. The name of the new style.'''
         import matplotlib.pyplot as plt
         
-        style_name = self.root_node.gui.dialogs.ask_list_item(
+        style_name = self.root_node.gui.dialogs.constant_handler_ASK_LIST_ITEM(
             style_name,
             the_list=plt.style.available,
             message='Select a style for newly-created figures.')

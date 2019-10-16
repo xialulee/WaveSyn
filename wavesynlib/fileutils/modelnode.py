@@ -31,7 +31,7 @@ class FileUtils(ModelNode):
     def calc_hash(self, file, algorithm):
         from wavesynlib.fileutils import calc_hash
         
-        file = self.root_node.gui.dialogs.ask_open_filename(
+        file = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
                 file, 
                 filetype=[('All Files', '*.*')])
                 

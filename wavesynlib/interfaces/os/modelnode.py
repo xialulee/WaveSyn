@@ -25,13 +25,13 @@ class TkClipboard(ModelNode):
         
         
     @constant_handler(print_replacement=False)
-    def get_clipboard_text(self, arg, **kwargs):
+    def constant_handler_CLIPBOARD_TEXT(self, arg, **kwargs):
         '''Get the text on the clipboard.'''
         return self.read()
     
     
     @constant_handler(print_replacement=True)
-    def get_clipboard_path_list(self, arg, **kwargs):
+    def constant_handler_CLIPBOARD_PATH_LIST(self, arg, **kwargs):
         '''Get the path list on the clipboard.'''
         return self.read_path_list()
         
@@ -124,13 +124,13 @@ if platform.system().lower() == 'windows':
         '''The advanced clipboard node for Windows OS.'''
         
         @constant_handler(print_replacement=False)
-        def get_clipboard_html(self, arg, **kwargs):
+        def constant_handler_CLIPBOARD_HTML(self, arg, **kwargs):
             '''Get the HTML code of the formatted text on clipboard.'''
             return self.read(html=True)
             
             
         @constant_handler(print_replacement=False)
-        def get_clipboard_image(self, arg, **kwargs):
+        def constant_handler_CLIPBOARD_IMAGE(self, arg, **kwargs):
             '''Get image object on clipboard.'''
             from PIL import ImageGrab
             image = ImageGrab.grabclipboard()
@@ -190,7 +190,7 @@ if platform.system().lower() == 'windows':
         @Scripting.printable
         def read_tables(self, strip_cells=False):
             with code_printer(False):
-                clipboard = self.root_node.lang_center.wavesynscript.constants.GET_CLIPBOARD_HTML
+                clipboard = self.root_node.lang_center.wavesynscript.constants.CLIPBOARD_HTML
                 ret = self.root_node.lang_center.html_utils.get_tables(clipboard, strip_cells=strip_cells)
             return ret
                 
@@ -286,7 +286,7 @@ convert it to an image object and put this object onto the clipboard.'''
             '''Set the x-coord of the mouse pointer.
             
     x: int. The new x-coord of the mouse pointer.'''
-            x = self.root_node.gui.dialogs.ask_integer(
+            x = self.root_node.gui.dialogs.constant_handler_ASK_INTEGER(
                 x, 
                 title='Set Mouse Cursor Position', 
                 prompt='Please input x-coordinate:')
@@ -300,7 +300,7 @@ convert it to an image object and put this object onto the clipboard.'''
             
     y: int. The new y-coord of the mouse pointer.'''
             x = self.get_x()
-            y = self.root_node.gui.dialogs.ask_integer(
+            y = self.root_node.gui.dialogs.constant_handler_ASK_INTEGER(
                 y, 
                 title='Set Mouse Cursor Position',
                 prompt='Please input y-coordinate:')
@@ -458,7 +458,7 @@ Arguments:
 Return:
     None.
 '''
-        root = self.root_node.gui.dialogs.ask_directory(root)
+        root = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(root)
 
         def correct(name):
             return name\

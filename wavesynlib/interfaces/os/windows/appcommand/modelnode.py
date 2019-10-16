@@ -26,9 +26,9 @@ class AppCommand(ModelNode):
     def _method_generator(command):
         def method(self, handle):
             constants = self.root_node.interfaces.os.windows.window_handle_getter.constants
-            handle = constants.hwnd_arbitrary(handle)
-            handle = constants.hwnd_foreground(handle)
-            handle = constants.hwnd_window_from_cursor_pos(handle)
+            handle = constants.constant_handler_HWND_ARBITRARY(handle)
+            handle = constants.constant_handler_HWND_FOREGROUND(handle)
+            handle = constants.constant_handler_HWND_WINDOW_FROM_CURSOR_POS(handle)
             self._send_command(handle, command)
         return method
         

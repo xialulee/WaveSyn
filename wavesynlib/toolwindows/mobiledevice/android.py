@@ -499,7 +499,7 @@ IP: {addr[0]}
     
     @Scripting.printable    
     def get_device_file(self, savein, on_finish):
-        self.__save_file_dir = self.root_node.gui.dialogs.ask_directory(savein)
+        self.__save_file_dir = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(savein)
         self._launch_server(command={'action':'read', 'source':'storage'})
         
         
@@ -525,7 +525,7 @@ IP: {addr[0]}
     
     @Scripting.printable
     def send_image_to_device(self, filename):
-        filename = Path(self.root_node.gui.dialogs.ask_open_filename(filename))
+        filename = Path(self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(filename))
         self.__send_filename = filename
         self._launch_server(command={
             'action':'write',
@@ -536,7 +536,7 @@ IP: {addr[0]}
     
     @Scripting.printable
     def send_file_to_device(self, filename):
-        filename = Path(self.root_node.gui.dialogs.ask_open_filename(filename))
+        filename = Path(self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(filename))
         self.__send_filename = filename
         self._launch_server(command={
             'action':'write',

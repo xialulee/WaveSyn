@@ -30,8 +30,8 @@ class Utils(ModelNode):
         
         
     def _get_html_code(self, html_code=None, stream=None, file_path=None, encoding=None):
-        if hasattr(self.root_node.interfaces.os.clipboard, 'get_clipboard_html'):
-            html_code = self.root_node.interfaces.os.clipboard.get_clipboard_html(html_code)
+        if hasattr(self.root_node.interfaces.os.clipboard, 'constant_handler_CLIPBOARD_HTML'):
+            html_code = self.root_node.interfaces.os.clipboard.constant_handler_CLIPBOARD_HTML(html_code)
         if html_code:
             pass
         elif stream:
@@ -54,7 +54,7 @@ Translate <table>s in HTML code into Python nested lists.
 On Windows platform, it can also retrive tables in clipboard, since MSOffice
 put tables in clipboard using CF_HTML format.
 
-html_code: the HTML code as a string (support GET_CLIPBOARD_HTML const if the
+html_code: the HTML code as a string (support CLIPBOARD_HTML const if the
         clipboard of the OS has the HTML mode).
     Default: None.
 stream: if html_code is None and stream provided, the HTML code will be 

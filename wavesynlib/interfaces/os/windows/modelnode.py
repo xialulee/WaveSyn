@@ -126,7 +126,7 @@ class WMI(ModelNode):
         
     Return Value: the result of the query, of which the data type depends on 
         the value of output_format.'''
-        wql = self.root_node.gui.dialogs.ask_string(
+        wql = self.root_node.gui.dialogs.constant_handler_ASK_STRING(
             wql,
             title='WQL',
             prompt='Please input the WQL string.')

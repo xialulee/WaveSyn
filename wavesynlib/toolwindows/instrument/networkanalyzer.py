@@ -82,7 +82,7 @@ dict(
         if self.__filename:
             kwargs['initialdir'] = os.path.split(self.__filename)[0]
         kwargs['filetypes'] = [('Touchstone Files', '*.s2p'), ('All Files', '*.*')]
-        filename = self.root_node.gui.dialogs.ask_open_filename(
+        filename = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             filename,
             **kwargs
         )

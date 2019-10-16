@@ -22,36 +22,40 @@ class Dialogs(ModelNode):
         super().__init__(*args, **kwargs)
         
         
+    def ask_yesno(self, **kwargs):
+        return askyesno(**kwargs)
+        
+        
     @constant_handler(doc='''Popup a yes/no dialog to ask users for a bool value, 
 and the place where this constant holds
 will be replaced with True (yes) or False (no).
 ''') 
-    def ask_yesno(self, arg, **kwargs):
+    def constant_handler_ASK_YESNO(self, arg, **kwargs):
         '''Popup a dialog to ask users for a bool value.
         
 arg: if arg is not the corresponding constant, arg will be returned directly.
 **kwargs: see the usage of tkinter.simpledialog.askyesno.'''
-        return askyesno(**kwargs)    
+        return self.askyesno(**kwargs)    
         
         
     @constant_handler(doc='''Popup a dialog to ask user an integer,
 and the place where this constant holds will be replaced with the given integer.
 ''')
-    def ask_integer(self, arg, **kwargs):
+    def constant_handler_ASK_INTEGER(self, arg, **kwargs):
         return askinteger(**kwargs)
     
     
     @constant_handler(doc='''Popup a dialog to ask user a string,
 and the place where this constant holds will be replaced with the given string.
 ''')
-    def ask_string(self, arg, **kwargs):
+    def constant_handler_ASK_STRING(self, arg, **kwargs):
         return askstring(**kwargs)
     
                 
     @constant_handler(doc='''Popup a dialog with a list and ask for an item in the list,
 and the place where this constant holds will be replaced with the chosen item. 
 ''')
-    def ask_list_item(self, arg, **kwargs):
+    def constant_handler_ASK_LIST_ITEM(self, arg, **kwargs):
         return ask_list_item(**kwargs)
     
     
@@ -60,7 +64,7 @@ and the place where this constant holds will be replaced with the list of the se
 
 Notice: the order of the selection is not preserved. 
 ''')
-    def ask_files(self, arg, **kwargs):
+    def constant_handler_ASK_FILES(self, arg, **kwargs):
         file_list = []
         while True:
             filenames = askopenfilenames(**kwargs)
@@ -78,7 +82,7 @@ Notice: the order of the selection is not preserved.
 and the place where this constant holds will be replaced with the list of the selected filenames,
 and the order of the filenames is preserved. 
 ''')
-    def ask_ordered_files(self, arg, **kwargs):
+    def constant_handler_ASK_ORDERED_FILES(self, arg, **kwargs):
         file_list = []
         while True:
             filename = askopenfilename(**kwargs)
@@ -95,27 +99,27 @@ and the order of the filenames is preserved.
     @constant_handler(doc='''Popup a dialog asking a directory,
 and the place where this constant holds will be replaced with the selected directory.
 ''')
-    def ask_directory(self, arg, **kwargs):
+    def constant_handler_ASK_DIRECTORY(self, arg, **kwargs):
         return Path(askdirectory(**kwargs))
         
     @constant_handler(doc='''Popup an open file dialog,
 and the place where this constant holds will be replaced with the selected filename.
 ''')
-    def ask_open_filename(self, arg, **kwargs):
+    def constant_handler_ASK_OPEN_FILENAME(self, arg, **kwargs):
         return Path(askopenfilename(**kwargs))
     
         
     @constant_handler(doc='''Popup a saveas dialog,
 and the place where this constant holds will be replaced with the selected filename.
 ''')
-    def ask_saveas_filename(self, arg, **kwargs):
+    def constant_handler_ASK_SAVEAS_FILENAME(self, arg, **kwargs):
         return Path(asksaveasfilename(**kwargs))
     
         
     @constant_handler('''Popup a dialog asking a slice (Python slice syntax),
 and the place where this constant holds will be replaced with the given slice.
 ''')
-    def ask_slice(self, arg, **kwargs):
+    def constant_handler_ASK_SLICE(self, arg, **kwargs):
         title = kwargs.get('title', 'Ask Slice')
         message = kwargs.get('message', 'Input a slice using Python slice syntax.')
         user_input = askstring(title, message)

@@ -58,12 +58,12 @@ class Pages(ModelNode):
         
     @Scripting.printable
     def write(self, filename, reverse=False):
-        filename = self.root_node.gui.dialogs.ask_saveas_filename(
+        filename = self.root_node.gui.dialogs.constant_handler_ASK_SAVEAS_FILENAME(
             filename, 
             filetypes=[('PDF Files', '*.pdf'), ('All Files', '*.*')],
             defaultextension='.pdf',
             initialdir=os.path.split(self.__filename)[0])
-        reverse = self.root_node.gui.dialogs.ask_yesno(
+        reverse = self.root_node.gui.dialogs.constant_handler_ASK_YESNO(
             reverse,
             title='Reverse',
             message='Reverse page order?')
@@ -96,7 +96,7 @@ class PDFFileManipulator(FileManipulator):
             
     # To Do: This kind of node is short-lived, and need not to notify model_tree_monitor
     def __getitem__(self, page_index):
-        page_index = self.root_node.gui.dialogs.ask_slice(page_index, title='Page Range', message='Select page range using Python slice syntax "start[:stop[:step]]".\nPage number start from 1.')
+        page_index = self.root_node.gui.dialogs.constant_handler_ASK_SLICE(page_index, title='Page Range', message='Select page range using Python slice syntax "start[:stop[:step]]".\nPage number start from 1.')
         if not page_index:
             return
             
@@ -114,7 +114,7 @@ class PDFFileList(FileList):
         
     @Scripting.printable
     def merge(self, filename):
-        filename = self.root_node.gui.dialogs.ask_saveas_filename(
+        filename = self.root_node.gui.dialogs.constant_handler_ASK_SAVEAS_FILENAME(
             filename,
             filetypes=[('PDF Files', '*.pdf'), ('All Files', '*.*')],
             defaultextension='.pdf',

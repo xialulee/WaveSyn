@@ -99,7 +99,7 @@ class UnrarWindow(TkToolWindow):
     @Scripting.printable
     def load(self, rar_file:(str, Path)): # TO DO: support io.IOBase
         self.__treeview.clear()
-        rar_file = self.root_node.gui.dialogs.ask_open_filename(
+        rar_file = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             rar_file,
             filetypes=[('Rar Files', '*.rar'), ('All Files', '*.*')])
         
@@ -113,7 +113,7 @@ class UnrarWindow(TkToolWindow):
         
         
     def unpack(self, dir_path:(str, Path)):
-        dir_path = self.root_node.gui.dialogs.ask_directory(
+        dir_path = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(
             dir_path,
             initialdir=str(self.__path.parent))
         unpack_rar(str(self.__path), dir_path)

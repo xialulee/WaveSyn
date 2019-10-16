@@ -19,28 +19,28 @@ class _GetterConstants(ModelNode):
 The handle of the console. For functionalities which need an arbitrary
 window handle.                       
 ''')
-    def hwnd_arbitrary(self, arg, **kwargs):
+    def constant_handler_HWND_ARBITRARY(self, arg, **kwargs):
         return self.parent_node.arbitrary()
     
     
     @constant_handler(doc='''\
 The handle of the foreground window.
 ''')
-    def hwnd_foreground(self, arg, **kwargs):
+    def constant_handler_HWND_FOREGROUND(self, arg, **kwargs):
         return self.parent_node.foreground()
     
         
     @constant_handler(doc='''\
 The handle of the window on which the mouse cursor is.
 ''')
-    def hwnd_window_from_cursor_pos(self, arg, **kwargs):
+    def constant_handler_HWND_WINDOW_FROM_CURSOR_POS(self, arg, **kwargs):
         return self.parent_node.from_cursor_pos(toplevel=True)
     
 
     @constant_handler(doc='''\
 The handle of the window on which the mouse cursor is.
 ''')
-    def hwnd_control_from_cursor_pos(self, arg, **kwargs):
+    def constant_handler_HWND_CONTROL_FROM_CURSOR_POS(self, arg, **kwargs):
         return self.parent_node.from_cursor_pos(toplevel=False)    
 
 
