@@ -56,7 +56,17 @@ class TkClipboard(ModelNode):
         '''Read a string from the clipboard if the content of the clipboard is text.'''
         return self.root_node.gui.root.clipboard_get()
     
+
+    @Scripting.printable
+    def read_image(self):
+        '''Get image object on clipboard.'''
+        from PIL import ImageGrab
+        image = ImageGrab.grabclipboard()
+        if not image:
+            raise TypeError('The data in clipboard is not an image.')
+        return image
     
+
     @Scripting.printable
     def read_path_list(self, sep='\n'):
         text = self.read()
@@ -132,12 +142,8 @@ if platform.system().lower() == 'windows':
         @constant_handler(print_replacement=False)
         def constant_handler_CLIPBOARD_IMAGE(self, arg, **kwargs):
             '''Get image object on clipboard.'''
-            from PIL import ImageGrab
-            image = ImageGrab.grabclipboard()
-            if not image:
-                raise TypeError('The data in clipboard is not an image.')
-            return image
-            
+            self.read_image()
+
         
         @Scripting.printable
         def write(self, content, html=None, table=None, code=None):

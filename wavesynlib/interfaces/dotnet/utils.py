@@ -4,7 +4,6 @@ Created on Mon Apr 24 22:57:24 2017
 
 @author: Feng-cong Li
 """
-import six
 import clr
 import System
 
@@ -55,11 +54,12 @@ class BitmapUtils:
         ms = MemoryStream()
         bitmap.Save(ms, ImageFormat.Png)
         arr = ms.ToArray()
-        from cStringIO import StringIO
-        stream = StringIO()
-        stream.write(six.binary_type('').join([chr(c) for c in arr]))
-        from scipy.ndimage import imread
-        return imread(stream)
+        from io import BytesIO
+        stream = BytesIO()
+        stream.write(b''.join(byte(b) for b in arr))
+        from imageio import imread
+        stream.seek(0)
+        imread(stream, 'png')
         
     
     

@@ -5,20 +5,16 @@
 
 (defclass AbstractTreeNode [ABC]
     #@(abstractmethod
-    (defn __iter__ [self]
-        (raise (NotImplementedError) ) ) ) 
+    (defn __iter__ [self])) 
+
+    #@(abstractmethod
+    (defn is-group [self]))
         
     #@(abstractmethod
-    (defn is-group [self]
-        (raise (NotImplementedError) ) ) ) 
+    (defn make-group [self group-info]))
         
     #@(abstractmethod
-    (defn make-group [self group-info]
-        (raise (NotImplementedError) ) ) ) 
-        
-    #@(abstractmethod
-    (defn make-leaf [self leaf-info]
-        (raise (NotImplementedError) ) ) ) )
+    (defn make-leaf [self leaf-info])) )
 
 
 
