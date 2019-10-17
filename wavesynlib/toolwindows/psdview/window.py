@@ -20,6 +20,7 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.utils import MethodDelegator
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.datatypes.treetype import AbstractTreeNode, tree_trans
 
 
 # The following code generates the bytecode file of the 
@@ -41,6 +42,42 @@ except hy.errors.HyCompileError:
 
 
 
+class TreeViewNode(AbstractTreeNode):
+    def __init__(self, tree, node=''):
+        self.control = tree.tree_view
+        self.tree = tree
+        self.node = node
+
+
+    def __iter__(self):
+        raise NotImplementedError()
+
+    
+    def is_group(self):
+        raise NotImplementedError()
+
+
+    def make_node(self, node_info):
+        new_node = self.control.insert(
+            self.node,
+            '0',
+            text=node_info.name,
+            values=(
+                str(node_info.visible), 
+                f'{str(node_info.opacity*100//255)}%', 
+                node_info.blend_mode))
+        return TreeViewNode(self.tree, new_node)
+
+
+    def make_group(self, group_info):
+        return self.make_node(group_info)
+
+
+    def make_leaf(self, leaf_info):
+        self.make_node(leaf_info)
+
+
+
 class LayerTree:
     def __init__(self, *args, **kwargs):
         self.__tree_view = tree_view = ScrolledTree(*args, **kwargs)
@@ -56,21 +93,13 @@ class LayerTree:
     @property
     def tree_view(self):
         return self.__tree_view
+
+
+    def _make_layer_tree(self, image):
+        dest_root = TreeViewNode(self)
+        tree_trans(source=image, dest=dest_root)
     
         
-    def _add_layer(self, layer, parent=''):
-        tree_node = self.__tree_view.insert(
-            parent, 
-            'end', 
-            text=layer.name, 
-            values=(str(layer.visible), f'{str(layer.opacity*100//255)}%', layer.blend_mode))
-        self.__layer_map[tree_node] = layer
-        
-        if hasattr(layer, 'layers'): # if layer is in fact a Group
-            for child in layer.layers:
-                self._add_layer(child, parent=tree_node)
-                
-                
     def clear(self):
         self.__tree_view.clear()
                 
@@ -84,8 +113,9 @@ class LayerTree:
     def psd_image(self, image):
         self.__psd_image = image
         self.clear()
-        for layer in image.layers:
-            self._add_layer(layer)
+        self._make_layer_tree(image)
+        #for layer in image:
+            #self._add_layer(layer)
             
         
     def _on_select_change(self, event):
@@ -181,17 +211,17 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
         self.__psd_path = filename
         #self.__scale = 100
         self.__mtime = Path(filename).stat().st_mtime
-        self.__psd_image = psd_tools.PSDImage.load(filename)
+        self.__psd_image = psd_tools.PSDImage.open(filename)
                 
         self.__layer_tree.psd_image = self.__psd_image
-        self.__pil_image = self.__psd_image.as_PIL()
+        self.__pil_image = self.__psd_image.compose()
         self.__tk_image = ImageTk.PhotoImage(image=self.__pil_image)
         if self.__image_id is None:
             self.__image_id = self.__all_canvas.canvas.create_image((0, 0), image=self.__tk_image, anchor='nw')
         else:
             self.__all_canvas.canvas.itemconfig(self.__image_id, image=self.__tk_image)
-        width = self.__psd_image.header.width
-        height = self.__psd_image.header.height
+        width = self.__psd_image.width
+        height = self.__psd_image.height
         self.__all_canvas.canvas.config(scrollregion=(0, 0, width, height))
         #self.__image_scale['value'] = 100
         self._on_scale(self.__scale)
@@ -225,7 +255,7 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
         self.__scale = val
         
         psd = self.__psd_image
-        width, height = psd.header.width, psd.header.height
+        width, height = psd.width, psd.height
         width = width * val // 100
         height = height * val // 100
         new_tk_image = self.__pil_image.resize((width, height), Image.ANTIALIAS)

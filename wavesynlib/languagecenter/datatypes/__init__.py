@@ -11,6 +11,18 @@ from abc import ABC, abstractmethod
 
 
 
+import os
+from pathlib import Path
+import hy
+try:
+    from wavesynlib.languagecenter.datatypes import treetype
+except hy.errors.HyCompilerError:
+    hy_path = Path(__file__).parent / 'treetype.hy'
+    os.system(f'hyc {hy_path}')
+    from wavesynlib.languagecenter.datatypes import treetype
+
+
+
 class ArgType:
     pass
 
