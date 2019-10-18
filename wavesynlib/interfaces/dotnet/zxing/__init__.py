@@ -7,7 +7,7 @@ Created on Fri Apr 02 16:11:43 2017
 from pathlib import Path
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
-from wavesynlib.interfaces.dotnet.utils import new_and_init, BitmapUtils
+from wavesynlib.interfaces.dotnet.utils import new, BitmapUtils
 
 import clr
 clr.AddReference(str(Path(__file__).parent / 'zxing.dll'))
@@ -37,7 +37,7 @@ class ZXingNET(ModelNode):
     def write(self, contents, size=400, encode='utf-8'):
         writer = BarcodeWriter()
         writer.Format = BarcodeFormat.QR_CODE
-        writer.Options = new_and_init(QrCodeEncodingOptions,
+        writer.Options = new(QrCodeEncodingOptions,
                                       DisableECI = True,
                                       CharacterSet = encode,
                                       Width = size,
