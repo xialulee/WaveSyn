@@ -142,7 +142,7 @@ if platform.system().lower() == 'windows':
         @constant_handler(print_replacement=False)
         def constant_handler_CLIPBOARD_IMAGE(self, arg, **kwargs):
             '''Get image object on clipboard.'''
-            self.read_image()
+            return self.read_image()
 
         
         @Scripting.printable
