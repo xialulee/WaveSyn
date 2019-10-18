@@ -35,7 +35,13 @@ class TkClipboard(ModelNode):
         '''Get the path list on the clipboard.'''
         return self.read_path_list()
         
+
+    @constant_handler(print_replacement=False)
+    def constant_handler_CLIPBOARD_IMAGE(self, arg, **kwargs):
+        '''Get image object on clipboard.'''
+        return self.read_image()
        
+
     @Scripting.printable
     def clear(self):
         '''Clear the clipboard.'''
@@ -139,10 +145,6 @@ if platform.system().lower() == 'windows':
             return self.read(html=True)
             
             
-        @constant_handler(print_replacement=False)
-        def constant_handler_CLIPBOARD_IMAGE(self, arg, **kwargs):
-            '''Get image object on clipboard.'''
-            return self.read_image()
 
         
         @Scripting.printable
@@ -164,6 +166,11 @@ if platform.system().lower() == 'windows':
                 stream.write(content)
                 stream.seek(0)                    
                 clipb.stream_to_clipboard(stream, mode=None, code=code, tee=None, null=None, html=html)
+
+
+        @Scripting.printable
+        def write_image(self, image):
+            clipb.image_to_clipboard(image)
                 
                 
         @Scripting.printable

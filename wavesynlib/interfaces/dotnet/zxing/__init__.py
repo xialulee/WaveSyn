@@ -4,13 +4,13 @@ Created on Fri Apr 02 16:11:43 2017
 
 @author: Feng-cong Li
 """
+from pathlib import Path
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
-from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.interfaces.dotnet.utils import new_and_init, BitmapUtils
 
 import clr
-clr.AddReference(str(get_caller_dir() / 'zxing.dll'))
+clr.AddReference(str(Path(__file__).parent / 'zxing.dll'))
 from ZXing import BarcodeReader, BarcodeWriter, BarcodeFormat
 from ZXing.QrCode import QrCodeEncodingOptions
 from System.Drawing import Bitmap
@@ -26,15 +26,15 @@ class ZXingNET(ModelNode):
     def read(self, image):
         image = self.root_node.interfaces.os.clipboard.constant_handler_CLIPBOARD_IMAGE(image)
         # To Do: support ask open file dialog
-        image = BitmapUtils.pil_to_net(image)
-        result = BarcodeReader().Decode(image)
+        bitmap = BitmapUtils.pil_to_netbmp(image)
+        result = BarcodeReader().Decode(bitmap)
         if result is None:
             raise ValueError('Input image seems not contain any barcode.')
         return result.Text
         
         
     @Scripting.printable
-    def write(self, contents, image, size=400, encode='utf-8'):
+    def write(self, contents, size=400, encode='utf-8'):
         writer = BarcodeWriter()
         writer.Format = BarcodeFormat.QR_CODE
         writer.Options = new_and_init(QrCodeEncodingOptions,
@@ -44,5 +44,4 @@ class ZXingNET(ModelNode):
                                       Height = size)
         mtx = writer.Write(contents)
         bmp = Bitmap(mtx)
-        bmp.Save(image)
-        
+        return BitmapUtils.netbmp_to_pil(bmp)

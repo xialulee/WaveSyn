@@ -39,16 +39,23 @@ def new_and_init(class_object, **kwargs):
 
 class BitmapUtils:
     @staticmethod
-    def pil_to_net(image):    
+    def pil_to_netbmp(image):    
         from System.Drawing import Bitmap    
         ns = NETMemoryStream()
         image.save(ns, 'png')
         ns.seek(0)
         return Bitmap(ns.net_object)
-        
-        
+
+
     @staticmethod
-    def net_to_matrix(bitmap):
+    def netbmp_to_pil(bitmap):
+        from PIL import Image
+        stream = BitmapUtils.netbmp_to_pystream(bitmap)
+        return Image.open(stream)
+
+
+    @staticmethod
+    def netbmp_to_pystream(bitmap):
         from System.IO import MemoryStream
         from System.Drawing.Imaging import ImageFormat
         ms = MemoryStream()
@@ -56,11 +63,16 @@ class BitmapUtils:
         arr = ms.ToArray()
         from io import BytesIO
         stream = BytesIO()
-        stream.write(b''.join(byte(b) for b in arr))
-        from imageio import imread
+        stream.write(bytes(arr))
         stream.seek(0)
-        imread(stream, 'png')
+        return stream
+
         
+    @staticmethod
+    def netbmp_to_matrix(bitmap):
+        stream = BitmapUtils.netbmp_to_pystream(bitmap)
+        from imageio import imread
+        return imread(stream, 'png')
     
     
         
