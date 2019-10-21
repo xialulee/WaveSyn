@@ -4,7 +4,6 @@ Created on Wed Nov 11 19:57:41 2015
 
 @author: Feng-cong Li
 """
-from __future__ import print_function
 
 import os
 import sys
@@ -12,12 +11,12 @@ from os.path import abspath, dirname, join
 import inspect
 import subprocess
 import tempfile
-from tkFileDialog import askopenfilename, asksaveasfilename
-from Tkinter import Tk
+from tkinter.filedialog import askopenfilename, asksaveasfilename
+from tkinter import Tk
 from wavesynlib.languagecenter.utils import auto_subs
 
 def get_my_dir():
-    return abspath(dirname(inspect.getfile(inspect.currentframe())))
+    return abspath(dirname(__file__))
 
     
 callerCode = '''
