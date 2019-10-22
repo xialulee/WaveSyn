@@ -362,6 +362,11 @@ convert it to an image object and put this object onto the clipboard.'''
             
     monitor_id: the id of the monitor. Default: None.'''
             return Path(self.__idw.GetWallpaper(monitor_id))
+
+
+        @Scripting.printable
+        def get_background_color(self):
+            return self.__idw.GetBackgroundColor()
             
         
         @property
