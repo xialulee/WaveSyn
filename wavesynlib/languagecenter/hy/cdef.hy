@@ -130,6 +130,21 @@
 
 
 
+(defmacro/g! make-ptr-type [&rest types]
+    `(do
+        (import [ctypes [POINTER :as ~g!POINTER]])
+        ~@(lfor tp types
+            `(setv ~(HySymbol (+ (str tp) "*")) (~g!POINTER ~tp) ) ) ) )
+
+;;Example
+; (import [ctypes [*]])
+; 
+; (make-ptr-type c_int c_float)
+; Then you can use c_int* and c_float* as pointer types of 
+; c_int and c_float. 
+
+
+
 (defmacro funcptr [type-name res-type name arg-types]
     (if (= res-type 'void)
         (setv res-type None))
@@ -138,9 +153,10 @@
 
 ;;Example
 ; (import [ctypes [*]])
+; (make-ptr-type c_int)
 ; 
 ; (funcptr CFUNCTYPE 
-;     c_int CMPFUNC [(POINTER c_int) (POINTER c_int)])
+;     c_int CMPFUNC [c_int* c_int*])
 ;
 ; (qsort ia (len ia) (sizeof c_int) 
 ;     (CMPFUNC (fn [a b]
