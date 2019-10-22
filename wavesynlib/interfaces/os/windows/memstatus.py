@@ -13,18 +13,12 @@ from pathlib import Path
 # it will fail, and I cannot figure out why. 
 import hy
 try:
-    from wavesynlib.interfaces.os.windows.memstatus_struct import MEMORYSTATUS
+    from wavesynlib.interfaces.os.windows.hymemstatus import *
 except hy.errors.HyCompileError:
 # After the bytecode file generated, we can import the module written by hy.    
-    hyfile_path = Path(__file__).parent / 'memstatus_struct.hy'
+    hyfile_path = Path(__file__).parent / 'hymemstatus.hy'
     os.system(f'hyc {hyfile_path}')
-    from wavesynlib.interfaces.os.windows.memstatus_struct import MEMORYSTATUS
+    from wavesynlib.interfaces.os.windows.hymemstatus import *
 
 
-def get_memory_usage():
-    memstat = MEMORYSTATUS()
-    memstat.dwLength = ct.sizeof(MEMORYSTATUS)    
-    ct.windll.kernel32.GlobalMemoryStatus(ct.byref(memstat))
-    memusage = memstat.dwMemoryLoad
-    return memusage  
 

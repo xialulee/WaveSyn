@@ -1,6 +1,11 @@
 (require [wavesynlib.languagecenter.hy.cdef [struct]])
+(require [wavesynlib.languagecenter.hy.win32def [import-func]])
+
 (import [ctypes.wintypes [DWORD]])
 (import [ctypes [c_size_t :as size_t]])
+(import [ctypes [sizeof byref]])
+
+(import-func kernel32 GlobalMemoryStatus)
 
 
 
@@ -14,3 +19,10 @@
     size_t dwTotalVirtual
     size_t dwAvailVirtual])
 
+
+
+(defn get-memory-usage []
+    (setv memstat (MEMORYSTATUS)) 
+    (setv memstat.dwLength (sizeof MEMORYSTATUS) ) 
+    (GlobalMemoryStatus (byref memstat) ) 
+    memstat.dwMemoryLoad)
