@@ -5,15 +5,12 @@ Created on Sun Aug 28 00:38:46 2016
 @author: Feng-cong Li
 """
 
-import hashlib
-
-
-
-def calc_hash(fileobj, algorithm):
-    m = getattr(hashlib, algorithm.lower())()
-    while True:
-        data = fileobj.read(1048576)
-        if not data:
-            break
-        m.update(data)
-    return m.hexdigest()
+import os
+from os.path import dirname, join
+import hy
+try:
+    from wavesynlib.fileutils.hyutils import *
+except hy.errors.HyCompilerError:
+    utils_path = join(dirname(__file__), 'hyutils.hy')
+    os.system(f'hyc {utils_path}')
+    from wavesynlib.fileutils.hyutils import *

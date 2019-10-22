@@ -9,6 +9,7 @@ from io import IOBase
 from pathlib import PurePath
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter import datatypes
 from wavesynlib.fileutils.tar import TarFileManager
 
 
@@ -28,7 +29,15 @@ class FileUtils(ModelNode):
         
         
     @Scripting.printable
-    def calc_hash(self, file, algorithm):
+    def calc_hash(self, file:datatypes.ArgOpenFile, algorithm):
+        '''\
+Calculate the hash code of a given file.
+
+return: the hash code of the given file. 
+
+file: the path of the given file or a stream object.
+algorithm: the name of the hash algorithm.
+'''
         from wavesynlib.fileutils import calc_hash
         
         file = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(

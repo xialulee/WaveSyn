@@ -3,7 +3,7 @@
 
 from tkinter import Canvas, Tk
 from wavesynlib.languagecenter.designpatterns import Observable
-from tkFileDialog import asksaveasfilename
+from tkinter.filedialog import asksaveasfilename
 from PIL import ImageGrab
 from PIL.ImageTk import PhotoImage
 
