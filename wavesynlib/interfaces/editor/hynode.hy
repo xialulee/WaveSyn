@@ -118,17 +118,16 @@
         (if (instance? str file-path) 
             (setv file-path [file-path]) ) 
         (setv id-list []) 
-        (ap-each file-path 
+        (list (ap-map (do
             (setv 
-                editor-id 
-                (.add self (EditorNode 
-                    :editor-path editor-path) ) ) 
+                editor-id
+                (.add self (EditorNode :editor-path editor-path) ) )
             (.launch (. self [editor-id]) 
-                :code        code 
-                :file-path   it 
+                :code        code
+                :file-path   it
                 :run-on-exit run-on-exit) 
-            (.append id-list editor-id) ) 
-        id-list) ) 
+            editor-id) 
+        file-path) ) ) )
         
     #@(Scripting.printable
     (defn launch-gvim [self &optional [code ""] file-path [run-on-exit False]]
