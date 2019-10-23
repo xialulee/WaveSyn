@@ -1,7 +1,9 @@
+(require [wavesynlib.languagecenter.hy.win32def [import-func]])
+
 (import ctypes)
 (import [ctypes [byref sizeof]])
 
-(setv user32 ctypes.windll.user32)
+(import-func user32 SendInput)
 
 (import [wavesynlib.interfaces.os.windows.inputsender.constants [*]])
 (import [wavesynlib.interfaces.os.windows.inputsender.structdef [
@@ -18,7 +20,7 @@
         (setv inp (INPUT
             :type INPUT_KEYBOARD
             :ki ki))
-        (user32.SendInput 1 (byref inp) (sizeof inp)))
+        (SendInput 1 (byref inp) (sizeof inp)))
         
     (cond
     [press 
@@ -53,7 +55,7 @@
         (setv inp (INPUT
             :type INPUT_MOUSE
             :mi mi) ) 
-        (user32.SendInput 1 (byref inp) (sizeof inp)) )
+        (SendInput 1 (byref inp) (sizeof inp)) )
 
     (cond 
     [press (generate-mouse-event dx dy button absolute)]

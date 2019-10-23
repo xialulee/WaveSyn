@@ -10,8 +10,8 @@
 (setv name-to-code {})
 (for [k (range 1 25)]
     (assoc name-to-code 
-        (.format "f{}" k)
-        (getattr constants (.format "VK_F{}" k))))
+        f"f{k}"
+        (getattr constants f"VK_F{k}")))
 (for [k (range 10)]
     (setv code (+ (ord "0") k))
     (assoc name-to-code
@@ -24,7 +24,7 @@
 (for [k ["ctrl" "control" "alt" "menu" "shift"]]
     (assoc name-to-code 
         k
-        (getattr constants (.format "VK_{}" (.upper k)))))
+        (getattr constants f"VK_{(.upper k)}" )))
 (for [k ["lctrl" "lcontrol" "left ctrl" "left control"]]
     (assoc name-to-code k constants.VK_LCTRL))
 (for [k ["rctrl" "rcontrol" "right ctrl" "right control"]]
@@ -74,7 +74,7 @@ interval(s): the interval between clicks."
         
         (if modifiers
             (setv mod-codes (lfor m modifiers (. name-to-code [m]))) 
-        ; else
+        #_else
             (setv mod-codes [])) 
             
         (defn key-act []

@@ -1,3 +1,4 @@
+(require [wavesynlib.languagecenter.hy.cdef [make-ptr-type]])
 (require [wavesynlib.languagecenter.hy.comdef [interface]])
 
 (import [comtypes [c_uint64 GUID IUnknown HRESULT c_uint c_voidp c_uint32]])
@@ -5,7 +6,7 @@
 (import [ctypes.wintypes [HWND HICON DWORD UINT BOOL LPCWSTR RECT]])
 
 (setv ULONGLONG c_ulonglong)
-(setv RECT* (POINTER RECT))
+(make-ptr-type RECT)
 
 
 

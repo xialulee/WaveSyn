@@ -34,7 +34,7 @@
 
 (for [k (range 24)]
     (dyn-setv 
-        (.format "VK_F{}" (inc k)) 
+        f"VK_F{(inc k)}"
         (+ k 0x70) ) )
 
 (setv MOUSEEVENTF_ABSOLUTE        0x8000)

@@ -12,7 +12,7 @@
                 #_else
                     []) 
                 (gfor [key val] (.items conditions) 
-                    `(= (getattr self ~(.format "_flag_in_{}" key) 0) ~val) ) ) ) ) )
+                    `(= (getattr self ~f"_flag_in_{key}" 0) ~val) ) ) ) ) )
 
 
 
@@ -26,13 +26,13 @@
 
     (.append procs (HyExpression `(enter 
         (setattr self 
-            ~(.format "_flag_in_{}" tag-name) 
-            (inc (getattr self ~(.format "_flag_in_{}" tag-name) 0) ) ) ) ) )
+            ~f"_flag_in_{tag-name}"
+            (inc (getattr self ~f"_flag_in_{tag-name}" 0) ) ) ) ) )
 
     (.append procs (HyExpression `(leave
         (setattr self 
-            ~(.format "_flag_in_{}" tag-name) 
-            (dec (getattr self ~(.format "_flag_in_{}" tag-name) ) ) ) ) ) )
+            ~f"_flag_in_{tag-name}"
+            (dec (getattr self f"_flag_in_{tag-name}") ) ) ) ) )
 
     (for [proc procs]
         (cond 
@@ -102,7 +102,7 @@
             (defn --init-- [self]
                 (.--init-- (super))
                 (for [[name val] [~@shared-vars]] 
-                    (setattr self (mangle (.format "-shared-{}" name) ) val) ) )
+                    (setattr self (mangle f"-shared-{name}") val) ) )
             ~(if enter-procs
                 `(defn handle-starttag [self tag attrs]
                     ~@enter-procs))

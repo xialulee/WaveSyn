@@ -4,10 +4,10 @@
               table (rest table)))
     (setv head-code (->> head
         (map str)
-	(.join "|")))
+	    (.join "|")))
     (setv split-code (->> (len head)
         (* ["---"])
-	(.join "|")))
+	    (.join "|")))
     (setv rows [head-code split-code])
     (rows.extend 
         (gfor row table (->> row 
