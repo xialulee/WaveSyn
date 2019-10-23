@@ -2,7 +2,7 @@
 
 (import platform)
 (import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
-(import [wavesynlib.interfaces.editor.externaleditor [EditorDict]])
+(import [wavesynlib.interfaces.editor.modelnode [EditorDict]])
 
 
 
