@@ -1,4 +1,4 @@
-(require [wavesynlib.languagecenter.hy.cdef [struct]])
+(require [wavesynlib.languagecenter.hy.cdef [struct →]])
 (require [wavesynlib.languagecenter.hy.win32def [import-func]])
 
 (import [ctypes.wintypes [DWORD]])
@@ -24,5 +24,5 @@
 (defn get-memory-usage []
     (setv memstat (MEMORYSTATUS)) 
     (setv memstat.dwLength (sizeof MEMORYSTATUS) ) 
-    (GlobalMemoryStatus (byref memstat) ) 
+    (GlobalMemoryStatus #→ memstat ) 
     memstat.dwMemoryLoad)

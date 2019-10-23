@@ -1,5 +1,6 @@
 (require [hy.extra.anaphoric [*]])
 (require [wavesynlib.languagecenter.hy.utils [call= dyn-defprop defprop freeze]])
+(require [wavesynlib.languagecenter.hy.cdef [→]])
 
 (import ctypes)
 (import [ctypes [byref]])
@@ -93,7 +94,7 @@
                     (.create_repeater_thread self.root-node.thread-manager (fn []
                         (setv msg (MSG))
                         (when (and 
-                                (-user32.PeekMessageW (byref msg) -1 0 0 PM-REMOVE)
+                                (-user32.PeekMessageW #→ msg -1 0 0 PM-REMOVE)
                                 (= msg.message WM-HOTKEY))
                             (setv id- msg.wParam)
                             (.put self.--queue id-) #_when) #_end-fn) #_create) #_setv)

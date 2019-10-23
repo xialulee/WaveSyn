@@ -1,3 +1,4 @@
+(require [wavesynlib.languagecenter.hy.cdef [→]])
 (require [wavesynlib.languagecenter.hy.win32def [import-func]])
 (require [wavesynlib.languagecenter.hy.utils [on-exit]])
 
@@ -28,6 +29,6 @@
 
 (defn get-pid-from-hwnd [hwnd]
     (setv pid (DWORD))
-    (GetWindowThreadProcessId hwnd (byref pid))
+    (GetWindowThreadProcessId hwnd #→ pid)
     pid.value)
 

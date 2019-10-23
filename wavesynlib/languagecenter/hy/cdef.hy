@@ -133,7 +133,7 @@
 (defmacro/g! make-ptr-type [&rest types]
     `(do
         (import [ctypes [POINTER :as ~g!POINTER]])
-        ~@(lfor tp types
+        ~@(gfor tp types
             `(setv ~(HySymbol (+ (str tp) "*")) (~g!POINTER ~tp) ) ) ) )
 
 ;;Example
@@ -163,3 +163,9 @@
 ;         (print "hy_cmp_func" (first a) (first b))
 ;         0)))
 
+
+
+; An alias of ctypes.byref
+; Should run "from ctypes import byref"
+; before using it. 
+(deftag → [expr] `(byref ~expr))
