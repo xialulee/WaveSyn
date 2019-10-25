@@ -6,8 +6,12 @@ import win32clipboard
 import getopt
 import re
 import msvcrt
+from ctypes import sizeof
 from io import BytesIO
 from PIL import Image, ImageGrab
+
+import hy
+from wavesynlib.languagecenter.hy.win32def import BITMAPFILEHEADER
 
 
 
@@ -131,7 +135,7 @@ EndFragment:{3: 13d}
 def image_to_clipboard(image):
     bio = BytesIO()
     image.convert('RGB').save(bio, 'BMP')
-    data = bio.getvalue()[14:]
+    data = bio.getvalue()[sizeof(BITMAPFILEHEADER):]
     bio.close()
     win32clipboard.OpenClipboard()
     try:
