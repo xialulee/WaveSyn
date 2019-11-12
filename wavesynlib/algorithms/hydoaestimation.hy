@@ -1,3 +1,6 @@
+(require [wavesynlib.languagecenter.hy.numpydef [npget]])
+
+
 (import [numpy [correlate r_ 
     angle :as ∠ 
     pi    :as π]])
@@ -26,8 +29,8 @@ generate a indices matrix, as
 3  2  1  0 ...
 ...") 
     (setv indices (- 
-        (get r_ (, "c" (S 0 m))) 
-        (get r_ (, "r" (S 0 m))) ) ) 
+        (npget r_ "c" (S 0 m))
+        (npget r_ "r" (S 0 m)) ) ) 
     (setv ̂a (autocorrelate x) ) 
     (comment "# using autocorrelation samples and indices matrix to create Rx
 Rx =
@@ -52,15 +55,18 @@ return value: normalized frequencies."
 Unlike numpy.linalg.svd, 
 the eigenvalue and the corresponding eigenvectors 
 calculated by eigh are in ascending order. ")
-    (setv Usig (get U (, 
-        ALL 
-        (S N-p END) ) ) ) 
-    (setv U₀ (get Usig (, 
-        (S 0 N-1) 
-        ALL ) ) ) 
-    (setv U₁ (get Usig (, 
-        (S 1 END) 
-        ALL) ) ) 
+    (setv Usig 
+        (npget U 
+            ALL 
+            (S N-p END) ) ) 
+    (setv U₀ 
+        (npget Usig 
+            (S 0 N-1) 
+            ALL) ) 
+    (setv U₁ 
+        (npget Usig  
+            (S 1 END) 
+            ALL) ) 
     (- 
         (/ 
             (∠ (eigvals 
