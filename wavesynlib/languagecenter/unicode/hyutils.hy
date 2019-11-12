@@ -3,7 +3,8 @@
     (setv deco {
         "strikethrough" "\u0335"
         "overline"      "\u0305"
-        "underline"     "\u0332"})
+        "underline"     "\u0332"
+        "hat"           "\u0302"})
     (.join "" 
         (interleave 
             text 
