@@ -26,7 +26,7 @@ generate a indices matrix, as
 3  2  1  0 ...
 ...") 
     (setv indices (- 
-        (get r_ (, "c" (S 0 m) ) ) 
+        (get r_ (, "c" (S 0 m))) 
         (get r_ (, "r" (S 0 m))) ) ) 
     (setv ̂a (autocorrelate x) ) 
     (comment "# using autocorrelation samples and indices matrix to create Rx
@@ -46,6 +46,7 @@ p:   number of complex sinusoids;
 return value: normalized frequencies."
     (setv [S END ALL] [slice None (slice None)]) 
     (setv [p N] [(int p) (first Rx.shape)] ) 
+    (setv [N-p N-1] [(- N p) (dec N)])
     (setv [D U] (eigh Rx) ) 
     (comment "Obtain signal subspace from U
 Unlike numpy.linalg.svd, 
@@ -53,9 +54,9 @@ the eigenvalue and the corresponding eigenvectors
 calculated by eigh are in ascending order. ")
     (setv Usig (get U (, 
         ALL 
-        (S (- N p) END) ) ) ) 
+        (S N-p END) ) ) ) 
     (setv U₀ (get Usig (, 
-        (S 0 (- N 1)) 
+        (S 0 N-1) 
         ALL ) ) ) 
     (setv U₁ (get Usig (, 
         (S 1 END) 
