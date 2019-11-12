@@ -13,62 +13,66 @@ from numpy import abs, angle, array, atleast_1d, \
 from numpy.linalg import eigh, eigvals, pinv
 from numpy.random import randn
 
+import hy
+from hydoaestimation import *
+from wavesynlib.formulae.noise import complex_gaussian
+
 
 autocorrelate   = lambda x: correlate(x, x, mode='full')
 
 
-def Rx(x, m=None):
-    '''Estimate autocorrelation matrix of vector x
-    x:  signal vector
-    m:  size of Rx
-    return value: estimated autocorrelation matrix
-    '''
-    N = len(x)
-    if m == None:
-        m = N
-    elif m > N:
-        raise ValueError("The number of rows/columns of R should less than or equal to vector lenght N.")
-    # generate a indices matrix, as
-    # 0 -1 -2 -3 ...
-    # 1  0 -1 -2 ...
-    # 2  1  0 -1 ...
-    # 3  2  1  0 ...
-    # ...    
-    indices     = r_['c', :m] - r_['r', :m]
-    # Please use newest version of numpy.
-    # Since the old version calculates correlate without conjugate for complex vectors.
-    acHat       = autocorrelate(x)
-    # using autocorrelation samples and indices matrix to create Rx
-    # Rx =
-    #   r[ 0] r[-1] r[-2] r[-3] ...
-    #   r[ 1] r[ 0] r[-1] r[-2] ...
-    #   r[ 2] r[ 1] r[ 0] r[-1] ...
-    #   r[ 3] r[ 2] r[ 1] r[ 0] ...
-    #   ..    
-    return acHat[indices + N - 1] / N
+#def Rx(x, m=None):
+    #'''Estimate autocorrelation matrix of vector x
+    #x:  signal vector
+    #m:  size of Rx
+    #return value: estimated autocorrelation matrix
+    #'''
+    #N = len(x)
+    #if m == None:
+        #m = N
+    #elif m > N:
+        #raise ValueError("The number of rows/columns of R should less than or equal to vector lenght N.")
+    ## generate a indices matrix, as
+    ## 0 -1 -2 -3 ...
+    ## 1  0 -1 -2 ...
+    ## 2  1  0 -1 ...
+    ## 3  2  1  0 ...
+    ## ...    
+    #indices     = r_['c', :m] - r_['r', :m]
+    ## Please use newest version of numpy.
+    ## Since the old version calculates correlate without conjugate for complex vectors.
+    #acHat       = autocorrelate(x)
+    ## using autocorrelation samples and indices matrix to create Rx
+    ## Rx =
+    ##   r[ 0] r[-1] r[-2] r[-3] ...
+    ##   r[ 1] r[ 0] r[-1] r[-2] ...
+    ##   r[ 2] r[ 1] r[ 0] r[-1] ...
+    ##   r[ 3] r[ 2] r[ 1] r[ 0] ...
+    ##   ..    
+    #return acHat[indices + N - 1] / N
     
-def LS_ESPRIT(Rx, p):
-    '''Estimate signal frequencies using LS-ESPRIT algorithm
-    Rx: autocorrelation matrix of signal;
-    p:   number of complex sinusoids;
-    return value: normalized frequencies.
-    '''
-    p       = int(p)
-    N       = Rx.shape[0]
-    # eigh is a newly added function in numpy 1.8.0 
-    # which calculates the eigenvalue and eigenvectors 
-    # efficiently for Hermitian matrix. 
-    D, U    = eigh(Rx)
-    # Obtain signal subspace from U
-    # Unlike numpy.linalg.svd, 
-    # the eigenvalue and the corresponding eigenvectors 
-    # calculated by eigh are in ascending order. 
-    Usig    = U[:, (N-p):]
-    # 
-    U0      = Usig[:N-1, :]
-    U1      = Usig[1:, :]
-    # Eigenvalues of U1\U0
-    return -angle(eigvals(pinv(U1)@U0)) / 2 / pi
+#def LS_ESPRIT(Rx, p):
+    #'''Estimate signal frequencies using LS-ESPRIT algorithm
+    #Rx: autocorrelation matrix of signal;
+    #p:   number of complex sinusoids;
+    #return value: normalized frequencies.
+    #'''
+    #p       = int(p)
+    #N       = Rx.shape[0]
+    ## eigh is a newly added function in numpy 1.8.0 
+    ## which calculates the eigenvalue and eigenvectors 
+    ## efficiently for Hermitian matrix. 
+    #D, U    = eigh(Rx)
+    ## Obtain signal subspace from U
+    ## Unlike numpy.linalg.svd, 
+    ## the eigenvalue and the corresponding eigenvectors 
+    ## calculated by eigh are in ascending order. 
+    #Usig    = U[:, (N-p):]
+    ## 
+    #U0      = Usig[:N-1, :]
+    #U1      = Usig[1:, :]
+    ## Eigenvalues of U1\U0
+    #return -angle(eigvals(pinv(U1)@U0)) / 2 / pi
     
     
     
@@ -108,7 +112,8 @@ def genTestSig(n, freqs, amps, noisePow):
     amps    = atleast_1d(amps)
     for freq, amp in zip(freqs, amps):
         x += amp * exp(1j * 2 * pi * freq * n)
-    awgn    = sqrt(noisePow/2) * randn(len(n)) + 1j * sqrt(noisePow/2) * randn(len(n))
+    #awgn    = sqrt(noisePow/2) * randn(len(n)) + 1j * sqrt(noisePow/2) * randn(len(n))
+    awgn = complex_gaussian(len(n), noisePow)
     return x + awgn
     
 
