@@ -4,7 +4,7 @@
 
 (import [numpy [array arange correlate r_ 
     roots trace atleast-1d exp zeros eye
-    unravel-index
+    unravel-index einsum
     inf   :as ∞
     angle :as ∠ 
     pi    :as π]])
@@ -89,7 +89,7 @@ return value: normalized frequencies."
         (setv N-p (- N p))
         (setv σ² 
             (. (/ 
-                    (trace (@ PN Rx))
+                    (einsum "ij,ji->" PN Rx) ; tr(PN@Rx)
                     N-p)
             real) )
         (setv σ²I (* σ² I))
