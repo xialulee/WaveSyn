@@ -77,4 +77,5 @@ if __name__ == '__main__':
     R           = Rx(x)
     print('Estimated frequencies (ESPRIT) are:    ', sort(LS_ESPRIT(R, len(freqs))))
     print('Estimated frequencies (root-MUSIC) are:', sort(root_MUSIC(R, len(freqs))))
+    print('Estimated frequencies (MLE) are:       ', sort(MLE(R, len(freqs))))
     
