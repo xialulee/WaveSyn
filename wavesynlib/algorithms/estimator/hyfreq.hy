@@ -4,7 +4,7 @@
 
 (import [numpy [array arange correlate r_ 
     roots trace atleast-1d exp zeros eye
-    unravel-index einsum
+    unravel-index einsum full
     inf   :as ∞
     angle :as ∠ 
     pi    :as π]])
@@ -31,9 +31,9 @@ return value: normalized frequencies."
 Unlike numpy.linalg.svd, 
 the eigenvalue and the corresponding eigenvectors 
 calculated by eigh are in ascending order. ")
-    (setv Usig (getcols U (S N-p END)))
-    (setv U₀ (getrows Usig (S 0 N-1) ) )
-    (setv U₁ (getrows Usig (S 1 END) ) )
+    (setv Uₛ (getcols U (S N-p END)))
+    (setv U₀ (getrows Uₛ (S 0 N-1) ) )
+    (setv U₁ (getrows Uₛ (S 1 END) ) )
     (- 
         (/ 
             (∠ (eigvals 
@@ -52,10 +52,10 @@ return value: normalized frequencies."
     (setv [D U] (eigh Rx)) (comment "Eigenvalue in ascending order.")
     (setv M (- N p) ) (comment "The dimension of the noise subspace.")
     (comment "An orth base of the noise subspace.")
-    (setv Un (getcols U (S 0 M) ) ) 
+    (setv Uₙ (getcols U (S 0 M) ) ) 
     (setv P 
         (∑ (gfor k (range M) 
-            (autocorrelate (npget Un ALL k) ) ) ) )
+            (autocorrelate (getcols Uₙ k) ) ) ) )
     (setv roots-P (roots P))
     (setv |roots-P| (abs roots-P))
     (comment "Remove all the roots outside the unit circle.")
@@ -80,22 +80,23 @@ return value: normalized frequencies."
         (setv n (npget r_ "c" (S 0 N)))
         (setv ω (* 2 π freqs))
         (exp (* 1j n ω)) ) 
-    (setv F (+ (zeros (* [Nf] p)) ∞))
+    (setv F (full (* [Nf] p) ∞))
     (for [idx (combinations (range Nf) p)]
         (setv A (Es (get freq-samps (array idx))))
         (setv A† (pinv A))
-        (setv PA (@ A A†))
-        (setv PN (- (eye (first PA.shape)) PA))
+        (setv Pᴀ (@ A A†))
+        (setv Pɴ (- (eye (first Pᴀ.shape)) Pᴀ))
         (setv N-p (- N p))
         (setv σ² 
             (. (/ 
-                    (einsum "ij,ji->" PN Rx) ; tr(PN@Rx)
+                    (einsum "ij,ji->" Pɴ Rx) ; tr(PN@Rx)
                     N-p)
             real) )
         (setv σ²I (* σ² I))
         (setv Rs (@ A† (- Rx σ²I) A†.H))
         (setv (get F idx) 
             (. (det (+ (@ A Rs A.H) σ²I) ) real)) )
-    (setv idx (.argmin F))
-    (setv sub (unravel-index idx F.shape))
-    (get freq-samps (array sub)) )
+    (setv sub (-> (.argmin F) 
+        (unravel-index F.shape) 
+        (array)))
+    (get freq-samps sub) )
