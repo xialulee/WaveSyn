@@ -10,6 +10,11 @@ import cvxpy as cp
 from collections.abc import Iterable
 from abc import ABCMeta, abstractproperty
 
+import hy
+from .hypattern2corrmtx import matA, matP, matG, corrmtx2pattern, make_problem
+
+
+
 class BasePattern(metaclass=ABCMeta):
     @abstractproperty    
     def samplesMagnitude(self):
@@ -55,61 +60,7 @@ width:  the width of the beams (in degree).'''
     def samplesMagnitude(self):
         return self.__samplesMagnitude
 
-def matJ(M):
-    'Return a complex M^2 * M^2 permutaion matrix J which satisfies vec(R) == Jr.'
-    ret = zeros((M**2, M**2), complex)
-    
-    k   = 0
-    addr_table  = {}
-    for q in range(M):
-        for p in range(q, M):
-            addr_table[(p,q)] = k
-            k += 1 if p==q else 2
-    
-    for q in range(M):
-        for p in range(M):
-            row = q*M + p
-            if p == q:
-                ret[row, addr_table[(p,q)]]   = 1
-            else:
-                addr    = addr_table[(p,q)] if p > q else addr_table[(q,p)]
-                ret[row, addr]    = 1
-                ret[row, addr+1]  = 1j if p > q else -1j
-    return mat(ret)
-    
-    
-def matA(M, angles):
-    'The steering matrix.'
-    ret = zeros((M, len(angles)), complex)
-    for col, theta in enumerate(angles):
-        ret[:, col] = exp(1j * pi * r_[0:M] * \
-        sin(pi * theta / 180.))
-    return mat(ret)
-    
 
-    
-def matG(M, angles, magnitude):
-    G1  = zeros((M**2+1, M**2+1))
-    A   = matA(M, angles)
-    J   = matJ(M)
-    for index, theta in enumerate(angles):
-        g   = -(kron(A[:,index].T, A[:,index].H) @ J).T
-        t   = vstack((magnitude[index], g))
-        G1  += real(t @ t.T)
-    G1  = 1.0/len(angles) * G1
-    G1  = real(G1)
-    return G1
-    
-                
-              
-def corrmtx2pattern(R, angles):
-    M   = R.shape[0]
-    ret = zeros(len(angles))    
-    A   = matA(M, angles)
-    for k in range(len(angles)):
-        ret[k]  = real((A[:, k].H * R * A[:, k])[0,0])
-    ret /= max(ret)
-    return ret
 
 class Problem(object):
     def __init__(self):
@@ -152,22 +103,9 @@ class Problem(object):
         
 
     def __setup(self):  
-        M = self.__M     
-        J = matJ(M)
-        R = cp.Variable((M, M), hermitian=True)
-        rho = cp.Variable((1+M**2,))
-        alpha = rho[0]
-        r = rho[1:]
-                
-        objective = cp.Minimize(cp.quad_form(rho, self.__Gamma))
-        
-        constraints = [
-            R >> 0,
-            alpha >= 0,
-            cp.vec(R) == J@r,
-            cp.diag(cp.real(R)) == 1]         
-        
-        problem = cp.Problem(objective, constraints)
+        M = self.__M
+        Gamma = self.__Gamma
+        problem, R = make_problem(M, Gamma)
         self.__problem  = problem
         self.__R = R
 
