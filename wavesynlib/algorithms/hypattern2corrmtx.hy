@@ -1,6 +1,7 @@
 (require [wavesynlib.languagecenter.hy.numpydef [npget getrows getcols]])
 (import [wavesynlib.languagecenter.hy.numpydef [‖v]])
 (require [wavesynlib.formulae.hyarray [TO-ROW]])
+(require [wavesynlib.algorithms.hycommon [∑]])
 
 
 (import [numpy [
@@ -59,20 +60,20 @@ M: The number of array elements."
 
 
 (defn matG [M angles magnitude]
-    (setv M²+1 (inc (* M M) ) ) 
-    (setv G (zeros (, M²+1 M²+1) ) )
     (setv A (matA M angles) ) 
     (setv P (matP M) ) 
-    (for [[idx θ] (enumerate angles)]
-        (setv a (getcols A idx) )
-        (setv t (->> a
-            (.conj) 
-            (kron a) 
-            (@ P.T) 
-            (-) ) )
-        (setv g (vstack (, (get magnitude idx) t) ) )
-        (+= G (real (outer g g) ) ) ) 
-    (/ G (len angles) ) )
+    (setv Nₐ (len angles) )
+    (setv G (
+        ∑ #_< k ∈ (range Nₐ) #_> (do
+            (setv aₖ (getcols A k) ) 
+            (setv t (->> aₖ
+                (.conj) 
+                (kron aₖ) 
+                (@ P.T) 
+                (-) ) ) 
+            (setv g (vstack (, (get magnitude k) t) ) ) 
+            (. (outer g g) real) ) ) ) 
+    (/ G Nₐ) )
 
 
 

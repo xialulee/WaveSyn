@@ -1,4 +1,5 @@
 (require [wavesynlib.formulae.hyarray [TO-COLUMN]])
+(require [wavesynlib.algorithms.hycommon [∑]])
 
 (import [numpy.fft [fft ifft]])
 (import [numpy [abs diag exp 
@@ -7,10 +8,6 @@
     roll
     zeros]])
 
-
-(setv ∑ sum)
-(defmacro ∈ [&rest args] 
-    `(gfor ~@args) )
 
 
 (defn Uₙ [n x]
@@ -66,11 +63,11 @@
     (setv s (exp (* 1j φ) ) )
     (setv a (autocorr s) ) 
     (setv grad (
-        ∑ (∈ k Q (do
+        ∑ #_< k ∈ Q #_> (do
             (setv aₖ* (-> a (get k) (.conj) ) )
             (setv ∂aₖ/∂φ (∂aₙ/∂φ s :n k) )
             (comment "See Eq.43 in [1].")
-            (* aₖ* ∂aₖ/∂φ) ) ) ) )
+            (* aₖ* ∂aₖ/∂φ) ) ) ) 
     (* 2 grad.real) )
 
 
@@ -99,14 +96,14 @@
         (exp) ) ) 
     (setv a (autocorr s) ) 
     (setv H (
-        ∑ (∈ k Q (do
+        ∑ #_< k ∈ Q #_> (do
             (setv ∂aₖ/∂φ (∂aₙ/∂φ s :n k) ) 
             (setv ∂²aₖ/∂φ∂φᵀ (∂²aₙ/∂φ∂φᵀ s :n k) )
             (setv aₖ* (-> a (get k) (.conj) ) )
             (comment "See Eq.48 in [1].")
             (+
                 (outer ∂aₖ/∂φ (.conj ∂aₖ/∂φ) ) 
-                (* aₖ* ∂²aₖ/∂φ∂φᵀ) ) ) ) ) ) 
+                (* aₖ* ∂²aₖ/∂φ∂φᵀ) ) ) ) ) 
     (* 2 H.real) )
 
 
