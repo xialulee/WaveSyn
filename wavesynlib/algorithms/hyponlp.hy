@@ -31,7 +31,7 @@
 
 
 (defn abs² [x]
-    (. (* x (.conj x) ) real) )
+    (+ (** x.real 2) (** x.imag 2) ) )
 
 
 
