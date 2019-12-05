@@ -1,13 +1,10 @@
-(import [numpy [exp complex128 sqrt :as √]])
+(import [numpy [atleast-1d exp complex128 sqrt :as √]])
 (import [numpy.random [randn]])
 
 
 
 (defn complex-gaussian [size &optional [σ² 1]]
-    (setv size (if (coll? size) 
-        size 
-    #_else
-        (, size) ) )
+    (setv size (atleast-1d size) )
     (* (√ (/ σ² 2))
         (+ 
             (randn #* size)
