@@ -79,7 +79,6 @@ return value: normalized frequencies."
         (exp (* 1j n ω)) ) 
     (setv F (full (* [Nf] p) ∞))
     (for [idx (combinations (range Nf) p)]
-        ;(setv A (Es (get freq-samps (array idx))))
         (setv A (->> idx (array) (get freq-samps) (Es) ) )
         (setv A† (pinv A))
         (setv Pᴀ (@ A A†))

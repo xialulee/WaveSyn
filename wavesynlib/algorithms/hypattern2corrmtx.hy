@@ -1,6 +1,6 @@
 (require [wavesynlib.languagecenter.hy.numpydef [npget getrows getcols]])
 (import [wavesynlib.languagecenter.hy.numpydef [‖v]])
-(require [wavesynlib.formulae.hyarray [TO-ROW]])
+(require [wavesynlib.formulae.hyarray [TO-ROW TO-COLUMN]])
 (require [wavesynlib.algorithms.hycommon [∑]])
 
 
@@ -60,20 +60,20 @@ M: The number of array elements."
 
 
 (defn matG [M angles magnitude]
+    (setv N (len angles) )
     (setv A (matA M angles) ) 
     (setv P (matP M) ) 
-    (setv Nₐ (len angles) )
     (setv G (
-        ∑ #_< k ∈ (range Nₐ) #_> (do
-            (setv aₖ (getcols A k) ) 
-            (setv t (->> aₖ
+        ∑ #_< [a m] ∈ (zip A.T magnitude) #_> (do
+            (TO-COLUMN a)
+            (setv t (->> a
                 (.conj) 
-                (kron aₖ) 
+                (kron a) 
                 (@ P.T) 
                 (-) ) ) 
-            (setv g (vstack (, (get magnitude k) t) ) ) 
+            (setv g (vstack (, m t) ) ) 
             (. (outer g g) real) ) ) ) 
-    (/ G Nₐ) )
+    (/ G N) )
 
 
 
@@ -96,10 +96,10 @@ M: The number of array elements."
     (setv ρ (cp.Variable (, M²+1) ) ) 
     (setv α (first ρ) ) 
     (setv r (get ρ (slice 1 None) ) )
-    (setv ρᵗΓρ (cp.quad-form ρ Γ) )
+    (setv ρᴴΓρ (cp.quad-form ρ Γ) )
     (, 
         (cp.Problem 
-            (cp.Minimize ρᵗΓρ) 
+            (cp.Minimize ρᴴΓρ) 
             #_s.t. [
                 (⪰ R 0)
                 (>= α 0)
