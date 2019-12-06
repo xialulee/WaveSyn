@@ -1,7 +1,11 @@
 
-(require [wavesynlib.languagecenter.hy.numpydef [npget]])
+(require [wavesynlib.languagecenter.hy.numpydef [
+    init-numpydef
+    ↕ ↔]])
 
-(import [numpy [correlate r_]])
+(init-numpydef)
+
+(import [numpy [correlate]])
 
 
 (defn autocorrelate [x] (correlate x x :mode "full") )
@@ -25,9 +29,7 @@ generate a indices matrix, as
 2  1  0 -1 ...
 3  2  1  0 ...
 ...") 
-    (setv indices (- 
-        (npget r_ "c" (S 0 m))
-        (npget r_ "r" (S 0 m)) ) ) 
+    (setv indices (- #↕[0:m] #↔[0:m]) ) 
     (setv ̂a (autocorrelate x) ) 
     (comment "# using autocorrelation samples and indices matrix to create Rx
 Rx =

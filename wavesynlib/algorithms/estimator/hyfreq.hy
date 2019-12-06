@@ -1,9 +1,14 @@
-(require [wavesynlib.languagecenter.hy.numpydef [npget getrows getcols]])
+(require [wavesynlib.languagecenter.hy.numpydef [
+    init-numpydef 
+    ↕
+    ▦⇨ ▤⇨ ▥⇨]])
+(init-numpydef)
+
 (require [wavesynlib.languagecenter.hy.utils [call=]])
 (require [wavesynlib.algorithms.hycommon [∑]])
 
 
-(import [numpy [array arange correlate r_ 
+(import [numpy [array arange correlate  
     roots trace atleast-1d exp zeros eye
     unravel-index einsum full
     inf   :as ∞
@@ -28,9 +33,9 @@ return value: normalized frequencies."
 Unlike numpy.linalg.svd, 
 the eigenvalue and the corresponding eigenvectors 
 calculated by eigh are in ascending order. ")
-    (setv Uₛ (getcols U ↔N-p:))
-    (setv U₀ (getrows Uₛ ↕0:N-1) )
-    (setv U₁ (getrows Uₛ ↕1:) )
+    (setv Uₛ (▥⇨ U ↔N-p:))
+    (setv U₀ (▤⇨ Uₛ ↕0:N-1) )
+    (setv U₁ (▤⇨ Uₛ ↕1:) )
     (setv U₁\U₀ (first (lstsq U₁ U₀ :rcond None) ) )
     (- 
         (/ 
@@ -48,7 +53,7 @@ return value: normalized frequencies."
     (setv [D U] (eigh Rx)) (comment "Eigenvalue in ascending order.")
     (setv N-p (- N p) ) (comment "The dimension of the noise subspace.")
     (comment "An orth base of the noise subspace.")
-    (setv Uₙₒᵢₛₑ (getcols U ↔0:N-p) ) 
+    (setv Uₙₒᵢₛₑ (▥⇨ U ↔0:N-p) ) 
     (setv P (
         ∑ #_< u ∈ Uₙₒᵢₛₑ.T #_> (autocorrelate u) ) ) 
     (setv roots-P (roots P))
@@ -60,7 +65,7 @@ return value: normalized frequencies."
     (setv roots-P (get roots-P (.argsort |roots-P|)))
     (setv -p-1 (- 0 p 1) )
     (/ 
-        (∠ (npget roots-P ↔-1:-p-1:-1)) 
+        (∠ (▦⇨ roots-P ↔-1:-p-1:-1)) 
         2 π) )
 
 
@@ -72,13 +77,15 @@ return value: normalized frequencies."
     (defn Es [freqs]
         "Create a steering matrix."
         (call= freqs atleast-1d) 
-        (setv n (npget r_ "c" ↔0:N))
+        (setv n #↕[0:N])
         (setv ω (* 2 π freqs))
         (exp (* 1j n ω)) ) 
     (setv F (full (* [Nf] p) ∞))
     (for [idx (combinations (range Nf) p)]
         (setv A (->> idx (array) (get freq-samps) (Es) ) )
+        (setv Aᴴ (.conj A.T) )
         (setv A† (pinv A))
+        (setv A†ᴴ (.conj A†.T) )
         (setv Pᴀ (@ A A†))
         (setv Pɴ (- (eye (first Pᴀ.shape)) Pᴀ))
         (setv N-p (- N p))
@@ -88,9 +95,9 @@ return value: normalized frequencies."
                     N-p)
             real) )
         (setv σ²I (* σ² I))
-        (setv Rs (@ A† (- Rx σ²I) A†.H))
+        (setv Rs (@ A† (- Rx σ²I) A†ᴴ))
         (assoc F idx
-            (. (det (+ (@ A Rs A.H) σ²I) ) real)) )
+            (. (det (+ (@ A Rs Aᴴ) σ²I) ) real)) )
     (setv sub (-> (.argmin F) 
         (unravel-index F.shape) 
         (array)))

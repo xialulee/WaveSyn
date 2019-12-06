@@ -1,4 +1,11 @@
+(require [wavesynlib.languagecenter.hy.utils [call=]])
 (import [numpy [sum matrix array]])
+
+
+(setv numpy-name (HySymbol "NUMPY-CE006C7F-2A67-437D-9444-6F2E6D645AA3") )
+
+(defmacro init-numpydef []
+    `(import [numpy :as ~numpy-name]) )
 
 
 (defn -isnum [x]
@@ -28,25 +35,47 @@
     [True sym]) )
 
 
+(defn -r-c- [s rc]
+    (call= s first) 
+    (setv s (+ "↕" s) ) 
+    (setv s (-> s (HySymbol) (-symbol-to-slice) ))
+    `(get (. ~numpy-name ~rc) ~s) )
 
-(defmacro npget [arr &rest args]
+
+(deftag ↕ [s]
+    (-r-c- s 'c_) )
+
+
+(deftag ↔ [s]
+    (-r-c- s 'r_) )
+
+
+(deftag ┅ [arrs]
+    `((. ~numpy-name hstack) ~arrs) )
+
+
+(deftag ┇ [arrs]
+    `((. ~numpy-name vstack) ~arrs))
+
+
+(defmacro ▦⇨ [arr &rest args]
     (setv args (list (map -symbol-to-slice args) ) )
     `(get ~arr (tuple ~args) ) )
 
 
-(defmacro npassoc [arr &rest args]
+(defmacro ▦⇦ [arr &rest args]
     (setv val (last args) ) 
     (setv args (get args (slice 0 -1) ) ) 
     (setv args (list (map -symbol-to-slice args) ) ) 
     `(assoc ~arr (tuple ~args) ~val) )
 
 
-(defmacro getrows [arr sel]
+(defmacro ▤⇨ [arr sel]
     (setv sel (-symbol-to-slice sel) )
     `(get ~arr (tuple [~sel (slice None) ]) ) )
 
 
-(defmacro getcols [arr sel]
+(defmacro ▥⇨ [arr sel]
     (setv sel (-symbol-to-slice sel) )
     `(get ~arr (tuple [(slice None) ~sel]) ) )
 
