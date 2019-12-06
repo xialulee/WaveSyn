@@ -14,6 +14,9 @@
     inf   :as ∞
     angle :as ∠ 
     pi    :as π]])
+
+(setv 2π (* 2 π) )
+
 (import [numpy.linalg [eigh eigvals pinv lstsq det]])
 (import [itertools [combinations]])
 
@@ -40,7 +43,7 @@ calculated by eigh are in ascending order. ")
     (- 
         (/ 
             (∠ (eigvals U₁\U₀) ) 
-            2 π) ) )
+            2π) ) )
 
 
 
@@ -66,7 +69,7 @@ return value: normalized frequencies."
     (setv -p-1 (- 0 p 1) )
     (/ 
         (∠ (▦⇨ roots-P ↔-1:-p-1:-1)) 
-        2 π) )
+        2π) )
 
 
 
@@ -78,7 +81,7 @@ return value: normalized frequencies."
         "Create a steering matrix."
         (call= freqs atleast-1d) 
         (setv n #↕[0:N])
-        (setv ω (* 2 π freqs))
+        (setv ω (* 2π freqs))
         (exp (* 1j n ω)) ) 
     (setv F (full (* [Nf] p) ∞))
     (for [idx (combinations (range Nf) p)]
