@@ -21,7 +21,6 @@
 Rx: autocorrelation matrix of signal;
 p:   number of complex sinusoids;
 return value: normalized frequencies."
-    (setv [S END ALL] [slice None (slice None)]) 
     (setv [p N] [(int p) (first Rx.shape)] ) 
     (setv [N-p N-1] [(- N p) (dec N)])
     (setv [D U] (eigh Rx) ) 
@@ -29,9 +28,9 @@ return value: normalized frequencies."
 Unlike numpy.linalg.svd, 
 the eigenvalue and the corresponding eigenvectors 
 calculated by eigh are in ascending order. ")
-    (setv Uₛ (getcols U (S N-p END)))
-    (setv U₀ (getrows Uₛ (S 0 N-1) ) )
-    (setv U₁ (getrows Uₛ (S 1 END) ) )
+    (setv Uₛ (getcols U ↔N-p:))
+    (setv U₀ (getrows Uₛ ↕0:N-1) )
+    (setv U₁ (getrows Uₛ ↕1:) )
     (setv U₁\U₀ (first (lstsq U₁ U₀ :rcond None) ) )
     (- 
         (/ 
@@ -45,12 +44,11 @@ calculated by eigh are in ascending order. ")
 Rx: auto-correlation matrix of signal;
 p:  number of complex sinusoids;
 return value: normalized frequencies."
-    (setv [S END ALL] [slice None (slice None)]) 
     (setv [p N] [(int p) (first Rx.shape)]) 
     (setv [D U] (eigh Rx)) (comment "Eigenvalue in ascending order.")
     (setv N-p (- N p) ) (comment "The dimension of the noise subspace.")
     (comment "An orth base of the noise subspace.")
-    (setv Uₙₒᵢₛₑ (getcols U (S 0 N-p) ) ) 
+    (setv Uₙₒᵢₛₑ (getcols U ↔0:N-p) ) 
     (setv P (
         ∑ #_< u ∈ Uₙₒᵢₛₑ.T #_> (autocorrelate u) ) ) 
     (setv roots-P (roots P))
@@ -62,7 +60,7 @@ return value: normalized frequencies."
     (setv roots-P (get roots-P (.argsort |roots-P|)))
     (setv -p-1 (- 0 p 1) )
     (/ 
-        (∠ (get roots-P (S -1 -p-1 -1))) 
+        (∠ (npget roots-P ↔-1:-p-1:-1)) 
         2 π) )
 
 
@@ -74,7 +72,7 @@ return value: normalized frequencies."
     (defn Es [freqs]
         "Create a steering matrix."
         (call= freqs atleast-1d) 
-        (setv n (npget r_ "c" (S 0 N)))
+        (setv n (npget r_ "c" ↔0:N))
         (setv ω (* 2 π freqs))
         (exp (* 1j n ω)) ) 
     (setv F (full (* [Nf] p) ∞))

@@ -1,3 +1,4 @@
+(require [wavesynlib.languagecenter.hy.numpydef [npget npassoc]])
 (require [wavesynlib.formulae.hyarray [TO-COLUMN]])
 (require [wavesynlib.algorithms.hycommon [∑]])
 
@@ -17,11 +18,11 @@
     [(zero? n) (setv x (.copy x))]
     [(pos? n) 
         (setv x (roll x n)) 
-        (assoc x (slice 0 n) 0)] 
+        (npassoc x ↔0:n 0) ] 
     [(neg? n) 
         (setv x (.copy x))
         (setv -n (- n))
-        (assoc x (slice 0 -n) 0) 
+        (npassoc x ↔0:-n 0)
         (setv x (roll x n))])
     x)
 
@@ -77,9 +78,9 @@
 
     (setv Diag_s (diag s) )
     (setv Diag_s* (.conj Diag_s))
-    (setv UₙDiag_s (-> s (get (S n END)) (diag n)) )
+    (setv UₙDiag_s (-> s (npget ↔n:) (diag n)) )
     (setv Diag_Uₙs (->> s (Uₙ n) (diag) ) )
-    (setv UₙᵀDiag_s* (-> s (get (S 0 -n)) (diag -n)) )
+    (setv UₙᵀDiag_s* (-> s (npget ↔0:-n) (diag -n)) )
     (setv Diag_Uₙᵀs* (->> s (Uₙ -n) (.conj) (diag) ) )
 
     (comment "See Eq.49 in [1].")
