@@ -1,19 +1,22 @@
-(import [numpy [abs exp sin angle :as ∠ pi :as π]])
+(require [wavesynlib.languagecenter.hy.utils [call=]])
+
+(import [numpy [abs atleast-1d exp sin angle :as ∠ pi :as π]])
 
 
 
-(defmacro TO-ROW [v]
+(defmacro ▦→┅ [v]
     `(setv (. ~v shape) (, 1 -1) ) )
 
-(defmacro TO-COLUMN [v]
+(defmacro ▦→┇ [v]
     `(setv (. ~v shape) (, -1 1) ) )
 
 
 
 (defn steering [p θ λ]
+    (setv θ (-> θ (atleast-1d) (.view) ) )
     (-= p (first p.flat) ) 
-    (TO-COLUMN p) 
-    (TO-ROW θ) 
+    (▦→┇ p) 
+    (▦→┅ θ) 
     (setv Δ (* (abs p) (sin (- θ (∠ p))) ) )
     (exp (* 2j π Δ (/ 1 λ) ) ) )
 

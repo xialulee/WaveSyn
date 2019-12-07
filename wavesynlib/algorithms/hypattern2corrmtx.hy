@@ -6,7 +6,7 @@
 (init-numpydef)
 
 (import [wavesynlib.languagecenter.hy.numpydef [‖v]])
-(require [wavesynlib.formulae.hyarray [TO-ROW TO-COLUMN]])
+(require [wavesynlib.formulae.hyarray [▦→┅ ▦→┇]])
 (require [wavesynlib.algorithms.hycommon [∑]])
 
 
@@ -25,16 +25,18 @@
 (setv jπ (* 1j π))
 
 
-(defn matA [M angles]
+(defn matA [M θ]
 "Make steering matrix.
-M:      The number of array elements.
-angles: The angle samples (°)."
+M: The number of array elements.
+θ: The angle samples (°)."
     (setv S slice)
-    (setv angles (-> angles 
+    (setv θ (-> θ 
         (atleast-1d)
+        (.view)
         (radians)))
-    (TO-ROW angles)
-    (exp (* jπ #↕[0:M] (sin angles))) )
+    (▦→┅ θ)
+    (setv sinθ (sin θ))
+    (exp (* jπ #↕[0:M] sinθ)) )
 
 
 
@@ -70,7 +72,7 @@ M: The number of array elements."
     (setv P (matP M) ) 
     (setv G (
         ∑ #_< [a m] ∈ (zip A.T magnitude) #_> (do
-            (TO-COLUMN a)
+            (▦→┇ a)
             (setv t (->> a
                 (.conj) 
                 (kron a) 

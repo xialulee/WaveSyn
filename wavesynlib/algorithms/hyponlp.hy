@@ -1,5 +1,5 @@
 (require [wavesynlib.languagecenter.hy.numpydef [⇦▦ ▦⇦]])
-(require [wavesynlib.formulae.hyarray [TO-COLUMN]])
+(require [wavesynlib.formulae.hyarray [▦→┇]])
 (require [wavesynlib.algorithms.hycommon [∑]])
 
 (import [numpy.fft [fft ifft]])
