@@ -58,7 +58,7 @@
     `((. ~numpy-name vstack) ~arrs))
 
 
-(defmacro ▦⇨ [arr &rest args]
+(defmacro ⇦▦ [arr &rest args]
     (setv args (list (map -symbol-to-slice args) ) )
     `(get ~arr (tuple ~args) ) )
 
@@ -70,12 +70,12 @@
     `(assoc ~arr (tuple ~args) ~val) )
 
 
-(defmacro ▤⇨ [arr sel]
+(defmacro ⇦▤ [arr sel]
     (setv sel (-symbol-to-slice sel) )
     `(get ~arr (tuple [~sel (slice None) ]) ) )
 
 
-(defmacro ▥⇨ [arr sel]
+(defmacro ⇦▥ [arr sel]
     (setv sel (-symbol-to-slice sel) )
     `(get ~arr (tuple [(slice None) ~sel]) ) )
 

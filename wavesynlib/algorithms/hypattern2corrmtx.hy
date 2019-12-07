@@ -2,7 +2,7 @@
     init-numpydef 
     ↕ ↔
     ┇
-    ▦⇨]])
+    ⇦▦]])
 (init-numpydef)
 
 (import [wavesynlib.languagecenter.hy.numpydef [‖v]])

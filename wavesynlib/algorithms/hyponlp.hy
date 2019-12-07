@@ -1,4 +1,4 @@
-(require [wavesynlib.languagecenter.hy.numpydef [▦⇨ ▦⇦]])
+(require [wavesynlib.languagecenter.hy.numpydef [⇦▦ ▦⇦]])
 (require [wavesynlib.formulae.hyarray [TO-COLUMN]])
 (require [wavesynlib.algorithms.hycommon [∑]])
 
@@ -77,9 +77,9 @@
 
     (setv Diag_s (diag s) )
     (setv Diag_s* (.conj Diag_s))
-    (setv UₙDiag_s (-> s (▦⇨ ↔n:) (diag n)) )
+    (setv UₙDiag_s (-> s (⇦▦ ↔n:) (diag n)) )
     (setv Diag_Uₙs (->> s (Uₙ n) (diag) ) )
-    (setv UₙᵀDiag_s* (-> s (▦⇨ ↔0:-n) (diag -n)) )
+    (setv UₙᵀDiag_s* (-> s (⇦▦ ↔0:-n) (diag -n)) )
     (setv Diag_Uₙᵀs* (->> s (Uₙ -n) (.conj) (diag) ) )
 
     (comment "See Eq.49 in [1].")

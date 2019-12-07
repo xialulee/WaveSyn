@@ -1,7 +1,7 @@
 (require [wavesynlib.languagecenter.hy.numpydef [
     init-numpydef 
     ↕
-    ▦⇨ ▤⇨ ▥⇨]])
+    ⇦▦ ⇦▤ ⇦▥]])
 (init-numpydef)
 
 (require [wavesynlib.languagecenter.hy.utils [call=]])
@@ -36,9 +36,9 @@ return value: normalized frequencies."
 Unlike numpy.linalg.svd, 
 the eigenvalue and the corresponding eigenvectors 
 calculated by eigh are in ascending order. ")
-    (setv Uₛ (▥⇨ U ↔N-p:))
-    (setv U₀ (▤⇨ Uₛ ↕0:N-1) )
-    (setv U₁ (▤⇨ Uₛ ↕1:) )
+    (setv Uₛ (⇦▥ U ↔N-p:))
+    (setv U₀ (⇦▤ Uₛ ↕0:N-1) )
+    (setv U₁ (⇦▤ Uₛ ↕1:) )
     (setv U₁\U₀ (first (lstsq U₁ U₀ :rcond None) ) )
     (- 
         (/ 
@@ -56,7 +56,7 @@ return value: normalized frequencies."
     (setv [D U] (eigh Rx)) (comment "Eigenvalue in ascending order.")
     (setv N-p (- N p) ) (comment "The dimension of the noise subspace.")
     (comment "An orth base of the noise subspace.")
-    (setv Uₙₒᵢₛₑ (▥⇨ U ↔0:N-p) ) 
+    (setv Uₙₒᵢₛₑ (⇦▥ U ↔0:N-p) ) 
     (setv P (
         ∑ #_< u ∈ Uₙₒᵢₛₑ.T #_> (autocorrelate u) ) ) 
     (setv roots-P (roots P))
@@ -68,7 +68,7 @@ return value: normalized frequencies."
     (setv roots-P (get roots-P (.argsort |roots-P|)))
     (setv -p-1 (- 0 p 1) )
     (/ 
-        (∠ (▦⇨ roots-P ↔-1:-p-1:-1)) 
+        (∠ (⇦▦ roots-P ↔-1:-p-1:-1)) 
         2π) )
 
 
