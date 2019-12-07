@@ -2,7 +2,9 @@
 (require [wavesynlib.formulae.hyarray [▦→┇]])
 (require [wavesynlib.algorithms.hycommon [∑]])
 
-(import [numpy.fft [fft ifft]])
+(import [numpy.fft [
+    fft  :as ℱ 
+    ifft :as ℱ⁻¹]])
 (import [numpy [abs diag exp 
     outer
     roll
@@ -34,8 +36,9 @@
 
 (defn autocorr [x]
     (setv N (len x) )
-    (setv F (fft x (* N 2) ) ) 
-    (ifft (* F (.conj F) ) ) )
+    (setv 2N (* 2 N) )
+    (setv F (ℱ x :n 2N ) ) 
+    (ℱ⁻¹ (* F (.conj F) ) ) )
 
 
 (defn objective [φ Q]
