@@ -12,7 +12,7 @@
 
 
 
-(defn Uₙ [n x]
+(defn 𝐔ₙ [n x]
 "The upper shift operator. See Eq.8 in [1]."
     (setv n (- n))
     (cond 
@@ -41,8 +41,8 @@
     (ℱ⁻¹ (* F (.conj F) ) ) )
 
 
-(defn objective [φ Q]
-    (setv |aǫ|² (-> φ
+(defn objective [𝛗 Q]
+    (setv |aǫ|² (-> 𝛗
         (* 1j)
         (exp)
         (autocorr)
@@ -51,62 +51,61 @@
     (∑ |aǫ|²) )
 
 
-(defn ∂aₙ/∂φ [s n]
+(defn ∂aₙ/∂𝛗 [𝐬 n]
     (setv -n (- n) )
-    (setv s* (.conj s) )
-    (setv Uₙs (Uₙ n s) )
-    (setv Uₙᵀs* (Uₙ -n s*) )
+    (setv 𝐬* (.conj 𝐬) )
+    (setv 𝐔ₙ𝐬 (𝐔ₙ n 𝐬) )
+    (setv 𝐔ₙᵀ𝐬* (𝐔ₙ -n 𝐬*) )
     (comment "See Eq.44 in [1].")
-    (setv t1 (* 1j s Uₙᵀs*) )
-    (setv t2 (* -1j s* Uₙs) )
+    (setv t1 (* 1j 𝐬 𝐔ₙᵀ𝐬*) )
+    (setv t2 (* -1j 𝐬* 𝐔ₙ𝐬) )
     (+ t1 t2) )
 
 
-(defn gradient [φ Q]
-    (setv s (exp (* 1j φ) ) )
-    (setv a (autocorr s) ) 
+(defn gradient [𝛗 Q]
+    (setv 𝐬 (exp (* 1j 𝛗) ) )
+    (setv a (autocorr 𝐬) ) 
     (setv grad (
         ∑ #_< k ∈ Q #_> (do
             (setv aₖ* (-> a (get k) (.conj) ) )
-            (setv ∂aₖ/∂φ (∂aₙ/∂φ s :n k) )
+            (setv ∂aₖ/∂𝛗 (∂aₙ/∂𝛗 𝐬 :n k) )
             (comment "See Eq.43 in [1].")
-            (* aₖ* ∂aₖ/∂φ) ) ) ) 
+            (* aₖ* ∂aₖ/∂𝛗) ) ) ) 
     (* 2 grad.real) )
 
 
-(defn ∂²aₙ/∂φ∂φᵀ [s n]
+(defn ∂²aₙ/∂𝛗∂𝛗ᵀ [𝐬 n]
     (setv -n (- n))
-    (setv [S END] [slice None])
 
-    (setv Diag_s (diag s) )
-    (setv Diag_s* (.conj Diag_s))
-    (setv UₙDiag_s (-> s (⇦▦ ↔n:) (diag n)) )
-    (setv Diag_Uₙs (->> s (Uₙ n) (diag) ) )
-    (setv UₙᵀDiag_s* (-> s (⇦▦ ↔0:-n) (diag -n)) )
-    (setv Diag_Uₙᵀs* (->> s (Uₙ -n) (.conj) (diag) ) )
+    (setv Diag𝐬 (diag 𝐬) )
+    (setv Diag𝐬* (.conj Diag𝐬))
+    (setv 𝐔ₙDiag𝐬 (-> 𝐬 (⇦▦ ↔n:) (diag n)) )
+    (setv Diag𝐔ₙ𝐬 (->> 𝐬 (𝐔ₙ n) (diag) ) )
+    (setv 𝐔ₙᵀDiag𝐬* (-> 𝐬 (⇦▦ ↔0:-n) (diag -n)) )
+    (setv Diag𝐔ₙᵀ𝐬* (->> 𝐬 (𝐔ₙ -n) (.conj) (diag) ) )
 
     (comment "See Eq.49 in [1].")
-    (setv t1 (@ Diag_s* UₙDiag_s) ) 
-    (setv t2 (@ (- Diag_s*) Diag_Uₙs) ) 
-    (setv t3 (@ Diag_s UₙᵀDiag_s*) ) 
-    (setv t4 (@ (- Diag_s) Diag_Uₙᵀs*) ) 
+    (setv t1 (@ Diag𝐬* 𝐔ₙDiag𝐬) ) 
+    (setv t2 (@ (- Diag𝐬*) Diag𝐔ₙ𝐬) ) 
+    (setv t3 (@ Diag𝐬 𝐔ₙᵀDiag𝐬*) ) 
+    (setv t4 (@ (- Diag𝐬) Diag𝐔ₙᵀ𝐬*) ) 
     (+ t1 t2 t3 t4) )
 
 
-(defn hessian [φ Q]
-    (setv s (-> φ 
+(defn hessian [𝛗 Q]
+    (setv s (-> 𝛗 
         (* 1j) 
         (exp) ) ) 
     (setv a (autocorr s) ) 
     (setv H (
         ∑ #_< k ∈ Q #_> (do
-            (setv ∂aₖ/∂φ (∂aₙ/∂φ s :n k) ) 
-            (setv ∂²aₖ/∂φ∂φᵀ (∂²aₙ/∂φ∂φᵀ s :n k) )
+            (setv ∂aₖ/∂𝛗 (∂aₙ/∂𝛗 s :n k) ) 
+            (setv ∂²aₖ/∂𝛗∂𝛗ᵀ (∂²aₙ/∂𝛗∂𝛗ᵀ s :n k) )
             (setv aₖ* (-> a (get k) (.conj) ) )
             (comment "See Eq.48 in [1].")
             (+
-                (outer ∂aₖ/∂φ (.conj ∂aₖ/∂φ) ) 
-                (* aₖ* ∂²aₖ/∂φ∂φᵀ) ) ) ) ) 
+                (outer ∂aₖ/∂𝛗 (.conj ∂aₖ/∂𝛗) ) 
+                (* aₖ* ∂²aₖ/∂𝛗∂𝛗ᵀ) ) ) ) ) 
     (* 2 H.real) )
 
 
