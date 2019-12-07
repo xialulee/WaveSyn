@@ -1,4 +1,4 @@
-(import [numpy [atleast-1d exp complex128 sqrt :as √]])
+(import [numpy [atleast-1d exp sqrt :as √]])
 (import [numpy.random [randn]])
 
 

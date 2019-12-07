@@ -11,8 +11,8 @@
 
 
 (import [numpy [
-    complex
-    zeros atleast-1d vstack real
+    complex :as ℂ
+    zeros atleast-1d real
     sin exp radians kron outer
     pi :as π]])
 
@@ -45,7 +45,7 @@ M: The number of array elements.
 M: The number of array elements."
     (setv M² (* M M))
     (setv M²xM² (, M² M²))
-    (setv P (zeros M²xM² complex))
+    (setv P (zeros M²xM² ℂ))
 
     (setv k 0)
     (setv addr-table {})
