@@ -1,3 +1,5 @@
+(require [hy.contrib.loop [loop]])
+
 (import [time [sleep]])
 
 (import [wavesynlib.languagecenter.wavesynscript [
@@ -51,9 +53,13 @@ dy:          y-coordinate.
 delay(s):    the click will wait (delay) seconds.
 interval(s): the interval between clicks."
         (sleep delay) 
-        (for [k (range times)]
-            (utils.send-mouse-input dx dy "left" absolute)
-            (sleep interval) ) ) ) ) 
+        (loop [[k times]]
+            (if (zero? k)
+                None
+            #_else (do
+                (utils.send-mouse-input dx dy "left" absolute)
+                (sleep interval) 
+                (recur (dec k) ) ) ) ) ) ) )
 
 
 
