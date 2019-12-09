@@ -1,4 +1,5 @@
-(require [wavesynlib.languagecenter.hy.cdef [make-ptr-type]])
+(require [wavesynlib.languagecenter.hy.cdef [init-cdef make-ptr-type]])
+(init-cdef)
 (require [wavesynlib.languagecenter.hy.comdef [interface]])
 
 (import [comtypes [GUID IUnknown COMMETHOD HRESULT c_voidp]])

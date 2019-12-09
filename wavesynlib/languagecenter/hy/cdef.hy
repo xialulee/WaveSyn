@@ -1,3 +1,8 @@
+(setv ctypes-name (HySymbol "CTYPES-CE006C7F-2A67-437D-9444-6F2E6D645AA3") )
+
+(defmacro init-cdef []
+    `(import [ctypes :as ~ctypes-name]) )
+
 
 
 (defmacro compound [type-name name &rest args]
@@ -132,7 +137,7 @@
 
 (defmacro/g! make-ptr-type [&rest types]
     `(do
-        (import [ctypes [POINTER :as ~g!POINTER]])
+        (setv ~g!POINTER (. ~ctypes-name POINTER) )
         ~@(gfor tp types
             `(setv ~(HySymbol (+ (str tp) "*")) (~g!POINTER ~tp) ) ) ) )
 
@@ -168,4 +173,4 @@
 ; An alias of ctypes.byref
 ; Should run "from ctypes import byref"
 ; before using it. 
-(deftag → [expr] `(byref ~expr))
+(deftag → [expr] `((. ~ctypes-name byref) ~(first expr)))

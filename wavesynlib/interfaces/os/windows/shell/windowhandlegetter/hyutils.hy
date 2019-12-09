@@ -1,5 +1,6 @@
 (require [hy.contrib.loop [loop]])
-(require [wavesynlib.languagecenter.hy.cdef [→]])
+(require [wavesynlib.languagecenter.hy.cdef [init-cdef →]])
+(init-cdef)
 (require [wavesynlib.languagecenter.hy.win32def [import-func]])
 
 (import [ctypes [byref]])
@@ -38,5 +39,5 @@
 
 (defn get-hwnd-from-cursor-pos [&optional [toplevel True]]
     (setv cursor-pos (POINT)) 
-    (GetCursorPos #→ cursor-pos) 
+    (GetCursorPos #→[cursor-pos]) 
     (get-hwnd-from-point cursor-pos.x cursor-pos.y toplevel) )

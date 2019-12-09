@@ -1,4 +1,5 @@
-(require [wavesynlib.languagecenter.hy.cdef [→]])
+(require [wavesynlib.languagecenter.hy.cdef [init-cdef →]])
+(init-cdef)
 (require [wavesynlib.languagecenter.hy.win32def [import-func]])
 
 (import ctypes)
@@ -21,7 +22,7 @@
         (setv inp (INPUT
             :type INPUT_KEYBOARD
             :ki ki))
-        (SendInput 1 #→ inp (sizeof inp)))
+        (SendInput 1 #→[inp] (sizeof inp)))
         
     (cond
     [press 
@@ -56,7 +57,7 @@
         (setv inp (INPUT
             :type INPUT_MOUSE
             :mi mi) ) 
-        (SendInput 1 #→ inp (sizeof inp)) )
+        (SendInput 1 #→[inp] (sizeof inp)) )
 
     (cond 
     [press (generate-mouse-event dx dy button absolute)]

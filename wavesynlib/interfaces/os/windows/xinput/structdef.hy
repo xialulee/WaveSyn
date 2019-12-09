@@ -1,4 +1,5 @@
-(require [wavesynlib.languagecenter.hy.cdef [struct]])
+(require [wavesynlib.languagecenter.hy.cdef [init-cdef struct]])
+(init-cdef)
 (import [ctypes.wintypes [BOOL WORD DWORD BYTE SHORT]])
 
 

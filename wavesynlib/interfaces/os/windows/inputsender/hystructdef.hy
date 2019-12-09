@@ -1,4 +1,5 @@
-(require [wavesynlib.languagecenter.hy.cdef [struct union]])
+(require [wavesynlib.languagecenter.hy.cdef [init-cdef struct union]])
+(init-cdef)
 (import [ctypes.wintypes [WORD DWORD LONG WPARAM]])
 
 ; See https://stackoverflow.com/a/13615802.
