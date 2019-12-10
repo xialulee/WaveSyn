@@ -357,54 +357,52 @@ class FileManager(ModelNode):
             raise NotImplementedError
 # End More Node Types
         
-        
+
+import hy
+from .hydatatypes import Constant        
 # WaveSyn Script Constants
 # To Do: move to datatypes
-class Constant:
-    __slots__ = ('__name', '__value', '__doc')
-    __cache = {}
+#class Constant:
+    #__slots__ = ('__name', '__value', '__doc')
+    #__cache = {}
     
     
-    def __new__(cls, name, value=None, doc=None):
-        if name in cls.__cache:
-            c = cls.__cache[name]
-            if value != c.value:
-                raise ValueError('Constant has already been initialized with a different value.')
-            return c
-        else:
-            return object.__new__(cls)
+    #def __new__(cls, name, value=None, doc=None):
+        #if name in cls.__cache:
+            #c = cls.__cache[name]
+            #if value != c.value:
+                #raise ValueError('Constant has already been initialized with a different value.')
+            #return c
+        #else:
+            #return object.__new__(cls)
         
     
-    def __init__(self, name, value=None, doc=None):
-        if name not in self.__cache:
-            self.__name = name
-            self.__value = value
-            self.__doc = doc
-            self.__cache[name] = self
+    #def __init__(self, name, value=None, doc=None):
+        #if name not in self.__cache:
+            #self.__name = name
+            #self.__value = value
+            #self.__doc = doc
+            #self.__cache[name] = self
             
             
-    @property
-    def name(self):
-        return self.__name
+    #@property
+    #def name(self):
+        #return self.__name
     
         
-    @property
-    def value(self):
-        return self.__value
+    #@property
+    #def value(self):
+        #return self.__value
     
     
-    @property
-    def doc(self):
-        return self.__doc
+    #@property
+    #def doc(self):
+        #return self.__doc
     
     
-    def help(self):
-        print(self.doc)
-        
+    #def help(self):
+        #print(self.doc)
  
-       
-constant_names = []
-
 
              
 class Constants(object): 
