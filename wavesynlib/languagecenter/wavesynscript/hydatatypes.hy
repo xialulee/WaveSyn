@@ -1,5 +1,5 @@
 (require [hy.extra.anaphoric [%]])
-(require [wavesynlib.languagecenter.hy.utils [defprop]])
+(require [wavesynlib.languagecenter.hy.utils [defprop dyn-setv]])
 
 
 
@@ -38,3 +38,24 @@
         #%(. %1 --doc) ) 
         
     (defn help [self] (print self.doc) ) )
+
+
+
+(defclass Constants []
+    (setv --name-value-pairs (,
+        (, "KEYSYM-MODIFIERS" #{
+            "Alt_L"     "Alt_R"
+            "Control_L" "Control_R"
+            "Shift_L"   "Shift_R" })
+        (, "KEYSYM-CURSORKEYS" #{
+            "KP_Prior" "KP_Next"  "KP_Home" "KP_End" 
+            "KP_Left"  "KP_Right" "KP_Up"   "KP_Down" 
+            "Left"     "Right"    "Up"      "Down" 
+            "Home"     "End"      "Next"    "Prior"}) ) )
+
+    (for [[name value] --name-value-pairs]
+        (dyn-setv name (Constant name value) ) )
+            
+    #@(classmethod
+    (defn append-new-constant [cls name &optional value doc]
+        (setattr cls name (Constant name value doc) ) ) ) )

@@ -359,7 +359,7 @@ class FileManager(ModelNode):
         
 
 import hy
-from .hydatatypes import Constant        
+from .hydatatypes import Constant, Constants
 # WaveSyn Script Constants
 # To Do: move to datatypes
 #class Constant:
@@ -405,26 +405,25 @@ from .hydatatypes import Constant
  
 
              
-class Constants(object): 
-    name_value_pairs = (                
-        ('KEYSYM_MODIFIERS', {
-            'Alt_L', 'Alt_R', 
-            'Control_L', 'Control_R', 
-            'Shift_L', 'Shift_R'}),
-        ('KEYSYM_CURSORKEYS', {
-            'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 
-            'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 
-            'Left', 'Right', 'Up', 'Down', 
-            'Home', 'End', 'Next', 'Prior'}) )
+#class Constants(object): 
+    #name_value_pairs = (                
+        #('KEYSYM_MODIFIERS', {
+            #'Alt_L', 'Alt_R', 
+            #'Control_L', 'Control_R', 
+            #'Shift_L', 'Shift_R'}),
+        #('KEYSYM_CURSORKEYS', {
+            #'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 
+            #'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 
+            #'Left', 'Right', 'Up', 'Down', 
+            #'Home', 'End', 'Next', 'Prior'}) )
     
-    for name, value in name_value_pairs:
-        locals()[name] = Constant(name, value)      
+    #for name, value in name_value_pairs:
+        #locals()[name] = Constant(name, value)      
         
     
-    @classmethod
-    def append_new_constant(cls, name, value=None, doc=None):
-        setattr(cls, name, Constant(name, value, doc))
-    # End Clipboard Constants
+    #@classmethod
+    #def append_new_constant(cls, name, value=None, doc=None):
+        #setattr(cls, name, Constant(name, value, doc))
     
 
 
