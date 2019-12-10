@@ -7,6 +7,7 @@ Created on Fri May 23 15:48:34 2014
 from tkinter import IntVar, Frame
 from tkinter.ttk import Button, Checkbutton
 from tkinter.filedialog import asksaveasfilename
+from tkinter.messagebox import showerror
 
 from PIL import ImageTk
 
@@ -86,7 +87,10 @@ class OptimizeGroup(Group):
     def _on_solve_button_click(self):
         with code_printer():
             topwin = self.__topwin
-            center, width = topwin.edit_group.beam_data
+            beam_data = topwin.edit_group.beam_data
+            if not beam_data:
+                showerror('Error', 'Please input the specification of the ideal beam pattern.')
+                return
             topwin.figure_book.clear()        
             topwin.set_ideal_pattern(center, width)
             topwin.plot_ideal_pattern()        
