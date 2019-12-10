@@ -92,7 +92,7 @@ class OptimizeGroup(Group):
                 showerror('Error', 'Please input the specification of the ideal beam pattern.')
                 return
             topwin.figure_book.clear()        
-            topwin.set_ideal_pattern(center, width)
+            topwin.set_ideal_pattern(*beam_data)
             topwin.plot_ideal_pattern()        
 
         M = self.__M.get_int()
