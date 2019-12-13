@@ -212,13 +212,25 @@ then node will have a property named 'a', which cannot be re-assigned."
 
 
 
+(defclass NodeContainer [ModelNode]
+    (defn --init-- [self &rest args &kwargs kwargs]
+        (super-init #* args #** kwargs) ) 
+        
+    (defn -make-child-path [self child]
+        (raise (NotImplementedError "Subclass of NodeContainer should implement _make_child_path") ) ) 
+        
+    (defn -hy-make-child-path [self child]
+        (raise (NotImplementedError "Subclass of NodeContainer should implement _hy_make_child_path") ) ) )
+
+
+
 (defclass Dict [dict]
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init) ) )
 
 
 
-(defclass NodeDict [ModelNode Dict]
+(defclass NodeDict [NodeContainer Dict]
     (setv -xmlrpcexport- []) 
     
     (defn --init-- [self &optional [node-name ""]]
