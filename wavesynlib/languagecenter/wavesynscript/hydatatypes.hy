@@ -1,6 +1,7 @@
 (require [hy.contrib.loop [loop]])
 (require [hy.extra.anaphoric [%]])
-(require [wavesynlib.languagecenter.hy.utils [super-init defprop dyn-setv]])
+(require [wavesynlib.languagecenter.hy.utils [
+    super-init make-slots defprop dyn-setv]])
 
 (import [importlib [import-module]])
 (import [wavesynlib.languagecenter.designpatterns [Observable]])
@@ -48,7 +49,6 @@
             node-name (.get kwargs "node_name" "") 
             is-root   (.get kwargs "is_root"   False) 
             is-lazy   (.get kwargs "is_lazy"   False) ) 
-        ;(unless (in "_attribute_lock" self.--dict--) 
         (unless (hasattr self "_attribute_lock")
             ; TO-DO: Maybe hasattr is better?
             (.--setattr-- object self "_attribute_lock" (set) ) ) 
@@ -199,8 +199,8 @@ then node will have a property named 'a', which cannot be re-assigned."
 
 (defclass Constant []
 "Constant type of wavesynscript."
-    [--slots-- (, "__name" "__value" "__doc")
-     --cache   {}]
+    (make-slots --name --value --doc)
+    (setv --cache {})
     
     (defn --new-- [cls name &optional value doc]
         (if (in name cls.--cache) (do

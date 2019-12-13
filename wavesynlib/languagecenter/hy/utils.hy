@@ -135,5 +135,12 @@
         None) )
 
 
+
 (defmacro super-init [&rest args]
     `(.--init-- (super) ~@args) )
+
+
+
+(defmacro make-slots [&rest args]
+    (setv args (gfor arg args (mangle arg) ) )
+    `(setv --slots-- (, ~@args) ) )
