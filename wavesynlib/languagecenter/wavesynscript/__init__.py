@@ -217,7 +217,15 @@ class NodeDict(ModelNode, Dict):
     
     def __init__(self, node_name=''):
         super().__init__(node_name=node_name)
-        
+
+
+    def _make_child_path(self, child):
+        return f"{self.node_path}[{id(child)}]"
+
+
+    def _hy_make_child_path(self, child):
+        return f"{self.hy_node_path[:-1]} [{id(child)}])"
+
         
     def __setitem__(self, key, val):
         object.__setattr__(val, 'parent_node', self)
