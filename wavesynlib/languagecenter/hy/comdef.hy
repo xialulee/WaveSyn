@@ -27,18 +27,18 @@
 (defmacro interface [interfacesym bases guid methods]
     `(do
         (import wavesynlib.languagecenter.hy.comobjects)
-        (defclass ~interfacesym ~bases [
+        (defclass ~interfacesym ~bases (setv
             -iid- ~guid
-            -methods- ~(lfor methinfo methods (do
-                (setv methtype (first methinfo)
-                      methdesc (-> methinfo (rest) (list)))
+            -methods- ~(lfor methinfo methods 
+                :setv methtype (first methinfo)
+                :setv methdesc (-> methinfo (rest) (list))
                 (cond 
                 [(= methtype 'STDMETHOD)
                     `(wavesynlib.languagecenter.hy.comobjects.STDMETHOD 
                         ~@(handle-stdmethod-args methdesc))]
                 [(= methtype 'COMMETHOD)
                     `(wavesynlib.languagecenter.hy.comobjects.COMMETHOD
-                        ~@(handle-commethod-args methdesc))])))])))
+                        ~@(handle-commethod-args methdesc))]) ) ) ) ) )
 
 ; Example:
 ;(require comdef)
