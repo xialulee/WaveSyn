@@ -53,11 +53,12 @@
             ; TO-DO: Maybe hasattr is better?
             (.--setattr-- object self "_attribute_lock" (set) ) ) 
         (setv 
-            self.parent-node None
-            self.--root-node None
-            self.--node-path None
-            self.--is-root   is-root
-            self.--is-lazy   is-lazy) 
+            self.parent-node    None
+            self.--root-node    None
+            self.--node-path    None
+            self.--hy-node-path None
+            self.--is-root      is-root
+            self.--is-lazy      is-lazy) 
         (when is-lazy
             (comment "TO-DO: Use dyn-private-setv and loop instead.")
             (setv 
@@ -159,20 +160,43 @@ then node will have a property named 'a', which cannot be re-assigned."
                 #_else
                     (setv node (.--class-object self #* self.--init-args #** self.--init-kwargs) ) ) ) 
             node) ) 
+
+    (defprop -node-path-list
+        #_getter
+        (fn [self]
+            (cond
+            [self.is-root
+                [self.node-name] ]
+            [(instance? dict self.parent-node)
+                (+ self.parent-node.-node-path-list [f"[{(id self)}]"])]
+            [True
+                (+ self.parent-node.-node-path-list [self.node-name])]) ) )
             
     (defprop node-path
         #_getter
         (fn [self]
-            (if (none? self.--node-path)
-                (setv self.--node-path 
-                    (cond
-                    [self.is-root 
-                        self.node-name]
-                    [(instance? dict self.parent-node) 
-                        f"{self.parent-node.node-path}[{(id self)}]"]
-                    [True
-                        (.join "." (, (. self parent-node node-path) self.node-name) )]) ) ) 
+            (when (none? self.--node-path)
+                (setv path-list self.-node-path-list)
+                (setv path [(first path-list)] )
+                (for [item (rest path-list)]
+                    (if (.startswith item "[") 
+                        (.append path item) 
+                    #_else
+                        (.append path f".{item}") ) ) 
+                (setv self.--node-path (.join "" path) ) )
             self.--node-path) ) 
+
+    (defprop hy-node-path
+        #_getter
+        (fn [self]
+            (when (none? self.--hy-node-path) 
+                (cond
+                [self.is-root
+                    (setv self.--hy-node-path self.node-name)]
+                [True
+                    (setv nodes (.join " " self.-node-path-list) )
+                    (setv self.--hy-node-path f"(. {nodes})") ]) )
+            self.--hy-node-path) ) 
 
     (defprop child-nodes 
         #_getter
