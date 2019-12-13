@@ -200,49 +200,49 @@ from wavesynlib.languagecenter.designpatterns import Observable
 
 
 import hy
-from .hydatatypes import Constant, Constants, ModelNode, model_tree_monitor
+from .hydatatypes import Constant, Constants, ModelNode, NodeDict, model_tree_monitor
         
 
                 
-class Dict(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
+#class Dict(dict):
+    #def __init__(self, *args, **kwargs):
+        #super().__init__()
         
         
 
-# NodeDict
-class NodeDict(ModelNode, Dict):
-    _xmlrpcexport_  = []
+## NodeDict
+#class NodeDict(ModelNode, Dict):
+    #_xmlrpcexport_  = []
     
     
-    def __init__(self, node_name=''):
-        super().__init__(node_name=node_name)
+    #def __init__(self, node_name=''):
+        #super().__init__(node_name=node_name)
 
 
-    def _make_child_path(self, child):
-        return f"{self.node_path}[{id(child)}]"
+    #def _make_child_path(self, child):
+        #return f"{self.node_path}[{id(child)}]"
 
 
-    def _hy_make_child_path(self, child):
-        return f"{self.hy_node_path[:-1]} [{id(child)}])"
+    #def _hy_make_child_path(self, child):
+        #return f"{self.hy_node_path[:-1]} [{id(child)}])"
 
         
-    def __setitem__(self, key, val):
-        object.__setattr__(val, 'parent_node', self)
-        val.lock_attribute('parent_node')
-        model_tree_monitor._on_add_node(val)
-        Dict.__setitem__(self, key, val)
-        val.on_connect()
+    #def __setitem__(self, key, val):
+        #object.__setattr__(val, 'parent_node', self)
+        #val.lock_attribute('parent_node')
+        #model_tree_monitor._on_add_node(val)
+        #Dict.__setitem__(self, key, val)
+        #val.on_connect()
         
         
-    def __delitem__(self, key):
-        model_tree_monitor._on_remove_node(self[key])
-        Dict.__delitem__(self, key)
+    #def __delitem__(self, key):
+        #model_tree_monitor._on_remove_node(self[key])
+        #Dict.__delitem__(self, key)
         
         
-    def pop(self, key):
-        model_tree_monitor._on_remove_node(self[key])
-        Dict.pop(self, key)
+    #def pop(self, key):
+        #model_tree_monitor._on_remove_node(self[key])
+        #Dict.pop(self, key)
         
 
 

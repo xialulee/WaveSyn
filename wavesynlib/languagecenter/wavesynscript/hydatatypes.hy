@@ -212,6 +212,42 @@ then node will have a property named 'a', which cannot be re-assigned."
 
 
 
+(defclass Dict [dict]
+    (defn --init-- [self &rest args &kwargs kwargs]
+        (super-init) ) )
+
+
+
+(defclass NodeDict [ModelNode Dict]
+    (setv -xmlrpcexport- []) 
+    
+    (defn --init-- [self &optional [node-name ""]]
+        (super-init :node-name node-name) ) 
+        
+    (defn -make-child-path [self child]
+        f"{self.node-path}[{(id child)}]") 
+        
+    (defn -hy-make-child-path [self child]
+        ; (
+        f"{(cut self.hy-node-path 0 -1)} [{(id child)}])") 
+        
+    (defn --setitem-- [self key child]
+        (with [child.attribute-lock] 
+            (setv child.parent-node self) )
+        (.-on-add-node model-tree-monitor child) 
+        (Dict.--setitem-- self key child) 
+        (.on-connect child) ) 
+        
+    (defn --delitem-- [self key]
+        (.-on-remove-node model-tree-monitor (get self key) ) 
+        (Dict.--delitem-- self key) ) 
+        
+    (defn pop [self key]
+        (.-on-remove-node model-tree-monitor (get self key) ) 
+        (Dict.pop self key) ) )
+
+
+
 (defclass Constant []
 "Constant type of wavesynscript."
     (make-slots --name --value --doc)
