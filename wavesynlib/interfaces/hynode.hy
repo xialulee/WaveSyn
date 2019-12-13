@@ -1,4 +1,5 @@
 (require [wavesynlib.languagecenter.wavesynscript.macros [BindLazyNode]])
+(require [wavesynlib.languagecenter.hy.utils [super-init]])
 
 (import platform)
 (import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
@@ -10,7 +11,7 @@
 "The interfaces node of WaveSyn, which provides several mechanisms for
 communicating with different software applications and hardware devices."
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) #* args #** kwargs) 
+        (super-init #* args #** kwargs) 
         (BindLazyNode
             self.os 
                 wavesynlib.interfaces.os.modelnode 

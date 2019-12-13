@@ -1,6 +1,6 @@
 (require [hy.contrib.loop [loop]])
 (require [hy.extra.anaphoric [%]])
-(require [wavesynlib.languagecenter.hy.utils [defprop dyn-setv]])
+(require [wavesynlib.languagecenter.hy.utils [super-init defprop dyn-setv]])
 
 (import [importlib [import-module]])
 (import [wavesynlib.languagecenter.designpatterns [Observable]])
@@ -9,7 +9,7 @@
 
 (defclass -ModelTreeMonitor [Observable]
     (defn --init-- [self]
-        (.--init-- (super) ) ) 
+        (super-init) ) 
         
     (defn -on-add-node [self node]
         (.notify-observers self node "add") ) 
@@ -25,7 +25,7 @@
 ; http://pypix.com/python/context-managers/        
 (defclass AttributeLock []
     (defn --init-- [self node]
-        (.--init-- (super) ) 
+        (super-init) 
         (unless (instance? ModelNode node) 
             (raise (TypeError "Only the instance of ModelNode is accepted.") ) ) 
         (setv self.node node) ) 
@@ -39,21 +39,23 @@
 
 
 
-; To Do: Implement an on_bind callback which is called when a node is connecting to the tree.    
 (defclass ModelNode []
-    [-xmlrpcexport- []]
+    (setv -xmlrpcexport- [])
     
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) ) 
+        (super-init) 
         (setv 
             node-name (.get kwargs "node_name" "") 
             is-root   (.get kwargs "is_root"   False) 
-            is-lazy   (.get kwargs "is-lazy    False") ) 
-        (unless (in "_attribute_lock" self.--dict--) 
-            (comment "TO-DO: Maybe hasattr is better?")
+            is-lazy   (.get kwargs "is_lazy"   False) ) 
+        ;(unless (in "_attribute_lock" self.--dict--) 
+        (unless (hasattr self "_attribute_lock")
+            ; TO-DO: Maybe hasattr is better?
             (.--setattr-- object self "_attribute_lock" (set) ) ) 
         (setv 
             self.parent-node None
+            self.--root-node None
+            self.--node-path None
             self.--is-root   is-root
             self.--is-lazy   is-lazy) 
         (when is-lazy
@@ -64,7 +66,7 @@
                 self.--class-object (.pop kwargs "class_object" None) 
                 self.--init-args    (.pop kwargs "init_args"    []) 
                 self.--init-kwargs  (.pop kwargs "init_kwargs"  {}) ) ) 
-        (setv self.node-name node-name) ) 
+        (setv self.node-name node-name) )  
         
     (defn lock-attribute [self attribute-name &optional [lock True]]
 "Lock a specified attribute, i.e. the attribute cannot be re-assigned.
@@ -84,11 +86,56 @@ then an AttributeError will be raised."
         #_getter
         (fn [self] 
 "This attribute is in fact a context manager.
-if the following statements are executed:
+If the following statements are executed:
 with node.attribute_lock:
   node.a = 0
 then node will have a property named 'a', which cannot be re-assigned."
             (AttributeLock self) ) ) 
+
+    (defn on-connect [self])
+
+    (defn --getattribute-- [self attribute-name]
+        (setv attr (.--getattribute-- object self attribute-name) ) 
+        (when (and (instance? ModelNode attr) attr.is-lazy) 
+            (comment "Unlock the attribute name before replacing.") 
+            (.lock-attribute self attribute-name :lock False) 
+            (setv attr attr.real-node) 
+            (comment "Replace the lazy node with the real one.") 
+            (with [self.attribute-lock]
+                (setattr self attribute-name attr) ) ) 
+        attr) 
+
+    (defn --setattr-- [self key val]
+        (unless (in "_attribute_lock" self.--dict--) 
+            ; This circumstance happens when __setattr__ called
+            ; before __init__ being called.
+            (.--setattr-- object self "_attribute_lock" (set) ) ) 
+        (unless (in "attribute_auto_lock" self.--dict--) 
+            (.--setattr-- object self "attribute_auto_lock" False) ) 
+        (when (in key self.-attribute-lock) 
+            (raise (AttributeError f"Attribute \"{key}\" is unchangeable.") ) ) 
+        (when (and
+                    (instance? ModelNode val) 
+                    (not val.is-root) 
+                    (is val.parent-node None) ) 
+            (setv val.node-name (if val.node-name val.node-name key) ) 
+            (.--setattr-- object val "parent_node" self) 
+            ; The autolock mechanism will lock the node
+            ; after you attach it to the model tree.
+            ; A child node cannot change its parent.
+            (.lock-attribute val "parent-node") 
+            ; and the parent node's child node cannot be
+            ; re-assigned.
+            (.lock-attribute self key)
+            (.-on-add-node model-tree-monitor val) ) 
+        (.--setattr-- object self key val) 
+        (when (and 
+                    self.attribute-auto-lock 
+                    ; attribute_auto_lock itself cannot be locked.
+                    (!= key "attribute_auto_lock") ) 
+            (.lock-attribute self key) ) 
+        (when (instance? ModelNode val) 
+            (.on-connect val) ) )
             
     (defprop is-root 
         #_getter
@@ -112,6 +159,20 @@ then node will have a property named 'a', which cannot be re-assigned."
                 #_else
                     (setv node (.--class-object self #* self.--init-args #** self.--init-kwargs) ) ) ) 
             node) ) 
+            
+    (defprop node-path
+        #_getter
+        (fn [self]
+            (if (none? self.--node-path)
+                (setv self.--node-path 
+                    (cond
+                    [self.is-root 
+                        self.node-name]
+                    [(instance? dict self.parent-node) 
+                        f"{self.parent-node.node-path}[{(id self)}]"]
+                    [True
+                        (.join "." (, (. self parent-node node-path) self.node-name) )]) ) ) 
+            self.--node-path) ) 
 
     (defprop child-nodes 
         #_getter
@@ -126,11 +187,13 @@ then node will have a property named 'a', which cannot be re-assigned."
     (defprop root-node
         #_getter
         (fn [self]
-            (loop [[node self]]
-                (if node.is-root
-                    node
-                #_else
-                    (recur node.parent-node) ) ) ) ) )
+            (if (none? self.--root-node)
+                (setv self.--root-node (loop [[node self]]
+                    (if node.is-root
+                        node
+                    #_else
+                        (recur node.parent-node) ) ) ) ) 
+            self.--root-node) ) ) 
 
 
 

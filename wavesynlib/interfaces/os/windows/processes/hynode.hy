@@ -1,3 +1,4 @@
+(require [wavesynlib.languagecenter.hy.utils [super-init]])
 (require [wavesynlib.languagecenter.hy.wmidef [wql]])
 
 
@@ -14,7 +15,7 @@
 
 (defclass Utils [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) #* args #** kwargs))
+        (super-init #* args #** kwargs))
 
     #@(Scripting.printable
     (defn get-pid-from-hwnd [self pid]
@@ -69,7 +70,7 @@ Return Value (Path): The path of the executable."
 
 (defclass Processes [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) #* args #** kwargs)
+        (super-init #* args #** kwargs)
         (setv self.utils (
             ModelNode 
                 :is-lazy True 

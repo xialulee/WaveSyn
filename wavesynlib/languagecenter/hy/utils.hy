@@ -134,3 +134,6 @@
             ~@exprs) ) 
         None) )
 
+
+(defmacro super-init [&rest args]
+    `(.--init-- (super) ~@args) )

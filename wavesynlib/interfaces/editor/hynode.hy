@@ -1,5 +1,5 @@
 (require [hy.extra.anaphoric [*]])
-(require [wavesynlib.languagecenter.hy.utils [call=]])
+(require [wavesynlib.languagecenter.hy.utils [call= super-init]])
 
 (import os)
 (import tempfile)
@@ -12,7 +12,7 @@
 
 (defclass EditorNode [ModelNode]
     (defn --init-- [self &optional [node-name ""] [editor-path ""]]
-        (.--init-- (super) :node-name node-name) 
+        (super-init :node-name node-name)
         (with [self.attribute-lock]
             (setv self.editor-path editor-path) ) 
         (setv 
@@ -67,7 +67,7 @@
 
 (defclass EditorManager [Observable]
     (defn --init-- [self editor-dict]
-        (.--init-- (super)) 
+        (super-init) 
         (setv self.--editor-dict editor-dict)) 
         
     (defn update [self]
@@ -82,7 +82,7 @@
 
 (defclass EditorDict [NodeDict]
     (defn --init-- [self &optional [node-name ""]]
-        (.--init-- (super) :node-name node-name) 
+        (super-init :node-name node-name) 
         (with [self.attribute-lock]
             (setv self.manager (EditorManager self) ) ) ) 
             

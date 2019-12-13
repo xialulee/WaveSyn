@@ -1,4 +1,5 @@
 (require [hy.contrib.loop [loop]])
+(require [wavesynlib.languagecenter.hy.utils [super-init]])
 
 (import [time [sleep]])
 
@@ -40,7 +41,7 @@
 
 (defclass MouseSender [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) #* args #** kwargs))
+        (super-init #* args #** kwargs))
         
     #@(Scripting.printable
     (defn click-repeatedly [self times &optional absolute [dx 0] [dy 0] [delay 0] [interval 0]]
@@ -65,7 +66,7 @@ interval(s): the interval between clicks."
 
 (defclass KeySender [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) #* args #** kwargs))
+        (super-init #* args #** kwargs))
         
     (defn send [self key &optional modifiers press release [interval 0]]
         (when (and (not press) (not release))
@@ -139,7 +140,7 @@ interval(s): the interval between clicks."
 
 (defclass MacroManager [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) #* args #** kwargs) 
+        (super-init #* args #** kwargs) 
         (setv 
             self.--profiles {}
             self.--current-profile None
@@ -167,7 +168,7 @@ interval(s): the interval between clicks."
 
 (defclass InputSenders [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) #* args #** kwargs)
+        (super-init #* args #** kwargs)
         (setv self.key-sender (KeySender) )
         (setv self.mouse-sender (MouseSender) )
         (setv self.macro-manager (

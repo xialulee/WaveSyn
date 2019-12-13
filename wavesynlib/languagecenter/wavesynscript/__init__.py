@@ -18,185 +18,189 @@ from wavesynlib.languagecenter.designpatterns import Observable
 # Object Model of the Scripting System
 # It is a part of the scripting system.
 
-class _ModelTreeMonitor(Observable):
-    def __init__(self):
-        super().__init__()
+#class _ModelTreeMonitor(Observable):
+    #def __init__(self):
+        #super().__init__()
         
         
-    def _on_add_node(self, node):
-        self.notify_observers(node, 'add')
+    #def _on_add_node(self, node):
+        #self.notify_observers(node, 'add')
         
         
-    def _on_remove_node(self, node):
-        self.notify_observers(node, 'remove')
+    #def _on_remove_node(self, node):
+        #self.notify_observers(node, 'remove')
         
         
         
-model_tree_monitor = _ModelTreeMonitor()
+#model_tree_monitor = _ModelTreeMonitor()
        
 # How to implement a context manager? See:
 # http://pypix.com/python/context-managers/        
-class AttributeLock(object):
-    def __init__(self, node):
-        super().__init__()
-        if not isinstance(node, ModelNode):
-            raise TypeError('Only the instance of ModelNode is accepted.')
-        self.node   = node
+#class AttributeLock(object):
+    #def __init__(self, node):
+        #super().__init__()
+        #if not isinstance(node, ModelNode):
+            #raise TypeError('Only the instance of ModelNode is accepted.')
+        #self.node   = node
         
             
-    def __enter__(self):
-        self.node.attribute_auto_lock = True
-        return self.node
+    #def __enter__(self):
+        #self.node.attribute_auto_lock = True
+        #return self.node
     
         
-    def __exit__(self, *dumb):
-        self.node.attribute_auto_lock = False
-        
+    #def __exit__(self, *dumb):
+        #self.node.attribute_auto_lock = False
         
         
 # To Do: Implement an on_bind callback which is called when a node is connecting to the tree.    
-class ModelNode:
-    _xmlrpcexport_  = []    
+#class ModelNode:
+    #_xmlrpcexport_  = []    
     
     
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        node_name = kwargs.get('node_name', '')
-        is_root = kwargs.get('is_root', False)
-        is_lazy = kwargs.get('is_lazy', False)
-        if '_attribute_lock' not in self.__dict__:
-            object.__setattr__(self, '_attribute_lock', set())
-        self.parent_node = None
-        self.__is_root = is_root
-        self.__is_lazy = is_lazy
-        if is_lazy:
-            self.__module_name = kwargs.pop('module_name', None)
-            self.__class_name = kwargs.pop('class_name', None)
-            self.__class_object = kwargs.pop('class_object', None)
-            self.__init_args = kwargs.pop('init_args', [])
-            self.__init_kwargs = kwargs.pop('init_kwargs', {})
-        self.node_name = node_name
-        #self.attribute_auto_lock   = False
+    #def __init__(self, *args, **kwargs):
+        #super().__init__()
+        #node_name = kwargs.get('node_name', '')
+        #is_root = kwargs.get('is_root', False)
+        #is_lazy = kwargs.get('is_lazy', False)
+        #if '_attribute_lock' not in self.__dict__:
+            #object.__setattr__(self, '_attribute_lock', set())
+        #self.parent_node = None
+        #self.__is_root = is_root
+        #self.__is_lazy = is_lazy
+        #if is_lazy:
+            #self.__module_name = kwargs.pop('module_name', None)
+            #self.__class_name = kwargs.pop('class_name', None)
+            #self.__class_object = kwargs.pop('class_object', None)
+            #self.__init_args = kwargs.pop('init_args', [])
+            #self.__init_kwargs = kwargs.pop('init_kwargs', {})
+        #self.node_name = node_name
+        ##self.attribute_auto_lock   = False
         
                 
-    def lock_attribute(self, attribute_name, lock=True):
-        '''Lock a specified attribute, i.e. the attribute cannot be re-assigned.
-For example:        
-node.a = 0
-node.lock_attribute("a")
-If you try to give node.a a new value
-node.a = 1
-then an AttributeError will be raised.
-'''
-        if lock:
-            self._attribute_lock.add(attribute_name)
-        else:
-            if attribute_name in self._attribute_lock:
-                self._attribute_lock.remove(attribute_name)
+    #def lock_attribute(self, attribute_name, lock=True):
+        #'''Lock a specified attribute, i.e. the attribute cannot be re-assigned.
+#For example:        
+#node.a = 0
+#node.lock_attribute("a")
+#If you try to give node.a a new value
+#node.a = 1
+#then an AttributeError will be raised.
+#'''
+        #if lock:
+            #self._attribute_lock.add(attribute_name)
+        #else:
+            #if attribute_name in self._attribute_lock:
+                #self._attribute_lock.remove(attribute_name)
 
         
-    @property
-    def attribute_lock(self):
-        '''This attribute is in fact a context manager.
-if the following statements are executed:
-with node.attribute_lock:
-  node.a = 0
-then node will have a property named 'a', which cannot be re-assigned.
-'''
-        return AttributeLock(self)        
+    #@property
+    #def attribute_lock(self):
+        #'''This attribute is in fact a context manager.
+#if the following statements are executed:
+#with node.attribute_lock:
+  #node.a = 0
+#then node will have a property named 'a', which cannot be re-assigned.
+#'''
+        #return AttributeLock(self)        
 
         
-    @property
-    def is_root(self):
-        return self.__is_root
+    #@property
+    #def is_root(self):
+        #return self.__is_root
 
         
-    @property
-    def is_lazy(self):
-        return self.__is_lazy
+    #@property
+    #def is_lazy(self):
+        #return self.__is_lazy
 
         
-    def get_real_node(self):
-        node = self
-        if self.is_lazy:
-            if self.__class_object is None:
-                #mod = __import__(self.__module_name, globals(), locals(), [self.__class_name], -1)
-                mod = import_module(self.__module_name)
-                node = getattr(mod, self.__class_name)(*self.__init_args, **self.__init_kwargs)
-            else:
-                node = self.__class_object(*self.__init_args, **self.__init_kwargs)
-        return node
+    #def get_real_node(self):
+        #node = self
+        #if self.is_lazy:
+            #if self.__class_object is None:
+                ##mod = __import__(self.__module_name, globals(), locals(), [self.__class_name], -1)
+                #mod = import_module(self.__module_name)
+                #node = getattr(mod, self.__class_name)(*self.__init_args, **self.__init_kwargs)
+            #else:
+                #node = self.__class_object(*self.__init_args, **self.__init_kwargs)
+        #return node
 
         
-    def __setattr__(self, key, val):
-        if '_attribute_lock' not in self.__dict__:
-            # This circumstance happens when __setattr__ called before __init__ being called.
-            object.__setattr__(self, '_attribute_lock', set())
-        if 'attribute_auto_lock' not in self.__dict__:
-            object.__setattr__(self, 'attribute_auto_lock', False)
-        if key in self._attribute_lock:
-            raise AttributeError(f'Attribute "{key}" is unchangeable.')
-        if isinstance(val, ModelNode) and not val.is_root and val.parent_node==None:
-            val.node_name = val.node_name if val.node_name else key
-            object.__setattr__(val, 'parent_node', self)
+    #def __setattr__(self, key, val):
+        #if '_attribute_lock' not in self.__dict__:
+            ## This circumstance happens when __setattr__ called before __init__ being called.
+            #object.__setattr__(self, '_attribute_lock', set())
+        #if 'attribute_auto_lock' not in self.__dict__:
+            #object.__setattr__(self, 'attribute_auto_lock', False)
+        #if key in self._attribute_lock:
+            #raise AttributeError(f'Attribute "{key}" is unchangeable.')
+        #if isinstance(val, ModelNode) and not val.is_root and val.parent_node==None:
+            #val.node_name = val.node_name if val.node_name else key
+            #object.__setattr__(val, 'parent_node', self)
             
-            # The autolock mechanism will lock the node after you attach it to the model tree.
-            # A child node cannot change its parent
-            val.lock_attribute('parent_node')
-            # and the parent node's child node cannot be re-assinged. 
-            self.lock_attribute(key)
-            model_tree_monitor._on_add_node(val)
+            ## The autolock mechanism will lock the node after you attach it to the model tree.
+            ## A child node cannot change its parent
+            #val.lock_attribute('parent_node')
+            ## and the parent node's child node cannot be re-assinged. 
+            #self.lock_attribute(key)
+            #model_tree_monitor._on_add_node(val)
                     
-        object.__setattr__(self, key, val)
-        if self.attribute_auto_lock and key != 'attribute_auto_lock': # attribute_auto_lock cannot be locked
-            self.lock_attribute(key)
+        #object.__setattr__(self, key, val)
+        #if self.attribute_auto_lock and key != 'attribute_auto_lock': # attribute_auto_lock cannot be locked
+            #self.lock_attribute(key)
         
-        if isinstance(val, ModelNode):
-            val.on_connect()
+        #if isinstance(val, ModelNode):
+            #val.on_connect()
 
             
-    def __getattribute__(self, attribute_name):
-        attr = object.__getattribute__(self, attribute_name)
-        if isinstance(attr, ModelNode) and attr.is_lazy:
-            # Before replacing, unlock the attribute name.
-            self.lock_attribute(attribute_name, lock=False)
-            # Get the real node.
-            attr = attr.get_real_node()
-            # Replace.
-            with self.attribute_lock:
-                setattr(self, attribute_name, attr)
-        return attr
+    #def __getattribute__(self, attribute_name):
+        #attr = object.__getattribute__(self, attribute_name)
+        #if isinstance(attr, ModelNode) and attr.is_lazy:
+            ## Before replacing, unlock the attribute name.
+            #self.lock_attribute(attribute_name, lock=False)
+            ## Get the real node.
+            #attr = attr.get_real_node()
+            ## Replace.
+            #with self.attribute_lock:
+                #setattr(self, attribute_name, attr)
+        #return attr
         
         
-    def on_connect(self):
-        pass
+    #def on_connect(self):
+        #pass
 
         
-    @property
-    def node_path(self):
-        if self.is_root:
-            return self.node_name
-        elif isinstance(self.parent_node, dict):
-            return f'{self.parent_node.node_path}[{id(self)}]'
-        else:
-            return '.'.join((self.parent_node.node_path, self.node_name))
-
-            
-    @property
-    def child_nodes(self):
-        return {attribute_name:self.__dict__[attribute_name].node_path 
-                for attribute_name in self.__dict__ 
-                if isinstance(self.__dict__[attribute_name], ModelNode) 
-                and attribute_name != 'parent_node'} 
+    #@property
+    #def node_path(self):
+        #if self.is_root:
+            #return self.node_name
+        #elif isinstance(self.parent_node, dict):
+            #return f'{self.parent_node.node_path}[{id(self)}]'
+        #else:
+            #return '.'.join((self.parent_node.node_path, self.node_name))
 
             
-    @property
-    def root_node(self):
-        node = self
+    #@property
+    #def child_nodes(self):
+        #return {attribute_name:self.__dict__[attribute_name].node_path 
+                #for attribute_name in self.__dict__ 
+                #if isinstance(self.__dict__[attribute_name], ModelNode) 
+                #and attribute_name != 'parent_node'} 
+
+            
+    #@property
+    #def root_node(self):
+        #node = self
                     
-        while not node.is_root:
-            node = node.parent_node
-        return node
+        #while not node.is_root:
+            #node = node.parent_node
+        #return node
+
+
+
+import hy
+from .hydatatypes import Constant, Constants, ModelNode, model_tree_monitor
         
 
                 
@@ -358,8 +362,6 @@ class FileManager(ModelNode):
 # End More Node Types
         
 
-import hy
-from .hydatatypes import Constant, Constants
 # WaveSyn Script Constants
 # To Do: move to datatypes
 #class Constant:

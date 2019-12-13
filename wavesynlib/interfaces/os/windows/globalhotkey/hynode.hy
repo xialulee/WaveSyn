@@ -1,5 +1,5 @@
 (require [hy.extra.anaphoric [*]])
-(require [wavesynlib.languagecenter.hy.utils [call= dyn-defprop defprop freeze]])
+(require [wavesynlib.languagecenter.hy.utils [call= dyn-defprop defprop freeze super-init]])
 (require [wavesynlib.languagecenter.hy.cdef [init-cdef →]])
 (init-cdef)
 
@@ -55,7 +55,7 @@
 
 (defclass GlobalHotkeyManager [ModelNode Observable]
     (defn --init-- [self &rest args &kwargs kwargs]
-        (.--init-- (super) #* args #** kwargs)
+        (super-init #* args #** kwargs)
         (setv self.--hotkey-info {})
         (setv self.--repeater None) 
         (setv self.--queue (Queue))
