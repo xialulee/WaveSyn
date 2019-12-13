@@ -10,6 +10,9 @@ from importlib import import_module
 
 import collections
 
+import hy
+from hy.contrib.hy_repr import hy_repr
+
 from wavesynlib.languagecenter.utils import MethodLock
 from wavesynlib.languagecenter.designpatterns import Observable
 
@@ -537,7 +540,7 @@ class Scripting(ModelNode):
     namespaces = {'locals':_namespace, 'globals':_namespace}
     
     _print_code_flag = False
-    
+
     
     @staticmethod
     def convert_args_to_str(*args, **kwargs):
@@ -559,6 +562,26 @@ class Scripting(ModelNode):
         else:
             params = strArgs if strArgs else strKwargs
         return params
+
+
+    @staticmethod
+    def hy_convert_args_to_str(*args, **kwargs):
+        def arg_to_str(arg):
+            if isinstance(arg, ScriptCode):
+                # To-Do: Handling ScriptCode correctly.
+                return arg.code
+            elif isinstance(arg, Constant):
+                return f"{Scripting.root_name}.lang_center.wavesynscript.constants.{arg.name}"
+            else:
+                return hy_repr(arg)
+        str_args   = ' '.join([arg_to_str(arg) for arg in args])
+        str_kwargs = ' '.join([f":{key} {arg_to_str(kwargs[key])}" for key in kwargs]) if kwargs else ""
+
+        if str_args and str_kwargs:
+            result = f"{str_args} {str_kwargs}"
+        else:
+            result = str_args if str_args else str_kwargs
+        return result
     
         
     def __init__(self, root_node):
@@ -583,8 +606,14 @@ class Scripting(ModelNode):
                     #   put the node and arguments into a command slot
                     #   and the main thread will check the command queue periodically.
                     # This mechanism will guarentee the thread safety of wavesyn scripting system.
-                    ret = cls.root_node.print_and_eval(
-                        f'{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})')
+                    display_language = cls.root_node.lang_center.wavesynscript.display_language
+                    if display_language == "python":
+                        ret = cls.root_node.lang_center.wavesynscript.display_and_eval(
+                            f'{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})')
+                    elif display_language == "hy":
+                        ret = cls.root_node.lang_center.wavesynscript.hy_display_and_eval(
+                            f"(.{method.__name__} {self.hy_node_path} {cls.hy_convert_args_to_str(*args, **kwargs)})",
+                            lambda: method(self, *args, **kwargs) )
                 finally:
                     cls._print_code_flag = True # Restore _print_code_flag settings.
             else:                          

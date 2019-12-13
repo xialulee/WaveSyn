@@ -21,18 +21,18 @@ def getRootNodePath():
 
 
 def getitem(node_path, index):
-    return Application.instance.execute(eval_format('{node_path}[{repr(index)}].node_path'))
+    return Application.instance.lang_center.wavesynscript.execute(eval_format('{node_path}[{repr(index)}].node_path'))
     # if repr is not used, the index of str type cannot be handled correctly.
 
 def getChildNodes(node_path=Scripting.root_name):
-    return Application.instance.execute(eval_format('{node_path}.child_nodes'))
+    return Application.instance.lang_center.wavesynscript.execute(eval_format('{node_path}.child_nodes'))
     
 def getMethodDoc(node_path, method_name):
-    doc = Application.instance.execute(eval_format('{node_path}.{method_name}.__doc__'))    
+    doc = Application.instance.lang_center.wavesynscript.execute(eval_format('{node_path}.{method_name}.__doc__'))    
     return '' if doc is None else doc
     
 def getMethods(node_path=Scripting.root_name):
-    execute = Application.instance.execute
+    execute = Application.instance.lang_center.wavesynscript.execute
     nodeObj = execute(node_path)
     mro     = type(nodeObj).__mro__
     return list(set(
@@ -44,7 +44,7 @@ def getMethods(node_path=Scripting.root_name):
     ))    
         
 def getRepr(node_path=Scripting.root_name):
-    return Application.instance.execute(eval_format('{node_path}.__repr__()'))
+    return Application.instance.lang_center.wavesynscript.execute(eval_format('{node_path}.__repr__()'))
   
 
 class CommandSlot(object):

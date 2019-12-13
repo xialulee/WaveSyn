@@ -40,7 +40,7 @@ class SystemShell(ModelNode):
         
             
     def run(self, code):
-        Scripting.root_node.execute(code)
+        Scripting.root_node.lang_center.wavesynscript.execute(code)
         
         
     def translate(self, code):
@@ -71,11 +71,12 @@ class ModesNode(ModelNode):
         right_mode = None
         for mode in self.__modes:
             if mode.test(code):
-                right_mode= mode
+                right_mode = mode
                 break
         
         if right_mode:
-            Scripting.root_node.stream_manager.write(f'''WaveSyn:
+            Scripting.root_node.stream_manager.write(f'''
+WaveSyn:
 The mode of the code is recognized as {right_mode.info.name}. 
 The actual code executed is listed as follows:
 

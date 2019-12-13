@@ -79,6 +79,9 @@ since the instance of Application is the first node created on the model tree.
         Scripting.namespaces['globals'] = Scripting.namespaces['locals'] = globals()
         Scripting.namespaces['globals'][Scripting.root_name] = self
         Scripting.root_node = self
+
+        with self.attribute_lock:
+            self.lang_center = LangCenterNode()
         
         file_path    = getsourcefile(type(self))
         dir_path     = os.path.split(file_path)[0]
@@ -140,8 +143,6 @@ since the instance of Application is the first node created on the model tree.
                 # To Do: WaveSyn will have a uniform command slot system.
                 #xmlrpc_command_slot = CommandSlot(),
 
-                lang_center = LangCenterNode(),
-                                            
                 config_file_path = config_file_path
             )  
             
@@ -213,7 +214,7 @@ since the instance of Application is the first node created on the model tree.
                 {'type':'text', 'content':''},
                 {'type':'text', 'content': code}])   
     
-            self.execute(code)
+            self.lang_center.wavesynscript.execute(code)
             
                 
         with self.attribute_lock:
@@ -320,53 +321,62 @@ and generate a dialog which helps user to input parameters.'''
         return argmap
                      
         
-    def print_and_eval(self, expr):
-        with self.exec_thread_lock:
-            self.stream_manager.write(expr+'\n', 'HISTORY')               
-            ret = self.eval(expr)
-            if ret is not None:
-                self.stream_manager.write(str(ret)+'\n', 'RETVAL', extras={'obj':ret})
-            return ret    
+    #def print_and_eval(self, expr):
+        #with self.exec_thread_lock:
+            #self.stream_manager.write(expr+'\n', 'HISTORY')               
+            #ret = self.eval(expr)
+            #if ret is not None:
+                #self.stream_manager.write(str(ret)+'\n', 'RETVAL', extras={'obj':ret})
+            #return ret    
+
+
+    #def hy_print_and_eval(self, hystr, expr):
+        #with self.exec_thread_lock:
+            #self.stream_manager.write(hystr+"\n", "HISTORY")
+            #ret = expr()
+            #if ret is not None:
+                #self.stream_manager.write(str(ret)+"\n", "RETVAL", extras={"obj":ret})
+            #return ret
             
                               
-    def eval(self, expr):
-        with self.exec_thread_lock:
-            try:
-                with busy_doing:
-                    ret = eval(expr, Scripting.namespaces['globals'], Scripting.namespaces['locals'])
-            except KeyboardInterrupt:
-                self.stream_manager.write('The mission has been aborted.\n', 'TIP')
-            Scripting.namespaces['locals']['_']  = ret
-            return ret
+    #def eval(self, expr):
+        #with self.exec_thread_lock:
+            #try:
+                #with busy_doing:
+                    #ret = eval(expr, Scripting.namespaces['globals'], Scripting.namespaces['locals'])
+            #except KeyboardInterrupt:
+                #self.stream_manager.write('The mission has been aborted.\n', 'TIP')
+            #Scripting.namespaces['locals']['_']  = ret
+            #return ret
             
         
-    def execute(self, code):
-        with self.exec_thread_lock:
-            ret = None
-            stripped_code    = code.strip()
-            if stripped_code[0] == '!':
-                PIPE = subprocess.PIPE
-                p = subprocess.Popen(stripped_code[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
-                (stdout, stderr) = p.communicate()
-                encoding = locale.getpreferredencoding()
-                print(stdout.decode(encoding, 'ignore'))
-                print(stderr.decode(encoding, 'ignore'), file=sys.stderr)               
-                return
-            try:
-                try:
-                    with busy_doing:
-                        ret = self.eval(code)
-                except SyntaxError:
-                    with busy_doing:
-                        try:
-                            exec(code, Scripting.namespaces['globals'], Scripting.namespaces['locals'])
-                        except KeyboardInterrupt:
-                            self.stream_manager.write('WaveSyn: The mission has been aborted.\n', 'TIP')
-            except SystemExit:
-                self._on_exit()
-            except:
-                traceback.print_exc()
-            return ret
+    #def execute(self, code):
+        #with self.exec_thread_lock:
+            #ret = None
+            #stripped_code    = code.strip()
+            #if stripped_code[0] == '!':
+                #PIPE = subprocess.PIPE
+                #p = subprocess.Popen(stripped_code[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
+                #(stdout, stderr) = p.communicate()
+                #encoding = locale.getpreferredencoding()
+                #print(stdout.decode(encoding, 'ignore'))
+                #print(stderr.decode(encoding, 'ignore'), file=sys.stderr)               
+                #return
+            #try:
+                #try:
+                    #with busy_doing:
+                        #ret = self.eval(code)
+                #except SyntaxError:
+                    #with busy_doing:
+                        #try:
+                            #exec(code, Scripting.namespaces['globals'], Scripting.namespaces['locals'])
+                        #except KeyboardInterrupt:
+                            #self.stream_manager.write('WaveSyn: The mission has been aborted.\n', 'TIP')
+            #except SystemExit:
+                #self._on_exit()
+            #except:
+                #traceback.print_exc()
+            #return ret
             
             
     def print_error(self, text):

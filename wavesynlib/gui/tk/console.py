@@ -59,9 +59,9 @@ def load_plugin():
 def make_menu(win, menu, json=False):
     def func_gen(code, print_code=True):
         if print_code:
-            f   = Scripting.root_node.print_and_eval
+            f = Scripting.root_node.lang_center.wavesynscript.display_and_eval
         else:
-            f   = Scripting.root_node.eval
+            f = Scripting.root_node.lang_center.wavesynscript.eval
             
         if isinstance(code, list):
             def func():
@@ -460,7 +460,7 @@ class ConsoleText(ModelNode, ScrolledText):
                         else:
                             self.prompt_symbol   = '>>> '
                             self.update_content(tag='', content='\n')
-                            ret = app.execute(code)
+                            ret = app.lang_center.wavesynscript.execute(code)
                             if ret is not None:
                                 repr_ret = repr(ret)
                                 maxlen = 1000
