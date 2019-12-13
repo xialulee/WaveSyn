@@ -59,7 +59,7 @@
     (if anonymous-list 
         (class-fields.extend ['-anonymous- `(tuple ~anonymous-list)]))
     (class-fields.extend ['-fields- field-list])
-    `(defclass ~name [~type-name] ~class-fields))
+    `(defclass ~name [~type-name] (setv ~@class-fields) ) )
 
 ;; Examples
 ; import [ctypes [*]])
