@@ -15,22 +15,21 @@ class ExtraModesNode(ModelNode):
             mode_object = mode_class()
             setattr(self, mode_object.info.name, mode_object)
             self.__modes.append(mode_object)
-            
-            
-    @Scripting.printable
-    def run(self, code):
-        right_mode = None
+
+
+    def _get_mode(self, code):
         for mode in self.__modes:
             if mode.test(code):
-                right_mode = mode
-                break
-        
-        if right_mode:
-            self.root_node.stream_manager.write(f'''
+                return mode
+        raise TypeError('The mode of the code is unrecognizable.')
+            
+
+    @Scripting.printable
+    def run(self, code):
+        right_mode = self._get_mode(code)
+        self.root_node.stream_manager.write(f'''
 WaveSyn:
 The mode of the code is recognized as {right_mode.info.name}. 
 The actual code executed is listed as follows:
 ''', 'TIP') # To Do: The output is stored in ...
-            right_mode.translate_and_run(code)
-        else:
-            raise TypeError('The mode of the code is unrecognizable.')
+        right_mode.translate_and_run(code)
