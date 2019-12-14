@@ -70,6 +70,16 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
             (assoc arg-dict "input" (ScriptCode stdin-var) ) ) 
         arg-dict) 
 
+    (defn translate [self code]
+        (setv arg-dict (.-arg-parse self code) ) 
+        (setv command (. arg-dict ["command"]) )
+        (setv arg-list [f"{(repr command)}"]) 
+        (when (in "input" arg-dict) 
+            (setv var-name (. arg-dict ["input"] code) )
+            (.append arg-list f"input={var-name}") ) 
+        (setv arg-str (.join ", " arg-list) ) 
+        f"{self.node-path}.run({arg-str})")
+
     (defn translate-and-run [self code]
         (try 
             (setv arg-dict (.-arg-parse self code) ) 
