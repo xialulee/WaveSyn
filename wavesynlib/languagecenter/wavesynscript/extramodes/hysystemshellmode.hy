@@ -44,7 +44,7 @@
                 Support run in thread.") 
         (.--run-process self code) ) 
         
-    (defn translate [self code &optional [display-language "python"]]
+    (defn translate [self code]
         (comment "To-Do:
                 #M!  default;
                 #M!s store stdout & stderr;
@@ -54,17 +54,11 @@
             (print "\nMode prefix and code should be splited by blank." :file sys.stderr) 
             (return) ) 
         (setv [prefix code] splited)
-        (call= display-language .lower) 
-        (cond
-        [(in display-language ["python" "py"])
-            (setv display-language "python") ]
-        [(= display-language "hy")
-            None]
-        [(True)
-            (raise (ValueError f"Display language {display-language} not supported."))]) 
-        (setv display-code
+        (setv display-language self.root-node.lang-center.wavesynscript.display-language) 
+        (setv expr-str f"{self.node-path}.run({(repr code)})")
+        (setv display-str
             (if (= display-language "python") 
-                f"{self.node-path}.run({(repr code)})"
+                expr-str
             #_else
                 f"(.run {self.hy-node-path} {(hy-repr code)})") ) 
-        (, display-code (fn [] (.run self code)) ) ) )
+        (, expr-str display-str) ) )

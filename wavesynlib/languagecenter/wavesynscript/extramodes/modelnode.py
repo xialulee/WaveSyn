@@ -26,13 +26,12 @@ class ExtraModesNode(ModelNode):
                 break
         
         if right_mode:
-            display, func = right_mode.translate(code)
+            expr_str, display_str = right_mode.translate(code)
             self.root_node.stream_manager.write(f'''
 WaveSyn:
 The mode of the code is recognized as {right_mode.info.name}. 
 The actual code executed is listed as follows:
 ''', 'TIP') # To Do: The output is stored in ...
-            self.root_node.stream_manager.write(f"{display}\n\n", "HISTORY")
-            func()
+            self.root_node.lang_center.wavesynscript.display_and_eval(expr_str, display_str)
         else:
             raise TypeError('The mode of the code is unrecognizable.')
