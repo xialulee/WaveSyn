@@ -53,15 +53,14 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
             (setv input (.encode input -encoding) ) )
         (.--run-process self command :input input) ) )
         
-    (defn translate-and-run [self code]
+    (defn -arg-parse [self code]
         (comment "To-Do:
                 #M!  default;
                 #M!s store stdout & stderr;
                 #M!t run in thread.") 
         (setv splited (.split code :maxsplit 1) ) 
         (when (< (len splited) 2) 
-            (print "\nMode prefix and code should be splited by blank." :file sys.stderr) 
-            (return) ) 
+            (raise (SyntaxError "Mode prefix and code should be splited by blank.") ) ) 
         (setv [prefix code] splited)
         (setv prefix-args (cut prefix (len self.-MODE-PREFIX) None) )
         (setv match-obj (re.match self.-PREFIX-ARG-PATTERN prefix-args) )
@@ -69,5 +68,14 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
         (setv arg-dict {"command" code}) 
         (when stdin-var
             (assoc arg-dict "input" (ScriptCode stdin-var) ) ) 
+        arg-dict) 
+
+    (defn translate-and-run [self code]
+        (try 
+            (setv arg-dict (.-arg-parse self code) ) 
+        (except [err SyntaxError]
+            (print) 
+            (print err :file sys.stderr) 
+            (return) ) )
         (with [(code-printer True)]
             (.run self #** arg-dict) ) ) ) 
