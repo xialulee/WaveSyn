@@ -9,14 +9,15 @@
 (import [hy.contrib.hy-repr [hy-repr]])
 
 (import [.basemode [ModeInfo BaseMode]])
-(import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
+(import [wavesynlib.languagecenter.wavesynscript [
+    ModelNode Scripting ScriptCode code-printer]])
 
 
 
 (defclass SystemShell [ModelNode BaseMode]
     (setv -MODE-PREFIX "#M!") 
     (setv -PREFIX-ARG-PATTERN (re.compile
-r"(?P<exec_mode>[st]*)      # s for storage; t for threading.
+r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not displaying.
 (?:\((?P<stdin_var>.*)\))?  # the var name of which the content will be written into stdin."
         re.VERBOSE) )
     
@@ -29,9 +30,9 @@ r"(?P<exec_mode>[st]*)      # s for storage; t for threading.
         (with [self.attribute-lock]
             (setv self.info (ModeInfo "system_shell" False self) ) ) ) 
             
-    (defn --run-process [self code input]
+    (defn --run-process [self command input]
         (setv PIPE subprocess.PIPE) 
-        (setv p (subprocess.Popen code :shell True :stdin PIPE :stdout PIPE :stderr PIPE) ) 
+        (setv p (subprocess.Popen command :shell True :stdin PIPE :stdout PIPE :stderr PIPE) ) 
         (setv [stdout stderr] (.communicate p :input input) ) 
         (print (.decode stdout -encoding "ignore") ) 
         (print (.decode stderr -encoding "ignore") :file sys.stderr) ) 
@@ -43,15 +44,16 @@ r"(?P<exec_mode>[st]*)      # s for storage; t for threading.
         #_else
             False) ) 
             
-    (defn run [self code &optional [input None] [store False] [thread False]]
+    #@(Scripting.printable 
+    (defn run [self command &optional [input None] [store False] [thread False]]
         (comment "To-Do:
                 Support store stdout & stderr;
                 Support run in thread.") 
         (when (instance? str input) 
             (setv input (.encode input -encoding) ) )
-        (.--run-process self code :input input) ) 
+        (.--run-process self command :input input) ) )
         
-    (defn translate [self code]
+    (defn translate-and-run [self code]
         (comment "To-Do:
                 #M!  default;
                 #M!s store stdout & stderr;
@@ -64,18 +66,8 @@ r"(?P<exec_mode>[st]*)      # s for storage; t for threading.
         (setv prefix-args (cut prefix (len self.-MODE-PREFIX) None) )
         (setv match-obj (re.match self.-PREFIX-ARG-PATTERN prefix-args) )
         (setv stdin-var (get match-obj "stdin_var") )
-        (setv py-arg-list [(repr code)])
-        (setv hy-arg-list [(hy-repr code)])
+        (setv arg-dict {"command" code}) 
         (when stdin-var
-            (.append py-arg-list f"input={stdin-var}") 
-            (.append hy-arg-list f":input {stdin-var}") )
-        (setv py-arg-str (.join ", " py-arg-list) )
-        (setv expr-str f"{self.node-path}.run({py-arg-str})")
-        (setv display-language self.root-node.lang-center.wavesynscript.display-language) 
-        (setv display-str
-            (if (= display-language "python") 
-                expr-str
-            #_else (do
-                (setv hy-arg-str (.join " " hy-arg-list) )
-                f"(.run {self.hy-node-path} {hy-arg-str})") ) ) 
-        (, expr-str display-str) ) )
+            (assoc arg-dict "input" (ScriptCode stdin-var) ) ) 
+        (with [(code-printer True)]
+            (.run self #** arg-dict) ) ) ) 
