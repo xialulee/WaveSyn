@@ -38,7 +38,6 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
         (print (.decode stderr -encoding "ignore") :file sys.stderr) ) 
         
     (defn test [self code]
-        (call= code .strip) 
         (if (and code (.startswith code self.-MODE-PREFIX) ) 
             self.info
         #_else

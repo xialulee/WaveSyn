@@ -22,6 +22,11 @@ class ExtraModesNode(ModelNode):
             if mode.test(code):
                 return mode
         raise TypeError('The mode of the code is unrecognizable.')
+
+
+    def translate(self, code):
+        right_mode = self._get_mode(code)
+        return right_mode.translate(code)
             
 
     @Scripting.printable

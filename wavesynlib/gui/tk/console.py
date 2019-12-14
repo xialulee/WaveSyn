@@ -35,6 +35,13 @@ from wavesynlib.status import busy_doing
 
 
 
+def _get_leading_blanks(s):
+    t = s.lstrip()
+    d = len(s) - len(t)
+    return s[:d]
+
+
+
 _retvaldisp = {}
 
 @call_immediately
@@ -437,7 +444,7 @@ class ConsoleText(ModelNode, ScrolledText):
                     stripped_code = code.strip()
 
                     try: # Code is in one mode of WaveSynScript
-                        self.root_node.lang_center.wavesynscript.extra_modes.run(stripped_code)
+                        self.root_node.lang_center.wavesynscript.extra_modes.run(code)
                         self.prompt_symbol   = '>>> '
                         self.update_content(tag='', content='\n')
                         return 'break'
@@ -454,6 +461,11 @@ class ConsoleText(ModelNode, ScrolledText):
                         elif code_list or \
                                  stripped_code[-1] in (':', '\\') or \
                                  (stripped_code[0] in ('@',) and not block_finished):
+                            try:
+                                mode_code = self.root_node.lang_center.wavesynscript.extra_modes.translate(code.lstrip())
+                                code = _get_leading_blanks(code) + mode_code
+                            except TypeError:
+                                pass
                             code_list.append(code)
                             self.prompt_symbol   = '... '
                             self.update_content(tag='', content='\n')
