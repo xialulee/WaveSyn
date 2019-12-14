@@ -1,4 +1,5 @@
-(require [wavesynlib.languagecenter.hy.utils [call= super-init]])
+(require [wavesynlib.languagecenter.hy.utils [
+    call= super-init defprop]])
 
 (import locale)
 (setv -encoding (locale.getpreferredencoding) )
@@ -28,14 +29,16 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs) 
         (with [self.attribute-lock]
-            (setv self.info (ModeInfo "system_shell" False self) ) ) ) 
+            (setv self.info (ModeInfo "system_shell" False self) ) 
+            (setv self.result {"stdout" "" "stderr" ""}) ) ) 
             
     (defn --run-process [self command input]
         (setv PIPE subprocess.PIPE) 
         (setv p (subprocess.Popen command :shell True :stdin PIPE :stdout PIPE :stderr PIPE) ) 
         (setv [stdout stderr] (.communicate p :input input) ) 
-        (print (.decode stdout -encoding "ignore") ) 
-        (print (.decode stderr -encoding "ignore") :file sys.stderr) ) 
+        (, 
+            (.decode stdout -encoding "ignore") 
+            (.decode stderr -encoding "ignore") ) ) 
         
     (defn test [self code]
         (if (and code (.startswith code self.-MODE-PREFIX) ) 
@@ -44,13 +47,21 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
             False) ) 
             
     #@(Scripting.printable 
-    (defn run [self command &optional [input None] [store False] [thread False]]
+    (defn run [self command &optional [display True] [input None] [store False] [thread False]]
         (comment "To-Do:
                 Support store stdout & stderr;
                 Support run in thread.") 
+        (assoc self.result "stdout" "")
+        (assoc self.result "stderr" "")
         (when (instance? str input) 
             (setv input (.encode input -encoding) ) )
-        (.--run-process self command :input input) ) )
+        (setv [stdout stderr] (.--run-process self command :input input) ) 
+        (when store
+            (assoc self.result "stdout" stdout) 
+            (assoc self.result "stderr" stderr) )
+        (when display
+            (print stdout) 
+            (print stderr :file sys.stderr) ) ) )
         
     (defn -arg-parse [self code]
         (comment "To-Do:
@@ -64,19 +75,19 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
         (setv prefix-args (cut prefix (len self.-MODE-PREFIX) None) )
         (setv match-obj (re.match self.-PREFIX-ARG-PATTERN prefix-args) )
         (setv stdin-var (get match-obj "stdin_var") )
+        (setv exec-mode (get match-obj "exec_mode") )
         (setv arg-dict {"command" code}) 
         (when stdin-var
             (assoc arg-dict "input" (ScriptCode stdin-var) ) ) 
+        (when (in "s" exec-mode) 
+            (assoc arg-dict "store" True) )
+        (when (in "n" exec-mode) 
+            (assoc arg-dict "display" False) )
         arg-dict) 
 
     (defn translate [self code]
         (setv arg-dict (.-arg-parse self code) ) 
-        (setv command (. arg-dict ["command"]) )
-        (setv arg-list [f"{(repr command)}"]) 
-        (when (in "input" arg-dict) 
-            (setv var-name (. arg-dict ["input"] code) )
-            (.append arg-list f"input={var-name}") ) 
-        (setv arg-str (.join ", " arg-list) ) 
+        (setv arg-str (Scripting.convert-args-to-str #** arg-dict) )
         f"{self.node-path}.run({arg-str})")
 
     (defn translate-and-run [self code]
