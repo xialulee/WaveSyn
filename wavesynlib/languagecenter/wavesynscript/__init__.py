@@ -607,13 +607,12 @@ class Scripting(ModelNode):
                     #   and the main thread will check the command queue periodically.
                     # This mechanism will guarentee the thread safety of wavesyn scripting system.
                     display_language = cls.root_node.lang_center.wavesynscript.display_language
+                    expr_str = f"{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})"
                     if display_language == "python":
-                        ret = cls.root_node.lang_center.wavesynscript.display_and_eval(
-                            f'{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})')
+                        display_str = expr_str
                     elif display_language == "hy":
-                        ret = cls.root_node.lang_center.wavesynscript.hy_display_and_eval(
-                            f"(.{method.__name__} {self.hy_node_path} {cls.hy_convert_args_to_str(*args, **kwargs)})",
-                            lambda: method(self, *args, **kwargs) )
+                        display_str = f"(.{method.__name__} {self.hy_node_path} {cls.hy_convert_args_to_str(*args, **kwargs)})"
+                    ret = cls.root_node.lang_center.wavesynscript.display_and_eval(expr=expr_str, display=display_str)
                 finally:
                     cls._print_code_flag = True # Restore _print_code_flag settings.
             else:                          

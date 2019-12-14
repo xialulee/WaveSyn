@@ -52,10 +52,12 @@ class WaveSynScriptNode(ModelNode):
             return ret
             
 
-    def display_and_eval(self, expr):
+    def display_and_eval(self, expr, display=None):
         root_node = self.root_node
+        if display is None:
+            display = expr
         with root_node.exec_thread_lock:
-            root_node.stream_manager.write(expr+'\n', 'HISTORY')               
+            root_node.stream_manager.write(display+'\n', 'HISTORY')               
             ret = self.eval(expr)
             if ret is not None:
                 root_node.stream_manager.write(str(ret)+'\n', 'RETVAL', extras={'obj':ret})
@@ -81,14 +83,4 @@ class WaveSynScriptNode(ModelNode):
                 root_node._on_exit()
             except:
                 traceback.print_exc()
-            return ret
-
-
-    def hy_display_and_eval(self, hystr, expr):
-        root_node = self.root_node
-        with root_node.exec_thread_lock:
-            root_node.stream_manager.write(hystr+"\n", "HISTORY")
-            ret = expr()
-            if ret is not None:
-                root_node.stream_manager.write(str(ret)+"\n", "RETVAL", extras={"obj":ret})
             return ret
