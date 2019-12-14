@@ -4,7 +4,7 @@ Created on Sat Aug 27 23:09:18 2016
 
 @author: Feng-cong Li
 """
-
+import sys
 import traceback
 import subprocess
 import locale
@@ -12,15 +12,15 @@ import locale
 from wavesynlib.status import busy_doing
 
 from wavesynlib.languagecenter.wavesynscript import (
-    ModelNode, Constants, modes, Scripting
-)
+    ModelNode, Constants, Scripting)
+from .extramodes.modelnode import ExtraModesNode
 
 
 class WaveSynScriptNode(ModelNode):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.constants = Constants
-        self.modes = modes.ModesNode()
+        self.extra_modes = ExtraModesNode()
         self.__display_language = "python"
 
 
@@ -67,15 +67,6 @@ class WaveSynScriptNode(ModelNode):
 
         with root_node.exec_thread_lock:
             ret = None
-            stripped_code    = code.strip()
-            if stripped_code[0] == '!':
-                PIPE = subprocess.PIPE
-                p = subprocess.Popen(stripped_code[1:], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)  
-                (stdout, stderr) = p.communicate()
-                encoding = locale.getpreferredencoding()
-                print(stdout.decode(encoding, 'ignore'))
-                print(stderr.decode(encoding, 'ignore'), file=sys.stderr)               
-                return
             try:
                 try:
                     with busy_doing:

@@ -437,7 +437,7 @@ class ConsoleText(ModelNode, ScrolledText):
                     stripped_code = code.strip()
 
                     try: # Code is in one mode of WaveSynScript
-                        self.root_node.lang_center.wavesynscript.modes.run(stripped_code)
+                        self.root_node.lang_center.wavesynscript.extra_modes.run(stripped_code)
                         self.prompt_symbol   = '>>> '
                         self.update_content(tag='', content='\n')
                         return 'break'
