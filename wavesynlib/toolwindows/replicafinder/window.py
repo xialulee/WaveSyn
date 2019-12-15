@@ -29,13 +29,13 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 # it will fail, and I cannot figure out why. 
 import hy
 try:
-    from wavesynlib.toolwindows.replicafinder.widgets import (
+    from .widgets import (
             finder_grp, status_frm, _green_light_icon, _red_light_icon)
 except hy.errors.HyCompileError:
 # After the bytecode file generated, we can import the module written by hy.    
     widgets_path = Path(__file__).parent / 'widgets.hy'
     os.system(f'hyc {widgets_path}')    
-    from wavesynlib.toolwindows.replicafinder.widgets import (
+    from .widgets import (
             finder_grp, status_frm, _green_light_icon, _red_light_icon)
 
 
@@ -102,7 +102,7 @@ class ReplicaFinder(Observable, ModelNode):
         self.__result = {}
         self.__timer.active = True
         self.__is_alive = True
-        thread.start_new_thread(self._thread_finder, (path,))
+        self.root_node.thread_manager.new_thread_do(lambda: self._thread_finder(path))
         
     
     def _thread_finder(self, path):
