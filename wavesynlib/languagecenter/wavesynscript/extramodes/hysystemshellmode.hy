@@ -25,7 +25,7 @@
 (defclass SystemShell [ModelNode BaseMode]
     (setv -MODE-PREFIX "#M!") 
     (setv -PREFIX-ARG-PATTERN (re.compile
-r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not displaying.
+r"(?P<exec_mode>[stnf]*)      # s for storage; t for threading; n for not displaying.
 (?:\((?P<stdin_var>.*)\))?  # the var name of which the content will be written into stdin."
         re.VERBOSE) )
     
@@ -90,6 +90,8 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
             (assoc arg-dict "store" True) )
         (when (in "n" exec-mode) 
             (assoc arg-dict "display" False) )
+        (when (in "f" exec-mode) 
+            (assoc arg-dict "command" (ScriptCode (+ "f" (repr code) ) ) ) )
         arg-dict) 
 
     (defn translate [self code &optional verbose]
