@@ -24,17 +24,14 @@ class ExtraModesNode(ModelNode):
         raise TypeError('The mode of the code is unrecognizable.')
 
 
-    def translate(self, code):
+    def translate(self, code, verbose=False):
         right_mode = self._get_mode(code)
-        return right_mode.translate(code)
-            
-
-    @Scripting.printable
-    def run(self, code):
-        right_mode = self._get_mode(code)
-        self.root_node.stream_manager.write(f'''
+        if verbose:
+            self.root_node.stream_manager.write(f'''
 WaveSyn:
 The mode of the code is recognized as {right_mode.info.name}. 
-The actual code executed is listed as follows:
-''', 'TIP') # To Do: The output is stored in ...
-        right_mode.translate_and_run(code)
+''', 'TIP') 
+        trans_code = right_mode.translate(code, verbose)
+        return trans_code
+            
+

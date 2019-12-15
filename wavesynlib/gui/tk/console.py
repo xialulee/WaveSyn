@@ -35,13 +35,6 @@ from wavesynlib.status import busy_doing
 
 
 
-def _get_leading_blanks(s):
-    t = s.lstrip()
-    d = len(s) - len(t)
-    return s[:d]
-
-
-
 _retvaldisp = {}
 
 @call_immediately
@@ -260,7 +253,7 @@ class ConsoleText(ModelNode, ScrolledText):
         self.text.update()
         
         
-    def on_key_release(self, evt):
+    def on_key_release(self, event):
         r, c = self.get_cursor_pos('insert')
         current_code = self.text.get(f'{r}.4', f'{r}.{c}')
         script = jedi.api.Interpreter(
@@ -276,12 +269,16 @@ class ConsoleText(ModelNode, ScrolledText):
             
         
 
-    def on_key_press(self, evt, code_list=[], init_history=[True]):     
+    def on_key_press(self, event, 
+            code_list=[], 
+            init_history=[True],
+            line_continuation=[False]):     
+        root_node = self.root_node
         # Begin Support History
-        if evt.keysym not in ('Up', 'Down'):
+        if event.keysym not in ('Up', 'Down'):
             init_history[0] = True
         else:
-            r_end, c_end = self.get_cursor_pos(mark='end')
+            r_end = self.get_cursor_pos(mark='end')[0]
             r, c = self.get_cursor_pos()
             
             if r != r_end-1:
@@ -295,7 +292,7 @@ class ConsoleText(ModelNode, ScrolledText):
 
             self.text.delete(f'{r}.4', 'end')
             code = self.__history.get(
-                1 if evt.keysym in ('Up', 'KP_Up') 
+                1 if event.keysym in ('Up', 'KP_Up') 
                 else -1)
             self.text.insert('end', code)
             self.__syntax_highlighter.highlight_one_row(row=r)
@@ -304,12 +301,12 @@ class ConsoleText(ModelNode, ScrolledText):
             
             
         # Begin: Tab key for auto complete
-        if evt.keysym == 'Tab':
+        if event.keysym == 'Tab':
             # Using call_immediately to make an independent namespace, which
             # prevents the contamination of namespace.
             @call_immediately
             def do():
-                r, c = self.get_cursor_pos('insert')
+                r = self.get_cursor_pos('insert')[0]
                 script = jedi.api.Interpreter(
                     self.text.get(f'{r}.4', 'end-1c'), 
                     [Scripting.namespaces['locals'], 
@@ -334,7 +331,7 @@ class ConsoleText(ModelNode, ScrolledText):
                 namelist.pack(expand='yes', fill='both')
                 namelist.list_config(selectmode='single')
                 
-                x, y, w, h = self.text.bbox('insert')
+                x, y = self.text.bbox('insert')[:2]
                 x += self.text.winfo_rootx()
                 y += self.text.winfo_rooty()
                 # y+h is the position below the current line.
@@ -357,9 +354,9 @@ class ConsoleText(ModelNode, ScrolledText):
                     namelist.see(newsel)
                     return 'break'
                     
-                namelist.list.bind('<Down>', lambda event:on_updown(event, 1))
-                namelist.list.bind('<Tab>', lambda event:on_updown(event, 1))
-                namelist.list.bind('<Up>', lambda event:on_updown(event, -1))
+                namelist.list.bind('<Down>',      lambda event:on_updown(event,  1))
+                namelist.list.bind('<Tab>',       lambda event:on_updown(event,  1))
+                namelist.list.bind('<Up>',        lambda event:on_updown(event, -1))
                 namelist.list.bind('<Shift-Tab>', lambda event:on_updown(event, -1))
                                 
                 for completion in script.completions():
@@ -374,7 +371,7 @@ class ConsoleText(ModelNode, ScrolledText):
                     self.text.insert('end', cstr)
                     on_exit(None)
                     
-                namelist.list.bind('<Return>', on_select)
+                namelist.list.bind('<Return>',          on_select)
                 namelist.list.bind('<ButtonRelease-1>', on_select)
                 
                 keyseq = ['']
@@ -403,7 +400,7 @@ class ConsoleText(ModelNode, ScrolledText):
             
             
         # Begin control the cursor when HOME key pressed.
-        if evt.keysym in ('KP_Home', 'Home'):
+        if event.keysym in ('KP_Home', 'Home'):
             r, c = self.get_cursor_pos()
             leading = self.text.get(f'{r}.0', f'{r}.4')
             if leading in ('... ', '>>> '):
@@ -417,74 +414,99 @@ class ConsoleText(ModelNode, ScrolledText):
 
         # Using keycode is not a good practice here, because for the same key,
         # the keycode may vary on different machines and operating systems.
-        #if evt.keysym not in ('Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R',  'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Next', 'Prior'):
-        if (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
-           (evt.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
+        #if event.keysym not in ('Alt_L', 'Alt_R', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R',  'KP_Prior', 'KP_Next', 'KP_Home', 'KP_End', 'KP_Left', 'KP_Right', 'KP_Up', 'KP_Down', 'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Next', 'Prior'):
+        if (event.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
+           (event.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
             r, c    = self.get_cursor_pos()
             prompt  = self.text.get(f'{r}.0', f'{r}.4')
             if prompt != '>>> ' and prompt != '... ':
                 return 'break'
-            if evt.keysym == 'BackSpace' and c <= 4:
+            if event.keysym == 'BackSpace' and c <= 4:
                 return 'break'
-            if evt.keysym == 'Escape':
+            if event.keysym == 'Escape':
                 self.text.delete(f'{r}.4', 'end')
             if c < 4:
                 return 'break'
-            rend, cend  = self.get_cursor_pos('end-1c')
+            rend = self.get_cursor_pos('end-1c')[0]
             if r < rend:
                 return 'break'  
             
             block_finished = False
             # Return
-            if evt.keysym == 'Return': 
-                app = Scripting.root_node
+            if event.keysym == 'Return': 
+                def remove_line_continuation(code):
+                    rstrip_code = code.rstrip()
+                    if rstrip_code[-1] == "\\":
+                        return rstrip_code[:-1]
+                    else:
+                        return code
+
+                def translate_code_list(code_list):
+                    translate = root_node.lang_center.wavesynscript.extra_modes.translate
+                    for index, line in enumerate(code_list):
+                        try:
+                            code_list[index] = translate(line)[0]
+                        except TypeError:
+                            pass
+
                 code = self.text.get(f'{r}.4', f'{r}.end')
                 self.__history.put(code)
                 try:
                     stripped_code = code.strip()
+                    if stripped_code == '':
+                        # A blank line ends a block.
+                        translate_code_list(code_list)
+                        code = '\n'.join(code_list)
+                        del code_list[:]
+                        block_finished = True
 
-                    try: # Code is in one mode of WaveSynScript
-                        self.root_node.lang_center.wavesynscript.extra_modes.run(code)
+                    stripped_code = code.strip()
+                    first_sym, last_sym = stripped_code[0], stripped_code[-1]
+                    if stripped_code == '':
+                        # Nothing meaningful input.
+                        self.prompt_symbol   = '>>> '
+                        self.update_content(tag='', content='\n') 
+                    elif code_list or \
+                                last_sym in (':', '\\') or \
+                                (first_sym in ('@',) and not block_finished):
+                        # A new block, decorated func/class and multiline being created.
+                        # Store the lines of code in code_list,
+                        # until a blank line appears. 
+                        code = remove_line_continuation(code)
+                        # Remove the line continuation if it exists.
+                        # We can still know whether line continuation exists in the original code
+                        # by reading the last_sym variable.
+                        if line_continuation[0]:
+                            # The last line ends up with a line continuation.
+                            # Join the current line with the last line, instead of 
+                            # making a new line.
+                            code_list[-1] += code
+                        else:
+                            code_list.append(code)
+                        line_continuation[0] = last_sym == "\\"
+                        self.prompt_symbol   = '... '
+                        self.update_content(tag='', content='\n')
+                    else:
+                        # One-line code, exec/eval immediately.
                         self.prompt_symbol   = '>>> '
                         self.update_content(tag='', content='\n')
-                        return 'break'
-                    except TypeError: # Code is normal Python code.
-                        if stripped_code == '':
-                            # A blank line ends a block.
-                            code = '\n'.join(code_list)
-                            del code_list[:]
-                            block_finished = True
-                        stripped_code = code.strip()
-                        if stripped_code == '':
-                            self.prompt_symbol   = '>>> '
-                            self.update_content(tag='', content='\n') 
-                        elif code_list or \
-                                 stripped_code[-1] in (':', '\\') or \
-                                 (stripped_code[0] in ('@',) and not block_finished):
-                            try:
-                                mode_code = self.root_node.lang_center.wavesynscript.extra_modes.translate(code.lstrip())
-                                code = _get_leading_blanks(code) + mode_code
-                            except TypeError:
-                                pass
-                            code_list.append(code)
-                            self.prompt_symbol   = '... '
-                            self.update_content(tag='', content='\n')
-                        else:
-                            self.prompt_symbol   = '>>> '
-                            self.update_content(tag='', content='\n')
-                            ret = app.lang_center.wavesynscript.execute(code)
-                            if ret is not None:
-                                repr_ret = repr(ret)
-                                maxlen = 1000
-                                if len(repr_ret) > maxlen:
-                                    repr_ret = f'{repr_ret[:maxlen-10]}\n\n...\n\n{repr_ret[-10:]}'
-                                self.update_content(tag='RETVAL', content=f'{repr_ret}\n', extras={'obj':ret})    
+                        try:
+                            code = root_node.lang_center.wavesynscript.extra_modes.translate(code, verbose=True)[0]
+                        except TypeError:
+                            pass
+                        ret = root_node.lang_center.wavesynscript.execute(code)
+                        if ret is not None:
+                            repr_ret = repr(ret)
+                            maxlen = 1000
+                            if len(repr_ret) > maxlen:
+                                repr_ret = f'{repr_ret[:maxlen-10]}\n\n...\n\n{repr_ret[-10:]}'
+                            self.update_content(tag='RETVAL', content=f'{repr_ret}\n', extras={'obj':ret})    
                 finally:
                     self.text.mark_set('insert', 'end')
                     self.text.see('end')
                     return 'break'
-                    # Do Not append anything below this line in this function, 
-                    # because the return command is already executed. 
+                    #! Do Not append anything below this line in this function, 
+                    #  because the return "break" statement is already executed. 
 
                 
     def get_cursor_pos(self, mark='insert'): 

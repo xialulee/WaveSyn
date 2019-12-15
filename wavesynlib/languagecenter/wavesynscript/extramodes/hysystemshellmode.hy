@@ -15,6 +15,13 @@
 
 
 
+(defn -get-leading-blanks [s]
+    (setv t (.lstrip s) ) 
+    (setv d (- (len s) (len t) ) ) 
+    (cut s 0 d) )
+
+
+
 (defclass SystemShell [ModelNode BaseMode]
     (setv -MODE-PREFIX "#M!") 
     (setv -PREFIX-ARG-PATTERN (re.compile
@@ -41,7 +48,7 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
             (.decode stderr -encoding "ignore") ) ) 
         
     (defn test [self code]
-        (if (and code (.startswith code self.-MODE-PREFIX) ) 
+        (if (.startswith (.lstrip code) self.-MODE-PREFIX) 
             self.info
         #_else
             False) ) 
@@ -85,12 +92,31 @@ r"(?P<exec_mode>[stn]*)      # s for storage; t for threading; n for not display
             (assoc arg-dict "display" False) )
         arg-dict) 
 
-    (defn translate [self code]
+    (defn translate [self code &optional verbose]
+        (setv leading-blanks (-get-leading-blanks code) )
+        (call= code .lstrip)
         (setv arg-dict (.-arg-parse self code) ) 
-        (setv arg-str (Scripting.convert-args-to-str #** arg-dict) )
-        f"{self.node-path}.run({arg-str})")
+        (setv arg-str    (Scripting.convert-args-to-str #** arg-dict) )
+        (setv hy-arg-str (Scripting.hy-convert-args-to-str #** arg-dict) )
+        (setv result (,
+            f"{leading-blanks}{self.node-path}.run({arg-str})" 
+            f"{leading-blanks}(.run {self.hy-node-path} {hy-arg-str})") ) 
+        (when verbose
+            (setv write self.root-node.stream-manager.write) 
+            (setv lang-index 
+                (if (= self.root-node.lang-center.wavesynscript.display-language "python") 
+                    0
+                #_else
+                    1) )
+            (write "The translated code is given as follows:\n" "TIP")
+            (write f"{(get result lang-index)}\n" "HISTORY")
+            (when (.get arg-dict "store" "")
+                (write f"'store=True' indicating that the contents of stdout & stderr are stored in
+{self.node-path}.result\n" "TIP") ) )
+        result)
 
-    (defn translate-and-run [self code]
+    (defn execute [self code]
+        (call= code .lstrip)
         (try 
             (setv arg-dict (.-arg-parse self code) ) 
         (except [err SyntaxError]

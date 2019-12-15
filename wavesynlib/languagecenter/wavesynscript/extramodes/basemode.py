@@ -40,7 +40,7 @@ class BaseMode(ABC):
 
 
     @abstractmethod
-    def translate_and_run(self, code):
+    def execute(self, code):
         pass
 
 
