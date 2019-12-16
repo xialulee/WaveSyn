@@ -431,76 +431,24 @@ class ConsoleText(ModelNode, ScrolledText):
             if r < rend:
                 return 'break'  
             
-            block_finished = False
             # Return
             if event.keysym == 'Return': 
-                def remove_line_continuation(code):
-                    rstrip_code = code.rstrip()
-                    if rstrip_code[-1] == "\\":
-                        return rstrip_code[:-1]
-                    else:
-                        return code
-
-                def translate_code_list(code_list):
-                    translate = root_node.lang_center.wavesynscript.extra_modes.translate
-                    for index, line in enumerate(code_list):
-                        try:
-                            code_list[index] = translate(line)[0]
-                        except TypeError:
-                            pass
-
                 code = self.text.get(f'{r}.4', f'{r}.end')
                 self.__history.put(code)
                 try:
-                    stripped_code = code.strip()
-                    if stripped_code == '':
-                        # A blank line ends a block.
-                        translate_code_list(code_list)
-                        code = '\n'.join(code_list)
-                        del code_list[:]
-                        block_finished = True
-
-                    stripped_code = code.strip()
-                    first_sym, last_sym = stripped_code[0], stripped_code[-1]
-                    if stripped_code == '':
-                        # Nothing meaningful input.
-                        self.prompt_symbol   = '>>> '
-                        self.update_content(tag='', content='\n') 
-                    elif code_list or \
-                                last_sym in (':', '\\') or \
-                                (first_sym in ('@',) and not block_finished):
-                        # A new block, decorated func/class and multiline being created.
-                        # Store the lines of code in code_list,
-                        # until a blank line appears. 
-                        code = remove_line_continuation(code)
-                        # Remove the line continuation if it exists.
-                        # We can still know whether line continuation exists in the original code
-                        # by reading the last_sym variable.
-                        if line_continuation[0]:
-                            # The last line ends up with a line continuation.
-                            # Join the current line with the last line, instead of 
-                            # making a new line.
-                            code_list[-1] += code
-                        else:
-                            code_list.append(code)
-                        line_continuation[0] = last_sym == "\\"
-                        self.prompt_symbol   = '... '
-                        self.update_content(tag='', content='\n')
-                    else:
-                        # One-line code, exec/eval immediately.
-                        self.prompt_symbol   = '>>> '
-                        self.update_content(tag='', content='\n')
-                        try:
-                            code = root_node.lang_center.wavesynscript.extra_modes.translate(code, verbose=True)[0]
-                        except TypeError:
-                            pass
-                        ret = root_node.lang_center.wavesynscript.execute(code)
-                        if ret is not None:
-                            repr_ret = repr(ret)
-                            maxlen = 1000
-                            if len(repr_ret) > maxlen:
-                                repr_ret = f'{repr_ret[:maxlen-10]}\n\n...\n\n{repr_ret[-10:]}'
-                            self.update_content(tag='RETVAL', content=f'{repr_ret}\n', extras={'obj':ret})    
+                    status, funcobj = root_node.lang_center.wavesynscript.feed(code)
+                    if status == "APPEND":
+                        self.prompt_symbol = "... "
+                    elif status == "EXECUTE":
+                        self.prompt_symbol = ">>> "
+                    self.update_content(tag="", content="\n")
+                    ret = funcobj()
+                    if ret is not None:
+                        repr_ret = repr(ret)
+                        maxlen = 1000
+                        if len(repr_ret) > maxlen:
+                            repr_ret = f'{repr_ret[:maxlen-10]}\n\n...\n\n{repr_ret[-10:]}'
+                        self.update_content(tag='RETVAL', content=f'{repr_ret}\n', extras={'obj':ret})    
                 finally:
                     self.text.mark_set('insert', 'end')
                     self.text.see('end')

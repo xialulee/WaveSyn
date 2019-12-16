@@ -25,8 +25,13 @@
 (defclass SystemShell [ModelNode BaseMode]
     (setv -MODE-PREFIX "#M!") 
     (setv -PREFIX-ARG-PATTERN (re.compile
-r"(?P<exec_mode>[stnf]*)      # s for storage; t for threading; n for not displaying.
-(?:\((?P<stdin_var>.*)\))?  # the var name of which the content will be written into stdin."
+r"(?P<exec_mode>[stnf]*)      
+# s for storage; 
+# t for threading; 
+# n for not displaying;
+# f for using f-str as command.
+(?:\((?P<stdin_var>.*)\))?  
+# the var name of which the content will be written into stdin."
         re.VERBOSE) )
     
     #@(classmethod
