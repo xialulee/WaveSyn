@@ -12,7 +12,7 @@ import locale
 
 from wavesynlib.status import busy_doing
 
-from wavesynlib.languagecenter.wavesynscript import (
+from . import (
     ModelNode, Constants, Scripting)
 from .pattern import detect_q3str
 from .extramodes.modelnode import ExtraModesNode

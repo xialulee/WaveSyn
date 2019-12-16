@@ -32,6 +32,7 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately, FunctionChain
 from wavesynlib.languagecenter import templates
 from wavesynlib.status import busy_doing
+from .candidatelist import CandidateList
 
 
 
@@ -142,6 +143,9 @@ class ConsoleText(ModelNode, ScrolledText):
         # should use func chain
         self.__encounter_func_callback = FunctionChain()
 
+        # A small pop window for displaying auto completion candidates.
+        self.candidate_list = CandidateList()
+
 
     def on_connect(self):
         self.__shell = shell = self.root_node.lang_center.wavesynscript.interactive_shell
@@ -224,6 +228,33 @@ class ConsoleText(ModelNode, ScrolledText):
         else:
             if cs:
                 self.__encounter_func_callback(cs)
+
+
+    def _on_launch_autocomplete(self):
+        r = self.get_cursor_pos('insert')[0]
+        script = jedi.api.Interpreter(
+            self.text.get(f'{r}.4', 'end-1c'), 
+            [Scripting.namespaces['locals'], 
+                Scripting.namespaces['globals']])
+
+        if len(script.completions())==0:
+            return 
+
+        if len(script.completions())==1:
+            cstr = script.completions()[0].complete
+            self.text.insert('end', cstr)
+            return 
+
+        self.candidate_list.launch(script.completions())
+
+
+    def _on_goto_line_start(self):
+        text_widget = self.text
+        r = self.get_cursor_pos()[0]
+        r_0, r_4 = f"{r}.0", f"{r}.4"
+        leading = text_widget.get(r_0, r_4)
+        new_pos = r_4 if leading in ("... ", ">>> ") else r_0
+        text_widget.mark_set("insert", new_pos)
             
 
     def on_key_press(self, event, 
@@ -255,118 +286,13 @@ class ConsoleText(ModelNode, ScrolledText):
             return 'break'     
         # End Support History
             
-            
-        # Begin: Tab key for auto complete
         if event.keysym == 'Tab':
-            # Using call_immediately to make an independent namespace, which
-            # prevents the contamination of namespace.
-            @call_immediately
-            def do():
-                r = self.get_cursor_pos('insert')[0]
-                script = jedi.api.Interpreter(
-                    self.text.get(f'{r}.4', 'end-1c'), 
-                    [Scripting.namespaces['locals'], 
-                     Scripting.namespaces['globals']])
-    
-                if len(script.completions())==0:
-                    return 'break'
-    
-                if len(script.completions())==1:
-                    cstr = script.completions()[0].complete
-                    self.text.insert('end', cstr)
-                    return 'break'
-                
-                acw = Toplevel(self.text)            
-                acw.wm_overrideredirect(1)
-                acw.wm_attributes('-topmost', True)
-                
-                seltext = Label(acw, anchor='w', justify='left')
-                seltext.pack(expand='yes', fill='x')                 
-                                
-                namelist = ScrolledList(acw)
-                namelist.pack(expand='yes', fill='both')
-                namelist.list_config(selectmode='single')
-                
-                x, y = self.text.bbox('insert')[:2]
-                x += self.text.winfo_rootx()
-                y += self.text.winfo_rooty()
-                # y+h is the position below the current line.
-                acw.geometry(f'+{x}+{y}') 
-                namelist.list.focus_set()
-                
-                def on_exit(event):
-                    acw.destroy()
-                
-                acw.bind('<FocusOut>', on_exit)   
-                namelist.list.bind('<Escape>', on_exit)
-                
-                def on_updown(event, direction):
-                    cursel = int(namelist.current_selection[0])
-                    newsel = cursel + direction
-                    if not (0<= newsel < namelist.length):
-                        return 'break'
-                    namelist.selection_clear(cursel)
-                    namelist.selection_set(newsel)
-                    namelist.see(newsel)
-                    return 'break'
-                    
-                namelist.list.bind('<Down>',      lambda event:on_updown(event,  1))
-                namelist.list.bind('<Tab>',       lambda event:on_updown(event,  1))
-                namelist.list.bind('<Up>',        lambda event:on_updown(event, -1))
-                namelist.list.bind('<Shift-Tab>', lambda event:on_updown(event, -1))
-                                
-                for completion in script.completions():
-                    namelist.append(completion.name)
-                    
-                # init
-                namelist.selection_set(0)
-                
-                def on_select(event):
-                    cursel = int(namelist.current_selection[0])
-                    cstr = script.completions()[cursel].complete
-                    self.text.insert('end', cstr)
-                    on_exit(None)
-                    
-                namelist.list.bind('<Return>',          on_select)
-                namelist.list.bind('<ButtonRelease-1>', on_select)
-                
-                keyseq = ['']
-                def on_key_press(event):
-                    if (event.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_MODIFIERS.value) and \
-                        (event.keysym not in self.root_node.lang_center.wavesynscript.constants.KEYSYM_CURSORKEYS.value):
-                        if event.keysym=='BackSpace':
-                            keyseq[0] = keyseq[0][:-1]
-                        else:
-                            keyseq[0] += event.keysym
-                        seltext['text'] = keyseq[0]
-                        for idx, completion in enumerate(script.completions()):
-                            if completion.complete.startswith(keyseq[0]):
-                                cursel = int(namelist.current_selection[0])
-                                namelist.selection_clear(cursel)
-                                namelist.selection_set(idx)
-                                namelist.see(idx)
-                                return
-                        on_exit(None)
-                    else:
-                        return
-                namelist.list.bind('<KeyPress>', on_key_press)
-                # No more key bindings hereafter. 
+            self._on_launch_autocomplete()
             return 'break'
-        # End
             
-            
-        # Begin control the cursor when HOME key pressed.
         if event.keysym in ('KP_Home', 'Home'):
-            r, c = self.get_cursor_pos()
-            leading = self.text.get(f'{r}.0', f'{r}.4')
-            if leading in ('... ', '>>> '):
-                # The head position of a line is after the prompt. 
-                self.text.mark_set('insert', f'{r}.4')
-            else:
-                self.text.mark_set('insert', f'{r}.0')
+            self._on_goto_line_start()
             return 'break'
-        # End
-            
 
         # Using keycode is not a good practice here, because for the same key,
         # the keycode may vary on different machines and operating systems.

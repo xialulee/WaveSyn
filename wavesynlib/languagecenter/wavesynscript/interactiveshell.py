@@ -1,5 +1,5 @@
 import re
-from wavesynlib.languagecenter.wavesynscript import ModelNode
+from . import ModelNode
 from .pattern import detect_q3str
 
 
