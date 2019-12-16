@@ -4,9 +4,55 @@ from .pattern import detect_q3str
 
 
 
+class History(ModelNode):
+    '''Class for supporting shell history.'''
+    def __init__(self, max_records=50):
+        super().__init__()
+        self.__max_records = max_records
+        self.__history_list = ['']
+        self.__search_list = None
+        self.__cursor = 0
+        
+        
+    def get(self, direction):
+        '''direction...'''
+        direction = 1 if direction > 0 else -1
+        new_cursor = self.__cursor + direction
+        # Always return a string for this function
+        if 0<=new_cursor<=len(self.__search_list):
+            self.__cursor = new_cursor
+            return self.__search_list[-new_cursor]        
+        else:
+            return self.__search_list[0]
+
+            
+    def put(self, code):
+        '''Append a line of code to the history list.'''
+        self.__history_list.append(code)
+        if len(self.__history_list) > self.__max_records + 1:
+            del self.__history_list[1]
+            
+            
+    def search(self, code):
+        if code:
+            self.__search_list = [code]
+            for line in self.__history_list:
+                if code == line[:len(code)]:
+                    self.__search_list.append(line)
+        else:
+            self.__search_list = self.__history_list            
+            
+            
+    def reset_cursor(self):
+        self.__search_list = None
+        self.__cursor = 0
+
+
+
 class InteractiveShell(ModelNode):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.history = History()
         self.__buffer = []
         self.__prev_line_continuation = False
         self.__in_q3_str = None

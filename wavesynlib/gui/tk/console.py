@@ -94,52 +94,6 @@ def make_menu(win, menu, json=False):
     win.config(menu=top)
     
     
-    
-class History:
-    '''Class for supporting console history.'''
-    def __init__(self, max_records=50):
-        self.__max_records = max_records
-        self.__history_list = ['']
-        self.__search_list = None
-        self.__cursor = 0
-        
-        
-    def get(self, direction):
-        '''direction...'''
-        direction = 1 if direction > 0 else -1
-        new_cursor = self.__cursor + direction
-
-        # Always return a string for this function
-        if 0<=new_cursor<=len(self.__search_list):
-            self.__cursor = new_cursor
-            return self.__search_list[-new_cursor]        
-        else:
-            return self.__search_list[0]
-
-        
-            
-    def put(self, code):
-        '''Append a line of code to the history list.'''
-        self.__history_list.append(code)
-        if len(self.__history_list) > self.__max_records + 1:
-            del self.__history_list[1]
-            
-            
-    def search(self, code):
-        if code:
-            self.__search_list = [code]
-            for line in self.__history_list:
-                if code == line[:len(code)]:
-                    self.__search_list.append(line)
-        else:
-            self.__search_list = self.__history_list            
-            
-            
-    def reset_cursor(self):
-        self.__search_list = None
-        self.__cursor = 0
-        
-        
 
 class KeyEventSim:
     def __init__(self, keysym):
@@ -184,10 +138,14 @@ class ConsoleText(ModelNode, ScrolledText):
         self.context_use_ps1    = '>>> '
                                       
         self.prompt_symbol = '>>> '  
-        self.__history = History()
         
         # should use func chain
         self.__encounter_func_callback = FunctionChain()
+
+
+    def on_connect(self):
+        self.__shell = shell = self.root_node.lang_center.wavesynscript.interactive_shell
+        self.__history = shell.history
         
         
     def __insert_hook(self, index, chars, tags=None):
@@ -267,13 +225,11 @@ class ConsoleText(ModelNode, ScrolledText):
             if cs:
                 self.__encounter_func_callback(cs)
             
-        
 
     def on_key_press(self, event, 
             code_list=[], 
             init_history=[True],
             line_continuation=[False]):     
-        root_node = self.root_node
         # Begin Support History
         if event.keysym not in ('Up', 'Down'):
             init_history[0] = True
@@ -436,7 +392,7 @@ class ConsoleText(ModelNode, ScrolledText):
                 code = self.text.get(f'{r}.4', f'{r}.end')
                 self.__history.put(code)
                 try:
-                    status, funcobj = root_node.lang_center.wavesynscript.interactive_shell.feed(code)
+                    status, funcobj = self.__shell.feed(code)
                     if status == "APPEND":
                         self.prompt_symbol = "... "
                     elif status == "EXECUTE":
