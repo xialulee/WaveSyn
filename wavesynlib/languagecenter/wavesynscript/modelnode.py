@@ -4,6 +4,7 @@ Created on Sat Aug 27 23:09:18 2016
 
 @author: Feng-cong Li
 """
+import re
 import sys
 import traceback
 import subprocess
@@ -13,6 +14,7 @@ from wavesynlib.status import busy_doing
 
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, Constants, Scripting)
+from .pattern import detect_q3str
 from .extramodes.modelnode import ExtraModesNode
 
 
@@ -34,6 +36,7 @@ class WaveSynScriptNode(ModelNode):
         self.__display_language = "python"
         self.__code_list = []
         self.__prev_line_continuation = False
+        self.__in_q3_str = None
 
 
     @property
@@ -80,7 +83,21 @@ class WaveSynScriptNode(ModelNode):
             # Nothing meaningful input.
             return "EXECUTE", do_nothing
         first_sym, last_sym = stripped_code[0], stripped_code[-1]
-        if code_list or \
+        # To-Do: use ":=" in elif clause when updated to Python 3.8.
+        match_q3, pattern = detect_q3str(code)[:2]
+        if self.__in_q3_str:
+            # A q3 (''' or """) string is started before and not closed yet.
+            code_list[-1] = f"{code_list[-1]}\n{code}"
+            match = re.search(self.__in_q3_str, code_list[-1])
+            if match and match["closed"]:
+                self.__in_q3_str = None
+            return "APPEND", do_nothing
+        elif match_q3 and not match_q3['closed']:
+            # The current line started a not-closed q3 string.
+            self.__in_q3_str = pattern
+            code_list.append(code)
+            return "APPEND", do_nothing
+        elif code_list or \
                     last_sym in (":", "\\") or \
                     (first_sym in ("@",) and not block_finished):
             # A new block, decorated func/class and multiline being created.
