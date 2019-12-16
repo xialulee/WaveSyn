@@ -16,15 +16,7 @@ from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, Constants, Scripting)
 from .pattern import detect_q3str
 from .extramodes.modelnode import ExtraModesNode
-
-
-
-def _remove_line_continuation(code):
-    rstrip_code = code.rstrip()
-    if rstrip_code.endswith("\\"):
-        return rstrip_code[:-1], True
-    else:
-        return code, False
+from .interactiveshell import InteractiveShell
 
 
 
@@ -34,9 +26,7 @@ class WaveSynScriptNode(ModelNode):
         self.constants = Constants
         self.extra_modes = ExtraModesNode()
         self.__display_language = "python"
-        self.__code_list = []
-        self.__prev_line_continuation = False
-        self.__in_q3_str = None
+        self.interactive_shell = InteractiveShell()
 
 
     @property
@@ -55,77 +45,22 @@ class WaveSynScriptNode(ModelNode):
             raise ValueError(f"Language {language} not supported.")
 
 
-    def _translate_code_list(self, code_list=None):
-        if code_list is None:
-            code_list = self.__code_list
-        translate = self.extra_modes.translate
-        for index, line in enumerate(code_list):
-            try:
-                code_list[index] = translate(line)[0]
-            except TypeError:
-                pass
-
-
-    def feed(self, code):
-        def do_nothing():
-            pass
-        code_list = self.__code_list
-        block_finished = False
-        stripped_code = code.strip()
-        if not stripped_code:
-            # A blank line ends a block.
-            self._translate_code_list()
-            code = "\n".join(code_list)
-            del code_list[:]
-            block_finished = True
-        stripped_code = code.strip()
-        if not stripped_code:
-            # Nothing meaningful input.
-            return "EXECUTE", do_nothing
-        first_sym, last_sym = stripped_code[0], stripped_code[-1]
-        # To-Do: use ":=" in elif clause when updated to Python 3.8.
-        match_q3, pattern = detect_q3str(code)[:2]
-        if self.__in_q3_str:
-            # A q3 (''' or """) string is started before and not closed yet.
-            code_list[-1] = f"{code_list[-1]}\n{code}"
-            match = re.search(self.__in_q3_str, code_list[-1])
-            if match and match["closed"]:
-                self.__in_q3_str = None
-            return "APPEND", do_nothing
-        elif match_q3 and not match_q3['closed']:
-            # The current line started a not-closed q3 string.
-            self.__in_q3_str = pattern
-            code_list.append(code)
-            return "APPEND", do_nothing
-        elif code_list or \
-                    last_sym in (":", "\\") or \
-                    (first_sym in ("@",) and not block_finished):
-            # A new block, decorated func/class and multiline being created.
-            # Store the lines of code in self.__code_list,
-            # until a blank line appears.
-            code = _remove_line_continuation(code)[0]
-            # Remove the line continuation if it exists.
-            # We can still know wheter line continuation exists in the original code
-            # by reading the last_sym variable.
-            if self.__prev_line_continuation:
-                # The previous line ends up with a line continuation.
-                # Join the current line with the previous line, instead of
-                # making a new line.
-                code_list[-1] = f"{code_list[-1]}{code}"
-            else:
-                code_list.append(code)
-            self.__prev_line_continuation = last_sym == "\\"
-            return "APPEND", do_nothing
+    @staticmethod
+    def _remove_line_continuation(code):
+        rstrip_code = code.rstrip()
+        if rstrip_code.endswith("\\"):
+            return rstrip_code[:-1], True
         else:
-            # One-line code
-            def execute():
-                nonlocal code
-                try:
-                    code = self.extra_modes.translate(code, verbose=True)[0]
-                except TypeError:
-                    pass
-                return self.execute(code)
-            return "EXECUTE", execute
+            return code, False
+
+
+    def _translate_buffer(self, buffer):
+        translate = self.extra_modes.translate
+        for index, line in enumerate(buffer):
+            try:
+                buffer[index] = translate(line)[0]
+            except SyntaxError:
+                pass
 
 
     def eval(self, expr):

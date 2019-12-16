@@ -21,7 +21,7 @@ class ExtraModesNode(ModelNode):
         for mode in self.__modes:
             if mode.test(code):
                 return mode
-        raise TypeError('The mode of the code is unrecognizable.')
+        raise SyntaxError('The mode of the code is unrecognizable.')
 
 
     def translate(self, code, verbose=False):

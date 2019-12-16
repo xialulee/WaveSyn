@@ -436,7 +436,7 @@ class ConsoleText(ModelNode, ScrolledText):
                 code = self.text.get(f'{r}.4', f'{r}.end')
                 self.__history.put(code)
                 try:
-                    status, funcobj = root_node.lang_center.wavesynscript.feed(code)
+                    status, funcobj = root_node.lang_center.wavesynscript.interactive_shell.feed(code)
                     if status == "APPEND":
                         self.prompt_symbol = "... "
                     elif status == "EXECUTE":
