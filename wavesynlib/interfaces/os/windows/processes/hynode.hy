@@ -17,11 +17,11 @@
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs))
 
-    #@(Scripting.printable
+    #@(Scripting.wavesynscript_api
     (defn get-pid-from-hwnd [self pid]
         (get-pid-from-hwnd pid) ) )
 
-    #@(Scripting.printable
+    #@(Scripting.wavesynscript_api
     (defn get-prop-from-pid [self prop pid]
         (setv wmi (. self root-node interfaces os windows wmi) ) 
         (setv result (
@@ -34,17 +34,17 @@
             :output-format "python") ) 
         (. result [0] [prop]) ) )
 
-    #@(Scripting.printable
+    #@(Scripting.wavesynscript_api
     (defn get-prop-from-hwnd [self prop hwnd]
         (setv pid (get-pid-from-hwnd hwnd))
         (.get-prop-from-pid self prop pid) ))
 
-    #@(Scripting.printable
+    #@(Scripting.wavesynscript_api
     (defn get-prop-from-foreground [self prop]
         (setv hwnd (.foreground self.root-node.interfaces.os.windows.window-handle-getter) ) 
         (.get-prop-from-hwnd self prop hwnd) ))
         
-    #@(Scripting.printable
+    #@(Scripting.wavesynscript_api
     (defn get-execpath-from-pid [self pid]
 "Get the executable path of the process specified by pid.
     pid (int): The PID of the process.
@@ -52,7 +52,7 @@
 Return Value (Path): The path of the executable."
         (.get-prop-from-pid self "ExecutablePath" pid) ))
 
-    #@(Scripting.printable
+    #@(Scripting.wavesynscript_api
     (defn get-execpath-from-hwnd [self hwnd]
 "Get the executable path of the window specified by hwnd.
     hwnd (int): The handle of the window.
@@ -60,7 +60,7 @@ Return Value (Path): The path of the executable."
 Return Value (Path): The path of the executable."
         (.get-prop-from-hwnd self "ExecutablePath", hwnd) ))
         
-    #@(Scripting.printable
+    #@(Scripting.wavesynscript_api
     (defn get-execpath-from-foreground [self]
 "Get the executable path of the foreground window.
 

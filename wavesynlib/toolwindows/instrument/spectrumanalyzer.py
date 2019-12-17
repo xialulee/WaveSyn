@@ -129,7 +129,7 @@ dict(
         figure.plot_function = plot_function
         
     
-    @Scripting.printable            
+    @Scripting.wavesynscript_api            
     def connect(self, name):
         # To Do: Load driver dialog.
         self.__driver = driver = RigolDSA1030Driver(name)
@@ -144,7 +144,7 @@ dict(
         self.connect(name)
         
     
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def refresh(self):
         # To Do: Design a driver model for supporting different SAs.
         driver = self.__driver

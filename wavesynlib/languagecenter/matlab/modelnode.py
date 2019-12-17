@@ -14,31 +14,31 @@ class MatlabServerNode(ModelNode):
         super(MatlabServerNode, self).__init__(*args, **kwargs)
         self.__server   = None
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def connectServer(self):
         if self.__server is None:
             self.__server   = matlabclient.MatlabCOMServer()
             
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def releaseServer(self):
         self.__server.release()
         self.__server   = None
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def getVar(self, name, globalVar=False):
         if globalVar:
             return self.__server.global_namespace[name]
         else:
             return self.__server.base_namespace[name]
             
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def setVar(self, name, value, globalVar=False):
         if globalVar:
             self.__server.global_namespace[name]    = value
         else:
             self.__server.base_namespace[name]      = value
             
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def mupadSymToScipy(self, symName):
         if isinstance(symName, str):
             tree, var   = self.__server.getMuPadExprTree(symName)

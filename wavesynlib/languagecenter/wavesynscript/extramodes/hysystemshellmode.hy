@@ -58,7 +58,7 @@ r"(?P<exec_mode>[stnf]*)
         #_else
             False) ) 
             
-    #@(Scripting.printable 
+    #@(Scripting.wavesynscript_api 
     (defn run [self command &optional [display True] [input None] [store False] [thread False]]
         (comment "To-Do:
                 Support store stdout & stderr;

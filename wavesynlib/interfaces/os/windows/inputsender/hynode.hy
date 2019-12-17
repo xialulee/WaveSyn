@@ -43,7 +43,7 @@
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs))
         
-    #@(Scripting.printable
+    #@(Scripting.wavesynscript_api
     (defn click-repeatedly [self times &optional absolute [dx 0] [dy 0] [delay 0] [interval 0]]
         "Left click several times.
 

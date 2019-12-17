@@ -80,7 +80,7 @@ class WindowDict(NodeDict, Observable):
         return super().__delitem__(key)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def create(self, module_name, class_name):
         mod = import_module(module_name)
         return self.add(node=getattr(mod, class_name)())  

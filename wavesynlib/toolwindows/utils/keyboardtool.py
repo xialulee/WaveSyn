@@ -48,6 +48,6 @@ class KeyboardToolWindow(TkToolWindow):
         self._make_window_manager_tab()
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def enable_key(self, enable, key_name):
         disablekeys.key_stat[key_name] = enable

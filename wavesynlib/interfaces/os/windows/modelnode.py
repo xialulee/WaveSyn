@@ -78,7 +78,7 @@ provides interfaces for calling useful tools on UoW.'''
                 on_finish(retval)
                 
                 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def convert_to_uow_path(self, path:(Path, str))->str:
         '''Windows 10 supports Ubuntu subsystem named UoW. This subsystem can access
 Windows file system. For example:
@@ -113,7 +113,7 @@ class WMI(ModelNode):
         return self.__services
         
        
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def query(self, wql, output_format='original'):
         '''Launch a WQL query and return the result.
     wql: WQL string.
@@ -134,7 +134,7 @@ class WMI(ModelNode):
         return self.__wql.query(wql, output_format)
     
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def set_sink(self, sink, wql):
         self.__init_services()
         self.__wql.set_sink(sink, wql)
@@ -189,7 +189,7 @@ class Windows(ModelNode):
             class_name='XInput')
 
             
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def create_guid(self)->str:
         return str(comtypes.GUID.create_new())
     

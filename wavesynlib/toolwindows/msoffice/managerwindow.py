@@ -237,7 +237,7 @@ class OfficeController(TkToolWindow):
             office[id_].utils.update_psd_images(window=window)
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def copy_selected_path(self):
         id_, app_name, txt, is_parent = self.__get_selected()
         office = self.root_node.interfaces.msoffice
@@ -250,7 +250,7 @@ class OfficeController(TkToolWindow):
             self.copy_selected_path()
             
             
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def close(self):
         self.root_node.interfaces.msoffice.delete_observer(self.__app_observer)
         super().close()

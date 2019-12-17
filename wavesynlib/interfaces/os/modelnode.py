@@ -42,13 +42,13 @@ class TkClipboard(ModelNode):
         return self.read_image()
        
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def clear(self):
         '''Clear the clipboard.'''
         self.root_node.gui.root.clipboard_clear()
         
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def write(self, content):
         '''Put a string into the clipboard.
         
@@ -57,13 +57,13 @@ class TkClipboard(ModelNode):
         self.root_node.gui.root.clipboard_append(content)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def read(self):
         '''Read a string from the clipboard if the content of the clipboard is text.'''
         return self.root_node.gui.root.clipboard_get()
     
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def read_image(self):
         '''Get image object on clipboard.'''
         from PIL import ImageGrab
@@ -73,7 +73,7 @@ class TkClipboard(ModelNode):
         return image
     
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def read_path_list(self, sep='\n'):
         text = self.read()
         li = text.split(sep)
@@ -87,7 +87,7 @@ class TkClipboard(ModelNode):
         return ret
                 
             
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def remove_text_formatting(self):
         '''This method removes the fomatting of the clipboard's text,
 if the clipboard on this OS supports rich text format.'''
@@ -95,7 +95,7 @@ if the clipboard on this OS supports rich text format.'''
         self.write(content)
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def remove_newlines(self, insert_blanks=True):
         '''Delete the new lines or replace the new lines with blanks.
 
@@ -117,13 +117,13 @@ class TkMouse(ModelNode):
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def get_x(self):
         '''Get the x-coord of the mouse pointer.'''
         return self.root_node.gui.root.winfo_pointerx()
         
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def get_y(self):
         '''Get the y-coord of the mouse pointer.'''
         return self.root_node.gui.root.winfo_pointery()
@@ -147,7 +147,7 @@ if platform.system().lower() == 'windows':
             
 
         
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def write(self, content, html=None, table=None, code=None):
             '''Set clipboard content.
             
@@ -168,12 +168,12 @@ if platform.system().lower() == 'windows':
                 clipb.stream_to_clipboard(stream, mode=None, code=code, tee=None, null=None, html=html)
 
 
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def write_image(self, image):
             clipb.image_to_clipboard(image)
                 
                 
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def read(self, html=None, code='@'):
             '''Get the content of the clipboard.
             
@@ -188,7 +188,7 @@ if platform.system().lower() == 'windows':
                 return stream.read()
             
             
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def read_path_list(self, sep='\n'):
             try:
                 path_list = clipb.get_clipboard_file_list()
@@ -200,7 +200,7 @@ if platform.system().lower() == 'windows':
                 return super().read_path_list(sep=sep)
             
             
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def read_tables(self, strip_cells=False):
             with code_printer(False):
                 clipboard = self.root_node.lang_center.wavesynscript.constants.CLIPBOARD_HTML
@@ -208,7 +208,7 @@ if platform.system().lower() == 'windows':
             return ret
                 
             
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def to_console_qr(self):
             try:
                 import qrcode
@@ -221,7 +221,7 @@ if platform.system().lower() == 'windows':
                 {'type':'text', 'content':'The QR code of the text stored by clipboard is shown above.'}])
             
     
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def to_console_image(self):
             '''Get the image on clipboard, and display it on the console of WaveSyn.'''
             from PIL import ImageGrab
@@ -235,7 +235,7 @@ if platform.system().lower() == 'windows':
                 raise TypeError('Data in clipboard is not an image.')
                 
                 
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def to_console_file_list(self):
             '''Get the file list on the clipboard, and display it on the console of WaveSyn.'''
             self.root_node.gui.console.show_tips([
@@ -243,7 +243,7 @@ if platform.system().lower() == 'windows':
                 {'type':'file_list', 'content':clipb.get_clipboard_file_list()}])
                 
                 
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def to_console(self):
             '''Display the content of the clipboard on the console of WaveSyn.'''
             def for_text():
@@ -270,7 +270,7 @@ if platform.system().lower() == 'windows':
             return func_map.get(format_code, for_unknown_type)()             
             
             
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def convert_file_to_image(self):
             '''If the content of the clipboard is an image file,
 convert it to an image object and put this object onto the clipboard.'''
@@ -294,7 +294,7 @@ convert it to an image object and put this object onto the clipboard.'''
         }
 
               
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def set_x(self, x):
             '''Set the x-coord of the mouse pointer.
             
@@ -307,7 +307,7 @@ convert it to an image object and put this object onto the clipboard.'''
             ctypes.windll.user32.SetCursorPos(x, y)
 
             
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def set_y(self, y):
             '''Set the y-coord of the mouse pointer.
             
@@ -320,7 +320,7 @@ convert it to an image object and put this object onto the clipboard.'''
             ctypes.windll.user32.SetCursorPos(x, y)
 
             
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def click(self, button='left'):
             '''Simulate a mouse click.
             
@@ -347,7 +347,7 @@ convert it to an image object and put this object onto the clipboard.'''
             )
             
         
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def set(self, path:datatypes.ArgOpenFile, monitor_id=None):
             '''Set wallpaper.
     path: a given image which will be set as the wallpaper.
@@ -356,7 +356,7 @@ convert it to an image object and put this object onto the clipboard.'''
             self.__idw.SetWallpaper(monitor_id, path)
             
         
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def get(self, monitor_id=None):
             '''Get the path of the current wallpaper.
             
@@ -364,7 +364,7 @@ convert it to an image object and put this object onto the clipboard.'''
             return Path(self.__idw.GetWallpaper(monitor_id))
 
 
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def get_background_color(self):
             return self.__idw.GetBackgroundColor()
             
@@ -434,7 +434,7 @@ provided by the Operating System.'''
             self.windows = ModelNode(is_lazy=True, class_object=Windows)
             
     
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def win_open(self, path):
         '''Display the contents of the given directory using system file browser.
 
@@ -446,18 +446,18 @@ path: string or pathlib.Path. The path of the given directory or file.
         return func(path)
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def chdir(self, directory):
         os.chdir(directory)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def map_open(self, latitude, longitude):
         uri = f'bingmaps:?collection=point.{latitude}_{longitude}_Pin'
         webbrowser.open(uri)
 
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def correct_path_encoding(self, 
         root: (str, Path), 
         correct_encoding: str, 
@@ -497,7 +497,7 @@ Return:
         
         
     if _get_mem_percent is None:
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def get_memory_usage(self):
             func = self._obj_map['get_memory_usage']
             try:
@@ -505,26 +505,26 @@ Return:
             except NotImplementedError:
                 return 0
     else:
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def get_memory_usage(self):
             return int(_get_mem_percent())
             
             
     if _get_cpu_percent is None:
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def get_cpu_usage(self):
             return 0
     else:
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def get_cpu_usage(self):
             return int(_get_cpu_percent()) 
 
 
     if _get_battery_status is None:
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def get_battery_status(self):
             return None
     else:
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def get_battery_status(self):
             return _get_battery_status()

@@ -485,36 +485,36 @@ IP: {addr[0]}
                     self.__enable_transfer_widgets()
                     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def read_device_clipboard(self, on_finish):
         self._launch_server(command={'action':'read', 'source':'clipboard'})
         self.__on_finish = on_finish
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def pick_gallery_photo(self, on_finish):
         self._launch_server(command={'action':'read', 'source':'gallery'})
         self.__on_finish = on_finish
         
     
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def get_device_file(self, savein, on_finish):
         self.__save_file_dir = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(savein)
         self._launch_server(command={'action':'read', 'source':'storage'})
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def read_device_location(self, on_finish):
         self._launch_server(command={'action':'read', 'source':'location_sensor'})
         self.__on_finish = on_finish
         
     
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def write_device_clipboard(self):
         self._launch_server(command={'action':'write', 'source':'', 'target':'clipboard'}) 
         
     
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def send_clipboard_image_to_device(self):
         self._launch_server(command={
             'action':'write', 
@@ -523,7 +523,7 @@ IP: {addr[0]}
             'name':f'clipboard_{int(datetime.datetime.now().timestamp())}.png'})
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def send_image_to_device(self, filename):
         filename = Path(self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(filename))
         self.__send_filename = filename
@@ -534,7 +534,7 @@ IP: {addr[0]}
             'name':f'from_pc_{filename.name}'})
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def send_file_to_device(self, filename):
         filename = Path(self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(filename))
         self.__send_filename = filename
@@ -545,7 +545,7 @@ IP: {addr[0]}
             'name':f'from_pc_{filename.name}'})
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def abort(self):
         self.__abort_event.set()
     

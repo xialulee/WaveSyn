@@ -96,7 +96,7 @@ class UnrarWindow(TkToolWindow):
         self.__path = None
         
        
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def load(self, rar_file:(str, Path)): # TO DO: support io.IOBase
         self.__treeview.clear()
         rar_file = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(

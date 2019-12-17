@@ -48,7 +48,7 @@ WaveSyn components.
         return ctypes.windll.user32.GetParent(self.root.winfo_id())
 
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def get_gui_name(self):
         return 'tk'
         

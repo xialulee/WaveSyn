@@ -195,7 +195,7 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
                         self.load(self.__psd_path)
 
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def load(self, filename):
         self.__timer.active = False
         
@@ -229,7 +229,7 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
         self.__timer.active = True
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def launch_viewer(self):
         self.root_node.gadgets.display_image(self.__pil_image)
         

@@ -106,7 +106,7 @@ class Command(ModelNode):
         return ''.join(temp_list)
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def get_command_string(self):
         temp_list = []
         for item in self._command_list:
@@ -144,7 +144,7 @@ class Command(ModelNode):
         return com
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def run(self):
         with code_printer(print_=False):
             com = self.get_command_string()

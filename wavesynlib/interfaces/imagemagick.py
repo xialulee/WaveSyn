@@ -123,7 +123,7 @@ class ImageMagickNode(ModelNode):
         return cmd
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def get_info(self, path, *args):
         params = []
         for arg in args:
@@ -143,7 +143,7 @@ class ImageMagickNode(ModelNode):
         return retval
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def get_available_colorspaces(self):
         p = sp.Popen(['magick', '-list', 'colorspace'], stdout=sp.PIPE)
         retval = p.communicate()

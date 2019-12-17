@@ -23,7 +23,7 @@ class Gadgets(ModelNode):
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def launch(self, gadget, *args):
         if gadget in gadget_paths:
             gadget_path = gadget_paths[gadget]

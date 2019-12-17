@@ -34,7 +34,7 @@ class WaveSynScriptNode(ModelNode):
         return self.__display_language
 
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def set_display_language(self, language):
         language = language.lower()
         if language in ("py", "python"):

@@ -92,12 +92,12 @@ class ReplicaFinder(Observable, ModelNode):
         return m.digest()
     
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def set_block_size(self, block_size):
         self.__block_size = block_size
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def thread_run(self, path):
         self.__result = {}
         self.__timer.active = True
@@ -136,7 +136,7 @@ class ReplicaFinder(Observable, ModelNode):
             self.__dead_event.set()
             
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def stop(self):
         self.__stop_event.set()
         # self.__timer.active = False

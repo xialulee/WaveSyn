@@ -82,7 +82,7 @@ class DataFigure(ModelNode, Observable):
             self.__callback = callback
             
             
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def axvspan(self, xmin, xmax, ymin=0, ymax=1, **kwargs):
             obj = self.__ax.axvspan(xmin, xmax, ymin, ymax, **kwargs)
             self.__meta.append(
@@ -99,7 +99,7 @@ class DataFigure(ModelNode, Observable):
             self.__dataFig.update()
             
             
-        @Scripting.printable
+        @Scripting.wavesynscript_api
         def axhspan(self, ymin, ymax, xmin=0, xmax=1, **kwargs):
             obj = self.__ax.axhspan(ymin, ymax, xmin, xmax, **kwargs)
             self.__meta.append(
@@ -221,7 +221,7 @@ class DataFigure(ModelNode, Observable):
             return None
         
     
-    @Scripting.printable        
+    @Scripting.wavesynscript_api        
     def set_tick(self, name, val):
         ax          = self.axes
         meth        = self.tick_parameters[name]
@@ -242,7 +242,7 @@ class DataFigure(ModelNode, Observable):
                                       self.set_tick(name, val))
             
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def turn_grid(self, b, which='major', axis='both', **kwargs):
         b = {'on':True, 'off':False}.get(b, b)
         self.axes.grid(b, which, axis, **kwargs)
@@ -253,13 +253,13 @@ class DataFigure(ModelNode, Observable):
         self.update()
 
 
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def update(self):
         self.__canvas.draw()
         self.notify_observers()
         
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def copy_bitmap(self, dpi=300):
         from wavesynlib.interfaces.os.windows.clipboard import clipb # To Do: use interfaces.clipboard instead.
         from os import path, remove
@@ -282,7 +282,7 @@ class DataFigure(ModelNode, Observable):
             remove(filename)
             
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def set_title(self, title):
         self.axes.set_title(title)
         self.update()
@@ -294,14 +294,14 @@ class DataFigure(ModelNode, Observable):
         self.update()
         
    
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def axis(self, r):
         retval  = self.axes.axis(r)
         self.update()
         return retval
     
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def auto_scale(self):
         self.axes.autoscale()
         self.update()
@@ -599,7 +599,7 @@ The rest parameters are passed to PanedWindow.__init__.
         self.notify_observers()
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def clear(self):
         for fig in self:
             fig.clear()
@@ -624,7 +624,7 @@ The rest parameters are passed to PanedWindow.__init__.
             figure.update()
             
             
-    @Scripting.printable            
+    @Scripting.wavesynscript_api            
     def export_matlab_script(self, filename):
         with open(filename, 'w') as file:
             for figure in self:
@@ -642,7 +642,7 @@ The rest parameters are passed to PanedWindow.__init__.
                     # To do: Grid
                     
                                         
-    @Scripting.printable                    
+    @Scripting.wavesynscript_api                    
     def delete_selected_lines(self, index=None):
         if index is None:
             index = self.__list.current_selection # index is a tuple of strings.
@@ -1207,7 +1207,7 @@ class FigureWindow(TkToolWindow):
         tool_tabs.add(export_frame, text='Export')
             
 
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def plot_current_data(self):        
         self.plot(self.current_data)
 

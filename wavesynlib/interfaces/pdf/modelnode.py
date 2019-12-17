@@ -56,7 +56,7 @@ class Pages(ModelNode):
         return f'{self.parent_node.node_path}[{name}]'
     
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def write(self, filename, reverse=False):
         filename = self.root_node.gui.dialogs.constant_handler_ASK_SAVEAS_FILENAME(
             filename, 
@@ -112,7 +112,7 @@ class PDFFileList(FileList):
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def merge(self, filename):
         filename = self.root_node.gui.dialogs.constant_handler_ASK_SAVEAS_FILENAME(
             filename,

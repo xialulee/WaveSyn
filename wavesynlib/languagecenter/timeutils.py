@@ -23,7 +23,7 @@ class ActionManager(ModelNode):
         self.current_actions[id(action)] = action
         
 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def cancel(self, action_id):
         try:
             action = self.current_actions[action_id]
@@ -36,7 +36,7 @@ class ActionManager(ModelNode):
             del self.current_actions[action_id]
             
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def cancel_all(self):
         for key in self.current_actions:
             self.cancel(key)
@@ -138,7 +138,7 @@ class DoNode(ModelNode):
         timer.active = True
         
                 
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def do(self, func, iterables=None):
         self.__timer = TkTimer(widget=self.root_node.gui.root)
         root = self.root_node
@@ -160,7 +160,7 @@ class DoNode(ModelNode):
         self.__do(func, iterables)  
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def printf(self, format_, *args):
         string = format_ % args
         func = lambda: print(string)

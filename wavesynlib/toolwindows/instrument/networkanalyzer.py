@@ -76,7 +76,7 @@ dict(
         with code_printer():
             self.load(self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def load(self, filename):
         kwargs = {}
         if self.__filename:

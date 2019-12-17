@@ -596,7 +596,7 @@ class Scripting(ModelNode):
 
         
     @classmethod    
-    def printable(cls, method):
+    def wavesynscript_api(cls, method):
         def func(self, *args, **kwargs):
             if cls._print_code_flag:
                 try:

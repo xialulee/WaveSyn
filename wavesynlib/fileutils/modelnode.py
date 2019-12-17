@@ -28,7 +28,7 @@ class FileUtils(ModelNode):
         self.tar_files = ModelNode(is_lazy=True, class_object=TarFileManager)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def calc_hash(self, file:datatypes.ArgOpenFile, algorithm):
         '''\
 Calculate the hash code of a given file.

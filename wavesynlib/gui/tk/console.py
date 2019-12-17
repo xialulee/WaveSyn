@@ -582,7 +582,7 @@ class DocWindow(TkToolWindow):
         return self.__visible
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def show_window(self):
         self.tk_object.update()
         self.tk_object.deiconify()
@@ -620,7 +620,7 @@ class DebugWindow(TkToolWindow):
         return self.__visible
     
     
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def show_window(self):
         self.tk_object.update()
         self.tk_object.deiconify()
@@ -714,7 +714,7 @@ class ConsoleWindow(ModelNode):
         return self.__stdstream_text.text
     
                                                                     
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def save(self, filename): # for scripting system
         with open(filename, 'w') as f:
             f.write(self.__stdstream_text.get_text())
@@ -728,7 +728,7 @@ class ConsoleWindow(ModelNode):
             self.save(filename)
             
     
-    @Scripting.printable    
+    @Scripting.wavesynscript_api    
     def clear(self):
         self.__stdstream_text.clear()
         print('', sep='', end='')
@@ -743,7 +743,7 @@ class ConsoleWindow(ModelNode):
         return self.root_node.gui.root.wm_attributes(*args, **kwargs)  
       
      
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def set_topmost(self, b):
         tk_root = self.root_node.gui.root
         if b == 'flip':

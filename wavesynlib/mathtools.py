@@ -162,7 +162,7 @@ class AlgorithmNode(ModelNode):
             self.__algorithm.cuda_worker = self.root_node.interfaces.gpu.cuda_worker
             
     
-    @Scripting.printable       
+    @Scripting.wavesynscript_api       
     def reload_algorithm(self):
         reload(self.__meta.module)
 
@@ -191,7 +191,7 @@ class AlgorithmNode(ModelNode):
         return self.__algorithm.progress_checker
 
                     
-    @Scripting.printable # To Do: Implement run in nonblocking mode. Add a new argument: on_finished. The callable object will be called when the procudure is finished. 
+    @Scripting.wavesynscript_api # To Do: Implement run in nonblocking mode. Add a new argument: on_finished. The callable object will be called when the procudure is finished. 
     def run(self, *args, **kwargs):
         result = self.__algorithm(*args, **kwargs)
         self.data_container.current_data  = result  
@@ -214,7 +214,7 @@ class AlgorithmNode(ModelNode):
                 command(data)
 
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def thread_run(self, on_finished, progress_indicator, repeat_times, *args, **kwargs):
         from wavesynlib.toolwindows.progresswindow.dialog import Dialog
                     
@@ -264,7 +264,7 @@ class AlgorithmNode(ModelNode):
             dialog.set_text(index=0, text=f'Finished. Total time consumption: {delta_t} (s)')
             
             
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def process_run(self, on_finished, progress_indicator, repeat_times, *args, **kwargs):
         from wavesynlib.toolwindows.progresswindow.dialog import Dialog
         

@@ -29,7 +29,7 @@ class Utils(ModelNode):
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def generate_table(self, table, head=None):
         if hasattr(self.root_node.interfaces.os.clipboard, 'constant_handler_CLIPBOARD_HTML'):
             if table is self.root_node.lang_center.wavesynscript.constants.CLIPBOARD_HTML:                

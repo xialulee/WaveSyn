@@ -306,7 +306,7 @@ class SingleWindow(FigureWindow, DataContainer):
             psd_figure.plot(abs(fft.fft(current_data)), *args, **kwargs)
             
     
-    @Scripting.printable        
+    @Scripting.wavesynscript_api        
     def load_algorithm(self, module_name, class_name):
         node = AlgorithmNode(module_name, class_name)
         self.algorithms.add(node)

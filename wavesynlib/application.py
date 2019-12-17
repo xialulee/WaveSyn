@@ -436,7 +436,7 @@ and generate a dialog which helps user to input parameters.'''
 #        self.gui.root.after(100, check_command) # To Do: Use TkTimer instead of after
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def system(self, command):
         '''Call system command.
 
@@ -444,7 +444,7 @@ command: system command in string form. '''
         subprocess.call(command, shell=True)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def webbrowser_open(self, url:str):
         '''Open the given URL using the default app.
         
@@ -452,7 +452,7 @@ command: system command in string form. '''
         webbrowser.open(url)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def save_var(self, var, filename, protocol=pickle.HIGHEST_PROTOCOL):        
         from wavesynlib.languagecenter.wavesynscript import Constant
                     
@@ -485,7 +485,7 @@ command: system command in string form. '''
             pickle.dump(var, fileobj, protocol)
             
             
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def load_var(self, filename):
         filename = self.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             filename,
@@ -499,7 +499,7 @@ command: system command in string form. '''
         return ret
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def set_matplotlib_style(self, style_name=''):
         '''Set the plot style of matplotlib.
         

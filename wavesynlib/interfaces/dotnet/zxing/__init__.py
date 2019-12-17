@@ -22,7 +22,7 @@ class ZXingNET(ModelNode):
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def read(self, image):
         image = self.root_node.interfaces.os.clipboard.constant_handler_CLIPBOARD_IMAGE(image)
         # To Do: support ask open file dialog
@@ -33,7 +33,7 @@ class ZXingNET(ModelNode):
         return result.Text
         
         
-    @Scripting.printable
+    @Scripting.wavesynscript_api
     def write(self, contents, size=400, encode='utf-8'):
         writer = BarcodeWriter()
         writer.Format = BarcodeFormat.QR_CODE
