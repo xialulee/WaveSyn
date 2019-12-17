@@ -36,7 +36,7 @@ r"(?P<exec_mode>[stnf]*)
     
     #@(classmethod
     (defn get-prefix [cls]
-        (cls.-MODE-PREFIX) ) ) 
+        cls.-MODE-PREFIX ) ) 
         
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs) 
@@ -80,11 +80,7 @@ r"(?P<exec_mode>[stnf]*)
                 #M!  default;
                 #M!s store stdout & stderr;
                 #M!t run in thread.") 
-        (setv splited (.split code :maxsplit 1) ) 
-        (when (< (len splited) 2) 
-            (raise (SyntaxError "Mode prefix and code should be splited by blank.") ) ) 
-        (setv [prefix code] splited)
-        (setv prefix-args (cut prefix (len self.-MODE-PREFIX) None) )
+        (setv [prefix-args code] (.-split-code self code) )
         (setv match-obj (re.match self.-PREFIX-ARG-PATTERN prefix-args) )
         (setv stdin-var (get match-obj "stdin_var") )
         (setv exec-mode (get match-obj "exec_mode") )

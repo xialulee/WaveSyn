@@ -44,3 +44,11 @@ class BaseMode(ABC):
         pass
 
 
+    def _split_code(self, code):
+        splited = code.split(maxsplit=1)
+        if len(splited) < 2:
+            raise SyntaxError("Mode prefix and code should be splited by blank.")
+        prefix, code = splited
+        return prefix[len(self.get_prefix()):], code
+
+

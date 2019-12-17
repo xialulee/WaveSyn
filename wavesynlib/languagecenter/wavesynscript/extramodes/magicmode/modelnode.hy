@@ -3,6 +3,7 @@
     call= super-init ]])
 
 (import re)
+(import importlib)
 
 (import [wavesynlib.languagecenter.wavesynscript [
     ModelNode Scripting ScriptCode code-printer]])
@@ -43,7 +44,7 @@ r"(?P<exec_mode>[f]*)" re.VERBOSE))
 
     #@(classmethod
     (defn get-prefix [cls]
-        (cls.-MODE-PREFIX) ) ) 
+        cls.-MODE-PREFIX ) ) 
         
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs) 
@@ -58,14 +59,18 @@ r"(?P<exec_mode>[f]*)" re.VERBOSE))
             
     (defn run [self command]
         (setv [name args] (command-parse command) ) 
-        (print name args) ) 
+        (.insert args 0 name) 
+        (setv mod 
+            (importlib.import-module 
+                f".commands.{name}"
+                :package 
+                    (first (.rsplit self.--module-- 
+                        :sep "." :maxsplit 1) ) ) ) 
+        (setv main mod.main) 
+        (main self.root-node args) ) 
 
     (defn -arg-parse [self code]
-        (setv splited (.split code :maxsplit 1) ) 
-        (when (< (len splited) 2) 
-            (raise (SyntaxError "Mode prefix and code should be splited by blank.") ) ) 
-        (setv [prefix code] splited) 
-        (setv prefix-args (cut prefix (len self.-MODE-PREFIX) ) ) 
+        (setv [prefix-args code] (.-split-code self code) )
         (setv match-obj (re.match self.-PREFIX-ARG-PATTERN prefix-args) ) 
         (setv exec-mode (get match-obj "exec_mode") ) 
         (setv result {"command" code}) 
@@ -80,8 +85,18 @@ r"(?P<exec_mode>[f]*)" re.VERBOSE))
         (setv
             arg-str    (Scripting.convert-args-to-str #** arg-dict) 
             hy-arg-str (Scripting.hy-convert-args-to-str #** arg-dict) )
-        (, 
+        (setv result (, 
             f"{leading-blanks}{self.node-path}.run({arg-str})"
             f"{leading-blanks}(.run {self.hy-node-path} {hy-arg-str})") ) 
+        (when verbose
+            (setv write self.root-node.stream-manager.write) 
+            (setv lang-index
+                (if (= self.root-node.lang-center.wavesynscript.display-language "python") 
+                    0
+                #_else
+                    1) )
+            (write "The translated code is given as follows\n" "TIP") 
+            (write f"{(get result lang-index)}\n" "HISTORY") ) 
+        result) 
             
     (defn execute [self code]) )
