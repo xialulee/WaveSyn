@@ -5,11 +5,12 @@ Created on Tue Jul 17 20:38:27 2018
 @author: Feng-cong Li
 """
 import os
+import sys
 import tkinter
 from pathlib import Path
 
 from wavesynlib.widgets.tk import ScrolledTree, json_to_tk
-from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
+from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.interfaces.unrar import list_content, get_content_tree
 from wavesynlib.interfaces.unrar import unpack as unpack_rar
@@ -32,8 +33,9 @@ except hy.errors.HyCompileError:
 
 
 
-class ContentTree:
+class ContentTree(ModelNode):
     def __init__(self, *args, **kwargs):
+        super().__init__()
         self.__tree_view = tree_view = ScrolledTree(*args, **kwargs)
         tree_view.tree['columns'] = ('ratio', 'crc', 'path', 'type')
         tree_view.heading('ratio', text='Ratio')
@@ -51,11 +53,14 @@ class ContentTree:
         self.tree_view.clear()
     
     
+    @WaveSynScriptAPI(thread_safe=True, silent=True)
     def load(self, path):
         content_root = get_content_tree(list_content(path))
         content_root['Type'] = 'Directory'
         content_root['path'] = os.path.sep
-        self._add_item('Archive', content_root)
+        @self.root_node.thread_manager.main_thread_do
+        def update_treeview():
+            self._add_item('Archive', content_root)
             
         
     def _add_item(self, node_name, node, parent=''):
@@ -91,34 +96,54 @@ class UnrarWindow(TkToolWindow):
         self._make_window_manager_tab()
         
         tk_object = self.tk_object
-        self.__treeview = treeview = ContentTree(tk_object)
+        self.treeview = treeview = ContentTree(tk_object)
         treeview.tree_view.pack(expand='yes', fill='both')
         self.__path = None
         
        
     @WaveSynScriptAPI
-    def load(self, rar_file:(str, Path)): # TO DO: support io.IOBase
-        self.__treeview.clear()
+    def load(self, rar_file:(str, Path), nonblock=True): # TO DO: support io.IOBase
+        """\
+Load an rar file and display its content on the window.
+
+rar_file:(str, Path) the path of the rar file;
+nonblock: this method will return immediately if True else
+  it will wait until the load finished. 
+"""
+        self.treeview.clear()
         rar_file = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             rar_file,
             filetypes=[('Rar Files', '*.rar'), ('All Files', '*.*')])
-        
-        self.__treeview.load(rar_file)
+        if nonblock:
+            load = self.treeview.load.new_thread_run
+        else:
+            load = self.treeview.load
+        load(rar_file)
         self.__path = Path(rar_file)
         
         
     def _on_load(self):
         with code_printer():
-            self.load(rar_file=self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
+            self.load(
+                rar_file=self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME, 
+                nonblock=True)
         
         
-    def unpack(self, dir_path:(str, Path)):
+    @WaveSynScriptAPI(thread_safe=True)
+    def unpack(self, dir_path:(str, Path), verbose=True):
         dir_path = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(
             dir_path,
             initialdir=str(self.__path.parent))
-        unpack_rar(str(self.__path), dir_path)
+        stdout, stderr = unpack_rar(str(self.__path), dir_path)
+        if verbose:
+            @self.root_node.thread_manager.main_thread_do(block=False)
+            def print_message():
+                print(stdout)
+                print(stderr, file=sys.stderr)
         
         
     def _on_unpack(self):
         with code_printer():
-            self.unpack(self.root_node.lang_center.wavesynscript.constants.ASK_DIRECTORY)
+            self.unpack.new_thread_run(
+                self.root_node.lang_center.wavesynscript.constants.ASK_DIRECTORY,
+                verbose=True)

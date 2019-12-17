@@ -22,7 +22,7 @@ class TarFileManipulator(ModelNode):
     def node_path(self):
         return f'{self.parent_node.node_path}["{self.filename}"]'
         
-    @WaveSynScriptAPI
+    @WaveSynScriptAPI(thread_safe=True)
     def extract_all(self, directory):
         directory = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(
             directory, 

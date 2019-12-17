@@ -650,9 +650,13 @@ class WaveSynScriptAPI:
             self.__make_default(args[0])
         elif kwargs:
             if "thread_safe" in kwargs:
-                self.__thread_safe = True
+                self.__thread_safe = kwargs["thread_safe"]
             else:
                 self.__thread_safe = False
+            if "silent" in kwargs:
+                self.__silent = kwargs["silent"]
+            else:
+                self.__silent = False
 
 
     def __copy_original_info(self):
@@ -664,6 +668,7 @@ class WaveSynScriptAPI:
         self.__original    = original
         self.__copy_original_info()
         self.__thread_safe = False
+        self.__silent = False
 
 
     def __get__(self, obj, type=None):
