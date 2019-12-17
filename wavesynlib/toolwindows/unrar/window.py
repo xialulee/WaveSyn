@@ -9,7 +9,7 @@ import tkinter
 from pathlib import Path
 
 from wavesynlib.widgets.tk import ScrolledTree, json_to_tk
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.interfaces.unrar import list_content, get_content_tree
 from wavesynlib.interfaces.unrar import unpack as unpack_rar
@@ -96,7 +96,7 @@ class UnrarWindow(TkToolWindow):
         self.__path = None
         
        
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def load(self, rar_file:(str, Path)): # TO DO: support io.IOBase
         self.__treeview.clear()
         rar_file = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(

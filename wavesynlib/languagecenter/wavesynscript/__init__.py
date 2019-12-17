@@ -494,43 +494,6 @@ class ScriptCode:
         
      
         
-class PrintableDescriptor:
-    def __init__(self, 
-                 func, # The decorated func
-                 original # The original method without decoration.
-        ):
-        self.__func = func
-        self.__original = original # the original method without decoration.
-        self.__doc__ = func.__doc__
-        self.__name__ = func.__name__
-        
-    def __get__(self, obj, type=None):
-        class PrintableMethod:
-            def __init__(self, obj, func, original):
-                self.__original = original
-                self.__func = func
-                self.__obj = obj
-                
-                
-            def __call__(self, *args, **kwargs):
-                return self.__func(self.__obj, *args, **kwargs)
-            
-            
-            @property
-            def panel(self):
-                caller = sys._getframe(1)
-                argmap = obj.root_node.create_arg_panel_for_func(self.__original)
-                for name in argmap:
-                    argmap[name] = eval(argmap[name], caller.f_globals, caller.f_locals)
-                return self.__call__(**argmap)
-                
-        PrintableMethod.__name__ = self.__func.__name__
-        PrintableMethod.__doc__ = self.__func.__doc__            
-        m = PrintableMethod(obj, self.__func, self.__original)
-        return m
-      
-
-        
 class Scripting(ModelNode):
     _xmlrpcexport_  = []    
     
@@ -595,38 +558,126 @@ class Scripting(ModelNode):
              self.namespaces['locals'])
 
         
-    @classmethod    
-    def wavesynscript_api(cls, method):
-        def func(self, *args, **kwargs):
-            if cls._print_code_flag:
-                try:
-                    cls._print_code_flag = False # Prevent recursive.
-                    # To Do: 
-                    # if current_thread is not main_thread:
-                    #   put the node and arguments into a command slot
-                    #   and the main thread will check the command queue periodically.
-                    # This mechanism will guarentee the thread safety of wavesyn scripting system.
-                    display_language = cls.root_node.lang_center.wavesynscript.display_language
-                    expr_str = f"{self.node_path}.{method.__name__}({Scripting.convert_args_to_str(*args, **kwargs)})"
-                    if display_language == "python":
-                        display_str = expr_str
-                    elif display_language == "hy":
-                        display_str = f"(.{method.__name__} {self.hy_node_path} {cls.hy_convert_args_to_str(*args, **kwargs)})"
-                    ret = cls.root_node.lang_center.wavesynscript.display_and_eval(expr=expr_str, display=display_str)
-                finally:
-                    cls._print_code_flag = True # Restore _print_code_flag settings.
-            else:                          
-                ret = method(self, *args, **kwargs)
-            return ret
-        func.__doc__    = method.__doc__
-        func.__name__   = method.__name__
-        return PrintableDescriptor(func, method)
-    
-    
     @classmethod
     def debug_print(cls, *args, **kwargs):
         cls.root_node.gui.console.debug_window.print(*args, **kwargs)
-    
+
+
+
+class WaveSynScriptAPIMethod:
+    def __init__(self, obj, original_method, thread_safe):
+        self.__original = original_method
+        self.__name__ = original_method.__name__
+        self.__obj = obj
+        self.__thread_safe = thread_safe
+
+
+    @property
+    def original(self): return self.__original
+
+    @property
+    def obj(self): return self.__obj
+
+
+    def __call__(self, *args, **kwargs):
+        obj = self.__obj
+        root = obj.root_node
+        original = self.__original
+        name = self.__name__
+        if Scripting._print_code_flag:
+            try:
+                # Set False preventing recursive.
+                Scripting._print_code_flag = False
+                display_language = root.lang_center.wavesynscript.display_language
+                expr_str = f"{obj.node_path}.{name}({Scripting.convert_args_to_str(*args, **kwargs)})"
+                if display_language == "python":
+                    display_str = expr_str
+                elif display_language == "hy":
+                    display_str = f"(.{name} {obj.hy_node_path} {Scripting.hy_convert_args_to_str(*args, **kwargs)})"
+                ret = root.lang_center.wavesynscript.display_and_eval(expr=expr_str, display=display_str)
+            finally:
+                # Restore
+                Scripting._print_code_flag = True
+        else:
+            if self.__thread_safe:
+                ret = original(obj, *args, **kwargs)
+            else:
+                ret = root.thread_manager.main_thread_do(lambda:original(obj, *args, **kwargs))
+        return ret
+
+
+    def new_thread_run(self, *args, **kwargs):
+        if not self.__thread_safe:
+            raise TypeError("This method is not thread-safe and not supports new_thread_run.")
+        obj = self.__obj
+        root = obj.root_node
+        original = self.__original
+        name = self.__name__
+        if Scripting._print_code_flag:
+            try:
+                # Set False preventing recursive.
+                Scripting._print_code_flag = False
+                display_language = root.lang_center.wavesynscript.display_language
+                expr_str = f"{obj.node_path}.{name}.new_thread_run({Scripting.convert_args_to_str(*args, **kwargs)})"
+                if display_language == "python":
+                    display_str = expr_str
+                elif display_language == "hy":
+                    display_str = f"(.new_thread_run {obj.hy_node_path[:-1]} {name}) {Scripting.hy_convert_args_to_str(*args, **kwargs)})"
+                ret = root.lang_center.wavesynscript.display_and_eval(expr=expr_str, display=display_str)
+            finally:
+                # Restore
+                Scripting._print_code_flag = True
+        else:
+            root.thread_manager.new_thread_do(lambda:original(obj, *args, **kwargs))
+
+
+    def help(self):
+        print(self.__doc__)
+
+
+    def panel(self):
+        caller = sys._getframe(1)
+        argmap = self.__obj.root_node.create_arg_panel_for_func(self.__original)
+        for name in argmap:
+            argmap[name] = eval(argmap[name], caller.f_globals, caller.f_locals)
+            return self.__call__(**argmap)
+
+
+
+class WaveSynScriptAPI:
+    def __init__(self, *args, **kwargs):
+        if not kwargs and (len(args)==1):
+            self.__make_default(args[0])
+        elif kwargs:
+            if "thread_safe" in kwargs:
+                self.__thread_safe = True
+            else:
+                self.__thread_safe = False
+
+
+    def __copy_original_info(self):
+        self.__doc__  = self.__original.__doc__
+        self.__name__ = self.__original.__name__
+
+
+    def __make_default(self, original):
+        self.__original    = original
+        self.__copy_original_info()
+        self.__thread_safe = False
+
+
+    def __get__(self, obj, type=None):
+        method = WaveSynScriptAPIMethod(obj, self.__original, self.__thread_safe)
+        method.__name__ = self.__name__
+        method.__doc__  = self.__doc__
+        return method
+
+
+    def __call__(self, original):
+        self.__original = original
+        self.__copy_original_info()
+        return self
+
 
 
 class CodePrinter:

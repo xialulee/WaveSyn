@@ -28,7 +28,7 @@ from wavesynlib.widgets.tk import (
         CWDIndicator, ScrolledText, ScrolledList, PILImageFrame,
         SyntaxHighlighter)
 from wavesynlib.widgets.tkredirector import WidgetRedirector
-from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.utils import call_immediately, FunctionChain
 from wavesynlib.languagecenter import templates
@@ -583,7 +583,7 @@ class DocWindow(TkToolWindow):
         return self.__visible
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def show_window(self):
         self.tk_object.update()
         self.tk_object.deiconify()
@@ -621,7 +621,7 @@ class DebugWindow(TkToolWindow):
         return self.__visible
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def show_window(self):
         self.tk_object.update()
         self.tk_object.deiconify()
@@ -715,7 +715,7 @@ class ConsoleWindow(ModelNode):
         return self.__stdstream_text.text
     
                                                                     
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def save(self, filename): # for scripting system
         with open(filename, 'w') as f:
             f.write(self.__stdstream_text.get_text())
@@ -729,7 +729,7 @@ class ConsoleWindow(ModelNode):
             self.save(filename)
             
     
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def clear(self):
         self.__stdstream_text.clear()
         print('', sep='', end='')
@@ -744,7 +744,7 @@ class ConsoleWindow(ModelNode):
         return self.root_node.gui.root.wm_attributes(*args, **kwargs)  
       
      
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_topmost(self, b):
         tk_root = self.root_node.gui.root
         if b == 'flip':

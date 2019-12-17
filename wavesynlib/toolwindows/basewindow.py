@@ -7,7 +7,7 @@ Created on Sun Jan 10 16:55:14 2016
 from importlib import import_module
 
 from wavesynlib.languagecenter.wavesynscript import (
-    ModelNode, NodeDict, Scripting)
+    ModelNode, NodeDict, Scripting, WaveSynScriptAPI)
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.languagecenter.datatypes import TypeLinks
 
@@ -80,7 +80,7 @@ class WindowDict(NodeDict, Observable):
         return super().__delitem__(key)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def create(self, module_name, class_name):
         mod = import_module(module_name)
         return self.add(node=getattr(mod, class_name)())  

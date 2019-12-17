@@ -13,7 +13,7 @@ from wavesynlib.widgets.tk import Group, LabeledEntry
 from wavesynlib.widgets.classselector import ask_class_name
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.utils import set_attributes
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.mathtools import Algorithm, AlgorithmDict, AlgorithmNode, DataContainer, Expression
 
 import json
@@ -306,7 +306,7 @@ class SingleWindow(FigureWindow, DataContainer):
             psd_figure.plot(abs(fft.fft(current_data)), *args, **kwargs)
             
     
-    @Scripting.wavesynscript_api        
+    @WaveSynScriptAPI        
     def load_algorithm(self, module_name, class_name):
         node = AlgorithmNode(module_name, class_name)
         self.algorithms.add(node)

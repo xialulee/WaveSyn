@@ -22,7 +22,7 @@ import inspect
 from os.path import abspath, dirname, join
 
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.devcomm.oneasyb.spi import USBSPIConverter
 from wavesynlib.widgets.tk import Group
@@ -322,12 +322,12 @@ class USBSPIWindow(TkToolWindow, Observable):
             else:
                 self.close_device(serialno)
 
-    @Scripting.wavesynscript_api        
+    @WaveSynScriptAPI        
     def open_device(self, serial_number):
         self.notify_observers(CommandSlot(command='open', 
                                           args=(serial_number, True))) 
 
-    @Scripting.wavesynscript_api                                          
+    @WaveSynScriptAPI                                          
     def close_device(self, serial_number):
         self.notify_observers(CommandSlot(command='open', 
                                           args=(serial_number, False)))
@@ -352,7 +352,7 @@ class USBSPIWindow(TkToolWindow, Observable):
         with code_printer():
             self.configure_device(**kwargs)
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def configure_device(self, serial_number, is_master, baudrate, CPHA, CPOL, 
                          read_timeout, write_timeout):
         self.notify_observers(CommandSlot(command='config', 
@@ -370,7 +370,7 @@ class USBSPIWindow(TkToolWindow, Observable):
         with code_printer():
             self.write_bytes(serial_number=serialno, data=data_list)
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def write_bytes(self, serial_number, data):
         length = len(data)
         buf = (wintypes.BYTE * length)()

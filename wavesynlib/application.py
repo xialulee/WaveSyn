@@ -40,7 +40,7 @@ from wavesynlib.threadtools import ThreadManager
 from wavesynlib.processtools import ProcessDict
 from wavesynlib.languagecenter.utils import set_attributes, get_caller_dir
 from wavesynlib.languagecenter.designpatterns import Singleton      
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, model_tree_monitor, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode, model_tree_monitor, code_printer
 from wavesynlib.languagecenter.modelnode import LangCenterNode
 from wavesynlib.languagecenter import timeutils, datatypes
 from wavesynlib.status import busy_doing
@@ -106,6 +106,7 @@ since the instance of Application is the first node created on the model tree.
         # End load config file
         
         
+        self.thread_manager = ThreadManager()
         self.interfaces = Interfaces()
         self.stream_manager = StreamManager()
         
@@ -132,7 +133,6 @@ since the instance of Application is the first node created on the model tree.
                     class_name='FileUtils'),
                 
                 # Thread related
-                thread_manager = ThreadManager(),
                 exec_thread_lock = threading.RLock(), # should be replaced with the "ensure main thread" mechanism. 
                 # End
                 
@@ -436,7 +436,7 @@ and generate a dialog which helps user to input parameters.'''
 #        self.gui.root.after(100, check_command) # To Do: Use TkTimer instead of after
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def system(self, command):
         '''Call system command.
 
@@ -444,7 +444,7 @@ command: system command in string form. '''
         subprocess.call(command, shell=True)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI(thread_safe=True)
     def webbrowser_open(self, url:str):
         '''Open the given URL using the default app.
         
@@ -452,7 +452,7 @@ command: system command in string form. '''
         webbrowser.open(url)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def save_var(self, var, filename, protocol=pickle.HIGHEST_PROTOCOL):        
         from wavesynlib.languagecenter.wavesynscript import Constant
                     
@@ -485,7 +485,7 @@ command: system command in string form. '''
             pickle.dump(var, fileobj, protocol)
             
             
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def load_var(self, filename):
         filename = self.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
             filename,
@@ -499,7 +499,7 @@ command: system command in string form. '''
         return ret
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_matplotlib_style(self, style_name=''):
         '''Set the plot style of matplotlib.
         

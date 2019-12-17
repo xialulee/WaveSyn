@@ -7,7 +7,7 @@ Created on Sat Sep 28 00:36:34 2019
 import os
 import tarfile
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
 
 
 
@@ -22,7 +22,7 @@ class TarFileManipulator(ModelNode):
     def node_path(self):
         return f'{self.parent_node.node_path}["{self.filename}"]'
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def extract_all(self, directory):
         directory = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(
             directory, 

@@ -13,7 +13,7 @@ import locale
 from wavesynlib.status import busy_doing
 
 from . import (
-    ModelNode, Constants, Scripting)
+    ModelNode, Constants, Scripting, WaveSynScriptAPI)
 from .pattern import detect_q3str
 from .extramodes.modelnode import ExtraModesNode
 from .interactiveshell import InteractiveShell
@@ -34,7 +34,7 @@ class WaveSynScriptNode(ModelNode):
         return self.__display_language
 
 
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_display_language(self, language):
         language = language.lower()
         if language in ("py", "python"):

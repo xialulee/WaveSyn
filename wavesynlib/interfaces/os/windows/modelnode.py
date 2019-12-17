@@ -14,7 +14,7 @@ import PIL
 import pylab
 from io import BytesIO
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
 from wavesynlib.interfaces.os.windows.wmi import WQL
 from wavesynlib.interfaces.os.windows.shell.windowhandlegetter.modelnode import WindowHandleGetter
 
@@ -78,7 +78,7 @@ provides interfaces for calling useful tools on UoW.'''
                 on_finish(retval)
                 
                 
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def convert_to_uow_path(self, path:(Path, str))->str:
         '''Windows 10 supports Ubuntu subsystem named UoW. This subsystem can access
 Windows file system. For example:
@@ -113,7 +113,7 @@ class WMI(ModelNode):
         return self.__services
         
        
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def query(self, wql, output_format='original'):
         '''Launch a WQL query and return the result.
     wql: WQL string.
@@ -134,7 +134,7 @@ class WMI(ModelNode):
         return self.__wql.query(wql, output_format)
     
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_sink(self, sink, wql):
         self.__init_services()
         self.__wql.set_sink(sink, wql)
@@ -189,7 +189,7 @@ class Windows(ModelNode):
             class_name='XInput')
 
             
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def create_guid(self)->str:
         return str(comtypes.GUID.create_new())
     

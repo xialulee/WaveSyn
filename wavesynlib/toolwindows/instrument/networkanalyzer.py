@@ -13,7 +13,7 @@ import six.moves.tkinter as tk
 
 from wavesynlib.widgets.tk import json_to_tk
 from wavesynlib.toolwindows.figurewindow import FigureWindow
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 
 
 class TouchstoneViewer(FigureWindow):
@@ -76,7 +76,7 @@ dict(
         with code_printer():
             self.load(self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME)
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def load(self, filename):
         kwargs = {}
         if self.__filename:

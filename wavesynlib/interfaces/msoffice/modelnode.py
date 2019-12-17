@@ -9,7 +9,7 @@ import win32con
 from comtypes import client
 
 from wavesynlib.languagecenter.wavesynscript import (
-    Scripting, ModelNode, NodeDict, code_printer)
+    Scripting, ModelNode, WaveSynScriptAPI, NodeDict, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
 
 import copy
@@ -30,7 +30,7 @@ class ExcelUtils(ModelNode):
         self.__regex_for_addr = re.compile('([A-Z]+)([0-9]+)')
         
 
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def is_nested_iterable(self, data):
         if isinstance(data, (list, tuple)) and \
             len(data)>0 and \
@@ -40,7 +40,7 @@ class ExcelUtils(ModelNode):
             return False
             
             
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def is_ragged(self, data):
         if not self.is_nested_iterable(data):
             raise TypeError('Input data is not a nested list/tuple.')
@@ -53,7 +53,7 @@ class ExcelUtils(ModelNode):
         return False
         
 
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_variant_matrix(self, value):
         if not self.is_nested_iterable(value):
             raise TypeError('Input data is not nested list/tuple.')
@@ -98,7 +98,7 @@ class ExcelUtils(ModelNode):
         return variant
         
        
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def transpose(self, data):
         if not self.is_nested_iterable(data):
             if isinstance(data, (list, tuple)): # 1D data
@@ -115,7 +115,7 @@ class ExcelUtils(ModelNode):
         return [[data[m][n] for m in range(num_row)] for n in range(num_col)]
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def fliplr(self, data):
         if self.is_nested_iterable(data): # 2D data
             retval = copy.deepcopy(data)
@@ -131,7 +131,7 @@ class ExcelUtils(ModelNode):
                 raise TypeError('Incompatible data type.')
                 
                 
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def flipud(self, data):
         if self.is_nested_iterable(data):
             retval = copy.deepcopy(data)
@@ -141,7 +141,7 @@ class ExcelUtils(ModelNode):
             raise TypeError('Incompatible data type.')
             
             
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def replace_string(self, data, old, new):
         if self.is_nested_iterable(data): # 2D Data
             for row in data:
@@ -177,7 +177,7 @@ class ExcelUtils(ModelNode):
         return addr_x_str + addr_y_str                
                 
                 
-    @Scripting.wavesynscript_api 
+    @WaveSynScriptAPI 
     def write_range(self, data, top_left, workbook=None, sheet=None):
         if workbook is None:
             workbook = self.__com_handle.ActiveWorkbook
@@ -214,7 +214,7 @@ class ExcelUtils(ModelNode):
             return          
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def read_range(self, 
         top_left, 
         bottom_right, 
@@ -249,7 +249,7 @@ class ExcelUtils(ModelNode):
         return rng
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def browser_fill_by_id(self, driver, ids, top_left, bottom_right, 
                            workbook=None, sheet=None):
         data = self.read_range(top_left, bottom_right, workbook, sheet)
@@ -268,7 +268,7 @@ class WordUtils(ModelNode):
         super().__init__(*args, **kwargs)
         
     
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def insert_psd_image(self, filename, comment='', resize=None, window=None, range_=None):
         from psd_tools import PSDImage
         from PIL import Image
@@ -333,7 +333,7 @@ class WordUtils(ModelNode):
                 os.remove(temp.name)
                 
     
-    @Scripting.wavesynscript_api            
+    @WaveSynScriptAPI            
     def update_psd_images(self, relative_first=True, window=None):        
         psd_shapes = []
         
@@ -385,7 +385,7 @@ class WordUtils(ModelNode):
                 self.insert_psd_image(file_path, resize=resize, comment=comment, range_=rng)
                 
                 
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def adjust_mtdisplayequation_tabs(self, window=None):
         wdAlignTabCenter = 1
         wdTabLeaderSpaces = 0
@@ -435,22 +435,22 @@ class AppObject(ModelNode):
         return self.__com_handle.Caption
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def show_window(self, show=True):
         self.com_handle.Visible = show    
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def change_caption(self, new_caption):
         self.com_handle.Caption = new_caption
 
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def run_macro(self, macro_name, *args):
         self.com_handle.run(macro_name, *args)  
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def foreground_run_macro(self, macro_name, *args):
         self.set_foreground()
         with code_printer(False):
@@ -474,7 +474,7 @@ class ExcelObject(AppObject):
         return 'Excel'
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_foreground(self):    
         hwnd = self.com_handle.Hwnd
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
@@ -522,7 +522,7 @@ class WordObject(AppObject):
         self.__event_connection = connection
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_foreground(self, index=None):
         if index:        
             window = self.com_handle.Windows[index]
@@ -551,12 +551,12 @@ class WordObject(AppObject):
             window.Caption = old_caption
             
             
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def open(self, filename):
         self.com_handle.Documents.Open(filename)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def close_active_document(self):
         self.com_handle.ActiveDocument.Close()
             
@@ -658,7 +658,7 @@ class MSOffice(NodeDict, Observable):
         return object_id
         
 
-    @Scripting.wavesynscript_api        
+    @WaveSynScriptAPI        
     def get_active(self, app_name):
         app_name = self.root_node.gui.dialogs.constant_handler_ASK_LIST_ITEM(
             app_name,
@@ -669,7 +669,7 @@ class MSOffice(NodeDict, Observable):
         return self._generate_object(app_name, client.GetActiveObject)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def create(self, app_name):
         app_name = self.root_node.gui.dialogs.constant_handler_ASK_LIST_ITEM(
             app_name,
@@ -680,7 +680,7 @@ class MSOffice(NodeDict, Observable):
         return self._generate_object(app_name, client.CreateObject)
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def read_excel_clipboard(self, 
         map_func=None,
         strip_cells=False,

@@ -12,7 +12,7 @@ import tkinter as tk
 
 from wavesynlib.widgets.tk import json_to_tk
 from wavesynlib.toolwindows.figurewindow import FigureWindow
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.devcomm.instruments.visainterface import get_resource_manager
 
 
@@ -140,7 +140,7 @@ dict(
         figure.plot_function = plot_function
         
     
-    @Scripting.wavesynscript_api            
+    @WaveSynScriptAPI            
     def connect(self, name):
         # To Do: Load driver dialog.
         self.__driver = driver = RigolDS1000Driver(name)
@@ -155,7 +155,7 @@ dict(
         self.connect(name)
         
     
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def refresh(self):
         # To Do: Design a driver model for supporting different SAs.
 #        driver = self.__driver

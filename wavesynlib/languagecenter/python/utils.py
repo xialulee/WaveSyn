@@ -6,7 +6,7 @@ Created on Sat Feb  3 00:51:32 2018
 """
 from copy import deepcopy
 
-from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
+from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI
 
 
 
@@ -19,7 +19,7 @@ MSWord, MS Excel, and so on.'''
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def transpose(self, table):
         '''Transpose a table.
 Only applicable for rectangular tables.'''
@@ -34,7 +34,7 @@ Only applicable for rectangular tables.'''
         return ret
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def map(self, func, table, inplace=True):
         if not inplace:
             table = deepcopy(table)
@@ -45,14 +45,14 @@ Only applicable for rectangular tables.'''
             return table
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def from_2darray(self, array):
         '''Convert 2-D NumPy array to table, i.e., nested python lists.'''
         ret = list(array)
         return [list(item) for item in ret]
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def flatten(self, table):
         ret = table[0]
         for row in table[1:]:

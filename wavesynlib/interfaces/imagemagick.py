@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 import subprocess as sp
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
 
 
 
@@ -123,7 +123,7 @@ class ImageMagickNode(ModelNode):
         return cmd
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def get_info(self, path, *args):
         params = []
         for arg in args:
@@ -143,7 +143,7 @@ class ImageMagickNode(ModelNode):
         return retval
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def get_available_colorspaces(self):
         p = sp.Popen(['magick', '-list', 'colorspace'], stdout=sp.PIPE)
         retval = p.communicate()

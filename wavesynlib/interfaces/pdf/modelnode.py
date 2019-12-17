@@ -12,7 +12,7 @@ from six.moves import xrange
 
 from PyPDF2 import PdfFileReader, PdfFileWriter
 
-from wavesynlib.languagecenter.wavesynscript import ModelNode, FileManager, FileManipulator, FileList, Scripting
+from wavesynlib.languagecenter.wavesynscript import ModelNode, FileManager, FileManipulator, FileList, Scripting, WaveSynScriptAPI
 
 
 
@@ -56,7 +56,7 @@ class Pages(ModelNode):
         return f'{self.parent_node.node_path}[{name}]'
     
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def write(self, filename, reverse=False):
         filename = self.root_node.gui.dialogs.constant_handler_ASK_SAVEAS_FILENAME(
             filename, 
@@ -112,7 +112,7 @@ class PDFFileList(FileList):
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def merge(self, filename):
         filename = self.root_node.gui.dialogs.constant_handler_ASK_SAVEAS_FILENAME(
             filename,

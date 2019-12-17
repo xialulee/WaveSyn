@@ -23,7 +23,7 @@ import tkinter.ttk as ttk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.widgets.tk import json_to_tk, \
     ScrolledCanvas, ScrolledText, ScrolledList, LabeledEntry, PILImageFrame
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
 from wavesynlib.misc.socketutils import AbortException, InterruptHandler
 
@@ -485,36 +485,36 @@ IP: {addr[0]}
                     self.__enable_transfer_widgets()
                     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def read_device_clipboard(self, on_finish):
         self._launch_server(command={'action':'read', 'source':'clipboard'})
         self.__on_finish = on_finish
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def pick_gallery_photo(self, on_finish):
         self._launch_server(command={'action':'read', 'source':'gallery'})
         self.__on_finish = on_finish
         
     
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def get_device_file(self, savein, on_finish):
         self.__save_file_dir = self.root_node.gui.dialogs.constant_handler_ASK_DIRECTORY(savein)
         self._launch_server(command={'action':'read', 'source':'storage'})
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def read_device_location(self, on_finish):
         self._launch_server(command={'action':'read', 'source':'location_sensor'})
         self.__on_finish = on_finish
         
     
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def write_device_clipboard(self):
         self._launch_server(command={'action':'write', 'source':'', 'target':'clipboard'}) 
         
     
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def send_clipboard_image_to_device(self):
         self._launch_server(command={
             'action':'write', 
@@ -523,7 +523,7 @@ IP: {addr[0]}
             'name':f'clipboard_{int(datetime.datetime.now().timestamp())}.png'})
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def send_image_to_device(self, filename):
         filename = Path(self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(filename))
         self.__send_filename = filename
@@ -534,7 +534,7 @@ IP: {addr[0]}
             'name':f'from_pc_{filename.name}'})
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def send_file_to_device(self, filename):
         filename = Path(self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(filename))
         self.__send_filename = filename
@@ -545,7 +545,7 @@ IP: {addr[0]}
             'name':f'from_pc_{filename.name}'})
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def abort(self):
         self.__abort_event.set()
     

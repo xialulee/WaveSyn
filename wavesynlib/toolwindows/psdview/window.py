@@ -19,7 +19,7 @@ from wavesynlib.widgets.tk import ScrolledTree, ScrolledCanvas, json_to_tk
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.utils import MethodDelegator
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.datatypes.treetype import AbstractTreeNode, tree_trans
 
 
@@ -195,7 +195,7 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
                         self.load(self.__psd_path)
 
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def load(self, filename):
         self.__timer.active = False
         
@@ -229,7 +229,7 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
         self.__timer.active = True
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def launch_viewer(self):
         self.root_node.gadgets.display_image(self.__pil_image)
         

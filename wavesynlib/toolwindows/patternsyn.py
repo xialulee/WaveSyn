@@ -19,7 +19,7 @@ import _thread as thread
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.widgets.tk import Group, LabeledEntry, ScrolledList
 from wavesynlib.languagecenter.utils import auto_subs, set_attributes
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer, WaveSynScriptAPI
 from wavesynlib.algorithms import pattern2corrmtx
 
 
@@ -370,7 +370,7 @@ class PatternWindow(FigureWindow):
         return self.__edit_group
     
     
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def set_ideal_pattern(self, center, width):
         self.__piecewisePattern.createPiecewisePattern(
             self.angles,
@@ -378,7 +378,7 @@ class PatternWindow(FigureWindow):
             width)
         
 
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def plot_ideal_pattern(self):
         pattern = self.__piecewisePattern        
         self.figure_book.plot(
@@ -388,7 +388,7 @@ class PatternWindow(FigureWindow):
             color='b')
         
     
-    @Scripting.wavesynscript_api        
+    @WaveSynScriptAPI        
     def plot_current_data(self):
         R   = self.R
         if R is None:
@@ -406,13 +406,13 @@ class PatternWindow(FigureWindow):
             color='g')
         
             
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def solve(self, M, display=False):
         self.__problem.M = M
         self.__problem.idealPattern = self.__piecewisePattern
         self.R = self.__problem.solve(verbose=display)
         
         
-    @Scripting.wavesynscript_api    
+    @WaveSynScriptAPI    
     def save_mat_file(self, filename, varname='R', format='5'):
         savemat(filename, {varname:self.R}, format=format)

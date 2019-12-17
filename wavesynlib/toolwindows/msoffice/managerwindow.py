@@ -13,7 +13,7 @@ from tkinter import ttk
 
 from wavesynlib.widgets.tk import ScrolledTree, Group, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 
 
@@ -237,7 +237,7 @@ class OfficeController(TkToolWindow):
             office[id_].utils.update_psd_images(window=window)
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def copy_selected_path(self):
         id_, app_name, txt, is_parent = self.__get_selected()
         office = self.root_node.interfaces.msoffice
@@ -250,7 +250,7 @@ class OfficeController(TkToolWindow):
             self.copy_selected_path()
             
             
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def close(self):
         self.root_node.interfaces.msoffice.delete_observer(self.__app_observer)
         super().close()

@@ -10,7 +10,7 @@ from tkinter import ttk
 from wavesynlib.interfaces.os.windows import disablekeys
 from wavesynlib.widgets.tk import Group
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.languagecenter.wavesynscript import code_printer, Scripting
+from wavesynlib.languagecenter.wavesynscript import code_printer, Scripting, WaveSynScriptAPI
 
 
 
@@ -48,6 +48,6 @@ class KeyboardToolWindow(TkToolWindow):
         self._make_window_manager_tab()
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def enable_key(self, enable, key_name):
         disablekeys.key_stat[key_name] = enable

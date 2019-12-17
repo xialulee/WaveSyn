@@ -8,7 +8,7 @@ import tkinter
 import ctypes
 
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
 from wavesynlib.widgets.tk import TaskbarIcon, ValueChecker, Balloon
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
@@ -48,7 +48,7 @@ WaveSyn components.
         return ctypes.windll.user32.GetParent(self.root.winfo_id())
 
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def get_gui_name(self):
         return 'tk'
         

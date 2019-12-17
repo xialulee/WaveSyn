@@ -11,7 +11,7 @@
 
 (import [.basemode [ModeInfo BaseMode]])
 (import [wavesynlib.languagecenter.wavesynscript [
-    ModelNode Scripting ScriptCode code-printer]])
+    ModelNode Scripting WaveSynScriptAPI ScriptCode code-printer]])
 
 
 
@@ -58,7 +58,7 @@ r"(?P<exec_mode>[stnf]*)
         #_else
             False) ) 
             
-    #@(Scripting.wavesynscript_api 
+    #@(WaveSynScriptAPI 
     (defn run [self command &optional [display True] [input None] [store False] [thread False]]
         (comment "To-Do:
                 Support store stdout & stderr;

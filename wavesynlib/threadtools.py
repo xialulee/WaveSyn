@@ -106,7 +106,7 @@ class ThreadManager(ModelNode, metaclass=Singleton):
         raise NotImplementedError('Not implemented yet.')
         
         
-    def main_thread_do(self, block=True):
+    def main_thread_do(self, func=None, block=True):
         '''Usage:
 @main_thread_do(block=False)
 def do_something():
@@ -122,9 +122,12 @@ do_something will be called in the main thread in blocking mode, i.e.,
 the rest code will not be executed util do_something() returned. 
 '''
         if self.in_main_thread:
-            def run(func):
-                func()
-            return run
+            if func:
+                return func()
+            else:
+                def run(func):
+                    return func()
+                return run
         else:
             def put_queue(func):
                 slot = datatypes.CommandSlot(source='local', node_list=[func])
@@ -133,14 +136,22 @@ the rest code will not be executed util do_something() returned.
             if block:
                 def block_do(func):
                     event = threading.Event()
+                    return_box = []
                     def wrapper():
-                        func()
+                        return_box.append(func())
                         event.set()
                     put_queue(wrapper)
                     event.wait()
-                return block_do
+                    return return_box[0]
+                if func:
+                    return block_do(func)
+                else:
+                    return block_do
             else:
-                return put_queue        
+                if func:
+                    return put_queue(func)
+                else:
+                    return put_queue        
                 
                 
     def new_thread_do(self, func):

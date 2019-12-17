@@ -20,7 +20,7 @@ except hy.errors.HyCompileError:
     os.system(f'hyc {utils_path}')
     from wavesynlib.languagecenter.markdown import utils
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode
 
 
 
@@ -29,7 +29,7 @@ class Utils(ModelNode):
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def generate_table(self, table, head=None):
         if hasattr(self.root_node.interfaces.os.clipboard, 'constant_handler_CLIPBOARD_HTML'):
             if table is self.root_node.lang_center.wavesynscript.constants.CLIPBOARD_HTML:                

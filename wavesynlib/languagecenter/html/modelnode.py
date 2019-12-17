@@ -7,7 +7,7 @@ Created on Sun Mar 05 17:50:52 2017
 import os
 from pathlib import Path
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode
 
 # The following code generates the bytecode file of the 
 # utils.hy which is written in Hy.
@@ -47,7 +47,7 @@ class Utils(ModelNode):
         return html_code
     
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def get_tables(self, html_code=None, stream=None, file_path=None, encoding=None, strip_cells=False):
         '''\
 Translate <table>s in HTML code into Python nested lists.
@@ -68,6 +68,6 @@ encoding: the encoding of the HTML code. '''
         return utils.get_table_text(html_code, strip=strip_cells)  
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def iterable_to_table(self, iterable, have_head=False):
         return utils.iterable_to_table(iterable, have_head)

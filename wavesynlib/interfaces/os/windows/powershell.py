@@ -9,7 +9,7 @@ import chardet
 import subprocess as sp
 from wavesynlib.languagecenter.powershell import ExprTranslator
 from wavesynlib.languagecenter.wavesynscript import (
-    Scripting, ModelNode, code_printer)
+    Scripting, WaveSynScriptAPI, ModelNode, code_printer)
 
 
 
@@ -106,7 +106,7 @@ class Command(ModelNode):
         return ''.join(temp_list)
     
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def get_command_string(self):
         temp_list = []
         for item in self._command_list:
@@ -144,7 +144,7 @@ class Command(ModelNode):
         return com
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def run(self):
         with code_printer(print_=False):
             com = self.get_command_string()

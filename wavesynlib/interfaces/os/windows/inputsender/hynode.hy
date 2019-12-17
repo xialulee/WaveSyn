@@ -4,7 +4,7 @@
 (import [time [sleep]])
 
 (import [wavesynlib.languagecenter.wavesynscript [
-    ModelNode Scripting code-printer]])
+    ModelNode WaveSynScriptAPI Scripting code-printer]])
 (import [wavesynlib.interfaces.os.windows.inputsender [
     utils constants]])
 
@@ -43,7 +43,7 @@
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs))
         
-    #@(Scripting.wavesynscript_api
+    #@(WaveSynScriptAPI
     (defn click-repeatedly [self times &optional absolute [dx 0] [dy 0] [delay 0] [interval 0]]
         "Left click several times.
 

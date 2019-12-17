@@ -13,7 +13,7 @@ from tkinter.ttk import Notebook, Label, Button, Checkbutton, Scale
 from PIL import ImageTk
 
 from wavesynlib.languagecenter.wavesynscript import (
-    ModelNode, NodeDict, Scripting, code_printer)
+    ModelNode, NodeDict, Scripting, WaveSynScriptAPI, code_printer)
 from wavesynlib.languagecenter.utils import auto_subs, MethodDelegator
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.interfaces.timer.tk import TkTimer
@@ -54,7 +54,7 @@ Properties inherited from ModelNode:
         pass        
 
        
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def close(self):
         #Scripting.root_node.on_window_quit(self)
         if hasattr(self.parent_node, 'on_window_close'):
@@ -144,22 +144,22 @@ class WindowManager(ModelNode, WindowComponent):
             self.set_topmost(topmost)
 
 
-    @Scripting.wavesynscript_api        
+    @WaveSynScriptAPI        
     def copy_window_id(self):
         self.root_node.interfaces.os.clipboard.write(id(self.window_node))
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def copy_window_path(self):
         self.root_node.interfaces.os.clipboard.write(self.window_node.node_path)
 
 
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_topmost(self, b):
         self.window_node.tk_object.wm_attributes('-topmost', b)
 
 
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_opacity(self, opacity):
         self.window_node.tk_object.wm_attributes('-alpha', opacity)
 

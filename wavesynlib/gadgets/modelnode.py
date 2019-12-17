@@ -9,7 +9,7 @@ from subprocess import Popen
 import webbrowser
 import tempfile
 
-from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
+from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI
 
 
 gadget_paths = {
@@ -23,7 +23,7 @@ class Gadgets(ModelNode):
         super().__init__(*args, **kwargs)
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def launch(self, gadget, *args):
         if gadget in gadget_paths:
             gadget_path = gadget_paths[gadget]

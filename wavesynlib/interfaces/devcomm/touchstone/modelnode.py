@@ -11,14 +11,14 @@ import csv
 import numpy
 from skrf.io.touchstone import Touchstone
 
-from wavesynlib.languagecenter.wavesynscript import Scripting, FileManipulator, FileManager
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, FileManipulator, FileManager
 
 
 class TouchstoneFileManipulator(FileManipulator):
     def __init__(self, *args, **kwargs):
         FileManipulator.__init__(self, *args, **kwargs)
                     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def to_csv(self, csv_filename, dB=True, angle='rad', unwrap=False):
         csv_filename = self.root_node.gui.dialogs.constant_handler_ASK_SAVEAS_FILENAME(
             csv_filename, 

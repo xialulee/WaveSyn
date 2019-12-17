@@ -5,7 +5,7 @@
 (import tempfile)
 (import subprocess)
 
-(import [wavesynlib.languagecenter.wavesynscript [Scripting ModelNode NodeDict]])
+(import [wavesynlib.languagecenter.wavesynscript [Scripting WaveSynScriptAPI ModelNode NodeDict]])
 (import [wavesynlib.languagecenter.designpatterns [Observable]])
 
 
@@ -98,7 +98,7 @@
         (setv (. self [id-node]) node) 
         id-node)
         
-    #@(Scripting.wavesynscript-api
+    #@(WaveSynScriptAPI
     (defn launch [self &optional editor-path [code ""] file-path [run-on-exit False]]
         "Launch a specified editor. When the editor terminated, it will notify the observer of .manager.
   editor_path: String. Specify the path of the editor. If None is given, it will launch the one specified in config.json.
@@ -129,7 +129,7 @@
             editor-id) 
         file-path) ) ) )
         
-    #@(Scripting.wavesynscript-api
+    #@(WaveSynScriptAPI
     (defn launch-gvim [self &optional [code ""] file-path [run-on-exit False]]
         (.launch self 
             :editor-path "gvim" 

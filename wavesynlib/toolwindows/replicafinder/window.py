@@ -17,7 +17,7 @@ from pathlib import Path
 from wavesynlib.widgets.tk import ScrolledTree, DirIndicator, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, code_printer
+from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 
 
@@ -91,12 +91,12 @@ class ReplicaFinder(Observable, ModelNode):
         return m.digest()
     
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def set_block_size(self, block_size):
         self.__block_size = block_size
         
         
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def thread_run(self, path):
         self.__result = {}
         self.__timer.active = True
@@ -135,7 +135,7 @@ class ReplicaFinder(Observable, ModelNode):
             self.__dead_event.set()
             
     
-    @Scripting.wavesynscript_api
+    @WaveSynScriptAPI
     def stop(self):
         self.__stop_event.set()
         # self.__timer.active = False
