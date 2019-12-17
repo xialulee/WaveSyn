@@ -18,7 +18,6 @@ from wavesynlib.widgets.tk import ScrolledTree, DirIndicator, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, code_printer
-from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.interfaces.timer.tk import TkTimer
 
 
@@ -40,7 +39,7 @@ except hy.errors.HyCompileError:
 
 
 
-_image_dir = get_caller_dir()/'images'
+_image_dir = Path(__file__).parent / 'images'
 
 
 

@@ -4,12 +4,12 @@ Created on Fri Mar 16 18:25:53 2018
 
 @author: Feng-cong Li
 """
+import pathlib
 from subprocess import Popen
 import webbrowser
 import tempfile
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
-from wavesynlib.languagecenter.utils import get_caller_dir
 
 
 gadget_paths = {
@@ -28,7 +28,7 @@ class Gadgets(ModelNode):
         if gadget in gadget_paths:
             gadget_path = gadget_paths[gadget]
         else:
-            gadget_path = str(get_caller_dir() / gadget)
+            gadget_path = str(pathlib.Path(__file__).parent / gadget)
         
         if args:
             cmd = ['python', gadget_path]

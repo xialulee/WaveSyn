@@ -5,6 +5,7 @@ Created on Tue Mar 14 16:34:07 2017
 @author: Feng-cong Li
 """
 import os
+from pathlib import Path
 
 from tkinter import Tk, Label
 import ctypes as ct
@@ -15,7 +16,6 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.wmi import WQL
 from wavesynlib.interfaces.os.windows.processes.utils import singleton
-from wavesynlib.languagecenter.utils import get_caller_dir
 
     
     
@@ -53,9 +53,9 @@ def main():
         return
     
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
-    caller_dir = get_caller_dir()
-    icon_charge = caller_dir/'batterymeter_charge.ico'
-    icon_discharge = caller_dir/'batterymeter_discharge.ico'
+    my_dir = Path(__file__).parent
+    icon_charge = my_dir/'batterymeter_charge.ico'
+    icon_discharge = my_dir/'batterymeter_discharge.ico'
     root    = Tk()
     root.iconbitmap(default=icon_discharge)
     label   = Label()

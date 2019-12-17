@@ -6,7 +6,7 @@
 # Feng-cong Li
 
 #import os
-
+from pathlib import Path
 from tkinter import Tk, Label
 import ctypes as ct
 
@@ -14,7 +14,6 @@ from wavesynlib.widgets import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.processes.utils import singleton
-from wavesynlib.languagecenter.utils import get_caller_dir
 from wavesynlib.interfaces.os.windows.memstatus import get_memory_usage
 
 APPID = '129832A8-AA09-4416-8C6A-9945FAB4CDFA'
@@ -27,7 +26,7 @@ def main():
     
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root    = Tk()
-    root.iconbitmap(default=get_caller_dir()/'memmeter.ico')
+    root.iconbitmap(default=Path(__file__).parent / 'memmeter.ico')
     label   = Label()
     label.pack()
     tbIcon  = tktools.TaskbarIcon(root) 

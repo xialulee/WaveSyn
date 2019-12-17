@@ -7,6 +7,7 @@ Created on Sun Aug 28 02:49:38 2016
 
 import os
 from io import StringIO
+import pathlib
 import importlib
 
 from tkinter import Menu, IntVar, Toplevel
@@ -29,7 +30,7 @@ from wavesynlib.widgets.tk import (
 from wavesynlib.widgets.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
-from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately, FunctionChain
+from wavesynlib.languagecenter.utils import call_immediately, FunctionChain
 from wavesynlib.languagecenter import templates
 from wavesynlib.status import busy_doing
 from .candidatelist import CandidateList
@@ -40,7 +41,7 @@ _retvaldisp = {}
 
 @call_immediately
 def load_plugin():
-    selfdir = get_caller_dir()
+    selfdir = pathlib.Path(__file__).parent
     retvaldisp = selfdir / 'plugins' / 'retvaldisp'
     for file in retvaldisp.glob('*.py'):
         if file.name == '__init__.py':
