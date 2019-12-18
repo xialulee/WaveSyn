@@ -542,92 +542,7 @@ Red:   main-thread is busy.''')
         cpubar_tip = balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage: ')        
         cpubar_tip.show_callback = lambda: f' {Scripting.root_node.interfaces.os.get_cpu_usage()}%.'
         
-
-
-from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-
-class DocWindow(TkToolWindow):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.tk_object.title('Document')
-        self._make_window_manager_tab()
-        self.__scrolledtext = stext = ScrolledText(self.tk_object)      
-        stext.pack(expand='yes', fill='both')
-        self.__visible = True
         
-        @Scripting.root_node.gui.console.console_text.encounter_func_callback.add_function
-        def on_encounter_func(cs):
-            if cs and self.visible:
-                self.text = str(cs[0].docstring())
-            Scripting.root_node.gui.console.console_text.text.focus_set()        
-        
-        
-    @property
-    def text(self):
-        return self.__scrolledtext.get_text()
-    
-    
-    @text.setter
-    def text(self, content):
-        self.__scrolledtext.set_text(content)
-        
-        
-    def _close_callback(self):
-        self.tk_object.withdraw()
-        self.__visible = False
-        return True
-    
-    
-    @property
-    def visible(self):
-        return self.__visible
-    
-    
-    @WaveSynScriptAPI
-    def show_window(self):
-        self.tk_object.update()
-        self.tk_object.deiconify()
-        self.__visible = True
-        
-        
-        
-class DebugWindow(TkToolWindow):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.tk_object.title('Debug')
-        self._make_window_manager_tab()
-        self.__scrolledtext = stext = ScrolledText(self.tk_object)
-        stext.pack(expand='yes', fill='both')
-        self.__visible = True
-        
-        
-    def print(self, *args, **kwargs):
-        sio = StringIO()
-        kwargs['file'] = sio
-        print(*args, **kwargs)
-        content = sio.getvalue()
-        self.__scrolledtext.append_text(content)
-        self.tk_object.update()
-            
-            
-    def _close_callback(self):
-        self.tk_object.withdraw()
-        self.__visible = False
-        return True
-        
-        
-    @property
-    def visible(self):
-        return self.__visible
-    
-    
-    @WaveSynScriptAPI
-    def show_window(self):
-        self.tk_object.update()
-        self.tk_object.deiconify()
-        self.__visible = True
-        
-
         
 class ConsoleWindow(ModelNode):    
     def __init__(self, *args, **kwargs):
@@ -686,12 +601,12 @@ class ConsoleWindow(ModelNode):
             
         self.doc_window = ModelNode(
             is_lazy=True, 
-            module_name='wavesynlib.gui.tk.console', 
+            module_name='wavesynlib.gui.tk.docwindow', 
             class_name='DocWindow')       
         
         self.debug_window = ModelNode(
             is_lazy=True,
-            module_name='wavesynlib.gui.tk.console',
+            module_name='wavesynlib.gui.tk.debugwindow',
             class_name='DebugWindow')
     
         
