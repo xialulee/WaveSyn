@@ -12,7 +12,7 @@
 
 
 
-(struct BITMAPFILEHEADER [pack 1] [
+(struct [pack 1] BITMAPFILEHEADER [
     WORD  bfType
     DWORD bfSize
     WORD  bfReserved1

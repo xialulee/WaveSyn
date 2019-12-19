@@ -5,133 +5,73 @@
 
 
 
-(defmacro compound [type-name name &rest args]
-    (setv class-fields [])
-
-    (if-not (symbol? name)
-        (raise (TypeError "Name of a struct should be a symbol.")))
-    
-    (setv len-args (len args))
-    (cond ; Do not have struct properties such as pack.
-          ; The first item of args is fields.
-          [(= len-args 1) (setv props [] 
-                                fields (first args))]
-	  ; len args == 2 means
-	  ; the first item is struct property
-	  ; and the second one is the fields.
-          [(= len-args 2) (setv props (first args) 
-                                fields (second args))])
-
-    (for [[prop-name prop-value] (partition props)]
-        (if (= prop-name "pack")
-            (class-fields.extend ['-pack- prop-value])))
-
-    (setv field-list [])
-    (setv anonymous-list [])
-
-    ; Analyzing fields
-    (for [[type-obj field-name] (partition fields)]
-        (setv field-name (-> field-name (str) (mangle)))
-        (setv field-width 0)
-        (if (coll? type-obj) (do
-            ; If not symbol, should be a collection or an expression.
-	    ; If type-obj is a collection, it includes field type
-	    ; and extra information;
-	    ; e.g. [anonymous -U] represents the field is type -U
-	    ; and this field is an anonymous field, and
-	    ; [c_int 16]
-            (if (= (type type-obj) (type '())) 
-	        ; An expression.
-                (setv type-obj `(~@type-obj))
-            (do ; else a list
-                (if (= "anonymous" (str (first type-obj))) (do
-                    (anonymous-list.append field-name)
-                    (type-obj.pop 0)))
-                (if (instance? int (last type-obj))
-		    ; Bit field. 
-                    (setv field-width (last type-obj)))
-                (setv type-obj (first type-obj))))))
-            (setv field-desc [field-name type-obj])
-        (if field-width (field-desc.append field-width))
-	; ctypes.Structure/Union only supports field descriptions
-	; in tuple type. 
-        (field-list.append `(tuple ~field-desc)))
-    (if anonymous-list 
-        (class-fields.extend ['-anonymous- `(tuple ~anonymous-list)]))
-    (class-fields.extend ['-fields- field-list])
-    `(defclass ~name [~type-name] (setv ~@class-fields) ) )
-
-;; Examples
-; import [ctypes [*]])
-;
-;; Basic Usage
-; compound Structure Point [
-;    c_int x
-;    c_int y])
-;
-;; Setting _pack_
-; compound Structure [pack 32] Point [
-;    c_int x
-;    c_int y])
-;
-;; Bit fields
-; compound Structure Int [
-;    [c_int 16] first-16
-;    [c_int 16] second-16])
-;
-;; Anonymous
-; compound Union -U [
-;    (POINTER TYPEDESC) lptdesc
-;    (POINTER ARRAYDESC) lpadesc
-;    HREFTYPE hreftype])
-;
-; compound Structure TYPEDESC [
-;    [anonymous -U] u
-;    VARTYPE vt])
+(import [funcparserlib.parser [maybe many]])
+(import [hy.model-patterns [
+    whole sym brackets pexpr dolike FORM SYM]])
 
 
 
-; The following macros provide more convenient way
-; for defining structs and unions.
-
-(defmacro/g! -aux-compound [type-name name &rest args]
-    (setv len-args (len args))
-
-    (cond [(= len-args 1) (setv props [] 
-                                fields (first args))]
-          [(= len-args 2) (setv props (first args) 
-                                fields (second args))])
-
-    (setv type-name (str type-name))
-
-    (for [[prop-name prop-value] (partition props)]
-        (if (= prop-name 'endian) 
-            (setv type-name (.join "" 
-                [(-> prop-value 
-                    (str) 
-                    (str.capitalize)) 
-                "Endian" 
-                type-name]))))
-    `(setv ~name ((fn []
-        (import ctypes)
-        (setv type- (getattr ctypes ~type-name))
-        (require wavesynlib.languagecenter.hy.cdef)
-        (wavesynlib.languagecenter.hy.cdef.compound type- ~g!TheStruct ~#*args)
-        ~g!TheStruct))))
+(setv -compound-parser (whole [
+    (maybe (brackets (many (+ SYM FORM)))) 
+    SYM
+    (brackets (many (+ FORM FORM) ) )]) )
 
 
 
-(defmacro struct [name &rest args]
-    `(do
-        (require wavesynlib.languagecenter.hy.cdef)
-        (wavesynlib.languagecenter.hy.cdef.-aux-compound "Structure" ~name ~#*args)))
+(defn -make-compound [type- &rest definition]
+    (setv type- 
+        (get 
+            {"struct" 'Structure 
+             "union"  'Union} type-) )
+    (setv arg-list       []
+          field-list     []
+          anonymous-list [])
+    (setv [type-args type-name [fields]] 
+        (.parse -compound-parser definition) ) 
+    (if type-args
+        (setv type-args (first type-args) )
+    #_else
+        (setv type-args []) )
+    (for [[name val] type-args]
+        (when (= name "endian") 
+            (setv type- (HySymbol f"{(.capitalize val)}Endian{type-}") ) )
+        (when (= name "pack") 
+            (.extend arg-list ['-pack- val]) ) ) 
+    (for [[field-type field-name] fields]
+        (if (coll? field-type) (do
+            (setv [t0 t1] field-type)
+            (cond 
+            [(= t0 "anonymous")
+                (.append anonymous-list (str field-name))
+                (setv field-type [t1])]
+            [(instance? int t1)
+                (setv field-type [t0 t1])]) ) 
+        #_else
+            (setv field-type [field-type]) )
+        (.append field-list `(, ~(str field-name) ~@field-type)))
+    (when anonymous-list
+        (.extend arg-list ['-anonymous- `(, ~@anonymous-list)]) )
+    (.extend arg-list ['-fields- field-list])
+    `(defclass ~type-name [(. ~ctypes-name ~type-)]
+        (setv ~@arg-list) ) )
 
 
 
-(defmacro union [name &rest args]
-    `(do
-        (require wavesynlib.languagecenter.hy.cdef)
-        (wavesynlib.languagecenter.hy.cdef.-aux-compound "Union" ~name ~#*args)))
+;Usage:
+;(struct optional:[pack a-integer endian big/little] NAME [
+    ;ctypes.c_int x
+    ;ctypes.c_int y
+    ;; bit field
+    ;[ctypes.c_int 16] b
+    ;; anonymous
+    ;[anonymous -U] a])
+
+
+(defmacro struct [&rest definition]
+    (-make-compound 'struct #* definition) )
+
+(defmacro union [&rest definition]
+    (-make-compound 'union #* definition) )
 
 
 
