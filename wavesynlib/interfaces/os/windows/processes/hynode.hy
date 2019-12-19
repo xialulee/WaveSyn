@@ -1,6 +1,9 @@
 (require [wavesynlib.languagecenter.hy.utils [super-init]])
 (require [wavesynlib.languagecenter.hy.wmidef [wql]])
-
+(require [wavesynlib.languagecenter.wavesynscript.macros [
+    init-wavesynscript-macros
+    BindLazyNode]])
+(init-wavesynscript-macros)
 
 (import [wavesynlib.languagecenter.wavesynscript [
     ModelNode Scripting WaveSynScriptAPI code-printer]])
@@ -71,8 +74,6 @@ Return Value (Path): The path of the executable."
 (defclass Processes [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs)
-        (setv self.utils (
-            ModelNode 
-                :is-lazy True 
-                :class-object Utils))))
+        (BindLazyNode 
+            [self.utils Utils]) ) )
 

@@ -1,5 +1,9 @@
 (require [hy.contrib.loop [loop]])
 (require [wavesynlib.languagecenter.hy.utils [super-init]])
+(require [wavesynlib.languagecenter.wavesynscript.macros [
+    init-wavesynscript-macros
+    BindLazyNode]])
+(init-wavesynscript-macros)
 
 (import [time [sleep]])
 
@@ -171,8 +175,6 @@ interval(s): the interval between clicks."
         (super-init #* args #** kwargs)
         (setv self.key-sender (KeySender) )
         (setv self.mouse-sender (MouseSender) )
-        (setv self.macro-manager (
-            ModelNode
-                :is-lazy True
-                :class-object MacroManager)) ) )
+        (BindLazyNode 
+            [self.macro-manager MacroManager])) ) 
 
