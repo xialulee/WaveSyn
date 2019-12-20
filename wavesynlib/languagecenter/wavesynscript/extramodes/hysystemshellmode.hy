@@ -30,6 +30,10 @@ r"(?P<exec_mode>[stnf]*)
 # t for threading; 
 # n for not displaying;
 # f for using f-str as command.
+(?:\[(?P<shell>.*)\])?
+# Shell selection.
+# Default shell will be used if not specified.
+# [uow]: Select Ubuntu-on-Windows bash as shell.
 (?:\((?P<stdin_var>.*)\))?  
 # the var name of which the content will be written into stdin."
         re.VERBOSE) )
@@ -82,8 +86,9 @@ r"(?P<exec_mode>[stnf]*)
                 #M!t run in thread.") 
         (setv [prefix-args code] (.-split-code self code) )
         (setv match-obj (re.match self.-PREFIX-ARG-PATTERN prefix-args) )
-        (setv stdin-var (get match-obj "stdin_var") )
-        (setv exec-mode (get match-obj "exec_mode") )
+        (setv stdin-var  (get match-obj "stdin_var") )
+        (setv exec-mode  (get match-obj "exec_mode") )
+        (setv shell-name (get match-obj "shell"))
         (setv arg-dict {"command" code}) 
         (when stdin-var
             (assoc arg-dict "input" (ScriptCode stdin-var) ) ) 
@@ -93,7 +98,12 @@ r"(?P<exec_mode>[stnf]*)
             (assoc arg-dict "display" False) )
         (when (in "f" exec-mode) 
             (assoc arg-dict "command" (ScriptCode (+ "f" (repr code) ) ) ) )
-        arg-dict) 
+        (when (= shell-name "uow")
+            (setv command-prefix (if (in "f" exec-mode) "f" "") )
+            (assoc arg-dict 
+                "command" 
+                (ScriptCode f"['bash', '-c', {command-prefix}{(repr code)}]") ) )
+        arg-dict)  
 
     (defn translate [self code &optional verbose]
         (setv leading-blanks (-get-leading-blanks code) )
