@@ -16,24 +16,24 @@ communicating with different software applications and hardware devices."
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs) 
         (BindLazyNode
-            [self.os 
+            self.os [ 
                 wavesynlib.interfaces.os.modelnode 
                 OperatingSystem]
-            [self.net 
+            self.net [
                 wavesynlib.interfaces.net.modelnode 
                 Net]
-            [self.gpu 
+            self.gpu [
                 wavesynlib.interfaces.gpu 
                 GPU]
-            [self.dotnet 
+            self.dotnet [
                 wavesynlib.interfaces.dotnet 
                 DotNet]
-            [self.imagemagick 
+            self.imagemagick [
                 wavesynlib.interfaces.imagemagick
                 ImageMagickNode]) 
         (setv self.editors (EditorDict) ) 
         (when (= "windows" (.lower (platform.system) ) ) 
             (BindLazyNode
-                [self.msoffice
+                self.msoffice [
                     wavesynlib.interfaces.msoffice.modelnode
                     MSOffice]) ) ) )

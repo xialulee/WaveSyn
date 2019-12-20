@@ -176,5 +176,5 @@ interval(s): the interval between clicks."
         (setv self.key-sender (KeySender) )
         (setv self.mouse-sender (MouseSender) )
         (BindLazyNode 
-            [self.macro-manager MacroManager])) ) 
+            self.macro-manager MacroManager)) ) 
 

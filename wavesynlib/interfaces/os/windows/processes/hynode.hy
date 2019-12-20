@@ -75,5 +75,5 @@ Return Value (Path): The path of the executable."
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs)
         (BindLazyNode 
-            [self.utils Utils]) ) )
+            self.utils Utils) ) )
 
