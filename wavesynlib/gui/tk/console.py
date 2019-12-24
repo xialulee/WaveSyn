@@ -238,15 +238,18 @@ class ConsoleText(ModelNode, ScrolledText):
             [Scripting.namespaces['locals'], 
                 Scripting.namespaces['globals']])
 
-        if len(script.completions())==0:
+        completions = script.completions()
+
+        if len(completions)==0:
             return 
 
-        if len(script.completions())==1:
-            cstr = script.completions()[0].complete
+        if len(completions)==1:
+            completion = completions[0]
+            cstr = completion.complete
             self.text.insert('end', cstr)
             return 
 
-        self.candidate_list.launch(script.completions())
+        self.candidate_list.launch(completions)
 
 
     def _on_goto_line_start(self):
