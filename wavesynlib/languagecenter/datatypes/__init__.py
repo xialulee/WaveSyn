@@ -27,13 +27,15 @@ class ArgType:
     pass
 
 
-
 class ArgOpenFile(ArgType):
     pass
 
 
-
 class ArgSaveAs(ArgType):
+    pass
+
+
+class ArgChooseDir(ArgType):
     pass
 
 

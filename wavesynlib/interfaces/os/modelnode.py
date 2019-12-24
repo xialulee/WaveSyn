@@ -447,7 +447,7 @@ path: string or pathlib.Path. The path of the given directory or file.
     
     
     @WaveSynScriptAPI
-    def chdir(self, directory):
+    def chdir(self, directory:datatypes.ArgChooseDir):
         os.chdir(directory)
         
         

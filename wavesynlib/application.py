@@ -288,13 +288,22 @@ and generate a dialog which helps user to input parameters.'''
                 if idx >= defstart:
                     ae.entry_text = repr(defaults[idx-defstart])
                 if name in annotations:
-                    if annotations[name] == datatypes.ArgOpenFile:
+                    type_ = annotations[name]
+                    if type_ == datatypes.ArgOpenFile:
                         ae.button['command'] = lambda ae=ae: open_file(arg_entry=ae)   
-                        ae.button['state'] = 'enable'
-                        ae.button['text'] = 'Select'
+                        ae.button['state']   = 'enable'
+                        ae.button['text']    = 'Select'
+                    elif type_ == datatypes.ArgChooseDir:
+                        ae.button['command'] = lambda ae=ae: choose_dir(arg_entry=ae)
+                        ae.button['state']   = 'enable'
+                        ae.button['text']    = 'select'
         
         def open_file(arg_entry):
             path = tkinter.filedialog.askopenfilename()
+            arg_entry.entry_text = repr(path)
+
+        def choose_dir(arg_entry):
+            path = tkinter.filedialog.askdirectory()
             arg_entry.entry_text = repr(path)
         
         def on_ok(event=None):
