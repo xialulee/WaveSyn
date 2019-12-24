@@ -345,7 +345,7 @@ class WaveSynScriptAPIMethod:
         argmap = self.__obj.root_node.create_arg_panel_for_func(self.__original)
         for name in argmap:
             argmap[name] = eval(argmap[name], caller.f_globals, caller.f_locals)
-            return self.__call__(**argmap)
+        return self.__call__(**argmap)
 
 
 
