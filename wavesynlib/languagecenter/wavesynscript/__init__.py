@@ -208,6 +208,7 @@ class Scripting(ModelNode):
     namespaces = {'locals':_namespace, 'globals':_namespace}
     
     _print_code_flag = False
+    _console_call = False
 
     
     @staticmethod
@@ -345,7 +346,8 @@ class WaveSynScriptAPIMethod:
         argmap = self.__obj.root_node.create_arg_panel_for_func(self.__original)
         for name in argmap:
             argmap[name] = eval(argmap[name], caller.f_globals, caller.f_locals)
-        return self.__call__(**argmap)
+        with code_printer():
+            return self.__call__(**argmap)
 
 
 
@@ -397,10 +399,13 @@ class CodePrinter:
             
     def __enter__(self):
         Scripting._print_code_flag = self.__print
+        if "________wavesyn_console_namespace" in sys._getframe(2).f_locals:
+            Scripting._console_call = True
         
         
     def __exit__(self, *dumb):
         Scripting._print_code_flag = False
+        Scripting._console_call = False
 
 
 

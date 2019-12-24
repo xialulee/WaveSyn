@@ -78,6 +78,7 @@ since the instance of Application is the first node created on the model tree.
             
         Scripting.namespaces['globals'] = Scripting.namespaces['locals'] = globals()
         Scripting.namespaces['globals'][Scripting.root_name] = self
+        Scripting.namespaces["locals"]["________wavesyn_console_namespace"] = True
         Scripting.root_node = self
 
         with self.attribute_lock:
