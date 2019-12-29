@@ -51,7 +51,12 @@ def which(name, all_=False, cwd=False):
     for path, ext in product(paths, exts):
         path = pathlib.Path(path)
         test_path = path / f'{str(name)}{ext}'
-        if test_path.exists():
+        try:
+            exists = test_path.exists()
+        except OSError:
+            # happens when the path is not authorized to access. 
+            exists = False
+        if exists:
             abs_test_path = test_path.absolute()
             file_paths[abs_test_path] = True
             if not all_:
