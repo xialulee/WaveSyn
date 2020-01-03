@@ -17,6 +17,9 @@
 
     (defn --bool-- [self]
         False)
+
+    (defn --str-- [self]
+        "")
         
     (defn --add-- [self other]
         (.--op self + other)) 
@@ -25,7 +28,7 @@
         (.--op self + other :right True)) 
 
     (defn --iadd-- [self other]
-        (+ self other))
+        (.--add-- self other))
         
     (defn --sub-- [self other]
         (.--op self - other)) 
@@ -34,7 +37,7 @@
         (.--op self - other :right True)) 
 
     (defn --isub-- [self other]
-        (- self other))
+        (.--sub-- self other))
         
     (defn --mul-- [self other]
         (.--op self * other)) 
@@ -43,7 +46,7 @@
         (.--op self * other :right True)) 
 
     (defn --imul-- [self other]
-        (* self other))
+        (.--mul-- self other))
 
     (defn --pow-- [self other]
         (.--op self ** other))
@@ -52,7 +55,7 @@
         (.--op self ** other :right True))
 
     (defn --ipow-- [self other]
-        (** self other))
+        (.--pow-- self other))
         
     (defn --truediv-- [self other]
         (.--op self / other)) 
@@ -61,7 +64,7 @@
         (.--op self / other :right True)) 
 
     (defn --itruediv-- [self other]
-        (/ self other))
+        (.--truediv-- self other))
         
     (defn --floordiv-- [self other]
         (.--op self // other)) 
@@ -70,11 +73,14 @@
         (.--op self // other :right True)) 
 
     (defn --ifloordiv-- [self other]
-        (// self other))
+        (.--floordiv-- self other))
         
     (defn --mod-- [self other]
         (.--op self % other)) 
         
     (defn --rmod-- [self other]
-        (.--op self % other :right True)) )
+        (.--op self % other :right True)) 
+        
+    (defn --imod-- [self other]
+        (.--mod-- self other)))
 
