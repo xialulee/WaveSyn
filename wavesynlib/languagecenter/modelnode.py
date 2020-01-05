@@ -17,6 +17,11 @@ class LangCenterNode(ModelNode):
             is_lazy=True,
             module_name='wavesynlib.languagecenter.python.modelnode',
             class_name='Python')
+
+        self.wslinp = ModelNode(
+            is_lazy=True,
+            module_name='wavesynlib.languagecenter.wslinp.modelnode',
+            class_name='WSLinp')
         
         self.unicode_utils = ModelNode(
             is_lazy=True,

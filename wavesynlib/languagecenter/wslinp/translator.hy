@@ -12,7 +12,16 @@
         [(= 'END head)
             (.extend end (rest item))]
         [(= '% head)
-            (.extend loopbody (rest item))]))
+            (.extend loopbody (rest item))]
+        [(instance? HyExpression head)
+            (setv do-clauses '(do))
+            (setv else-clauses '(do))
+            (for [clause (rest item)]
+                (if (= "else" (first clause))
+                    (.extend else-clauses (rest clause))
+                #_else
+                    (.append do-clauses clause)))
+            (.append loopbody `(if ~head ~do-clauses ~else-clauses))]))
     `(do 
         ~begin 
         (while (.load-next-record engine)
