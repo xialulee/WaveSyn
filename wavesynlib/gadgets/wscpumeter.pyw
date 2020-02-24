@@ -5,7 +5,8 @@ Created on Sat Mar 04 16:08:52 2017
 @author: Feng-cong Li
 """
 from pathlib import Path
-from tkinter import Tk, Label
+from tkinter import Tk, Frame, Label, StringVar
+from tkinter.ttk import Combobox
 import ctypes as ct
 
 import psutil
@@ -17,8 +18,12 @@ from wavesynlib.interfaces.os.windows.processes.utils import singleton
 
     
     
-def get_cpu_usage():
-    return psutil.cpu_percent()
+def get_cpu_usage(mode):
+    if mode == "Average":
+        return psutil.cpu_percent()
+    percent = psutil.cpu_percent(percpu=True)
+    func_dict = {"Max":max, "Min":min}
+    return func_dict[mode](percent)
 
 
 
@@ -31,6 +36,17 @@ def main():
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root = Tk()
     root.iconbitmap(default=Path(__file__).parent / 'cpumeter.ico')
+    mode_frame = Frame(root)
+    mode_frame.pack()
+    Label(mode_frame, text="Mode:").pack(side="left")
+    mode = StringVar()
+    mode.set("Average")
+    Combobox(
+        mode_frame, 
+        textvariable=mode, 
+        value=["Average", "Max", "Min"], 
+        takefocus=1, 
+        stat="readonly").pack(side="left")
     label = Label()
     label.pack()
     tb_icon  = tktools.TaskbarIcon(root) 
@@ -39,7 +55,7 @@ def main():
     
     @timer.add_observer   
     def show_cpu_usage():
-        cpu_usage = get_cpu_usage()
+        cpu_usage = get_cpu_usage(mode=mode.get())
         label['text']   = f'CPU Usage: {cpu_usage}%'
         root.title(f'CPU {cpu_usage}%')
         tb_icon.progress = cpu_usage        
