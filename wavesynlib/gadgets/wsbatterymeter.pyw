@@ -12,6 +12,7 @@ import ctypes as ct
 from comtypes import client
 
 from wavesynlib.widgets import tk as tktools
+from wavesynlib.widgets.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.wmi import WQL
@@ -60,7 +61,7 @@ def main():
     root.iconbitmap(default=icon_discharge)
     label   = Label()
     label.pack()
-    tb_icon  = tktools.TaskbarIcon(root) 
+    tb_icon  = TaskbarIcon(root) 
     battery = Battery()
     
     timer = TkTimer(widget=root, interval=5000) # No Config Dialog

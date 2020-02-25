@@ -42,8 +42,8 @@ if platform.system() == 'Windows':
         win7plus = True
 
 if win7plus:
-    from wavesynlib.interfaces.os.windows.shell.taskbarmanager.definitions \
-        import ITaskbarList4, GUID_CTaskbarList
+    #from wavesynlib.interfaces.os.windows.shell.taskbarmanager.definitions \
+        #import ITaskbarList4, GUID_CTaskbarList
     from comtypes import CoCreateInstance
     import ctypes as ct
     from win32con import GWL_EXSTYLE, WS_EX_LAYERED, LWA_ALPHA
@@ -52,31 +52,31 @@ if win7plus:
     SetWindowLongA = ct.windll.user32.SetWindowLongA
     SetLayeredWindowAttributes = ct.windll.user32.SetLayeredWindowAttributes
 
-    class TaskbarIcon(object):
-        def __init__(self, root):
-            self.__tbm  = CoCreateInstance(GUID_CTaskbarList, 
-                                           interface=ITaskbarList4)
-            self.__root = root
+    #class TaskbarIcon(object):
+        #def __init__(self, root):
+            #self.__tbm  = CoCreateInstance(GUID_CTaskbarList, 
+                                           #interface=ITaskbarList4)
+            #self.__root = root
 
-        @property
-        def progress(self):
-            '''Not implemented'''
-            pass
+        #@property
+        #def progress(self):
+            #'''Not implemented'''
+            #pass
 
-        @progress.setter
-        def progress(self, value):
-            self.__tbm.SetProgressValue(GetParent(self.__root.winfo_id()), 
-                                        int(value), 100)
+        #@progress.setter
+        #def progress(self, value):
+            #self.__tbm.SetProgressValue(GetParent(self.__root.winfo_id()), 
+                                        #int(value), 100)
 
-        @property
-        def state(self):
-            '''Not Implemented'''
-            pass
+        #@property
+        #def state(self):
+            #'''Not Implemented'''
+            #pass
 
-        @state.setter
-        def state(self, state):
-            self.__tbm.SetProgressState(GetParent(self.__root.winfo_id()), 
-                                        state)
+        #@state.setter
+        #def state(self, state):
+            #self.__tbm.SetProgressState(GetParent(self.__root.winfo_id()), 
+                                        #state)
                                         
                                         
     class Transparenter(object):
@@ -96,9 +96,10 @@ if win7plus:
             SetLayeredWindowAttributes(handle, 0, opacity, LWA_ALPHA)
             
 else:
-    class TaskbarIcon(object):
-        def __init__(self, root):
-            pass
+    pass
+    #class TaskbarIcon(object):
+        #def __init__(self, root):
+            #pass
 
 
 def check_value(d, i, P, s, S, v, V, W, func):

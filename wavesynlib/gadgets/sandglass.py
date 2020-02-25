@@ -10,6 +10,7 @@ import ctypes as ct
 import time
 
 from wavesynlib.widgets import tk as tktools
+from wavesynlib.widgets.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 
@@ -22,7 +23,7 @@ def main(argv):
     root = Tk()
     label = Label(root)
     label.pack()
-    tb_icon = tktools.TaskbarIcon(root)
+    tb_icon = TaskbarIcon(root)
     
     total = int(argv[1])
     current = [0]

@@ -9,7 +9,8 @@ import ctypes
 
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
-from wavesynlib.widgets.tk import TaskbarIcon, ValueChecker, Balloon
+from wavesynlib.widgets.tk import ValueChecker, Balloon
+from wavesynlib.widgets.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
 from wavesynlib.toolwindows import simpledialogs

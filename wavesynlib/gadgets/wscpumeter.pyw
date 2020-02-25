@@ -16,6 +16,7 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.processes.utils import singleton
 from wavesynlib.widgets.gaugethreshold import GaugeThreshold
+from wavesynlib.widgets.taskbaricon import TaskbarIcon
 
     
     
@@ -56,7 +57,7 @@ def main():
         root,
         default_range=(60, 80))
     gauge_threshold.pack(expand="yes", fill="x")
-    tb_icon  = tktools.TaskbarIcon(root) 
+    tb_icon  = TaskbarIcon(root) 
     
     timer = TkTimer(widget=root, interval=2000) # No Config Dialog
     
