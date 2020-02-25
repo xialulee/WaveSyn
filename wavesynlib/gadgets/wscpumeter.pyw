@@ -15,6 +15,7 @@ from wavesynlib.widgets import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.processes.utils import singleton
+from wavesynlib.widgets.gaugethreshold import GaugeThreshold
 
     
     
@@ -36,6 +37,10 @@ def main():
     ct.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APPID)
     root = Tk()
     root.iconbitmap(default=Path(__file__).parent / 'cpumeter.ico')
+
+    label = Label()
+    label.pack()
+
     mode_frame = Frame(root)
     mode_frame.pack()
     Label(mode_frame, text="Mode:").pack(side="left")
@@ -47,8 +52,10 @@ def main():
         value=["Average", "Max", "Min"], 
         takefocus=1, 
         stat="readonly").pack(side="left")
-    label = Label()
-    label.pack()
+    gauge_threshold = GaugeThreshold(
+        root,
+        default_range=(60, 80))
+    gauge_threshold.pack(expand="yes", fill="x")
     tb_icon  = tktools.TaskbarIcon(root) 
     
     timer = TkTimer(widget=root, interval=2000) # No Config Dialog
@@ -58,10 +65,11 @@ def main():
         cpu_usage = get_cpu_usage(mode=mode.get())
         label['text']   = f'CPU Usage: {cpu_usage}%'
         root.title(f'CPU {cpu_usage}%')
-        tb_icon.progress = cpu_usage        
-        if cpu_usage <= 60:
+        tb_icon.progress = cpu_usage
+        threshold_list = gauge_threshold.threshold_list        
+        if cpu_usage <= threshold_list[0]:
             state = TBPFLAG.TBPF_NORMAL
-        elif 60 <= cpu_usage < 80:
+        elif cpu_usage <= threshold_list[1]:
             state = TBPFLAG.TBPF_PAUSED
         else:
             state = TBPFLAG.TBPF_ERROR
