@@ -330,11 +330,12 @@ class WaveSynScriptAPIMethod:
                 elif display_language == "hy":
                     display_str = f"(.new_thread_run {obj.hy_node_path[:-1]} {name}) {Scripting.hy_convert_args_to_str(*args, **kwargs)})"
                 ret = root.lang_center.wavesynscript.display_and_eval(expr=expr_str, display=display_str)
+                return ret
             finally:
                 # Restore
                 Scripting._print_code_flag = True
         else:
-            root.thread_manager.new_thread_do(lambda:original(obj, *args, **kwargs))
+            return root.thread_manager.new_thread_do(lambda:original(obj, *args, **kwargs))
 
 
     def help(self):

@@ -7,6 +7,7 @@ Created on Sat Aug  4 18:47:28 2018
 
 from math import log2
 from urllib.request import urlopen
+import pandas
 
 
 
@@ -59,6 +60,11 @@ File format see ftp://ftp.apnic.net/pub/apnic/stats/apnic/README.TXT.'''
     @property
     def records(self):
         return self.__records
+
+
+    @property
+    def records_as_dataframe(self):
+        return pandas.DataFrame(self.__records)
     
     
     def _load(self, fileobj):
@@ -89,6 +95,7 @@ File format see ftp://ftp.apnic.net/pub/apnic/stats/apnic/README.TXT.'''
             if not line:
                 break
             fields = line.split('|')[:len(field_names)]
+            fields[-1] = fields[-1].strip()
             record = dict(zip(field_names, fields))
             if record['type'] == 'ipv4':
                 record['mask'] = _calcmask(record['value'])

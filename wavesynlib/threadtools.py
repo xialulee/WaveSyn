@@ -18,10 +18,19 @@ class _ThreadObj(threading.Thread):
     def __init__(self, func):
         self.__func = func
         super().__init__()
+        self.__result = None
     
     
     def run(self):
-        self.__func()
+        self.__result = self.__func()
+
+
+    @property
+    def result(self):
+        if self.is_alive():
+            return None
+        else:
+            return self.__result
         
         
 
@@ -155,7 +164,9 @@ the rest code will not be executed util do_something() returned.
                 
                 
     def new_thread_do(self, func):
-        return thread.start_new_thread(func, (), {})
+        thread_obj = _ThreadObj(func)
+        thread_obj.start()
+        return thread_obj
         
         
     def create_thread_object(self, func):
