@@ -5,6 +5,7 @@ Created on Thu Mar 02 22:41:20 2017
 @author: Feng-cong Li
 """
 
+import os
 import sys
 import comtypes
 from comtypes import client
@@ -17,6 +18,7 @@ from io import BytesIO
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
 from wavesynlib.interfaces.os.windows.wmi import WQL
 from wavesynlib.interfaces.os.windows.shell.windowhandlegetter.modelnode import WindowHandleGetter
+from wavesynlib.gadgets.wswhich import which
 
 
 
@@ -192,8 +194,19 @@ class Windows(ModelNode):
     @WaveSynScriptAPI
     def create_guid(self)->str:
         return str(comtypes.GUID.create_new())
-    
-    
 
+
+    @WaveSynScriptAPI
+    def edit_hosts(self, editor=None):
+        if not editor:
+            editor = "gvim"
+        editor_paths = which(editor)
+        if editor_paths:
+            editor_path = str(editor_paths[0])
+        else:
+            # The specified editor not installed. Use notepad.exe instead.
+            editor_path = str(which("notepad")[0])
+        hosts_path = os.path.join(os.environ["SYSTEMROOT"], r"System32\drivers\etc\hosts")
+        self.root_node.interfaces.os.windows.processes.utils.run_as_admin(editor_path, hosts_path)
         
         

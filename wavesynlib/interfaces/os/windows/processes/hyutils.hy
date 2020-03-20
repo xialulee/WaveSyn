@@ -6,6 +6,7 @@
 (import [ctypes [windll byref]])
 (import [ctypes.wintypes [DWORD]])
 (import-func user32 GetWindowThreadProcessId)
+(import-func shell32 ShellExecuteW)
 (import-func kernel32
     CreateMutexW
     CloseHandle
@@ -32,4 +33,9 @@
     (setv pid (DWORD))
     (GetWindowThreadProcessId hwnd #→[pid])
     pid.value)
+
+
+
+(defn run-as-admin [executable parameters]
+    (ShellExecuteW None "runas" executable parameters None 1) )
 

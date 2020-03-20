@@ -12,13 +12,17 @@
 (import [pathlib [Path]])
 (import hy)
 (import [wavesynlib.interfaces.os.windows.processes.utils 
-    [get-pid-from-hwnd]])
+    [get-pid-from-hwnd run-as-admin]])
 
 
 
 (defclass Utils [ModelNode]
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs))
+
+    #@(WaveSynScriptAPI
+    (defn run-as-admin [self executable parameters]
+        (run-as-admin executable parameters) ) )
 
     #@(WaveSynScriptAPI
     (defn get-pid-from-hwnd [self pid]
