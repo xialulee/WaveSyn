@@ -23,6 +23,14 @@ class DNS(ModelNode):
             raise NotImplementedError("Not implemented on this platform.")
 
 
+    def get_hosts_path(self):
+        system = platform.system()
+        if system == "Windows":
+            return self.root_node.interfaces.os.windows.get_hosts_path()
+        else:
+            raise NotImplementedError("Not implemented on this platform.")
+
+
 
 class Net(ModelNode):
     def __init__(self, *args, **kwargs):

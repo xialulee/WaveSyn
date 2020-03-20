@@ -206,7 +206,13 @@ class Windows(ModelNode):
         else:
             # The specified editor not installed. Use notepad.exe instead.
             editor_path = str(which("notepad")[0])
-        hosts_path = os.path.join(os.environ["SYSTEMROOT"], r"System32\drivers\etc\hosts")
+        hosts_path = str(self.get_hosts_path())
         self.root_node.interfaces.os.windows.processes.utils.run_as_admin(editor_path, hosts_path)
+
+
+    @WaveSynScriptAPI
+    def get_hosts_path(self):
+        root = Path(os.environ["SYSTEMROOT"])
+        return root / r"System32\drivers\etc\hosts"
         
         
