@@ -5,6 +5,7 @@ Created on Tue Aug  7 01:40:48 2018
 @author: Feng-cong Li
 """
 
+import platform
 from urllib.request import urlopen
 from email.utils import parsedate
 from datetime import datetime
@@ -46,3 +47,18 @@ class APNIC(ModelNode):
     def get_reports(self, verbose=False):
         with open(self.__get_reports_path(verbose=verbose)) as f:
             return AllocationAndAssignmentReports(f)
+
+
+    @WaveSynScriptAPI(thread_safe=True)
+    def make_route_table(self, filter, gateway, script_file_add, script_file_delete, verbose=False):
+        result = self.get_reports(verbose=verbose)
+        df = result.records_as_dataframe
+        df = df.query(filter)
+        if platform.system() == "Windows":
+            with open(script_file_add, "w") as fadd, \
+                 open(script_file_delete, "w") as fdel:
+                for row in df.itertuples():
+                    print(f"route add {row.start} mask {row.mask} {gateway}", file=fadd)
+                    print(f"route delete {row.start} mask {row.mask}", file=fdel)
+        if verbose:
+            print("Route table generated.")                    
