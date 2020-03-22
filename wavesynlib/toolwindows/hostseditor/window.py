@@ -41,7 +41,7 @@ class Editor(TkToolWindow):
 
 
     def __load(self):
-        path = self.root_node.interfaces.net.dns.get_hosts_path()
+        path = self.root_node.interfaces.net.dns.hosts_file.get_path()
         with open(path) as f:
             table = self.__table
             for line in f:
