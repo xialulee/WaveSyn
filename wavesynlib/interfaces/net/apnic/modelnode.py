@@ -5,6 +5,7 @@ Created on Tue Aug  7 01:40:48 2018
 @author: Feng-cong Li
 """
 
+import os
 import platform
 from urllib.request import urlopen
 from email.utils import parsedate
@@ -32,9 +33,15 @@ class APNIC(ModelNode):
                 datetime.fromtimestamp(cache_path.stat().st_mtime)<page_time:
                 if verbose:
                     print("APNIC cache obsolete. Refreshing...")
-                with open(cache_path, 'w') as f:
-                    for line in response:
-                        f.write(line.decode())
+                try:
+                    with open(cache_path, 'w') as f:
+                        for line in response:
+                            f.write(line.decode())
+                except Exception as err:
+                    os.remove(cache_path)
+                    if verbose:
+                        print("APNIC cache refreshing failed. Please try again.")
+                    raise err
                 if verbose:
                     print("APNIC cache refreshing complete.")
             else:

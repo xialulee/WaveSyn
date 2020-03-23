@@ -19,7 +19,7 @@ def _readline(fileobj):
 
 
 
-def _calcmask(value):
+def _calc_ipv4_mask(value):
     value = int(value)
     i = int(log2(value))
     m = '1'*(32-i)+'0'*i 
@@ -27,6 +27,15 @@ def _calcmask(value):
     for k in range(4):
         mask.append(str(int(m[(k*8):(k*8+8)], base=2)))
     return '.'.join(mask)
+
+
+
+def _calc_ipv4_int(ip):
+    ip = ip.split(".")
+    result = 0
+    for s, p in zip(ip, (24, 16, 8, 0)):
+        result += int(s) << p
+    return result
 
 
 
@@ -39,6 +48,7 @@ File format see ftp://ftp.apnic.net/pub/apnic/stats/apnic/README.TXT.'''
         self.__version = None
         self.__summaries = []
         self.__records = []
+        self.__dataframe = None
         self._load(fileobj)
         
         
@@ -64,7 +74,14 @@ File format see ftp://ftp.apnic.net/pub/apnic/stats/apnic/README.TXT.'''
 
     @property
     def records_as_dataframe(self):
-        return pandas.DataFrame(self.__records)
+        if self.__dataframe is None:
+            self.__dataframe = pandas.DataFrame(self.__records)
+        return self.__dataframe
+
+
+    def ip_search(self, ip):
+        ip_int = _calc_ipv4_int(ip)
+        return self.records_as_dataframe.query(f"start_int <= {ip_int} <= stop_int").iloc[0]
     
     
     def _load(self, fileobj):
@@ -98,7 +115,10 @@ File format see ftp://ftp.apnic.net/pub/apnic/stats/apnic/README.TXT.'''
             fields[-1] = fields[-1].strip()
             record = dict(zip(field_names, fields))
             if record['type'] == 'ipv4':
-                record['mask'] = _calcmask(record['value'])
+                value = int(record["value"])
+                record["mask"] = _calc_ipv4_mask(value)
+                record["start_int"] = start_int = _calc_ipv4_int(record["start"])
+                record["stop_int"]  = start_int + value -1
             self.__records.append(record)
             line = _readline(fileobj)
     
