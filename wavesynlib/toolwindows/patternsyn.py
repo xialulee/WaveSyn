@@ -98,18 +98,9 @@ class OptimizeGroup(Group):
         M = self.__M.get_int()
         display = self.__bDisplay.get()            
 
-        # Create a new thread for solving the correlation matrix.            
-        def solve_func():
-            with code_printer():
-                topwin.solve(M=M, display=bool(display))
-                
-            @self._app.thread_manager.main_thread_do(block=False)
-            def on_finish_solving():
-                with code_printer():
-                    topwin.plot_current_data()
+        with code_printer():
+            topwin.solve.new_thread_run(M=M, verbose=bool(display), on_finish=["plot"])
 
-        thread.start_new_thread(solve_func, ())
-                
 
 
 class EditGroup(Group):
@@ -406,12 +397,17 @@ class PatternWindow(FigureWindow):
             color='g')
         
             
-    @WaveSynScriptAPI    
-    def solve(self, M, display=False):
+    @WaveSynScriptAPI(thread_safe=True)    
+    def solve(self, M, verbose=False, on_finish=[]):
         self.__problem.M = M
         self.__problem.idealPattern = self.__piecewisePattern
-        self.R = self.__problem.solve(verbose=display)
-        
+        self.R = self.__problem.solve(verbose=verbose)
+        if "plot" in on_finish:
+            @self.root_node.thread_manager.main_thread_do(block=False)
+            def plot():
+                self.plot_current_data()
+        return self.R
+
         
     @WaveSynScriptAPI    
     def save_mat_file(self, filename, varname='R', format='5'):
