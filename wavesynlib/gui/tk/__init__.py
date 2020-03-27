@@ -7,9 +7,11 @@ Created on Fri Apr 07 17:08:49 2017
 import tkinter
 import ctypes
 
+import hy
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
-from wavesynlib.widgets.tk import ValueChecker, Balloon
+from wavesynlib.widgets.tk import ValueChecker 
+from wavesynlib.widgets.balloon import Balloon
 from wavesynlib.widgets.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.interrupter.modelnode import InterrupterNode
