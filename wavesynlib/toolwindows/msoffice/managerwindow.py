@@ -11,7 +11,9 @@ from comtypes import COMError
 import tkinter as tk
 from tkinter import ttk
 
-from wavesynlib.widgets.tk import ScrolledTree, Group, json_to_tk
+import hy
+from wavesynlib.widgets.scrolledtree import ScrolledTree
+from wavesynlib.widgets.tk import Group, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver

@@ -439,48 +439,6 @@ class TextWinHotkey(Text):
         return 'break'
 
 
-class ScrolledTree(Frame):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.pack(expand='yes', fill='both')
-        self._make_widgets()
-        self.__on_item_double_click = FunctionChain()
-        def dbclick_callback(event):
-            item_id = self.tree.identify('item', event.x, event.y)
-            item_properties = self.tree.item(item_id)
-            self.__on_item_double_click(item_id, item_properties)
-        self.tree.bind('<Double-1>', dbclick_callback)
-        
-        
-    def clear(self):
-        for row in self.tree.get_children():
-            self.tree.delete(row)
-        
-        
-    @property
-    def on_item_double_click(self):
-        return self.__on_item_double_click
-        
-    def _make_widgets(self):
-        sbar    = Scrollbar(self)
-        tree    = Treeview(self)
-        sbar.config(command=tree.yview)
-        tree.config(yscrollcommand=sbar.set)
-        sbar.pack(side='right', fill='y')
-        tree.pack(side='left', expand='yes', fill='both')
-        self.tree   = tree
-                
-    for method_name in (
-            'bind',
-            'insert', 
-            'delete',
-            'heading',
-            'selection',
-            'item'
-    ):
-        locals()[method_name] = MethodDelegator('tree', method_name)
-
-
 
 class CheckTree: 
     class TreeNode:

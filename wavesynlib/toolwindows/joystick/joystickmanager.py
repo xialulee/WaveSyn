@@ -6,8 +6,9 @@ Created on Sun Oct 15 23:25:03 2017
 """
 from tkinter import Frame
 
+import hy
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.widgets.tk import ScrolledTree
+from wavesynlib.widgets.scrolledtree import ScrolledTree
 
 
 

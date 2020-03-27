@@ -1,6 +1,7 @@
 import tkinter as tk
 
-from wavesynlib.widgets.tk import ScrolledTree
+import hy
+from wavesynlib.widgets.scrolledtree import ScrolledTree
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 
 
@@ -9,7 +10,7 @@ class TableView:
     def __init__(self, *args, **kwargs):
         self.__tree_view = tree_view = ScrolledTree(*args, **kwargs)
         tree_view.tree["columns"] = ("ip", "host_name", "comments")
-        tree_view.tree["show"] = "headings"
+        tree_view.hide_icon_column()
         tree_view.heading("ip", text="IP")
         tree_view.heading("host_name", text="Host Name")
         tree_view.heading("comments", text="Comments")

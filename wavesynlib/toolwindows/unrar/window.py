@@ -9,7 +9,9 @@ import sys
 import tkinter
 from pathlib import Path
 
-from wavesynlib.widgets.tk import ScrolledTree, json_to_tk
+import hy
+from wavesynlib.widgets.scrolledtree import ScrolledTree
+from wavesynlib.widgets.tk import json_to_tk
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.interfaces.unrar import list_content, get_content_tree

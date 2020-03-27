@@ -7,7 +7,10 @@ Created on Mon Feb  5 00:45:09 2018
 import ast
 import tkinter as tk
 
-from wavesynlib.widgets.tk import ScrolledText, ScrolledTree, json_to_tk
+import hy 
+
+from wavesynlib.widgets.scrolledtree import ScrolledTree
+from wavesynlib.widgets.tk import ScrolledText, json_to_tk
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 

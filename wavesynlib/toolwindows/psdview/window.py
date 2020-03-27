@@ -15,7 +15,9 @@ import psd_tools
 from PIL import Image
 from PIL import ImageTk
 
-from wavesynlib.widgets.tk import ScrolledTree, ScrolledCanvas, json_to_tk
+import hy
+from wavesynlib.widgets.scrolledtree import ScrolledTree
+from wavesynlib.widgets.tk import ScrolledCanvas, json_to_tk
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.utils import MethodDelegator
