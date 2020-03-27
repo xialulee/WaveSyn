@@ -33,46 +33,6 @@ from wavesynlib.languagecenter.designpatterns import Observable
 
 __DEBUG__ = False
     
-win = False
-win7plus = False
-if platform.system() == 'Windows':
-    win = True
-    winver  = platform.version().split('.')    
-    if float('.'.join(winver[0:2])) >= 6.1:
-        win7plus = True
-
-if win7plus:
-    from comtypes import CoCreateInstance
-    import ctypes as ct
-    from win32con import GWL_EXSTYLE, WS_EX_LAYERED, LWA_ALPHA
-    
-    GetParent = ct.windll.user32.GetParent
-    SetWindowLongA = ct.windll.user32.SetWindowLongA
-    SetLayeredWindowAttributes = ct.windll.user32.SetLayeredWindowAttributes
-
-                                        
-    class Transparenter(object):
-        def __init__(self, tk_window):
-            self._tk_object = tk_window
-            self._handle = None
-            
-        def _get_window_handle(self):
-            if self._handle is None:
-                self._handle = GetParent(self._tk_object.winfo_id())
-            SetWindowLongA(self._handle, GWL_EXSTYLE, WS_EX_LAYERED)
-            return self._handle
-            
-        def set_opacity(self, opacity):
-            opacity = ct.c_ubyte(opacity)
-            handle = self._get_window_handle()
-            SetLayeredWindowAttributes(handle, 0, opacity, LWA_ALPHA)
-            
-else:
-    pass
-
-
-
-        
 
 
 #class FontFrame(Frame, object):
@@ -155,38 +115,6 @@ else:
 #    return retval[0]
     
     
-def ask_list_item(the_list, default_item_index=0, message=''):
-    win = Toplevel()
-
-    Label(win, text=message).pack()
-
-    combo = Combobox(win, stat='readonly')
-    combo['values'] = the_list
-    combo.current(default_item_index)
-    combo.pack()
-    
-    ret = [None]
-    
-    def on_ok():
-        ret[0] = combo.get()
-        win.quit()
-        
-    def on_cancel():
-        win.quit()
-        
-    frame = Frame(win)
-    frame.pack()
-    Button(win, text='Cancel', command=on_cancel).pack(side='right')            
-    Button(win, text='Ok', command=on_ok).pack(side='right')
-        
-    win.protocol('WM_DELETE_WINDOW', win.quit)
-    win.focus_set()
-    win.grab_set()
-    win.mainloop()
-    win.destroy()
-    
-    return ret[0]               
-
 
 #class GUIConsumer(object):                    
 #    def __init__(self, producer, timer):
