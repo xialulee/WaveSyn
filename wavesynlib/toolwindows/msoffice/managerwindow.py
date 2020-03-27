@@ -12,9 +12,9 @@ import tkinter as tk
 from tkinter import ttk
 
 import hy
-from wavesynlib.widgets.scrolledtree import ScrolledTree
-from wavesynlib.widgets.jsontotk import json_to_tk
-from wavesynlib.widgets.group import Group
+from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
+from wavesynlib.widgets.tk.jsontotk import json_to_tk
+from wavesynlib.widgets.tk.group import Group
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver

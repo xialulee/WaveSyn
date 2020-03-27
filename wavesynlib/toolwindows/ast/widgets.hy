@@ -2,7 +2,7 @@
 
 (import [tkinter [*]])
 (import [tkinter.ttk [Button]])
-(import [wavesynlib.widgets.group [Group]])
+(import [wavesynlib.widgets.tk.group [Group]])
 
 
 

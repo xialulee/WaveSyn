@@ -1,7 +1,7 @@
 import tkinter as tk
 
 import hy
-from wavesynlib.widgets.scrolledtree import ScrolledTree
+from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 
 

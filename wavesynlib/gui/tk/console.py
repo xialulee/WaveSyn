@@ -24,12 +24,12 @@ import traceback
 
 import jedi
 
-from wavesynlib.widgets.cwdindicator import CWDIndicator
-from wavesynlib.widgets.scrolledlist import ScrolledList
-from wavesynlib.widgets.scrolledtext import ScrolledText
-from wavesynlib.widgets.pilimageframe import PILImageFrame
-from wavesynlib.widgets.syntaxhighlighter import SyntaxHighlighter
-from wavesynlib.widgets.tkredirector import WidgetRedirector
+from wavesynlib.widgets.tk.cwdindicator import CWDIndicator
+from wavesynlib.widgets.tk.scrolledlist import ScrolledList
+from wavesynlib.widgets.tk.scrolledtext import ScrolledText
+from wavesynlib.widgets.tk.pilimageframe import PILImageFrame
+from wavesynlib.widgets.tk.syntaxhighlighter import SyntaxHighlighter
+from wavesynlib.widgets.tk.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.utils import call_immediately, FunctionChain

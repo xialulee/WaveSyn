@@ -3,7 +3,7 @@
 (import [tkinter [*]])
 (import [tkinter.ttk [
     Button Label]])
-(import [wavesynlib.widgets.group [Group]])
+(import [wavesynlib.widgets.tk.group [Group]])
 
 (import [PIL [ImageTk]])
 (import [wavesynlib.languagecenter.hy.tools [get-hy-file-dir]])

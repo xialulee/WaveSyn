@@ -1,4 +1,4 @@
-from wavesynlib.widgets.scrolledtext import ScrolledText
+from wavesynlib.widgets.tk.scrolledtext import ScrolledText
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 

@@ -23,13 +23,13 @@ import tkinter.ttk as ttk
 
 import hy
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.widgets.jsontotk import json_to_tk
-from wavesynlib.widgets.group import Group
-from wavesynlib.widgets.scrolledcanvas import ScrolledCanvas
-from wavesynlib.widgets.scrolledlist import ScrolledList
-from wavesynlib.widgets.scrolledtext import ScrolledText
-from wavesynlib.widgets.pilimageframe import PILImageFrame
-from wavesynlib.widgets.labeledentry import LabeledEntry
+from wavesynlib.widgets.tk.jsontotk import json_to_tk
+from wavesynlib.widgets.tk.group import Group
+from wavesynlib.widgets.tk.scrolledcanvas import ScrolledCanvas
+from wavesynlib.widgets.tk.scrolledlist import ScrolledList
+from wavesynlib.widgets.tk.scrolledtext import ScrolledText
+from wavesynlib.widgets.tk.pilimageframe import PILImageFrame
+from wavesynlib.widgets.tk.labeledentry import LabeledEntry
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
 from wavesynlib.misc.socketutils import AbortException, InterruptHandler

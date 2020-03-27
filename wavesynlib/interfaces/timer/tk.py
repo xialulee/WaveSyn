@@ -7,7 +7,7 @@ Created on Mon Mar 30 10:14:20 2015
 from tkinter import Toplevel, IntVar
 from tkinter.ttk import Button, Checkbutton
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer, Divider
-from wavesynlib.widgets.labeledentry import LabeledEntry
+from wavesynlib.widgets.tk.labeledentry import LabeledEntry
 
 
 class TkTimer(BaseObservableTimer):    

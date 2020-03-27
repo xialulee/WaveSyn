@@ -16,7 +16,7 @@ from tkinter.ttk import Button
 from six.moves.tkinter import Frame
 
 import hy
-from wavesynlib.widgets.scrolledtree import ScrolledTree
+from .scrolledtree import ScrolledTree
 from wavesynlib.stdstream import dumb_stream
 
 

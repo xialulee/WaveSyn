@@ -6,7 +6,7 @@
 (import [tkinter.ttk [
     Label Scale Entry Button 
     Scrollbar Treeview Combobox]])
-(import [wavesynlib.widgets.group [Group]])
+(import [wavesynlib.widgets.tk.group [Group]])
 
 
 

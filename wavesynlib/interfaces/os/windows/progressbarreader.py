@@ -25,8 +25,7 @@ class ProgressBarReader(object):
 
 
 from tkinter import Tk
-from wavesynlib.widgets import tk as tktools
-from wavesynlib.widgets.taskbaricon import TaskbarIcon
+from wavesynlib.widgets.tk.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.timer.tk import TkTimer
 import sys
 

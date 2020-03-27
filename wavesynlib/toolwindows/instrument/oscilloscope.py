@@ -11,8 +11,8 @@ import numpy as np
 import tkinter as tk
 
 import hy
-from wavesynlib.widgets.jsontotk import json_to_tk
-from wavesynlib.widgets.group import Group
+from wavesynlib.widgets.tk.jsontotk import json_to_tk
+from wavesynlib.widgets.tk.group import Group
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.devcomm.instruments.visainterface import get_resource_manager

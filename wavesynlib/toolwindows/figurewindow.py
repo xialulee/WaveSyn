@@ -28,10 +28,10 @@ from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeList, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
-from wavesynlib.widgets.group import Group
-from wavesynlib.widgets.scrolledlist import ScrolledList
-from wavesynlib.widgets.labeledentry import LabeledEntry
-from wavesynlib.widgets.labeledscale import LabeledScale
+from wavesynlib.widgets.tk.group import Group
+from wavesynlib.widgets.tk.scrolledlist import ScrolledList
+from wavesynlib.widgets.tk.labeledentry import LabeledEntry
+from wavesynlib.widgets.tk.labeledscale import LabeledScale
 
 
 color_map = {

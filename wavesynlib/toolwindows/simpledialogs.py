@@ -12,7 +12,7 @@ from tkinter.simpledialog import askstring, askinteger
 from tkinter.messagebox import showinfo, askyesno
 from tkinter.filedialog import asksaveasfilename, askopenfilename, askopenfilenames, askdirectory
 
-from wavesynlib.widgets.asklistitem import ask_list_item
+from wavesynlib.widgets.tk.asklistitem import ask_list_item
 
 from wavesynlib.languagecenter.wavesynscript import ModelNode, WaveSynScriptAPI, constant_handler, code_printer
 

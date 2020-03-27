@@ -5,9 +5,9 @@ Created on Sun Jan 10 16:38:55 2016
 @author: Feng-cong Li
 """
 
-#from wavesynlib.widgets.tk import *
 from wavesynlib.toolwindows.tkbasewindow import TkWindowNode
-from wavesynlib.widgets.labeledscale import LabeledScale
+from wavesynlib.widgets.tk.labeledscale import LabeledScale
+
 
 
 class FileSplitDialog(TkWindowNode):

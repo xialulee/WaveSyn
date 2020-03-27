@@ -11,12 +11,11 @@ import ctypes as ct
 
 import psutil
 
-from wavesynlib.widgets import tk as tktools
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
 from wavesynlib.interfaces.os.windows.processes.utils import singleton
-from wavesynlib.widgets.gaugethreshold import GaugeThreshold
-from wavesynlib.widgets.taskbaricon import TaskbarIcon
+from wavesynlib.widgets.tk.gaugethreshold import GaugeThreshold
+from wavesynlib.widgets.tk.taskbaricon import TaskbarIcon
 
     
     

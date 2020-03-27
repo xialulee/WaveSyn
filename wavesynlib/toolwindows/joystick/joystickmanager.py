@@ -8,7 +8,7 @@ from tkinter import Frame
 
 import hy
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.widgets.scrolledtree import ScrolledTree
+from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 
 
 

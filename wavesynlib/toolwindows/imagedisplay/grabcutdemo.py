@@ -5,7 +5,7 @@ Created on Thu Jun 22 18:04:01 2017
 @author: Feng-cong Li
 """
 import sys
-from wavesynlib.widgets.matplotlibwidgets import ImageFrame
+from wavesynlib.widgets.tk.matplotlibwidgets import ImageFrame
 from tkinter import Tk
 import pylab
 import numpy as np
