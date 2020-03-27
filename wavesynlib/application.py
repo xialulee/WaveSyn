@@ -33,7 +33,7 @@ import subprocess
 import json
 
 
-from wavesynlib.widgets.tk import ScrolledText
+from wavesynlib.widgets.scrolledtext import ScrolledText
 from wavesynlib.widgets.pilimageframe import PILImageFrame
 from wavesynlib.widgets.argentry import ArgEntry
 from wavesynlib.interfaces.modelnode import Interfaces
