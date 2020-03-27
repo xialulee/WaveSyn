@@ -28,7 +28,9 @@ from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeList, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.widgets.tk import (
-    Group, LabeledEntry, ScrolledList, LabeledScale)
+    Group, LabeledEntry, ScrolledList)
+from wavesynlib.widgets.labeledscale import LabeledScale
+
 
 color_map = {
     'c': 'cyan',
