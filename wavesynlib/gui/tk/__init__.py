@@ -10,7 +10,7 @@ import ctypes
 import hy
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
-from wavesynlib.widgets.tk import ValueChecker 
+from wavesynlib.widgets.valuechecker import ValueChecker 
 from wavesynlib.widgets.balloon import Balloon
 from wavesynlib.widgets.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.timer.tk import TkTimer

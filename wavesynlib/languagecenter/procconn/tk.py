@@ -10,7 +10,9 @@ import six
 import six.moves.tkinter as tkinter
 import six.moves.tkinter_tix as tix
 
-from wavesynlib.widgets.tk import ValueChecker
+import hy
+
+from wavesynlib.widgets.valuechecker import ValueChecker
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.designpatterns import Singleton
