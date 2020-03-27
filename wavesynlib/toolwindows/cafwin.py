@@ -16,7 +16,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from wavesynlib.toolwindows.figurewindow import FigureWindow
-from wavesynlib.widgets.tk import Group, LabeledEntry
+from wavesynlib.widgets.tk import Group 
+from wavesynlib.widgets.labeledentry import LabeledEntry
 from wavesynlib.algorithms import ambiguityfunction
 
 

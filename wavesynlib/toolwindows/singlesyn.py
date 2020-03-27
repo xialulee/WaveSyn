@@ -9,7 +9,8 @@ from tkinter import Frame, IntVar
 from tkinter.ttk import Button, Checkbutton, Progressbar, Combobox
 
 
-from wavesynlib.widgets.tk import Group, LabeledEntry
+from wavesynlib.widgets.tk import Group 
+from wavesynlib.widgets.labeledentry import LabeledEntry
 from wavesynlib.widgets.classselector import ask_class_name
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.utils import set_attributes
