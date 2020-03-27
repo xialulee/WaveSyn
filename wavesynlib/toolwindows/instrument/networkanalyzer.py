@@ -12,7 +12,7 @@ from skrf.io.touchstone import Touchstone
 import six.moves.tkinter as tk
 
 import hy
-from wavesynlib.widgets.tk import json_to_tk
+from wavesynlib.widgets.jsontotk import json_to_tk
 from wavesynlib.widgets.group import Group
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer

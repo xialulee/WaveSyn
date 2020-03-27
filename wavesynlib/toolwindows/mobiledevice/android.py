@@ -23,7 +23,7 @@ import tkinter.ttk as ttk
 
 import hy
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.widgets.tk import json_to_tk
+from wavesynlib.widgets.jsontotk import json_to_tk
 from wavesynlib.widgets.group import Group
 from wavesynlib.widgets.scrolledcanvas import ScrolledCanvas
 from wavesynlib.widgets.scrolledlist import ScrolledList

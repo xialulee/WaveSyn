@@ -11,7 +11,7 @@ from pathlib import Path
 
 import hy
 from wavesynlib.widgets.scrolledtree import ScrolledTree
-from wavesynlib.widgets.tk import json_to_tk
+from wavesynlib.widgets.jsontotk import json_to_tk
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.interfaces.unrar import list_content, get_content_tree

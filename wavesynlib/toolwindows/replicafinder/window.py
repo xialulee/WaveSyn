@@ -16,7 +16,7 @@ from pathlib import Path
 
 import hy
 from wavesynlib.widgets.scrolledtree import ScrolledTree
-from wavesynlib.widgets.tk import json_to_tk
+from wavesynlib.widgets.jsontotk import json_to_tk
 from wavesynlib.widgets.dirindicator import DirIndicator
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
