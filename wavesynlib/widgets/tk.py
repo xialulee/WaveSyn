@@ -42,8 +42,6 @@ if platform.system() == 'Windows':
         win7plus = True
 
 if win7plus:
-    #from wavesynlib.interfaces.os.windows.shell.taskbarmanager.definitions \
-        #import ITaskbarList4, GUID_CTaskbarList
     from comtypes import CoCreateInstance
     import ctypes as ct
     from win32con import GWL_EXSTYLE, WS_EX_LAYERED, LWA_ALPHA
@@ -52,32 +50,6 @@ if win7plus:
     SetWindowLongA = ct.windll.user32.SetWindowLongA
     SetLayeredWindowAttributes = ct.windll.user32.SetLayeredWindowAttributes
 
-    #class TaskbarIcon(object):
-        #def __init__(self, root):
-            #self.__tbm  = CoCreateInstance(GUID_CTaskbarList, 
-                                           #interface=ITaskbarList4)
-            #self.__root = root
-
-        #@property
-        #def progress(self):
-            #'''Not implemented'''
-            #pass
-
-        #@progress.setter
-        #def progress(self, value):
-            #self.__tbm.SetProgressValue(GetParent(self.__root.winfo_id()), 
-                                        #int(value), 100)
-
-        #@property
-        #def state(self):
-            #'''Not Implemented'''
-            #pass
-
-        #@state.setter
-        #def state(self, state):
-            #self.__tbm.SetProgressState(GetParent(self.__root.winfo_id()), 
-                                        #state)
-                                        
                                         
     class Transparenter(object):
         def __init__(self, tk_window):
@@ -102,36 +74,6 @@ else:
 
 
 
-from wavesynlib.languagecenter.python.pattern import prog as prog_pattern
-    
-class SyntaxHighlighter:
-    def __init__(self, text_widget, syntax_tags):
-        self.__text_widget = text_widget
-        self.__syntax_tags = syntax_tags
-        
-    
-    def highlight_one_row(self, row):
-        text = self.__text_widget
-        
-        for tag in self.__syntax_tags:
-            text.tag_remove(tag, f'{row}.0', f'{row}.end')
-            
-        line = text.get(f'{row}.0', f'{row}.end')
-        start = 0
-        while True: 
-            m = prog_pattern.search(line, start)
-            if not m: 
-                break
-            start = m.end()
-            for key, value in m.groupdict().items():
-                if value:
-                    text.tag_add(
-                        key, 
-                        f'{row}.{m.start()}',
-                        f'{row}.{m.end()}')        
-        
-        
-                        
 class LabeledScale(Frame):
     def __init__(self, *args, **kwargs):
         from_ = kwargs.pop('from_')
