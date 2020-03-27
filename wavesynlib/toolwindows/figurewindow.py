@@ -27,8 +27,8 @@ from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeList, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
-from wavesynlib.widgets.tk import (
-    Group, ScrolledList)
+from wavesynlib.widgets.tk import Group
+from wavesynlib.widgets.scrolledlist import ScrolledList
 from wavesynlib.widgets.labeledentry import LabeledEntry
 from wavesynlib.widgets.labeledscale import LabeledScale
 

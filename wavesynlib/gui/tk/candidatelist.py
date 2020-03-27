@@ -1,6 +1,6 @@
 from tkinter import Toplevel, Label
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
-from wavesynlib.widgets.tk import ScrolledList
+from wavesynlib.widgets.scrolledlist import ScrolledList
 
 
 
