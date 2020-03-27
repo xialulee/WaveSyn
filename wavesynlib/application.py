@@ -33,7 +33,9 @@ import subprocess
 import json
 
 
-from wavesynlib.widgets.tk import PILImageFrame, ArgEntry, ScrolledText
+from wavesynlib.widgets.tk import ScrolledText
+from wavesynlib.widgets.pilimageframe import PILImageFrame
+from wavesynlib.widgets.argentry import ArgEntry
 from wavesynlib.interfaces.modelnode import Interfaces
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.threadtools import ThreadManager

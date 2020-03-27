@@ -25,7 +25,8 @@ import traceback
 import jedi
 
 from wavesynlib.widgets.tk import (
-        CWDIndicator, ScrolledText, ScrolledList, PILImageFrame)
+        CWDIndicator, ScrolledText, ScrolledList)
+from wavesynlib.widgets.pilimageframe import PILImageFrame
 from wavesynlib.widgets.syntaxhighlighter import SyntaxHighlighter
 from wavesynlib.widgets.tkredirector import WidgetRedirector
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, code_printer
