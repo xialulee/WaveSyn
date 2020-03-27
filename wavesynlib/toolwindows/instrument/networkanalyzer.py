@@ -11,7 +11,9 @@ from skrf.io.touchstone import Touchstone
 
 import six.moves.tkinter as tk
 
+import hy
 from wavesynlib.widgets.tk import json_to_tk
+from wavesynlib.widgets.group import Group
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 
@@ -26,7 +28,7 @@ class TouchstoneViewer(FigureWindow):
         
         widgets_desc = [
 dict(
-    class_='Group', pack=dict(side='left', fill='y'), setattr={'name':'Load'}, children=[
+    class_=Group, pack=dict(side='left', fill='y'), setattr={'name':'Load'}, children=[
         dict(class_='Button', config=dict(text='Load', command=self._on_load))
     ]
 )

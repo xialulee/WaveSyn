@@ -12,12 +12,14 @@ from tkinter.ttk import Notebook, Label, Button, Checkbutton, Scale
 
 from PIL import ImageTk
 
+import hy
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, WaveSynScriptAPI, code_printer)
 from wavesynlib.languagecenter.utils import auto_subs, MethodDelegator
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.interfaces.timer.tk import TkTimer
-from wavesynlib.widgets.tk import Group, json_to_tk
+from wavesynlib.widgets.group import Group
+from wavesynlib.widgets.tk import json_to_tk
 from wavesynlib.toolwindows.basewindow import BaseWindowNode
 
 
@@ -110,13 +112,13 @@ class WindowManager(ModelNode, WindowComponent):
             self.set_opacity(val)        
             
         widgets_desc = [
-{"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "children":[
+{"class":Group, "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "children":[
     {"class":"Label", "config":{"text":f"ID: {id(self.window_node)}"}},
     {"class":"Button", "config":{"text":"Copy ID  ", "image":copy_id_icon, "compound":"left", "command":self._on_copy_id_click}},
     {"class":"Button", "config":{"text":"Copy Path", "image":copy_path_icon, "compound":"left", "command":self._on_copy_path_click}}]
 },
 
-{"class":"Group", "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Attributes"}, "children":[
+{"class":Group, "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Attributes"}, "children":[
     {"class":"Checkbutton", "config":{"text":"Topmost", "variable":topmost, "command":self._on_topmost_click}},
     {"class":"Scale", "config":{"from_":0.2, "to":1.0, "orient":"horizontal", "value":1.0, "command":on_scale}},
     {"class":"Label", "config":{"text":"Opacity"}}]

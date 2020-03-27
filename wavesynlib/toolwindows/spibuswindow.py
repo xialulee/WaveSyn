@@ -21,11 +21,12 @@ import threading
 import inspect
 from os.path import abspath, dirname, join
 
+import hy
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.devcomm.oneasyb.spi import USBSPIConverter
-from wavesynlib.widgets.tk import Group
+from wavesynlib.widgets.group import Group
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 
 

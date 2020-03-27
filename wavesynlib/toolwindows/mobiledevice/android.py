@@ -20,8 +20,11 @@ from PIL import ImageTk, Image
 
 import tkinter as tk
 import tkinter.ttk as ttk
+
+import hy
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.widgets.tk import json_to_tk
+from wavesynlib.widgets.group import Group
 from wavesynlib.widgets.scrolledcanvas import ScrolledCanvas
 from wavesynlib.widgets.scrolledlist import ScrolledList
 from wavesynlib.widgets.scrolledtext import ScrolledText
@@ -92,7 +95,7 @@ if action == "read":
         self.__transfer_progress = tk.IntVar()
         
         widgets_desc = [
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Clipboard'}, 'children':[
+{'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Clipboard'}, 'children':[
     {'class':'Frame', 'children':[
         {'class':'Button', 'name':'read_clipb', 'grid':{'row':0, 'column':0},
              'balloonmsg':'Read the clipboard of an Android device.',
@@ -106,7 +109,7 @@ if action == "read":
     ]}
 ]},
     
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Storage'}, 'children':[
+{'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Storage'}, 'children':[
     {'class':'Frame', 'children':[
         {'class':'Button', 'name':'get_file', 'grid':{'row':0, 'column':0},
              'balloonmsg':'Get gallery photos.',
@@ -126,15 +129,15 @@ if action == "read":
     ]}
 ]},
 
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
+{'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
     {'class':'Button', 'name':'read_gps',
          'balloonmsg':'Read the AGPS sensor of an Android device.',
          'config':{'text':'Location', 'image':image_sensor_location, 'compound':'left', 'command':self.__on_read_device_location}}
 ]},
 
-{'class':'Group', 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Manage'}, 'children':[
+{'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Manage'}, 'children':[
     {'class':'Frame', 'pack':{'side':'left', 'fill':'y'}, 'children':[
-        {'class':'LabeledEntry', 'name':'qr_size', 
+        {'class':LabeledEntry, 'name':'qr_size', 
              'balloonmsg':'Size (pixels) of the generated QR code.',
              'setattr':{
                  'label_text':'QR Size', 
@@ -146,7 +149,7 @@ if action == "read":
         {'class':'Button', 'config':{'text':'Abort', 'command':self.__on_abort}}
     ]},
     {'class':'Frame', 'pack':{'side':'left'}, 'children':[
-        {'class':'ScrolledList', 'name':'ip_list', 'pack':{}}
+        {'class':ScrolledList, 'name':'ip_list', 'pack':{}}
     ]}
 ]}
 ]

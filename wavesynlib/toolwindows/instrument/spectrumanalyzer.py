@@ -9,7 +9,9 @@ import numpy as np
 
 import tkinter as tk
 
+import hy
 from wavesynlib.widgets.tk import json_to_tk
+from wavesynlib.widgets.group import Group
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.devcomm.instruments.visainterface import get_resource_manager
@@ -83,7 +85,7 @@ class SpectrumViewer(FigureWindow):
         
         widgets_desc = [
 dict(
-    class_='Group', pack=dict(side='left', fill='y'), setattr={'name':'Instrument'}, children=[
+    class_=Group, pack=dict(side='left', fill='y'), setattr={'name':'Instrument'}, children=[
         dict(class_='LabeledEntry', name='entry_inst_name', setattr={'label_text':'Name', 'entry_width':8}),
         dict(class_='Button', pack=dict(fill='x'), config=dict(text='Connect', command=self._on_connect_click)),
         dict(class_='Button', pack=dict(fill='x'), config=dict(text='Refresh', command=on_refresh))
@@ -91,7 +93,7 @@ dict(
 ),        
         
 dict(
-    class_='Group', pack=dict(side='left', fill='y'), setattr={'name':'Frequency'}, children=[
+    class_=Group, pack=dict(side='left', fill='y'), setattr={'name':'Frequency'}, children=[
         dict(class_='Label', name='label_start_stop'),
         dict(class_='Label', name='label_center_span')
     ]

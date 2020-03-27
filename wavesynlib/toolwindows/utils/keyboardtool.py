@@ -7,8 +7,9 @@ Created on Sun Feb 14 23:32:52 2016
 import tkinter as tk
 from tkinter import ttk
 
+import hy
 from wavesynlib.interfaces.os.windows import disablekeys
-from wavesynlib.widgets.tk import Group
+from wavesynlib.widgets.group import Group
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import code_printer, Scripting, WaveSynScriptAPI
 

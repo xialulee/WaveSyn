@@ -72,25 +72,6 @@ else:
 
 
 
-class Group(Frame):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'relief' not in kwargs:
-            self['relief']  = 'groove'
-        if 'bd' not in kwargs:
-            self['bd']      = 2
-        self.__lblName  = Label(self)
-        self.__lblName.pack(side='bottom')        
-
-
-    @property
-    def name(self):
-        return self.__lblName['text']
-
-
-    @name.setter
-    def name(self, name):
-        self.__lblName['text']  = name
         
 
 

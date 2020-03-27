@@ -8,8 +8,8 @@ from numpy import array, ndarray, angle, log10, convolve, fft, r_, conj
 from tkinter import Frame, IntVar
 from tkinter.ttk import Button, Checkbutton, Progressbar, Combobox
 
-
-from wavesynlib.widgets.tk import Group 
+import hy
+from wavesynlib.widgets.group import Group 
 from wavesynlib.widgets.labeledentry import LabeledEntry
 from wavesynlib.widgets.classselector import ask_class_name
 from wavesynlib.toolwindows.figurewindow import FigureWindow
