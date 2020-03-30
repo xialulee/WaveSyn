@@ -4,7 +4,8 @@
 		"Name":"Waveform", "TearOff":0, "UnderLine":0, "SubMenu":[
 		    {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.singlesyn', class_name='SingleWindow')"},
 		    {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"print('Not Implemented', file=sys.stderr)"},
-		    {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.antennaarray.mimopatternsyn', class_name='PatternWindow')"}
+            {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.antennaarray.mimopatternsyn', class_name='PatternWindow')"},
+            {"Name":"New DFT Directions Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.antennaarray.dftdirections', class_name='DFTDirectionsWindow')"}
 		]
 	    },
 	    

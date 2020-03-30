@@ -19,7 +19,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk 
 import matplotlib.pyplot as pyplot
 
-from numpy import deg2rad, rad2deg
+from numpy import deg2rad, rad2deg, ndarray
 
 import hy
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
@@ -173,6 +173,17 @@ class DataFigure(ModelNode, Observable):
         
     def plot(self, *args, **kwargs):
         line_object = self.axes.plot(*args, **kwargs)
+        self.line_objects.append(line_object)
+        self.update()
+
+
+    def stem(self, *args, **kwargs):
+        kwargs["use_line_collection"] = True
+        color = kwargs.pop("color", None)
+        line_object = self.axes.stem(*args, **kwargs)
+        if color:
+            line_object.markerline.set_color(color)
+            line_object.stemlines.set_color(color)
         self.line_objects.append(line_object)
         self.update()
         
@@ -360,7 +371,11 @@ ylim:       the lower and upper limits of the y axis.
 major_x_tick: the x axis' tick of the major grid.
 major_y_tick: the y axis' ...
 minor_x_tick: the x axis' tick of the minor grid.
-minor_y_tick: the y axis' ...'''    
+minor_y_tick: the y axis' ...
+----Curve List----
+curve_selected: will appear in kwargs when an item in the curve list being clicked.
+'''    
+
 
     class GridGroupObserver:
         '''This class is used by FigureBook. FigureBook is a class supports observable protocal.
@@ -479,6 +494,8 @@ The rest parameters are passed to PanedWindow.__init__.
         node_name    = kwargs.pop('node_name', '')
         super().__init__(node_name=node_name)
 
+        self.__selected_curve = (None, None)
+
         figure_meta = None if 'figure_meta' not in kwargs \
             else kwargs.pop('figure_meta')
         kwargs['orient'] = 'horizontal'
@@ -535,11 +552,16 @@ The rest parameters are passed to PanedWindow.__init__.
                 data_figure_observer = self.DataFigureObserver(self),
                 data_pool    = []
             )
+
+
+    @property
+    def selected_curve(self):
+        return self.__selected_curve
             
             
     def append(self, val):
         val.add_observer(self.data_figure_observer)
-        return super(FigureBook, self).append(val)
+        return super().append(val)
     
             
     def notify_observers(self, **kwargs):
@@ -593,11 +615,20 @@ The rest parameters are passed to PanedWindow.__init__.
             figure.plot_function(*args, **kwargs)
         self.__list.insert('end', curve_name)
         
+        color = None
         if 'color' in kwargs:
-            color = color_map[kwargs['color']]
-        else:
-            color = self[0].line_objects[-1][0].get_color()
-            color = color_map.get(color, color)
+            color = color_map.get(kwargs['color'], None)
+        if not color:
+            line_object = self[0].line_objects[-1]
+            if isinstance(line_object, matplotlib.container.StemContainer):
+                color = line_object.stemlines.get_color()[0]
+            else:
+                color = line_object[0].get_color()
+            if isinstance(color, ndarray):
+                color = [int(c*255) for c in color]
+                color = "#{:02x}{:02x}{:02x}".format(*color)
+            else:
+                color = color_map.get(color, color)
             
         self.__list.item_config('end', fg=color)
         self.notify_observers()
@@ -626,6 +657,8 @@ The rest parameters are passed to PanedWindow.__init__.
                 pyplot.setp(line, linewidth=1)
             pyplot.setp(figure.line_objects[index], linewidth=2)
             figure.update()
+        self.__selected_curve = (index, label)
+        self.notify_observers(curve_selected=True)
             
             
     @WaveSynScriptAPI            
