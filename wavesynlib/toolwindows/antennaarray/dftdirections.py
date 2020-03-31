@@ -12,6 +12,7 @@ from tkinter.ttk import Button
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.labeledentry import LabeledEntry
+from wavesynlib.widgets.tk.scrolledlist import ScrolledList
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 
 from wavesynlib.languagecenter.datatypes.color import WaveSynColor
@@ -61,8 +62,18 @@ class ParametersGroup(Group):
             text="",
             image=image_run,
             compound="left",
-            command=lambda:self.__topwin.show_directions(M=self.__M.get_int(), d=self.__d.get_float()))
+            command=lambda:topwin.show_directions(M=self.__M.get_int(), d=self.__d.get_float()))
         run_button.pack(side="top", fill="x")
+
+
+
+class AmbiguityGroup(Group):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = "Ambiguity"
+        self._list = _list = ScrolledList(self)
+        _list.list_config(height=4, width=10)
+        _list.pack()
 
 
 
@@ -74,9 +85,14 @@ class DFTDirectionsWindow(FigureWindow):
         super().__init__(*args, **kwargs)
         tool_tabs = self._tool_tabs
 
+        self.__M = 0
+        self.__d = 0
+
         array_frame = Frame(tool_tabs)
         param_group = ParametersGroup(array_frame, topwin=self)
         param_group.pack(side="left", fill="y")
+        self._ambig_group = ambig_group = AmbiguityGroup(array_frame)
+        ambig_group.pack(side="left", fill="y")
         tool_tabs.add(array_frame, text="Array")
 
         self._make_view_tab()
@@ -98,10 +114,28 @@ class DFTDirectionsWindow(FigureWindow):
         @figure_book.add_observer
         def on_curve_selected(**kwargs):
             if "curve_selected" in kwargs:
-                print(self.figure_book.selected_curve)
+                # print(self.figure_book.selected_curve)
+                _list = self._ambig_group._list
+                _list.clear()
+                M = self.__M
+                d = self.__d
+                index = self.figure_book.selected_curve[0]
+                k = index - M//2
+                cd2 = ceil(d*2)
+                steps = r_[(1-cd2):cd2] * M
+                j = (k+steps)/d/M
+                j = j[-1<=j]
+                j = j[j<=1]
+                j = arcsin(j)
+                j = rad2deg(j)
+                for i in j:
+                    _list.append(f"{i: 3.2f}°")
 
 
     def show_directions(self, M, d):
+        self._ambig_group._list.clear()
+        self.__M = M
+        self.__d = d
         self.figure_book.clear()
         k = r_[:M]
         k -= M//2
@@ -116,7 +150,7 @@ class DFTDirectionsWindow(FigureWindow):
                 arcsin(j), 
                 mag, 
                 color=WaveSynColor(hsv=(index/(M+0.1*M), 1.0, 0.75)).to_matplotlib(),
-                curve_name=f"{rad2deg(arcsin(i/d/M)): 3.2f}")
+                curve_name=f"{rad2deg(arcsin(i/d/M)): 3.2f}°")
 
 
 
