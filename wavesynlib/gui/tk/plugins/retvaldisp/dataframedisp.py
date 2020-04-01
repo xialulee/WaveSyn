@@ -2,6 +2,7 @@ from pandas import DataFrame
 from tkinter import Toplevel
 
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
+from wavesynlib.widgets.tk import dataframedisplay
 
 
 
@@ -26,13 +27,5 @@ class Plugin:
         self.__root.gui.console.show_tips([{
             "type":"link",
             "content":"Display this DataFrame object in a window.",
-            "command":lambda *args:self.show_dataframe(data)}])
+            "command":lambda *args:dataframedisplay.show(data)}])
 
-
-    def show_dataframe(self, dataframe):
-        win = Toplevel()
-        win.title("WaveSyn-DataFrameDisplay")
-        st = ScrolledTree(win)
-        st.pack(fill="both", expand="yes")
-        st.load_dataframe(dataframe)
-        
