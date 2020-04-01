@@ -1,7 +1,7 @@
 (require [hy.extra.anaphoric [*]])
 (require [wavesynlib.languagecenter.hy.utils [defprop super-init]])
 
-(import [tkinter [Frame]])
+(import [tkinter [Frame Tk]])
 (import [tkinter.ttk [Scrollbar Treeview]])
 
 (import [wavesynlib.languagecenter.utils [FunctionChain MethodDelegator]])
@@ -30,6 +30,17 @@
     (defprop on-item-double-click
         #_getter
         (fn [self] self.--on-item-double-click) ) 
+
+    (defn load-dataframe [self dataframe]
+        (.clear self)
+        (setv (. self tree ["columns"]) (tuple dataframe.columns))
+        (for [colname dataframe.columns]
+            (.heading self colname :text colname))
+        (for [row (.iterrows dataframe)]
+            (.insert self 
+                "" "end" 
+                :text (first row) 
+                :values (tuple (second row)))))
         
     (defn -make-widgets [self]
         (setv
@@ -49,6 +60,20 @@
             "selection"
             "item")
         (assoc (locals) it (MethodDelegator "tree" it) ) ) )
+
+
+
+(defmain [&rest args]
+    (import [pandas [DataFrame]])
+    (setv df (DataFrame 
+        :data [[1 2] [3 4]]
+        :index ["row1" "row2"]
+        :columns ["col1" "col2"]))
+    (setv root (Tk))
+    (setv st (ScrolledTree root))
+    (.pack st)
+    (.load-dataframe st df)
+    (.mainloop root))
 
     
 

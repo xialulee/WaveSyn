@@ -13,7 +13,6 @@ from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.labeledentry import LabeledEntry
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
-from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 
 from wavesynlib.languagecenter.datatypes.color import WaveSynColor
 from wavesynlib.languagecenter.wavesynscript import Scripting
