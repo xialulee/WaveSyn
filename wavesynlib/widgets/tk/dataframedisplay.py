@@ -9,7 +9,7 @@ def show(dataframe):
     win = Toplevel()
     win.title("WaveSyn-DataFrameDisplay")
     query_entry = LabeledEntry(win)
-    query_entry.pack(fill="x", expand="yes")
+    query_entry.pack(fill="x", expand="no")
     query_entry.label_text = "Query:"
     def query_func(event):
         if event.keysym == "Return":
