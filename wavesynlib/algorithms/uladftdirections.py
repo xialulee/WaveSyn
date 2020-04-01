@@ -1,5 +1,5 @@
-from math import ceil
-from numpy import abs, arcsin, r_, rad2deg
+from math import ceil, pi
+from numpy import abs, arcsin, deg2rad, exp, inner, r_, rad2deg, sin, sum
 from pandas import DataFrame
 
 
@@ -25,4 +25,25 @@ d: the space between elements with respect to wavelength."""
                 "k":k, 
                 "θ (°)":rad2deg(theta),
                 "θ (rad)":theta})
+    return DataFrame(result)
+
+
+
+def calc_dft_peak(M, d, theta_deg=None, theta_rad=None):
+    result = []
+    if theta_deg:
+        theta_rad = deg2rad(theta_deg)
+    else:
+        theta_deg = rad2deg(theta_rad)
+    theta_k = sin(theta_rad) * d * M % M
+    print(theta_k)
+    for index, k in enumerate(theta_k):
+        s1 = exp(1j*2*pi*k*r_[:M]/M)
+        s2 = exp(1j*2*pi*round(k)*r_[:M]/M)
+        loss = 1 - abs(sum(s1*s2.conj()))/16
+        result.append({
+            "θ(°)": theta_deg[index],
+            "θ(rad)": theta_rad[index],
+            "peak": int(k),
+            "loss": loss })
     return DataFrame(result)
