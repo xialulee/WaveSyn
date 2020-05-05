@@ -5,6 +5,7 @@ from tkinter.ttk import Checkbutton
 import  ctypes as ct
 import  tkinter.messagebox as msgbox
 import  sys
+import atexit
 
 hKHook = [0]
 
@@ -20,8 +21,8 @@ VK_CONTROL      =   0x11
 
 GetKeyState         = ct.windll.user32.GetKeyState
 SetWindowsHookExA   = ct.windll.user32.SetWindowsHookExA
+UnhookWindowsHookEx = ct.windll.user32.UnhookWindowsHookEx
 CallNextHookEx      = ct.windll.user32.CallNextHookEx
-GetModuleHandleA    = ct.windll.kernel32.GetModuleHandleA
 
 key_name = {}
 key_name['LWIN'] = 'Left Win'
@@ -91,10 +92,15 @@ class MainWin(Frame):
 if __name__ == '__main__':
     KHOOK = ct.WINFUNCTYPE(ct.c_int, ct.c_int, ct.c_int, ct.POINTER(KBDLLHOOKSTRUCT))
     c_khook = KHOOK(khook_proc)
-    hKHook[0] = SetWindowsHookExA(13, c_khook, GetModuleHandleA(0), 0)
+    hKHook[0] = SetWindowsHookExA(13, c_khook, None, 0)
     if not hKHook[0]:
         msgbox.showerror('Error', "Can't hook keyboard.")
         sys.exit(1)
+    
+    @atexit.register
+    def on_exit():
+        UnhookWindowsHookEx(hKHook[0])
+
     root = Tk()
     mainw = MainWin()
     root.title('DKey')
