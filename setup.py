@@ -6,7 +6,9 @@ Created on Tue Mar 31 16:10:33 2015
 """
 import os
 import pathlib
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
+import numpy
+from Cython.Build import cythonize
 
 selfpath = pathlib.Path(os.path.realpath(__file__))
 dirpath = selfpath.parent
@@ -38,6 +40,9 @@ setup(
       url="https://github.com/xialulee/WaveSyn",
       packages= find_packages(),
       scripts=["scripts/launchwavesyn.py"],
+      ext_modules=cythonize("wavesynlib/fileutils/photoshop/packbits.pyx"),
+      include_dirs=[numpy.get_include()],
+      zip_safe=False,
       package_data = {
         # If any package contains *.json/png/pyw files, include them:
         # .m files for Matlab functions and scripts.

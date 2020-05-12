@@ -40,6 +40,10 @@ class Gadgets(ModelNode):
             
             
     def display_image(self, image):
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tfile:
-            image.save(tfile, 'png')
-        self.launch('wsdisplay.py', tfile.name, '--delete')        
+        if isinstance(image, (str, pathlib.Path)):
+            args = [image]
+        else:
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tfile:
+                image.save(tfile, 'png')
+            args = [tfile.name, '--delete']
+        self.launch('wsdisplay.py', *args)        

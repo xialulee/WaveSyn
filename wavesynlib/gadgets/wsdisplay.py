@@ -8,12 +8,15 @@ __DEBUG__ = False
 
 import os
 import argparse
+from pathlib import Path
 
 from PIL import Image
 
 import numpy as np
 from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
+
+from wavesynlib.fileutils.photoshop import psd
 
 
 vertex = """
@@ -146,7 +149,10 @@ class Canvas(app.Canvas):
 
 def get_image_data(path):
     with open(path, 'rb') as f:
-        image = Image.open(f)
+        if path.suffix == ".psd":
+            image = psd.get_pil_image(f)
+        else:
+            image = Image.open(f)
         rgba_image = Image.new('RGBA', image.size)
         rgba_image.paste(image)    
     ret = np.array(rgba_image, dtype=np.float32)
@@ -156,7 +162,7 @@ def get_image_data(path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Display a given image file.')
-    parser.add_argument('filename', metavar='filename', type=str, help='The filename of the given image.')
+    parser.add_argument('filename', metavar='filename', type=Path, help='The filename of the given image.')
     parser.add_argument('--delete', help='Delete image file.', action='store_true')
     args = parser.parse_args()
     mat = get_image_data(args.filename)
