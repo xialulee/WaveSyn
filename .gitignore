@@ -219,3 +219,5 @@ pip-log.txt
 *.jar
 
 wavesynlib/path.txt
+wavesynlib/.vscode/c_cpp_properties.json
+wavesynlib/fileutils/photoshop/packbits.c
