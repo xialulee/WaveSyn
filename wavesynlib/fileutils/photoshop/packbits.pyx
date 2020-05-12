@@ -7,7 +7,7 @@ from libc.stdint cimport uint8_t
 
 
 @cython.wraparound(False)
-def packbits(const uint8_t [:] buf, int image_size):
+def packbits(const uint8_t [::1] buf, int image_size):
     cdef int buf_size
     cdef int row_idx
     cdef int size_pos
