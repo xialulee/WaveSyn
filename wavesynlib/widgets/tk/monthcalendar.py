@@ -64,6 +64,7 @@ class MonthCalendar(Frame):
         for r in range(6):
             for c in range(7):
                 date_button = tkButton(lower_frame, **button_style)
+                date_button["command"] = lambda button=date_button: self.__picker_callback(self.__year, self.__month, int(button["text"]))
                 date_button.grid(row=r, column=c)
                 date_buttons.append(date_button)
 
@@ -74,6 +75,7 @@ class MonthCalendar(Frame):
         self.__date = None
         self.__default_fg = date_buttons[0]["fg"]
         self.__default_bg = date_buttons[0]["bg"]
+        self.__picker_callback = lambda day: None
 
 
     def clear_buttons(self):
@@ -81,6 +83,11 @@ class MonthCalendar(Frame):
             button["text"] = ""
             button["fg"] = self.__default_fg
             button["bg"] = self.__default_bg
+            button["state"] = "disable"
+
+
+    def pick_date(self, callback):
+        self.__picker_callback = callback
 
 
     def set_month(self, year, month):
@@ -101,6 +108,7 @@ class MonthCalendar(Frame):
             if date.month != month:
                 button["fg"] = "gray"
             else:
+                button["state"] = "normal"
                 if date.weekday() == 5:
                     button["fg"] = "lime green"
                 elif date.weekday() == 6:
@@ -155,6 +163,30 @@ def show_date(date):
     mc = MonthCalendar(win)
     mc.pack(fill="both")
     mc.set_date(date.year, date.month, date.day)
+
+
+
+def pick_date():
+    win = Toplevel()
+    win.resizable(False, False)
+    win.title("WaveSyn-DatePicker")
+    mc = MonthCalendar(win)
+    today = datetime.date.today()
+    mc.set_date(today.year, today.month, today.day)
+    mc.pack(fill="both")
+    retval = None
+    def callback(year, month, day):
+        nonlocal retval
+        retval = datetime.date(year, month, day)
+        win.quit()
+    mc.pick_date(callback)
+
+    win.protocol("WM_DELETE_WINDOW", lambda:0)
+    win.focus_set()
+    win.grab_set()
+    win.mainloop()
+    win.destroy()
+    return retval
 
 
 
