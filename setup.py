@@ -12,25 +12,12 @@ from Cython.Build import cythonize
 
 selfpath = pathlib.Path(os.path.realpath(__file__))
 dirpath = selfpath.parent
-
-try:
-    import tkinter
-    from tkinter.filedialog import askdirectory
-    root = tkinter.Tk()
-    root.withdraw()
-    def ask_config_dir():
-        return askdirectory(title='''\
-Select the directory for storing config, cache, and history files.''')
-except:
-    def ask_config_dir():
-        return input('''\
-Please input the path of the directory for storing config, \
-cache, and history files:\n''')
-
-specpath = ask_config_dir()
+specpath = pathlib.Path.home() / ".wavesyndata"
+if not specpath.exists():
+    specpath.mkdir()
 
 with open(dirpath / 'wavesynlib' / 'path.txt', 'w') as f:
-    f.write(specpath)
+    f.write(str(specpath))
     
 setup(
       name="wavesynlib",
