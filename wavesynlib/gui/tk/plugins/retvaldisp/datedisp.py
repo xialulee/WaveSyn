@@ -1,11 +1,10 @@
-from pandas import DataFrame
-
-from wavesynlib.widgets.tk import dataframedisplay
+from datetime import date
+from wavesynlib.widgets.tk import monthcalendar
 
 
 
 class Plugin:
-    _type = DataFrame
+    _type = date
 
 
     def __init__(self, root_node):
@@ -23,7 +22,6 @@ class Plugin:
         if not self.test_data(data):
             return
         self.__root.gui.console.show_tips([{
-            "type":"link",
-            "content":"Display this DataFrame object in a window.",
-            "command":lambda *args:dataframedisplay.show(data)}])
-
+            "type": "link",
+            "content": "Show month calendar.",
+            "command": lambda *args: monthcalendar.show_date(data) }])
