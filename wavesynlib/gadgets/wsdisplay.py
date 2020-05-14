@@ -150,7 +150,7 @@ class Canvas(app.Canvas):
 def get_image_data(path):
     with open(path, 'rb') as f:
         if path.suffix == ".psd":
-            image = psd.get_pil_image(f)
+            image = psd.get_pil_image(f, read_channels="min")[0]
         else:
             image = Image.open(f)
         rgba_image = Image.new('RGBA', image.size)

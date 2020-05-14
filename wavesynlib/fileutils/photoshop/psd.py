@@ -1,29 +1,63 @@
+import hy
 import struct
+from ctypes import sizeof
 
 import numpy as np
 from PIL import Image
 import time
 
 from .packbits import packbits
-
-
-_head_def = ">4cH6cHIIHH"
+from .structdef import Head
 
 
 
-def get_image_matrix(psd_file, rgba=False):
+COLORMODE = {
+    0: "Bitmap",
+    1: "Grayscale",
+    2: "Indexed",
+    3: "RGB",
+    4: "CMYK",
+    7: "Multichannel",
+    8: "Duotone",
+    9: "Lab"}
+
+
+
+def get_image_matrix(psd_file, read_channels=-1):
     """\
 Get the numpy array of the image in the given psd_file.
 
 psd_file: a stream object of the psd file.
 rgba:     assume the 4th channel is the alpha channel."""
     psd_file.seek(0)
-    head = psd_file.read(struct.calcsize(_head_def))
-    head = struct.unpack(_head_def, head)
+    head = Head()
+    head.bytes[:] = psd_file.read(sizeof(Head))
 
-    n_ch = head[11]
-    height = head[12]
-    width = head[13]
+    if head.signature != b"8BPS":
+        print(head.signature)
+        raise TypeError("Given file is not PSD.")
+
+    n_ch = head.channels
+
+    if read_channels == "min":
+        read_channels = {
+            0: 1,
+            1: 1,
+            2: 1,
+            3: 3,
+            4: 4,
+            7: -1,
+            8: -1, # Not sure
+            9: 3
+        }[head.colormode]
+
+    if read_channels > n_ch:
+        raise ValueError("Too many channels to read.")
+    elif read_channels <= 0:
+        read_channels = n_ch
+
+    height = head.height
+    width  = head.width
     pixel_num = width * height
     color_mode_len = struct.unpack(">I", psd_file.read(4))[0]
 
@@ -36,10 +70,7 @@ rgba:     assume the 4th channel is the alpha channel."""
     psd_file.seek(layer_info_len, 1)
     compress_type = struct.unpack(">H", psd_file.read(2))[0]
 
-    if rgba and n_ch>3:
-        read_ch = 4
-    else:
-        read_ch = 3
+    read_ch = read_channels
 
     if compress_type == 0: # RAW
         buf_size = height*width*read_ch # 3 channels, RGB
@@ -53,11 +84,12 @@ rgba:     assume the 4th channel is the alpha channel."""
     else:
         raise NotImplementedError("Not implemented compression type.")
     imgmtx = pixels.reshape(read_ch, height, width).transpose([1, 2, 0])
-    return imgmtx
+    return imgmtx, COLORMODE[head.colormode]
 
 
 
-def get_pil_image(psd_file, rgba=False):
-    return Image.fromarray(get_image_matrix(psd_file, rgba))
+def get_pil_image(psd_file, read_channels=-1):
+    matrix, colormode = get_image_matrix(psd_file, read_channels)
+    return Image.fromarray(matrix), colormode
 
 
