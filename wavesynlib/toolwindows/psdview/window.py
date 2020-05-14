@@ -24,24 +24,9 @@ from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.utils import MethodDelegator
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.datatypes.treetype import AbstractTreeNode, tree_trans
-
-
-# The following code generates the bytecode file of the 
-# widgets.hy which is written in Hy.
-# If we import a module written in hy directly in wavesyn,
-# it will fail, and I cannot figure out why. 
-import hy
-try:
-    from wavesynlib.toolwindows.psdview.widgets import (
-            load_grp, export_grp, resize_grp,
-            external_viewer_grp, wallpaper_grp)
-except hy.errors.HyCompileError:
-# After the bytecode file generated, we can import the module written by hy.    
-    widgets_path = Path(__file__).parent / 'widgets.hy'
-    os.system(f'hyc {widgets_path}')    
-    from wavesynlib.toolwindows.psdview.widgets import (
-            load_grp, export_grp, resize_grp,
-            external_viewer_grp, wallpaper_grp)
+from wavesynlib.toolwindows.psdview.widgets import (
+        load_grp, export_grp, resize_grp,
+        external_viewer_grp, wallpaper_grp)
 
 
 
@@ -217,7 +202,7 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
         self.__psd_image = psd_tools.PSDImage.open(filename)
                 
         self.__layer_tree.psd_image = self.__psd_image
-        self.__pil_image = self.__psd_image.compose()
+        self.__pil_image = self.__psd_image.composite()
         self.__tk_image = ImageTk.PhotoImage(image=self.__pil_image)
         if self.__image_id is None:
             self.__image_id = self.__all_canvas.canvas.create_image((0, 0), image=self.__tk_image, anchor='nw')
