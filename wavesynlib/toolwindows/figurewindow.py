@@ -32,6 +32,7 @@ from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
 from wavesynlib.widgets.tk.labeledentry import LabeledEntry
 from wavesynlib.widgets.tk.labeledscale import LabeledScale
+from wavesynlib.fileutils.photoshop import psd
 
 
 color_map = {
@@ -806,7 +807,8 @@ class GridGroup(Observable, Group):
             self.notify_observers(major_grid=major.get(), 
                                   minor_grid=minor.get(), props=props)
                                     
-        icon = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path('GridTab_Major.png'))
+        with open(Scripting.root_node.get_gui_image_path("GridTab_Major.psd"), "rb") as image_file:
+            icon = ImageTk.PhotoImage(psd.get_pil_image(image_file))
         self.__gui_images.append(icon)
         major_grid_checkbutton = Checkbutton(self, text='Grid Major', 
                                              image=icon,
@@ -816,7 +818,8 @@ class GridGroup(Observable, Group):
         major_grid_checkbutton.pack(fill='x')
         self.major_grid_checkbutton = major_grid_checkbutton
         
-        icon = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path('GridTab_Minor.png'))
+        with open(Scripting.root_node.get_gui_image_path("GridTab_Minor.psd"), "rb") as image_file:
+            icon = ImageTk.PhotoImage(psd.get_pil_image(image_file))
         self.__gui_images.append(icon)
         minor_grid_checkbutton = Checkbutton(self, text='Grid Minor', 
                                              image=icon,

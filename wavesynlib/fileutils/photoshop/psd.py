@@ -29,12 +29,19 @@ def get_image_matrix(psd_file):
     layer_info_len = struct.unpack(">I", psd_file.read(4))[0]
 
     psd_file.seek(layer_info_len, 1)
-    compress_type = struct.unpack(">H", psd_file.read(2))
-    scan_line_counts = struct.unpack(">"+"H"*height*n_ch, psd_file.read(2*height*n_ch))
-    buf_size = sum(scan_line_counts[:(height*3)]) # 3 channels, RGB
-    buf = psd_file.read(buf_size)
+    compress_type = struct.unpack(">H", psd_file.read(2))[0]
 
-    pixels = packbits(buf, pixel_num*3)
+    if compress_type == 0: # RAW
+        buf_size = height*width*3 # 3 channels, RGB
+        buf = psd_file.read(buf_size)
+        pixels = np.frombuffer(buf, dtype="uint8")
+    elif compress_type == 1: # RLE
+        scan_line_counts = struct.unpack(">"+"H"*height*n_ch, psd_file.read(2*height*n_ch))
+        buf_size = sum(scan_line_counts[:(height*3)]) # 3 channels, RGB
+        buf = psd_file.read(buf_size)
+        pixels = packbits(buf, pixel_num*3)
+    else:
+        raise NotImplementedError("Not implemented compression type.")
     imgmtx = pixels.reshape(3, height, width).transpose([1, 2, 0])
     return imgmtx
 
