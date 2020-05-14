@@ -808,7 +808,7 @@ class GridGroup(Observable, Group):
                                   minor_grid=minor.get(), props=props)
                                     
         with open(Scripting.root_node.get_gui_image_path("GridTab_Major.psd"), "rb") as image_file:
-            icon = ImageTk.PhotoImage(psd.get_pil_image(image_file))
+            icon = ImageTk.PhotoImage(psd.get_pil_image(image_file, rgba=True))
         self.__gui_images.append(icon)
         major_grid_checkbutton = Checkbutton(self, text='Grid Major', 
                                              image=icon,
@@ -819,7 +819,7 @@ class GridGroup(Observable, Group):
         self.major_grid_checkbutton = major_grid_checkbutton
         
         with open(Scripting.root_node.get_gui_image_path("GridTab_Minor.psd"), "rb") as image_file:
-            icon = ImageTk.PhotoImage(psd.get_pil_image(image_file))
+            icon = ImageTk.PhotoImage(psd.get_pil_image(image_file, rgba=True))
         self.__gui_images.append(icon)
         minor_grid_checkbutton = Checkbutton(self, text='Grid Minor', 
                                              image=icon,

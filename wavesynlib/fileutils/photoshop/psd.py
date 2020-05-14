@@ -11,7 +11,12 @@ _head_def = ">4cH6cHIIHH"
 
 
 
-def get_image_matrix(psd_file):
+def get_image_matrix(psd_file, rgba=False):
+    """\
+Get the numpy array of the image in the given psd_file.
+
+psd_file: a stream object of the psd file.
+rgba:     assume the 4th channel is the alpha channel."""
     psd_file.seek(0)
     head = psd_file.read(struct.calcsize(_head_def))
     head = struct.unpack(_head_def, head)
@@ -31,23 +36,28 @@ def get_image_matrix(psd_file):
     psd_file.seek(layer_info_len, 1)
     compress_type = struct.unpack(">H", psd_file.read(2))[0]
 
+    if rgba and n_ch>3:
+        read_ch = 4
+    else:
+        read_ch = 3
+
     if compress_type == 0: # RAW
-        buf_size = height*width*3 # 3 channels, RGB
+        buf_size = height*width*read_ch # 3 channels, RGB
         buf = psd_file.read(buf_size)
         pixels = np.frombuffer(buf, dtype="uint8")
     elif compress_type == 1: # RLE
         scan_line_counts = struct.unpack(">"+"H"*height*n_ch, psd_file.read(2*height*n_ch))
-        buf_size = sum(scan_line_counts[:(height*3)]) # 3 channels, RGB
+        buf_size = sum(scan_line_counts[:(height*read_ch)]) 
         buf = psd_file.read(buf_size)
-        pixels = packbits(buf, pixel_num*3)
+        pixels = packbits(buf, pixel_num*read_ch)
     else:
         raise NotImplementedError("Not implemented compression type.")
-    imgmtx = pixels.reshape(3, height, width).transpose([1, 2, 0])
+    imgmtx = pixels.reshape(read_ch, height, width).transpose([1, 2, 0])
     return imgmtx
 
 
 
-def get_pil_image(psd_file):
-    return Image.fromarray(get_image_matrix(psd_file))
+def get_pil_image(psd_file, rgba=False):
+    return Image.fromarray(get_image_matrix(psd_file, rgba))
 
 
