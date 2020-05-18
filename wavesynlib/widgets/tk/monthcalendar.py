@@ -23,7 +23,7 @@ class MonthCalendar(Frame):
 
         minus_button = ttkButton(
             upper_frame, 
-            text="<", 
+            text="\u25c4", 
             width=2,
             command=lambda: self.month_adjust(inc=False))
         minus_button.pack(side="left")
@@ -34,7 +34,7 @@ class MonthCalendar(Frame):
 
         plus_button = ttkButton(
             upper_frame, 
-            text=">", 
+            text="\u25ba", 
             width=2,
             command=lambda: self.month_adjust(inc=True))
         plus_button.pack(side="right")
