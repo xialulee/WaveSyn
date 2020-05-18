@@ -53,6 +53,17 @@ class HostsFile(ModelNode):
 
 
     def update(self, filter=lambda index, row: True, name_servers=None):
+        """\
+Update the entries with specified DNS.
+
+filter: a function for selecting entries wanted to be updated. 
+    f(index, row): 
+        index: the number of current row.
+        row: a pandas Series object with fields: ip, host, and comment.
+    name_servers: the IP of the given DNS. 
+
+return: None.
+"""
         resolver = dns.resolver.Resolver()
         if name_servers:
             resolver.nameservers = name_servers

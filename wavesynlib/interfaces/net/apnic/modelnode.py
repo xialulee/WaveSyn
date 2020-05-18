@@ -58,6 +58,18 @@ class APNIC(ModelNode):
 
     @WaveSynScriptAPI(thread_safe=True)
     def make_route_table(self, filter, gateway, script_file_add, script_file_delete, verbose=False):
+        """\
+Make two shell script, one for adding route, one for deleting. 
+(thread safe.)
+
+filter: pandas.DataFrame filter for filtering the APNIC records.
+gateway: route gateway.
+script_file_add: the path of the script for adding route.
+script_file_delete: the path of the script for deleting route.
+verbose: printing messages if True. Default False. 
+
+return: None
+"""
         result = self.get_reports(verbose=verbose)
         df = result.records_as_dataframe
         df = df.query(filter)
