@@ -18,6 +18,7 @@ def packbits(const uint8_t [::1] buf, int image_size):
         int len_data
         int cnt
         uint8_t value 
+        int error_flag
         np.ndarray[np.uint8_t, ndim=1] pixels 
         uint8_t [::1] pixel_view
 
@@ -31,31 +32,39 @@ def packbits(const uint8_t [::1] buf, int image_size):
     buf_size = len(buf)
     col = 0
     size_pos = 0
+    error_flag = 0
     
-    while size_pos < buf_size-1: 
-        # size_pos cannot be the last byte of buf.
-        # hence size_pos < buf_size MINUS ONE.
-        size = buf[size_pos]
-        if size >= 128:
-            size = 257 - size
-            value = buf[size_pos+1]
-            # bounds check for pixel_view
-            if col+size > image_size:
-                raise IndexError("Pixel array index out of range.")
-            for cnt in range(size):
-                pixel_view[col+cnt] = value
-            size_pos += 2
-        else:
-            size += 1
-            if col+size > image_size:
-                raise IndexError("Pixel array index out of range.")
-            if size_pos+1+size > buf_size:
-                raise IndexError("RLE data buf index out of range.")
-            for cnt in range(size):
-                pixel_view[col+cnt] = buf[size_pos+1+cnt]
-            size_pos += size + 1
-
-        col += size
+    with cython.nogil:
+        while size_pos < buf_size-1: 
+            # size_pos cannot be the last byte of buf.
+            # hence size_pos < buf_size MINUS ONE.
+            size = buf[size_pos]
+            if size >= 128:
+                size = 257 - size
+                value = buf[size_pos+1]
+                # bounds check for pixel_view
+                if col+size > image_size:
+                    error_flag = 1
+                    break
+                for cnt in range(size):
+                    pixel_view[col+cnt] = value
+                size_pos += 2
+            else:
+                size += 1
+                if col+size > image_size:
+                    error_flag = 1
+                    break
+                if size_pos+1+size > buf_size:
+                    error_flag = 2
+                    break
+                for cnt in range(size):
+                    pixel_view[col+cnt] = buf[size_pos+1+cnt]
+                size_pos += size + 1
+            col += size
             
-    return pixels    
-
+    if error_flag == 1:
+        raise IndexError("Pixel array index out of range.")
+    elif error_flag == 2:
+        raise IndexError("RLE data buf index out of range.")
+            
+    return pixels  
