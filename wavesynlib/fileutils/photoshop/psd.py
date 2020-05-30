@@ -27,14 +27,16 @@ def get_image_matrix(psd_file, read_channels=-1):
     """\
 Get the numpy array of the image in the given psd_file.
 
-psd_file: a stream object of the psd file.
-rgba:     assume the 4th channel is the alpha channel."""
+psd_file:      a stream object of the psd file.
+read_channels: 
+    'min': read channels based on colormode (without any alpha channel);
+    -1: read all channels;
+    a positive integer: read specified number of channels."""
     psd_file.seek(0)
     head = Head()
     head.bytes[:] = psd_file.read(sizeof(Head))
 
     if head.signature != b"8BPS":
-        print(head.signature)
         raise TypeError("Given file is not PSD.")
 
     n_ch = head.channels

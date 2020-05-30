@@ -4,23 +4,25 @@ Created on Thu Aug 18 23:14:19 2016
 
 @author: Feng-cong Li
 """
+
 import re
-import win32con
-from comtypes import client
-
-from wavesynlib.languagecenter.wavesynscript import (
-    Scripting, ModelNode, WaveSynScriptAPI, NodeDict, code_printer)
-from wavesynlib.languagecenter.designpatterns import Observable
-
 import copy
 import json
 import os
 import time
 import win32gui
+import win32con
+from pathlib import Path
+from PIL import Image
 from ctypes import POINTER, byref, sizeof, memmove
-from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
-from comtypes import _safearray, COMError
 
+from comtypes import client, _safearray, COMError
+from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
+
+from wavesynlib.languagecenter.wavesynscript import (
+    Scripting, ModelNode, WaveSynScriptAPI, NodeDict, code_printer)
+from wavesynlib.languagecenter.designpatterns import Observable
+from wavesynlib.fileutils.photoshop.psd import get_pil_image
 
 
 class ExcelUtils(ModelNode):
@@ -269,9 +271,14 @@ class WordUtils(ModelNode):
         
     
     @WaveSynScriptAPI    
-    def insert_psd_image(self, filename, comment='', resize=None, window=None, range_=None):
-        from psd_tools import PSDImage
-        from PIL import Image
+    def insert_psd_image(self, 
+        filename, 
+        comment='', 
+        resize=None, 
+        window=None, 
+        range_=None,
+        width=None,
+        height=None):
         from tempfile import NamedTemporaryFile
         
         filename = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
@@ -285,7 +292,8 @@ class WordUtils(ModelNode):
             # We cannot use the automatic delete mechanism of NamedTemporaryFile
             # since the save method of the following PIL object will call close of temp file
             # which will activate the self-destruction of the temp file. 
-            pil_image = PSDImage.load(filename).as_PIL()
+            with open(filename, "rb") as psd_file:
+                pil_image = get_pil_image(psd_file, read_channels="min")[0]
             if resize:
                 if  isinstance(resize, str):
                     if resize[-1] != u'%':
@@ -328,6 +336,10 @@ class WordUtils(ModelNode):
                 'time':int(time.time()),
                 'resize':resize,
                 'comment':comment})
+            if width:
+                image.Width = width
+            if height:
+                image.Height = height
         finally:
             if os.path.exists(temp.name):
                 os.remove(temp.name)
@@ -343,7 +355,7 @@ class WordUtils(ModelNode):
         else:
             winobj = self.__com_handle.Windows[window]
             document = winobj.Document
-            inline_shapes = winobj.Selection.InlineShapes        
+            inline_shapes = document.InlineShapes        
         
         for shape in inline_shapes:
             try:
@@ -369,20 +381,30 @@ class WordUtils(ModelNode):
             # else,
             #   it will check the abspath first. 
             # Finally, the first available path will be the file_path below.             
-            p1 = os.path.abspath(os.path.join(self.__com_handle.ActiveDocument.Path, relative_path))
-            p2 = file_path
+            p1 = (Path(document.Path)/relative_path).absolute()
+            p2 = Path(file_path)
             if not relative_first:
                 p1, p2 = p2, p1
-            if os.path.exists(p1):
+            if p1.exists():
                 file_path = p1
             else:
                 file_path = p2            
+
+            if not file_path.exists():
+                raise IOError(f'PSD file "{p1}" and "{p2}" not exists.')
                 
-            mtime = os.path.getmtime(file_path)
+            mtime = file_path.stat().st_mtime
             if mtime > insert_time:
                 rng = shape.Range
+                width, height = shape.Width, shape.Height
                 shape.Delete()
-                self.insert_psd_image(file_path, resize=resize, comment=comment, range_=rng)
+                self.insert_psd_image(
+                    file_path, 
+                    resize=resize, 
+                    comment=comment, 
+                    range_=rng,
+                    width=width,
+                    height=height)
                 
                 
     @WaveSynScriptAPI
@@ -633,6 +655,8 @@ class MSOffice(NodeDict, Observable):
                     return id_
         
         wrapper = self._prog_info[app_name]['class'](com_handle=com_handle)
+        object_id = id(wrapper)
+        self[object_id] = wrapper
         wrapper.show_window()
         
         if app_name == 'word':
@@ -652,9 +676,6 @@ class MSOffice(NodeDict, Observable):
                         doc_wrapper)
                 wrapper._doc_list.append(doc_wrapper)
                 
-
-        object_id = id(wrapper)
-        self[object_id] = wrapper
         return object_id
         
 

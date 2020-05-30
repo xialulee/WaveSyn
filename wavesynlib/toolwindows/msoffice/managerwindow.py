@@ -18,23 +18,8 @@ from wavesynlib.widgets.tk.group import Group
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
-
-
-
-# The following code generates the bytecode file of the 
-# widgets.hy which is written in Hy.
-# If we import a module written in hy directly in wavesyn,
-# it will fail, and I cannot figure out why. 
-import hy
-try:
-    from wavesynlib.toolwindows.msoffice.widgets import (
-            connect_grp, window_grp, utils_grp)
-except hy.errors.HyCompileError:
-# After the bytecode file generated, we can import the module written by hy.    
-    widgets_path = Path(__file__).parent / 'widgets.hy'
-    os.system(f'hyc {widgets_path}')    
-    from wavesynlib.toolwindows.msoffice.widgets import (
-            connect_grp, window_grp, utils_grp)
+from .widgets import (
+        connect_grp, window_grp, utils_grp)
 
 
 
