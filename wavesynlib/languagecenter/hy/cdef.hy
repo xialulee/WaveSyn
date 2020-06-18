@@ -90,7 +90,7 @@
 
 
 
-(defmacro funcptr [type-name res-type name arg-types]
+(defmacro funcptrtype [type-name res-type name arg-types]
     (if (= res-type 'void)
         (setv res-type None))
     `(setv ~name 
@@ -100,7 +100,7 @@
 ; (import [ctypes [*]])
 ; (make-ptr-type c_int)
 ; 
-; (funcptr CFUNCTYPE 
+; (funcptrtype CFUNCTYPE 
 ;     c_int CMPFUNC [c_int* c_int*])
 ;
 ; (qsort ia (len ia) (sizeof c_int) 

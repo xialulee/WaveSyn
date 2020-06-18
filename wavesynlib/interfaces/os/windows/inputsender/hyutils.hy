@@ -35,7 +35,7 @@
 
 
 
-(defn send-mouse-input [dx dy button &optional absolute press release]
+(defn send-mouse-input [dx dy button &optional absolute press release wheel wheel-data [time 0]]
     (setv mi-args {"dx" dx "dy" dy})
     (setv dw-flags 0)
     (when absolute
@@ -44,10 +44,10 @@
 
     (setv consts (globals))
 
-    (defn generate-mouse-event [dx dy button absolute &optional release]
+    (defn generate-mouse-button [dx dy button absolute &optional release]
         (setv mi-args {"dx" dx "dy" dy}) 
         (setv flags 0)
-        (if absolute (|= flags MOUSEEVENTF_ABSOLUTE))
+        (if absolute (|= flags (| MOUSEEVENTF_ABSOLUTE MOUSEEVENTF_MOVE)))
         (setv event-name "MOUSEEVENTF_")
         (+= event-name button) 
         (+= event-name (if release "UP" "DOWN") ) 
@@ -59,10 +59,23 @@
             :mi mi) ) 
         (SendInput 1 #→[inp] (sizeof inp)) )
 
+    (defn generate-mouse-wheel [wheel-data &optional time]
+        (setv mi (MOUSEINPUT))
+        (setv 
+            mi.mouseData   wheel-data
+            mi.dwFlags     MOUSEEVENTF_WHEEL
+            mi.time        time
+            mi.dwExtraInfo 0)
+        (setv inp (INPUT
+            :type INPUT_MOUSE
+            :mi mi))
+        (SendInput 1 #→[inp] (sizeof inp)))
+
     (cond 
-    [press (generate-mouse-event dx dy button absolute)]
-    [release (generate-mouse-event dx dy button absolute :release True)]
+    [press (generate-mouse-button dx dy button absolute)]
+    [release (generate-mouse-button dx dy button absolute :release True)]
+    [wheel (generate-mouse-wheel wheel-data time)]
     [True
-        (generate-mouse-event dx dy button absolute)
-        (generate-mouse-event dx dy button absolute :release True)]) )
+        (generate-mouse-button dx dy button absolute)
+        (generate-mouse-button dx dy button absolute :release True)]) )
 

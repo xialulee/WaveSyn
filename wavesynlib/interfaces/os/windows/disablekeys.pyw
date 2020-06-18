@@ -7,17 +7,25 @@ import  tkinter.messagebox as msgbox
 import  sys
 import atexit
 
-hKHook = [0]
+from wavesynlib.languagecenter.datatypes.wintypes.hook import (
+    KHOOKPROC)
 
-HC_ACTION       =   0
-WM_KEYDOWN      =   0x100
-WM_SYSKEYDOWN   =   0x104
-WM_KEYUP        =   0x101
-WM_SYSKEYUP     =   0x105
-VK_TAB          =   0x9
-LLKHF_ALTDOWN   =   0x20
-VK_ESCAPE       =   0x1B
-VK_CONTROL      =   0x11
+global hKHook
+
+from win32con import (
+    HC_ACTION,
+    WM_KEYDOWN,
+    WM_SYSKEYDOWN,
+    WM_KEYUP,
+    WM_SYSKEYUP,
+    WH_KEYBOARD_LL,
+    VK_TAB,
+    VK_LWIN,
+    VK_RWIN,
+    VK_APPS,
+    LLKHF_ALTDOWN,
+    VK_ESCAPE,
+    VK_CONTROL)
 
 GetKeyState         = ct.windll.user32.GetKeyState
 SetWindowsHookExA   = ct.windll.user32.SetWindowsHookExA
@@ -34,27 +42,19 @@ key_name['CTRL+ESC'] = 'CTRL+ESC'
 
 key_stat = {}
 
-
-# hook functions
-class KBDLLHOOKSTRUCT(ct.Structure):
-	_fields_ = [('vkCode',		ct.c_int),
-				('scanCode',	ct.c_int),
-				('flags',		ct.c_int),
-				('time',		ct.c_int),
-				('dwExtraInfo',	ct.c_int)]
-    
     
 
 def khook_proc(nCode, wParam, lParam):
+    global hKHook
     eat = False
     vkCode  = lParam.contents.vkCode
     flags   = lParam.contents.flags
     if key_stat['LWIN'].get():
-        if vkCode == 91: eat = True
+        if vkCode == VK_LWIN: eat = True
     if key_stat['RWIN'].get():
-        if vkCode == 92: eat = True
+        if vkCode == VK_RWIN: eat = True
     if key_stat['MENU'].get():
-        if vkCode == 93: eat = True
+        if vkCode == VK_APPS: eat = True
     if key_stat['ALT+ESC'].get():
         if vkCode == VK_ESCAPE and flags & LLKHF_ALTDOWN != 0:
             eat = True
@@ -67,7 +67,7 @@ def khook_proc(nCode, wParam, lParam):
     if eat:
         return -1
     else:
-        return CallNextHookEx(hKHook[0], nCode, wParam, lParam)
+        return CallNextHookEx(hKHook, nCode, wParam, lParam)
     
     
 
@@ -90,16 +90,15 @@ class MainWin(Frame):
             
 
 if __name__ == '__main__':
-    KHOOK = ct.WINFUNCTYPE(ct.c_int, ct.c_int, ct.c_int, ct.POINTER(KBDLLHOOKSTRUCT))
-    c_khook = KHOOK(khook_proc)
-    hKHook[0] = SetWindowsHookExA(13, c_khook, None, 0)
-    if not hKHook[0]:
+    c_khook = KHOOKPROC(khook_proc)
+    hKHook = SetWindowsHookExA(WH_KEYBOARD_LL, c_khook, None, 0)
+    if not hKHook:
         msgbox.showerror('Error', "Can't hook keyboard.")
         sys.exit(1)
     
     @atexit.register
     def on_exit():
-        UnhookWindowsHookEx(hKHook[0])
+        UnhookWindowsHookEx(hKHook)
 
     root = Tk()
     mainw = MainWin()
