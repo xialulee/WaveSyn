@@ -4,7 +4,6 @@ Created on Wed Dec 09 11:05:00 2015
 
 @author: Feng-cong Li
 """
-from __future__ import division, print_function
 
 
 def Q(nu, lambda_, x, epsilon=1e-5):
