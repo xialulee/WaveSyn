@@ -223,3 +223,4 @@ wavesynlib/.vscode/c_cpp_properties.json
 wavesynlib/fileutils/photoshop/packbits.c
 wavesynlib/fileutils/photoshop/packbits.cp37-win_amd64.pyd
 wavesynlib/.vscode/launch.json
+*.pyd
