@@ -17,7 +17,7 @@ from PIL import ImageTk
 
 import hy
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
-from wavesynlib.widgets.tk.jsontotk import json_to_tk
+from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.scrolledcanvas import ScrolledCanvas
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow

@@ -65,3 +65,8 @@ Example: [
         if 'name' in item:
             retval[item.get('name')] = widget
     return retval
+
+
+
+def hywidgets_to_tk(parent, hy_code, balloon=None):
+    return json_to_tk(parent, hy_code, balloon)

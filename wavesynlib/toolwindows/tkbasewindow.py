@@ -19,7 +19,7 @@ from wavesynlib.languagecenter.utils import auto_subs, MethodDelegator
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.widgets.tk.group import Group
-from wavesynlib.widgets.tk.jsontotk import json_to_tk
+from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.toolwindows.basewindow import BaseWindowNode
 
 

@@ -17,6 +17,8 @@
         (cond 
             [(in tag ["pack" "grid" "setattr" "config"])
                 (assoc retval tag (-args-to-dict (rest item)))]
+            [(= tag "balloonmsg")
+                (assoc retval tag (-> item (second) (str)))]
             [(= tag "child") 
                 (if (not-in "children" retval)
                     (assoc retval "children" []))
