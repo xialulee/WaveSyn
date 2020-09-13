@@ -54,7 +54,7 @@ class ParametersGroup(Group):
             balloonmsg="The space between elements (with respect to wavelength)")
 
         image_run = ImageTk.PhotoImage(
-            file=Scripting.root_node.get_gui_image_path("Pattern_Solve_Button.png"))
+            file=Scripting.root_node.get_gui_image_path("run20x20.png"))
         gui_images.append(image_run)
         run_button = Button(
             self,

@@ -53,7 +53,7 @@ class OptimizeGroup(Group):
             balloonmsg='The number of the array elements.')
 
         image_solve = ImageTk.PhotoImage(
-            file=Scripting.root_node.get_gui_image_path('Pattern_Solve_Button.png'))
+            file=Scripting.root_node.get_gui_image_path('run20x20.png'))
         self.__gui_images.append(image_solve)
 
         self.__btnSolve = Button(
