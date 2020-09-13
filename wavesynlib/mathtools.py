@@ -249,7 +249,7 @@ class AlgorithmNode(ModelNode):
 
         @root_node.thread_manager.new_thread_do
         def run():
-            t1 = time.clock()
+            t1 = time.perf_counter()
 
             for n in range(repeat_times):
                 result = run_algorithm(*args, **kwargs)
@@ -260,7 +260,7 @@ class AlgorithmNode(ModelNode):
                 
                 dialog.set_progress(index=0, progress=(n+1)/repeat_times * 100)
                     
-            delta_t = time.clock() - t1
+            delta_t = time.perf_counter() - t1
             dialog.set_text(index=0, text=f'Finished. Total time consumption: {delta_t} (s)')
             
             
@@ -280,7 +280,7 @@ class AlgorithmNode(ModelNode):
 
         @root_node.thread_manager.new_thread_do
         def wait_result():
-            t1 = time.clock()
+            t1 = time.perf_counter()
 
             result_count = 0
             
@@ -297,7 +297,7 @@ class AlgorithmNode(ModelNode):
                 if result_count == repeat_times:
                     break
                     
-            delta_t = time.clock() - t1
+            delta_t = time.perf_counter() - t1
             dialog.set_text(index=0, text=f'Finished. Total time consumption: {delta_t} (s)')
 
                         
