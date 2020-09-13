@@ -19,12 +19,14 @@
         #_setter
         (fn [self icon]
             (import [wavesynlib.languagecenter.wavesynscript [Scripting]])
-            (setv root-node Scripting.root-node)
-            (setv path (.get-gui-image-path root-node icon)) 
+            (setv 
+                root-node Scripting.root-node
+                path      (.get-gui-image-path root-node icon)) 
             (if (= (last (.split icon ".")) "psd") (do
                 (with [psd-file (open path "rb")]
-                    (setv pil-image (first (get-pil-image psd-file))) 
-                    (setv self.--icon (ImageTk.PhotoImage :image pil-image)) ) ) 
+                    (setv 
+                        pil-image   (first (get-pil-image psd-file))
+                        self.--icon (ImageTk.PhotoImage :image pil-image)) ) ) 
             #_else (do
                 (setv self.--icon (ImageTk.PhotoImage :file path)))) 
             (assoc self "image" self.--icon)) ) )
