@@ -2,6 +2,9 @@
 	"ConsoleMenu":[
         
         {"Name":"Toolboxes", "TearOff":0, "UnderLine":0, "SubMenu":[
+            {"Name":"Data Visualization", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"2D Plane", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.datavisualization.plane.window', class_name='PlaneWindow')"} ]},
+
             {"Name":"Radar Signal", "TearOff":0, "UnderLine":0, "SubMenu":[
                 {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.singlesyn', class_name='SingleWindow')"},
                 {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"print('Not Implemented', file=sys.stderr)"},

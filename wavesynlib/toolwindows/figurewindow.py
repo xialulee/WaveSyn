@@ -187,6 +187,12 @@ class DataFigure(ModelNode, Observable):
             line_object.stemlines.set_color(color)
         self.line_objects.append(line_object)
         self.update()
+
+
+    def scatter(self, *args, **kwargs):
+        graph_object = self.axes.scatter(*args, **kwargs)
+        self.line_objects.append(graph_object)
+        self.update()
         
         
     def show_image(self, *args, **kwargs):
@@ -623,6 +629,8 @@ The rest parameters are passed to PanedWindow.__init__.
             line_object = self[0].line_objects[-1]
             if isinstance(line_object, matplotlib.container.StemContainer):
                 color = line_object.stemlines.get_color()[0]
+            elif isinstance(line_object, matplotlib.collections.PathCollection):
+                color = "#000000"
             else:
                 color = line_object[0].get_color()
             if isinstance(color, ndarray):
