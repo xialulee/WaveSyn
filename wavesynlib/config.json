@@ -1,25 +1,13 @@
 {
 	"ConsoleMenu":[
-	    {
-		"Name":"Waveform", "TearOff":0, "UnderLine":0, "SubMenu":[
-		    {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.singlesyn', class_name='SingleWindow')"},
-		    {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"print('Not Implemented', file=sys.stderr)"},
-            {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.antennaarray.mimopatternsyn', class_name='PatternWindow')"},
-            {"Name":"New DFT Directions Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.antennaarray.dftdirections', class_name='DFTDirectionsWindow')"}
-		]
-	    },
+        
+        {"Name":"Toolboxes", "TearOff":0, "UnderLine":0, "SubMenu":[
+            {"Name":"Radar Signal", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.singlesyn', class_name='SingleWindow')"},
+                {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"print('Not Implemented', file=sys.stderr)"},
+                {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.mimopatternsyn', class_name='PatternWindow')"},
+                {"Name":"New DFT Directions Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.dftdirections', class_name='DFTDirectionsWindow')"} ]} ]},
 	    
-	    {
-		"Name":"Instrument", "TearOff":0, "UnderLine":0, "SubMenu":[	    
-		    {"Name":"Newwork Analyzer", "TearOff":0, "UnderLine":0, "SubMenu":[
-                        {"Name":"S2P Viewer", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.instrument.networkanalyzer', class_name='TouchstoneViewer')"},
-                        {"Name":"Convert to CSV", "UnderLine":0, "Command":"wavesyn.file_utils.touchstone_files[wavesyn.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME].to_csv(wavesyn.lang_center.wavesynscript.constants.ASK_SAVEAS_FILENAME)"}
-                    ]
-                    },
-
-		    {"Name":"Spectrum Analyzer", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.instrument.spectrumanalyzer', class_name='SpectrumViewer')"}
-	      ]
-	    },
 
 	    {
 		"Name":"Console", "TearOff":0, "UnderLine":0, "SubMenu":[
@@ -38,63 +26,47 @@
 		]
 	    },
 
-          {
-          "Name":"Interfaces", "TearOff":0, "UnderLine":0, "SubMenu":[
-              {
-              "Name":"Hardware", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"SPI Bus", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.spibuswindow', class_name='USBSPIWindow')"},
-                  {"Name":"Keyboard Tool (Windows Only)", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.utils.keyboardtool', class_name='KeyboardToolWindow')"}
-              ]
-              },
-              {
-              "Name":"Operating System", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"Clipboard", "TearOff":0, "UnderLine":0, "SubMenu":[
-                      {"Name":"Convert text to QR Barcode", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.to_console_qr()", "Print":true},
-                      {"Name":"Convert file to image", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.convert_file_to_image()", "Print":true},
-                      {"Name":"Display Clipboard Content in Console", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.to_console()", "Print":true},
-                      {"Name":"Get Clipboard Tables", "TearOff":0, "UnderLine":0, "Command":"wavesyn.lang_center.html_utils.get_tables(html_code=wavesyn.lang_center.wavesynscript.constants.CLIPBOARD_HTML)", "Print":true},
-                      {"Name":"Get Clipboard Barcode Text", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.dotnet.zxing.read(image=wavesyn.lang_center.wavesynscript.constants.CLIPBOARD_IMAGE)", "Print":true},
-                      {"Name":"Remove Text Formatting", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_text_formatting()", "Print":true},
-                      {"Name":"Remove Newlines (\\n)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=False)"},
-                      {"Name":"Remove Newlines (\\n) and insert blanks", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=True)"},
-			     {"Name":"Copy Tab(\\t)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.write('\\t')"},
-                      {"Name":"Copy Link", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.dialogs.copy_link_text()"}
-                  ]
-                  },
-                  {"Name":"Mouse", "TearOff":0, "UnderLine":0, "SubMenu":[
-                      {"Name":"Set Mouse Cursor Position", "TearOff":0, "UnderLine":0, "Command":["wavesyn.interfaces.os.mouse.set_x(wavesyn.lang_center.wavesynscript.constants.ASK_INTEGER)", "wavesyn.interfaces.os.mouse.set_y(wavesyn.lang_center.wavesynscript.constants.ASK_INTEGER)"]}
-                  ]
-                  },
-                  {"Name":"Windows", "TearOff":0, "UnderLine":0, "SubMenu":[
-                      {"Name":"Launch CMD with ws* support", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('cmd')", "Print":true},
-                      {"Name":"Launch PowerShell with ws* support", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('powershell')", "Print":true},
-                      {"Name":"Launch RAM meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wsmemmeter.pyw')", "Print":true},
-                      {"Name":"Launch CPU meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wscpumeter.pyw')", "Print":true},
-                      {"Name":"Launch disk IO meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wsdiskiometer.pyw')", "Print":true},
-                      {"Name":"Launch battery meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wsbatterymeter.pyw')", "Print":true},
-                      {"Name":"Launch NumLock indicator", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wsnumlockindicator.pyw')", "Print":true},
-                      {"Name":"Launch CapsLock indicator", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wscapslockindicator.pyw')", "Print":true},
-                      {"Name":"Create new GUID", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.create_guid()", "Print":true},
-                      {"Name":"WMI query", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.wmi.query(wql=wavesyn.lang_center.wavesynscript.constants.ASK_STRING, output_format='python')"}
-                  ]
-                  }
-              ]
-              },
-              {"Name":"Net", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"Launch hosts editor", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.hostseditor.window', class_name='Editor')"}
-              ]
-              },
-              {
-              "Name":"Android", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"Data Transfer", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.mobiledevice.android', class_name='DataTransferWindow')", "Print":true}
-              ]
-              },
-              {"Name":"MS Office", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"Controller", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.msoffice.managerwindow', class_name='OfficeController')"}
-              ]
-              }
-          ]
-          },
+        {"Name":"Interfaces", "TearOff":0, "UnderLine":0, "SubMenu":[
+            {"Name":"Hardware", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"SPI Bus", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.spibuswindow', class_name='USBSPIWindow')"},
+                {"Name":"Keyboard Tool (Windows Only)", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.utils.keyboardtool', class_name='KeyboardToolWindow')"} ] },
+            {"Name":"Instrument", "TearOff":0, "UnderLine":0, "SubMenu":[	    
+                {"Name":"Newwork Analyzer", "TearOff":0, "UnderLine":0, "SubMenu":[
+                            {"Name":"S2P Viewer", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.instrument.networkanalyzer', class_name='TouchstoneViewer')"},
+                            {"Name":"Convert to CSV", "UnderLine":0, "Command":"wavesyn.file_utils.touchstone_files[wavesyn.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME].to_csv(wavesyn.lang_center.wavesynscript.constants.ASK_SAVEAS_FILENAME)"} ] },
+
+                {"Name":"Spectrum Analyzer", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.instrument.spectrumanalyzer', class_name='SpectrumViewer')"} ] },
+            {"Name":"Operating System", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"Clipboard", "TearOff":0, "UnderLine":0, "SubMenu":[
+                    {"Name":"Convert text to QR Barcode", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.to_console_qr()", "Print":true},
+                    {"Name":"Convert file to image", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.convert_file_to_image()", "Print":true},
+                    {"Name":"Display Clipboard Content in Console", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.to_console()", "Print":true},
+                    {"Name":"Get Clipboard Tables", "TearOff":0, "UnderLine":0, "Command":"wavesyn.lang_center.html_utils.get_tables(html_code=wavesyn.lang_center.wavesynscript.constants.CLIPBOARD_HTML)", "Print":true},
+                    {"Name":"Get Clipboard Barcode Text", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.dotnet.zxing.read(image=wavesyn.lang_center.wavesynscript.constants.CLIPBOARD_IMAGE)", "Print":true},
+                    {"Name":"Remove Text Formatting", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_text_formatting()", "Print":true},
+                    {"Name":"Remove Newlines (\\n)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=False)"},
+                    {"Name":"Remove Newlines (\\n) and insert blanks", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.remove_newlines(insert_blanks=True)"},
+                {"Name":"Copy Tab(\\t)", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.clipboard.write('\\t')"},
+                    {"Name":"Copy Link", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.dialogs.copy_link_text()"} ] },
+                {"Name":"Mouse", "TearOff":0, "UnderLine":0, "SubMenu":[
+                    {"Name":"Set Mouse Cursor Position", "TearOff":0, "UnderLine":0, "Command":["wavesyn.interfaces.os.mouse.set_x(wavesyn.lang_center.wavesynscript.constants.ASK_INTEGER)", "wavesyn.interfaces.os.mouse.set_y(wavesyn.lang_center.wavesynscript.constants.ASK_INTEGER)"]} ] },
+                {"Name":"Windows", "TearOff":0, "UnderLine":0, "SubMenu":[
+                    {"Name":"Launch CMD with ws* support", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('cmd')", "Print":true},
+                    {"Name":"Launch PowerShell with ws* support", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('powershell')", "Print":true},
+                    {"Name":"Launch RAM meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wsmemmeter.pyw')", "Print":true},
+                    {"Name":"Launch CPU meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wscpumeter.pyw')", "Print":true},
+                    {"Name":"Launch disk IO meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wsdiskiometer.pyw')", "Print":true},
+                    {"Name":"Launch battery meter", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wsbatterymeter.pyw')", "Print":true},
+                    {"Name":"Launch NumLock indicator", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wsnumlockindicator.pyw')", "Print":true},
+                    {"Name":"Launch CapsLock indicator", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gadgets.launch('wscapslockindicator.pyw')", "Print":true},
+                    {"Name":"Create new GUID", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.create_guid()", "Print":true},
+                    {"Name":"WMI query", "TearOff":0, "UnderLine":0, "Command":"wavesyn.interfaces.os.windows.wmi.query(wql=wavesyn.lang_center.wavesynscript.constants.ASK_STRING, output_format='python')"} ] } ] },
+            {"Name":"Net", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"Launch hosts editor", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.hostseditor.window', class_name='Editor')"} ] },
+            {"Name":"Android", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"Data Transfer", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.mobiledevice.android', class_name='DataTransferWindow')", "Print":true} ] },
+            {"Name":"MS Office", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"Controller", "TearOff":0, "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.msoffice.managerwindow', class_name='OfficeController')"} ] } ] },
 
           {
           "Name":"Utils", "TearOff":0, "UnderLine":0, "SubMenu":[
