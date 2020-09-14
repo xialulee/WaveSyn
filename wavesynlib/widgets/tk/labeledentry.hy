@@ -65,6 +65,14 @@
         (fn [self width]
             (assoc self.--label "width" width)))
 
+    (defprop label-compound
+        #_getter
+        (fn [self]
+            (. self --label ["compound"]))
+        #_setter
+        (fn [self val]
+            (assoc self.--label "compound" val)))
+
     (defprop entry-width
         #_getter
         (fn [self]
