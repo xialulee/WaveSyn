@@ -4,6 +4,7 @@
 (import [PIL [ImageTk]])
 
 (import [wavesynlib.fileutils.photoshop.psd [get-pil-image]])
+(import [.utils.loadicon [load-icon]])
 
 
 
@@ -18,15 +19,5 @@
             self.--icon)
         #_setter
         (fn [self icon]
-            (import [wavesynlib.languagecenter.wavesynscript [Scripting]])
-            (setv 
-                root-node Scripting.root-node
-                path      (.get-gui-image-path root-node icon)) 
-            (if (= (last (.split icon ".")) "psd") (do
-                (with [psd-file (open path "rb")]
-                    (setv 
-                        pil-image   (first (get-pil-image psd-file))
-                        self.--icon (ImageTk.PhotoImage :image pil-image)) ) ) 
-            #_else (do
-                (setv self.--icon (ImageTk.PhotoImage :file path)))) 
-            (assoc self "image" self.--icon)) ) )
+            (assoc self "image"
+                (setx self.--icon (load-icon icon :common True)))) ) )
