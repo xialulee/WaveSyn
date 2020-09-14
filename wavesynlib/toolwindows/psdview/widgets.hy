@@ -14,7 +14,7 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Load")
     (child Button load-btn [
-        (config :text "Load")])])
+        (init :text "Load")])])
 
 
 
@@ -22,10 +22,10 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Resize")
     (child Button export-all-btn [
-        (config :text "All Layers")
+        (init :text "All Layers")
         (pack :fill X)])
     (child Button export-selected-btn [
-        (config :text "Selected Layer/Group")])])
+        (init :text "Selected Layer/Group")])])
 
 
 
@@ -33,12 +33,12 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Resize")
     (child Scale image-scale [
-        (config :from- 5 
+        (init :from- 5 
                 :to 100 
                 :orient HORIZONTAL
                 :value 100)])
     (child Label scale-label [
-        (config :text "100%")])])
+        (init :text "100%")])])
 
 
 
@@ -46,7 +46,7 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Viewer")
     (child Button launch-viewer-btn [
-        (config :text "Launch")])])
+        (init :text "Launch")])])
 
 
 
@@ -54,9 +54,9 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Wallpaper")
     (child Button set-wallpaper-btn [
-        (config :text "Set")])
+        (init :text "Set")])
     (child Combobox wallpaper-position-combo [
-        (config :stat "readonly"
+        (init :stat "readonly"
                 :values ["Center" "Tile"
                          "Stretch" "Fit"
                          "Fill" "Span"])])])

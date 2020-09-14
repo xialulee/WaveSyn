@@ -10,7 +10,7 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Load")
     (child Button load-btn [
-        (config :text "Load")])])
+        (init :text "Load")])])
 
 
 
@@ -18,5 +18,5 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Unpack")
     (child Button unpack-btn [
-        (config :text "Unpack")])])
+        (init :text "Unpack")])])
 

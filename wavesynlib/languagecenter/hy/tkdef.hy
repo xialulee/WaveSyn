@@ -15,7 +15,7 @@
     (for [item (nth sexpr 2)]
         (setv tag (-> item (first) (str)))
         (cond 
-            [(in tag ["pack" "grid" "setattr" "config"])
+            [(in tag ["pack" "grid" "setattr" "init"])
                 (assoc retval tag (-args-to-dict (rest item)))]
             [(= tag "balloonmsg")
                 (assoc retval tag (-> item (second) (str)))]

@@ -10,9 +10,9 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Connect")
     (child Button get-active-btn [
-        (config :text "Get Active")])
+        (init :text "Get Active")])
     (child Button create-btn [
-        (config :text "Create")])])
+        (init :text "Create")])])
 
 
 
@@ -20,9 +20,9 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Window")
     (child Button foreground-btn [
-        (config :text "Foreround")])
+        (init :text "Foreround")])
     (child Button copypath-btn [
-        (config :text "Copy Path")])])
+        (init :text "Copy Path")])])
 
 
 

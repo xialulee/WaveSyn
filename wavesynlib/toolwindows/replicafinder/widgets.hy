@@ -26,10 +26,10 @@
     (child Frame grid-frm [
         (pack :side LEFT :fill BOTH)
         (child Button start-btn [
-            (config :image -start-icon)
+            (init :image -start-icon)
             (grid :row 0 :column 0)])
         (child Button stop-btn [
-            (config :image -stop-icon)
+            (init :image -stop-icon)
             (grid :row 0 :column 1)])])])
 
 

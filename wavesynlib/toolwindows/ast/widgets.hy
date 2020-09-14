@@ -10,5 +10,5 @@
     (pack :side LEFT :fill Y)
     (setattr :name "Source")
     (child Button parse-btn [
-        (config :text "Parse")])])
+        (init :text "Parse")])])
 

@@ -19,11 +19,6 @@ Example: [
     retval = {}
 
     for item in json_obj:
-#        try:
-#            class_name = item.get('class')
-#        except KeyError:
-#            class_name = item.get('class_')
-            
         if 'class' in item:
             class_name = item['class']
         else:
@@ -43,7 +38,7 @@ Example: [
             else:
                 cls = tk.__dict__[class_name]
         
-        widget = cls(parent, **item.get('config', {}))
+        widget = cls(parent, **item.get('init', {}))
         if 'grid' in item:
             widget.grid(**item.get('grid', {}))        
         else:
