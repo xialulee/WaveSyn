@@ -4,7 +4,7 @@ Created on Sun Jan 10 16:38:55 2016
 
 @author: Feng-cong Li
 """
-
+import hy
 from wavesynlib.toolwindows.tkbasewindow import TkWindowNode
 from wavesynlib.widgets.tk.labeledscale import LabeledScale
 
