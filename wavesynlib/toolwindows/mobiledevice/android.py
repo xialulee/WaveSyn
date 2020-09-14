@@ -99,13 +99,13 @@ if action == "read":
     {'class':'Frame', 'children':[
         {'class':'Button', 'name':'read_clipb', 'grid':{'row':0, 'column':0},
              'balloonmsg':'Read the clipboard of an Android device.',
-             'config':{'image':image_read_clipb, 'command':self.__on_read_device_clipboard}},
+             'init':{'image':image_read_clipb, 'command':self.__on_read_device_clipboard}},
         {'class':'Button', 'name':'write_clipb','grid':{'row':0, 'column':1},
              'balloonmsg':'Write the clipboard of an Android device.',
-             'config':{'image':image_write_clipb, 'command':self.__on_write_device_clipboard}}, 
+             'init':{'image':image_write_clipb, 'command':self.__on_write_device_clipboard}}, 
         {'class':'Button', 'name':'send_clipb_image', 'grid':{'row':0, 'column':2},
              'balloonmsg':'Send image in clipboard to the Android device.',
-             'config':{'image':image_send_clipb_image, 'command':self.__on_send_clipboard_image_to_device}}
+             'init':{'image':image_send_clipb_image, 'command':self.__on_send_clipboard_image_to_device}}
     ]}
 ]},
     
@@ -113,26 +113,26 @@ if action == "read":
     {'class':'Frame', 'children':[
         {'class':'Button', 'name':'get_file', 'grid':{'row':0, 'column':0},
              'balloonmsg':'Get gallery photos.',
-             'config':{'text':'Get Image', 'image':image_get_image, 'command':self.__on_pick_gallery_photo}},
+             'init':{'text':'Get Image', 'image':image_get_image, 'command':self.__on_pick_gallery_photo}},
         {'class':'Button', 'name':'get_image', 'grid':{'row':0, 'column':1},
              'balloonmsg':'Get File',
-             'config':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}},
+             'init':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}},
         {'class':'Button', 'name':'send_image', 'grid':{'row':1, 'column':0},
              'balloonmsg':'Send a picture to device',
-             'config':{'text':'Send Image', 'image':image_send_clipb_image, 'command':self.__on_send_image_to_device}},
+             'init':{'text':'Send Image', 'image':image_send_clipb_image, 'command':self.__on_send_image_to_device}},
         {'class':'Button', 'name':'send_file', 'grid':{'row':1, 'column':1},
              'balloonmsg':'Send a file to device',
-             'config':{'text':'Send File', 'image':image_send_file, 'command':self.__on_send_file_to_device}},
+             'init':{'text':'Send File', 'image':image_send_file, 'command':self.__on_send_file_to_device}},
         {'class':'Progressbar', 'name':'transfer_progressbar', 'grid':{'row':2, 'columnspan':2},
              'balloonmsg':'Data transfer progress',
-             'config':{'length':60, 'variable':self.__transfer_progress, 'maximum':100}}
+             'init':{'length':60, 'variable':self.__transfer_progress, 'maximum':100}}
     ]}
 ]},
 
 {'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
     {'class':'Button', 'name':'read_gps',
          'balloonmsg':'Read the AGPS sensor of an Android device.',
-         'config':{'text':'Location', 'image':image_sensor_location, 'compound':'left', 'command':self.__on_read_device_location}}
+         'init':{'text':'Location', 'image':image_sensor_location, 'compound':'left', 'command':self.__on_read_device_location}}
 ]},
 
 {'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Manage'}, 'children':[
@@ -145,8 +145,8 @@ if action == "read":
                  'entry_width':4,
                  'entry_text':str(default_qr_size),
                  'checker_function':self.root_node.gui.value_checker.check_int}},
-        {'class':'Button', 'config':{'text':'Ok'}},
-        {'class':'Button', 'config':{'text':'Abort', 'command':self.__on_abort}}
+        {'class':'Button', 'init':{'text':'Ok'}},
+        {'class':'Button', 'init':{'text':'Abort', 'command':self.__on_abort}}
     ]},
     {'class':'Frame', 'pack':{'side':'left'}, 'children':[
         {'class':ScrolledList, 'name':'ip_list', 'pack':{}}

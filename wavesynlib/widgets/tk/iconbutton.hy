@@ -3,7 +3,6 @@
 (import [tkinter.ttk [Button]])
 (import [PIL [ImageTk]])
 
-(import [wavesynlib.fileutils.photoshop.psd [get-pil-image]])
 (import [.utils.loadicon [load-icon]])
 
 

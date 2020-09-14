@@ -113,15 +113,15 @@ class WindowManager(ModelNode, WindowComponent):
             
         widgets_desc = [
 {"class":Group, "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Info"}, "children":[
-    {"class":"Label", "config":{"text":f"ID: {id(self.window_node)}"}},
-    {"class":"Button", "config":{"text":"Copy ID  ", "image":copy_id_icon, "compound":"left", "command":self._on_copy_id_click}},
-    {"class":"Button", "config":{"text":"Copy Path", "image":copy_path_icon, "compound":"left", "command":self._on_copy_path_click}}]
+    {"class":"Label", "init":{"text":f"ID: {id(self.window_node)}"}},
+    {"class":"Button", "init":{"text":"Copy ID  ", "image":copy_id_icon, "compound":"left", "command":self._on_copy_id_click}},
+    {"class":"Button", "init":{"text":"Copy Path", "image":copy_path_icon, "compound":"left", "command":self._on_copy_path_click}}]
 },
 
 {"class":Group, "pack":{"side":"left", "fill":"y"}, "setattr":{"name":"Attributes"}, "children":[
-    {"class":"Checkbutton", "config":{"text":"Topmost", "variable":topmost, "command":self._on_topmost_click}},
-    {"class":"Scale", "config":{"from_":0.2, "to":1.0, "orient":"horizontal", "value":1.0, "command":on_scale}},
-    {"class":"Label", "config":{"text":"Opacity"}}]
+    {"class":"Checkbutton", "init":{"text":"Topmost", "variable":topmost, "command":self._on_topmost_click}},
+    {"class":"Scale", "init":{"from_":0.2, "to":1.0, "orient":"horizontal", "value":1.0, "command":on_scale}},
+    {"class":"Label", "init":{"text":"Opacity"}}]
 }
 ]
 

@@ -934,13 +934,12 @@ class AxisGroup(Observable, Group):
         for c in range(4):
             for r in range(2):
                 temp = LabeledEntry(paramfrm)
-                image   = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path(images[c*2+r]))
+                #image   = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path(images[c*2+r]))
                 set_attributes(temp,
-                    checker_function   = check_float,
-                    #label_text   = names[c*2+r],
-                    label_image  = image,
-                    label_width  = 5 if c*2+r < 4 else 10,
-                    entry_width  = 5,
+                    checker_function  = check_float,
+                    label_common_icon = images[c*2+r],
+                    label_width       = 5 if c*2+r < 4 else 10,
+                    entry_width       = 5,
                     entry_variable    = self.__params[c*2+r]
                 )
                 temp.entry.bind('<Return>', self._on_confirm_button_click)

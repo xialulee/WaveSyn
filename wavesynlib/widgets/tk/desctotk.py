@@ -6,7 +6,7 @@ def json_to_tk(parent, json_code, balloon=None):
     '''\
 Example: [
     {"name":"alert_button", "class":"Button", "module":"ttk", 
-    "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
+    "init":{"text":"Alert!"}, "pack":{"fill":"x"}}
 ]
     '''
     import tkinter as tk

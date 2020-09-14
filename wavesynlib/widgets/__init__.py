@@ -191,7 +191,7 @@ Created on Fri April 3 2015
 
     #root = Tk()
     #json_code = '''[
-    #{"name":"alert_button", "class":"Button", "config":{"text":"Alert!"}, "pack":{"fill":"x"}}
+    #{"name":"alert_button", "class":"Button", "init":{"text":"Alert!"}, "pack":{"fill":"x"}}
 #]
     #'''
     #widgets = json_to_tk(root, json_code)

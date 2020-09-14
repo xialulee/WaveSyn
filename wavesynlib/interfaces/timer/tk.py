@@ -4,6 +4,7 @@ Created on Mon Mar 30 10:14:20 2015
 
 @author: Administrator
 """
+import hy
 from tkinter import Toplevel, IntVar
 from tkinter.ttk import Button, Checkbutton
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer, Divider

@@ -45,6 +45,11 @@
         (.set self.--scale val))
 
 
+    (defprop scale 
+        #_getter
+        (fn [self] self.--scale))
+
+
     (defprop name
         #_getter
         (fn [self] 
