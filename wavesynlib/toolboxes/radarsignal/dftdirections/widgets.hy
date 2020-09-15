@@ -1,10 +1,26 @@
 (require [wavesynlib.languagecenter.hy.tkdef [widget]])
 
+(import [tkinter [Frame]])
+(import [tkinter.ttk [Button Combobox]])
+
 (import [wavesynlib.widgets.tk.group [Group]])
 (import [wavesynlib.widgets.tk.iconbutton [IconButton]])
 (import [wavesynlib.widgets.tk.labeledentry [LabeledEntry]])
 
 (import [wavesynlib.languagecenter.wavesynscript [Scripting]])
+
+
+(widget Frame to-dvplane-frm [
+    (pack :fill "both")
+    (child Button new-btn [
+        (init :text "New")
+        (pack :fill "x") ])
+    (child Frame exist-frm [
+        (pack :fill "x")
+        (child Combobox id-cmb [ 
+            (pack :side "left" :fill "x") ])
+        (child Button ok-btn [
+            (init :text "Ok") ]) ]) ])
 
 
 (widget Group parameter-grp [
@@ -35,3 +51,17 @@
             :compound "left")
         (setattr
             :common-icon "run20x20.png") ]) ])
+
+
+(widget Group export-data-grp [
+    (pack :side "left" :fill "y")
+    (setattr :name "Data")
+    (child Frame export-button-frame [
+        (child IconButton export-to-console-btn [
+            (setattr :common-icon "console20x20.psd")
+            (grid :row 0 :column 0) 
+            (balloonmsg "Export data to the console.") ]) 
+        (child IconButton export-to-dvplane-btn [
+            (setattr :common-icon "figurewindow20x20.psd")
+            (grid :row 0 :column 1)
+            (balloonmsg "Export data to a data visualization plane window.") ]) ]) ])

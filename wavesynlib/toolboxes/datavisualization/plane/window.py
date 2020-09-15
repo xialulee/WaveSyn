@@ -33,7 +33,6 @@ class PlaneWindow(FigureWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__current_data_info = None
 
 
     def on_connect(self):
@@ -58,27 +57,33 @@ class PlaneWindow(FigureWindow):
                 dict(name="Polar",     polar=True) ])
 
 
-    def __on_load_var_btn_click(self):
-        var_name = askstring("Var Name", "Please enter variable name:")
-        data = Scripting.namespaces["locals"][var_name]
+    @staticmethod
+    def __ask_draw_properties():
         drawmode = ask_drawmode()
-        #if drawmode == "plot":
-            #prop = ask_plot_properties()
-        #elif drawmode == "scatter":
-            #prop = ask_scatter_properties()
-        #elif drawmode == "stem":
-            #prop = ask_stem_properties()
         prop = {
             "plot": ask_plot_properties,
             "stem": ask_stem_properties,
             "scatter": ask_scatter_properties
         }[drawmode]()
         prop = {key:value for key, value in prop.items() if value is not None}
-        self.__current_data_info = {
+        return drawmode, prop
+
+
+    def __on_load_var_btn_click(self):
+        var_name = askstring("Var Name", "Please enter variable name:")
+        data = Scripting.namespaces["locals"][var_name]
+        drawmode, prop = self.__ask_draw_properties()
+        data_info = {
             "source":   "console",
             "name":     var_name,
             "drawmode": drawmode}
-        self.__draw(drawmode, data, prop)
+        self.__draw(drawmode, data, data_info, prop)
+
+
+    def draw_data(self, data, data_info):
+        drawmode, prop = self.__ask_draw_properties()
+        data_info["drawmode"] = drawmode
+        self.__draw(drawmode, data, data_info, prop)
 
 
     @staticmethod
@@ -128,13 +133,12 @@ class PlaneWindow(FigureWindow):
         self.figure_book[1].scatter(*self.xy_to_ar(x, y), **prop)
 
 
-    def __draw(self, drawmode, data, prop):
+    def __draw(self, drawmode, data, data_info, prop):
         if isinstance(data, Polygon):
             data_x, data_y = data.exterior.xy
             data = vstack([data_x, data_y]).T
 
-        dinfo = self.__current_data_info
-        prop["curve_name"] = f"{dinfo['source']}:{dinfo['name']}:{dinfo['drawmode']}"
+        prop["curve_name"] = f"{data_info['source']}:{data_info['name']}:{data_info['drawmode']}"
 
         def scatter():
             if isinstance(data, ndarray):

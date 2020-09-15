@@ -2,12 +2,13 @@ import hy
 
 from math import ceil, pi
 
-from numpy import arcsin, ones_like, r_, rad2deg
+from numpy import array, arcsin, ones_like, r_, rad2deg, vstack, sin, cos
 
 from PIL import ImageTk
 
 from tkinter import Frame
 from tkinter.ttk import Button
+from tkinter.simpledialog import askstring, askfloat
 
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.group import Group
@@ -16,9 +17,10 @@ from wavesynlib.widgets.tk.desctotk import hywidgets_to_tk
 
 from wavesynlib.languagecenter.datatypes.color import WaveSynColor
 from wavesynlib.languagecenter.wavesynscript import (
-    WaveSynScriptAPI, code_printer)
+    WaveSynScriptAPI, Scripting, code_printer)
 
-from .widgets import parameter_grp
+from .widgets import parameter_grp, export_data_grp
+from .dialogs import ask_dvplane
 from .algorithms import calc_directions
 
 
@@ -63,6 +65,13 @@ class DFTDirectionsWindow(FigureWindow):
         self._make_view_tab()
         self._make_marker_tab()
         self._make_export_tab()
+        export_widgets_desc = [export_data_grp]
+        export_widgets = hywidgets_to_tk(
+            self.export_frame, 
+            export_widgets_desc,
+            self.root_node.gui.balloon)
+        export_widgets["export_to_console_btn"]["command"] = self.__on_export_to_console_btn_click
+        export_widgets["export_to_dvplane_btn"]["command"] = self.__on_export_to_dvplane_btn_click
 
         self._make_window_manager_tab()
 
@@ -108,6 +117,11 @@ class DFTDirectionsWindow(FigureWindow):
                 curve_name=f"{index:0{index_width}d}, {rad2deg(angle_coll[0]): 3.2f}°")
 
 
+    @WaveSynScriptAPI
+    def export_data_to_console(self, var_name):
+        Scripting.namespaces["locals"][var_name] = self.data
+
+
     @property
     def data(self):
         return self.__data
@@ -118,4 +132,34 @@ class DFTDirectionsWindow(FigureWindow):
             self.show_directions(
                 num_elem=self.__array_tab["num_elem_lent"].get_int(),
                 dist_elem=self.__array_tab["dist_elem_lent"].get_float())
+
+
+    def __on_export_to_console_btn_click(self):
+        var_name = askstring("Variable Name", "Please input variable name here:")
+        with code_printer():
+            self.export_data_to_console(var_name)
+
+
+    def __on_export_to_dvplane_btn_click(self):
+        sel_exist, winid_str = ask_dvplane(self)
+        radius = askfloat(
+            "Radius", 
+            "Please input radius:",
+            initialvalue=1.0)
+        data_info = {
+            "source": "dftdirections",
+            "name":   "" }
+        if sel_exist:
+            window = self.root_node.gui.windows[int(winid_str)]
+        else:
+            winid = self.root_node.gui.windows.create(module_name='wavesynlib.toolboxes.datavisualization.plane.window', class_name='PlaneWindow')
+            window = self.root_node.gui.windows[winid]
+        angles = []
+        for index, row in self.__data.iterrows():
+            angles.extend(row.angle_coll)
+        angles = array(angles)
+        xy = vstack([radius*cos(angles), radius*sin(angles)])
+        xy = xy.T
+
+        window.draw_data(xy, data_info)
 
