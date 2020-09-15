@@ -25,7 +25,7 @@
             :label-compound    "left"
             :label-common-icon "Pattern_d_Label.png"
             :label-text        "d"
-            :label-width      3
+            :label-width       3
             :entry-width       6
             :entry-text        0.5
             :checker-function (. Scripting root-node gui value-checker check-positive-float))

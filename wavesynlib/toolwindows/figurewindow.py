@@ -23,10 +23,9 @@ from numpy import deg2rad, rad2deg, ndarray
 
 import hy
 from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
-from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI
-from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.wavesynscript import (
-    ModelNode, NodeList, code_printer)
+    Scripting, WaveSynScriptAPI, ModelNode, NodeList, code_printer)
+from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList

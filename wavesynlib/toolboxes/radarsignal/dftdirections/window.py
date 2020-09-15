@@ -12,11 +12,14 @@ from tkinter.ttk import Button
 from wavesynlib.toolwindows.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
-
-from wavesynlib.languagecenter.datatypes.color import WaveSynColor
 from wavesynlib.widgets.tk.desctotk import hywidgets_to_tk
 
+from wavesynlib.languagecenter.datatypes.color import WaveSynColor
+from wavesynlib.languagecenter.wavesynscript import (
+    WaveSynScriptAPI, code_printer)
+
 from .widgets import parameter_grp
+from .algorithms import calc_directions
 
 
 
@@ -36,6 +39,7 @@ class DFTDirectionsWindow(FigureWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__data = None
 
 
     def on_connect(self):
@@ -49,10 +53,8 @@ class DFTDirectionsWindow(FigureWindow):
 
         widgets_desc = [parameter_grp]
         widgets = hywidgets_to_tk(array_frame, widgets_desc, self.root_node.gui.balloon)
-        widgets["run_btn"]["command"] = lambda:\
-            self.show_directions(
-                M=widgets["num_elem_lent"].get_int(),
-                d=widgets["dist_elem_lent"].get_float())
+        widgets["run_btn"]["command"] = self.__on_run_btn_click
+        self.__array_tab = widgets
 
         self._ambig_group = ambig_group = AmbiguityGroup(array_frame)
         ambig_group.pack(side="left", fill="y")
@@ -79,41 +81,41 @@ class DFTDirectionsWindow(FigureWindow):
             if "curve_selected" in kwargs:
                 _list = self._ambig_group._list
                 _list.clear()
-                M = self.__M
-                d = self.__d
                 index = self.figure_book.selected_curve[0]
-                k = index - M//2
-                cd2 = ceil(d*2)
-                steps = r_[(1-cd2):cd2] * M
-                j = (k+steps)/d/M
-                j = j[-1<=j]
-                j = j[j<=1]
-                j = arcsin(j)
-                j = rad2deg(j)
-                for i in j:
-                    _list.append(f"{i: 3.2f}°")
+                angle_coll = self.__data.loc[index].angle_coll
+                for angle in angle_coll:
+                    _list.append(f"{rad2deg(angle): 3.2f}°")
 
 
-    def show_directions(self, M, d):
+    @WaveSynScriptAPI
+    def show_directions(self, num_elem, dist_elem):
         self._ambig_group._list.clear()
-        self.__M = M
-        self.__d = d
+        self.__M = M = num_elem
+        self.__d = d = dist_elem
         self.figure_book.clear()
-        k = r_[:M]
-        k -= M//2
-        cd2 = ceil(d*2)
-        steps = r_[(1-cd2):cd2] * M
-        for index, i in enumerate(k):
-            j = (i+steps)/d/M
-            j = j[-1<=j]
-            j = j[j<=1]
-            mag = ones_like(j)
+        self.__array_tab["num_elem_lent"].entry_text = str(M)
+        self.__array_tab["dist_elem_lent"].entry_text = str(d)
+
+        self.__data = data = calc_directions(M, d)
+        index_width = len(str(M))
+        for index, row in data.iterrows():
+            angle_coll = row.angle_coll
+            mag = ones_like(angle_coll)
             self.figure_book.plot(
-                arcsin(j), 
+                angle_coll, 
                 mag, 
                 color=WaveSynColor(hsv=(index/(M+0.1*M), 1.0, 0.75)).to_matplotlib(),
-                curve_name=f"{rad2deg(arcsin(i/d/M)): 3.2f}°")
+                curve_name=f"{index:0{index_width}d}, {rad2deg(angle_coll[0]): 3.2f}°")
 
 
+    @property
+    def data(self):
+        return self.__data
 
+
+    def __on_run_btn_click(self):
+        with code_printer():
+            self.show_directions(
+                num_elem=self.__array_tab["num_elem_lent"].get_int(),
+                dist_elem=self.__array_tab["dist_elem_lent"].get_float())
 
