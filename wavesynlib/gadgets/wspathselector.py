@@ -8,6 +8,9 @@ from tkinter import Tk
 from tkinter.filedialog import askdirectory, askopenfilenames
 import sys
 import getopt
+from pathlib import Path
+
+from wavesynlib.interfaces.os.windows.wsl import winpath_to_wslpath
 
 ERROR_NOERROR, ERROR_PARAM, ERROR_NOSEL = range(3)
 
@@ -18,7 +21,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:],\
             'd',\
-            ['dir', 'filetype=', 'typename=']\
+            ['dir', 'wsl', 'filetype=', 'typename=']\
         )
     except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
@@ -28,13 +31,16 @@ def main(argv):
     directory = False
     filetype  = ''
     typename  = ''
+    wslpath   = False
     for o, a in opts:
         if o in ('-d', '--dir'):
             directory = True
-        if o in ('--filetype'):
+        elif o == '--filetype':
             filetype = a
-        if o in ('--typename'):
+        elif o == '--typename':
             typename = a
+        elif o == '--wsl':
+            wslpath = True
             
     root = Tk()
     root.withdraw()            
@@ -52,7 +58,10 @@ def main(argv):
         print('No file/directory selected.', file=sys.stderr)
     
     for path in path_list:
-        print(path)
+        if wslpath:
+            print(winpath_to_wslpath(Path(path)).as_posix())
+        else:
+            print(path)
         
     return ERROR_NOERROR
     
