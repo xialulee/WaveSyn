@@ -113,7 +113,7 @@ class DFTDirectionsWindow(FigureWindow):
             self.figure_book.plot(
                 angle_coll, 
                 mag, 
-                color=WaveSynColor(hsv=(index/(M+0.1*M), 1.0, 0.75)).to_matplotlib(),
+                color=WaveSynColor(hsv=(index/(M+0.1*M), 1.0, 0.9)).to_matplotlib(),
                 curve_name=f"{index:0{index_width}d}, {rad2deg(angle_coll[0]): 3.2f}°")
 
 
