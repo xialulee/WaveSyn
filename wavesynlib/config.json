@@ -1,15 +1,16 @@
 {
 	"ConsoleMenu":[
-        
         {"Name":"Toolboxes", "TearOff":0, "UnderLine":0, "SubMenu":[
             {"Name":"Data Visualization", "TearOff":0, "UnderLine":0, "SubMenu":[
                 {"Name":"2D Plane", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.datavisualization.plane.window', class_name='PlaneWindow')"} ]},
-
             {"Name":"Radar Signal", "TearOff":0, "UnderLine":0, "SubMenu":[
                 {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.singlesyn', class_name='SingleWindow')"},
                 {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"print('Not Implemented', file=sys.stderr)"},
                 {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.mimopatternsyn', class_name='PatternWindow')"},
-                {"Name":"New DFT Directions Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.dftdirections.window', class_name='DFTDirectionsWindow')"} ]} ]},
+                {"Name":"New DFT Directions Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.dftdirections.window', class_name='DFTDirectionsWindow')"} ]}, 
+            {"Name":"File", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"RAR Viewer", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.file.rar.window', class_name='RARViewer')"}, 
+                {"Name":"Replica Finder", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.file.replicafinder.window', class_name='ReplicaFinderWindow')"} ]} ]},
 	    
 
 	    {
@@ -75,7 +76,6 @@
           "Name":"Utils", "TearOff":0, "UnderLine":0, "SubMenu":[
               {
               "Name":"File System", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"Replica Finder", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.replicafinder.window', class_name='ReplicaFinderWindow')"},
                   {"Name":"Tar Extractor", "UnderLine":0, "Command":"wavesyn.file_utils.tar_files[wavesyn.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME].extract_all(wavesyn.lang_center.wavesynscript.constants.ASK_DIRECTORY)"}]
               },
               {
@@ -87,11 +87,6 @@
               {
               "Name":"PSD Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
                   {"Name":"PSD Viewer", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.psdview.window', class_name='PSDViewer')"}
-              ]
-              },
-              {
-              "Name":"Rar Tools", "TearOff":0, "UnderLine":0, "SubMenu":[
-                  {"Name":"Rar Viewer", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolwindows.unrar.window', class_name='UnrarWindow')"}
               ]
               },
               {

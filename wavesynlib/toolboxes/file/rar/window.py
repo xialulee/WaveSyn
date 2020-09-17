@@ -17,21 +17,7 @@ from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 from wavesynlib.interfaces.unrar import list_content, get_content_tree
 from wavesynlib.interfaces.unrar import unpack as unpack_rar
 
-# The following code generates the bytecode file of the 
-# widgets.hy which is written in Hy.
-# If we import a module written in hy directly in wavesyn,
-# it will fail, and I cannot figure out why. 
-
-# After the bytecode file generated, we can import the module written by hy.
-import hy
-try:
-    from wavesynlib.toolwindows.unrar.widgets import (
-            load_grp, unpack_grp)
-except hy.errors.HyCompileError:
-    widgets_path = Path(__file__).parent / 'widgets.hy'
-    os.system(f'hyc {widgets_path}')    
-    from wavesynlib.toolwindows.unrar.widgets import (
-            load_grp, unpack_grp)    
+from .widgets import load_grp, unpack_grp
 
 
 
@@ -80,8 +66,8 @@ class ContentTree(ModelNode):
 
     
 
-class UnrarWindow(TkToolWindow):
-    window_name = 'WaveSyn-UnRarWindow'
+class RARViewer(TkToolWindow):
+    window_name = 'WaveSyn-RARViewer'
     
     def __init__(self):
         super().__init__()

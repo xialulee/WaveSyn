@@ -4,6 +4,7 @@ Created on Wed Feb 03 16:00:18 2016
 
 @author: Feng-cong Li
 """
+import hy
 import tkinter as tk
 
 import os
@@ -23,23 +24,8 @@ from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 
-
-
-# The following code generates the bytecode file of the 
-# widgets.hy which is written in Hy.
-# If we import a module written in hy directly in wavesyn,
-# it will fail, and I cannot figure out why. 
-import hy
-try:
-    from .widgets import (
-            finder_grp, status_frm, _green_light_icon, _red_light_icon)
-except hy.errors.HyCompileError:
-# After the bytecode file generated, we can import the module written by hy.    
-    widgets_path = Path(__file__).parent / 'widgets.hy'
-    os.system(f'hyc {widgets_path}')    
-    from .widgets import (
-            finder_grp, status_frm, _green_light_icon, _red_light_icon)
-
+from .widgets import (
+    finder_grp, status_frm)
 
 
 _image_dir = Path(__file__).parent / 'images'
@@ -99,6 +85,7 @@ class ReplicaFinder(Observable, ModelNode):
         self.__block_size = block_size
         
         
+    # To do: Make a thread-safe WaveSynAPI
     @WaveSynScriptAPI
     def thread_run(self, path):
         self.__result = {}
@@ -236,8 +223,7 @@ class ReplicaFinderWindow(TkToolWindow):
         
         widgets_desc = [status_frm]
         widgets = json_to_tk(self.tk_object, widgets_desc)
-        self.__busy_light = busy_light = widgets['light_lbl']
-        busy_light['image'] = _green_light_icon
+        self.__busy_light = widgets['light_lbl']
         self.__current_dir_label = widgets['current_dir_lbl']
               
         
@@ -251,15 +237,15 @@ class ReplicaFinderWindow(TkToolWindow):
         if stop != laststate[0]:
             laststate[0] = stop            
             state = 'normal' if stop else 'disabled'
-            light = _green_light_icon if stop else _red_light_icon
             self.__start_button['state'] = state
-            self.__busy_light['image'] = light
-            
+            busy = False if stop else True
+            self.__busy_light.busy = busy
+
                                
     def _on_start_click(self):
         self.__treeview.clear()
         self.__start_button['state'] = 'disabled'
-        self.__busy_light['image'] = _red_light_icon
+        self.__busy_light.busy = True
         with code_printer():
             self.replica_finder.thread_run(self.__dir_indicator.directory)
             

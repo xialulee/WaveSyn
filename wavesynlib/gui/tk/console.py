@@ -30,6 +30,7 @@ from wavesynlib.widgets.tk.scrolledtext import ScrolledText
 from wavesynlib.widgets.tk.pilimageframe import PILImageFrame
 from wavesynlib.widgets.tk.syntaxhighlighter import SyntaxHighlighter
 from wavesynlib.widgets.tk.tkredirector import WidgetRedirector
+from wavesynlib.widgets.tk.busylight import BusyLight
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.utils import call_immediately, FunctionChain
@@ -363,15 +364,9 @@ class StatusBar(Frame):
             battery_images[image_name] = ImageTk.PhotoImage(
                 file=str(image_dir/(image_name+'.png')))
             
-        self.__busy_images = busy_images = {}
-        image_dir = Path(Scripting.root_node.get_gui_image_path('busysignal'))
-        busy_images['busy'] = ImageTk.PhotoImage(file=str(image_dir/('busy'+'.png')))
-        busy_images['available'] = ImageTk.PhotoImage(file=str(image_dir/('available'+'.png')))
-
         balloon = Scripting.root_node.gui.balloon
                         
-        self.__busy_lamp = busy_lamp = Label(self)
-        busy_lamp['image'] = busy_images['available']
+        self.__busy_lamp = busy_lamp = BusyLight(self)
         busy_lamp.pack(side='right', fill='y')
         
         balloon.bind_widget(busy_lamp, balloonmsg='''Main-thread status.
@@ -513,13 +508,7 @@ Red:   main-thread is busy.''')
         # To Do: add several customizable lamps for users.
         
     def _set_busy_light(self):
-        if self.__busy:
-            image = self.__busy_images['busy']
-        else:
-            image = self.__busy_images['available']
-        if self.__busy_lamp['image'] != image:
-            self.__busy_lamp['image'] = image
-        self.update()
+        self.__busy_lamp.busy = self.__busy
         
     def set_busy(self, busy=True):
         with self.__lock:
