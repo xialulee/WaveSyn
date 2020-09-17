@@ -40,11 +40,15 @@ def _launch_interrupter(messages_from_interrupter, messages_to_interrupter):
 
 class InterrupterNode(ModelNode):
     def __init__(self, *args, **kwargs):
-        ModelNode.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+
+    def on_connect(self):
+        super().on_connect()
         p = mp.Process(
                 target=_launch_interrupter, 
                 args=(_messages_from_interrupter, _messages_to_interrupter))
-        thread.start_new_thread(_listener, ())
+        self.root_node.thread_manager.new_thread_do(_listener)
         self.__process = p
 
     
