@@ -4,11 +4,10 @@ Created on Thu Nov 05 12:26:16 2015
 
 @author: Feng-cong Li
 """
-from __future__ import print_function
 
-import barcode
+import wavesynlib.gadgets.wsmakeqrcode as makeqr
 import platform
-from cStringIO import StringIO
+from io import StringIO
 
 if platform.system() == 'Windows':
     from wavesynlib.interfaces.os.windows.clipb import clipboard_to_stream
@@ -42,7 +41,7 @@ def main(argv):
     sys.stdin = stream
     argv.append('--stdin')
     argv.append('--wintitle=WaveSyn-QrClipb')
-    barcode.main(argv)
+    makeqr.main(argv)
     sys.stdin = origStdin
     
     

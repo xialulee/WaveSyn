@@ -19,16 +19,16 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:],\
             'd:e:s:f:',\
-            ['nodisplay', 'stdin', 'size=', 'decode=', 'encode=', 'file=', 'wintitle=']
-        )
+            ['nodisplay', 'stdin', \
+             'size=', 'decode=', \
+             'encode=', 'file=', 'wintitle='])
     except getopt.GetoptError as err:
         print(str(err), file=sys.stderr)
         sys.exit(ERROR_PARAM)
         
-        
     size = 400 # default size
     nodisplay = False
-    readStdin = False
+    readstdin = False
     decode = None
     encode = 'utf-8'
     filename = None
@@ -45,11 +45,11 @@ def main(argv):
         if o in ('--nodisplay',):
             nodisplay = True
         if o in ('--stdin',):
-            readStdin = True
+            readstdin = True
         if o in ('--wintitle'):
             title = a
             
-    if readStdin:
+    if readstdin:
         content = sys.stdin.read()
     else:
         content = args[0]
@@ -59,17 +59,16 @@ def main(argv):
         
     content.encode('utf-8')
         
-    qrImage = qrcode.make(content)
+    qrimage = qrcode.make(content)
     
     if filename:
-        qrImage.save(filename)
+        qrimage.save(filename)
     
     if not nodisplay:
         root = Tk()
         root.title(title)
-        photo = ImageTk.PhotoImage(qrImage)
-        label = Label(root, image=photo)
-        label.pack()
+        photo = ImageTk.PhotoImage(qrimage)
+        Label(root, image=photo).pack()
         root.mainloop()
      
      
