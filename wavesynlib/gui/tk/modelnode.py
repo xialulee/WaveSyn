@@ -15,7 +15,7 @@ from wavesynlib.widgets.tk.balloon import Balloon
 from wavesynlib.widgets.tk.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.timer.tk import TkTimer
 from .interrupter.modelnode import InterrupterNode
-from wavesynlib.toolwindows import simpledialogs
+from wavesynlib.widgets.tk import simpledialogs
 from wavesynlib.widgets.basewindow import WindowDict
 from wavesynlib.gui.tk.console import ConsoleWindow
 
