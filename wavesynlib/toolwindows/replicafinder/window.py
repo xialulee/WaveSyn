@@ -18,7 +18,7 @@ import hy
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.dirindicator import DirIndicator
-from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
+from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer

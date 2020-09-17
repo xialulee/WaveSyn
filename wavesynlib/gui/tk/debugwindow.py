@@ -2,7 +2,7 @@ from io import StringIO
 
 from wavesynlib.widgets.tk.scrolledtext import ScrolledText
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI
-from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
+from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 
 
 

@@ -12,7 +12,7 @@ import six.moves.tkinter_ttk as ttk
 import hy
 from wavesynlib.widgets.tk.iqslider import IQSlider
 from wavesynlib.widgets.tk.group import Group
-from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
+from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode
 

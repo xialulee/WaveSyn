@@ -14,7 +14,7 @@ from tkinter import ttk
 import hy
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.widgets.tk.desctotk import json_to_tk
-from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
+from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 from .widgets import (

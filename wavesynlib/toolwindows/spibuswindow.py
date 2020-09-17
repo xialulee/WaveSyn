@@ -27,7 +27,7 @@ from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI,
 from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.interfaces.devcomm.oneasyb.spi import USBSPIConverter
 from wavesynlib.widgets.tk.group import Group
-from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
+from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 
 
 #def get_my_dir():

@@ -1,6 +1,6 @@
 from wavesynlib.widgets.tk.scrolledtext import ScrolledText
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI
-from wavesynlib.toolwindows.tkbasewindow import TkToolWindow
+from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 
 class DocWindow(TkToolWindow):
     def __init__(self, *args, **kwargs):
