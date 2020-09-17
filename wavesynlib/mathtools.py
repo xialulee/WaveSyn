@@ -216,7 +216,7 @@ class AlgorithmNode(ModelNode):
         
     @WaveSynScriptAPI
     def thread_run(self, on_finished, progress_indicator, repeat_times, *args, **kwargs):
-        from wavesynlib.toolwindows.progresswindow.dialog import Dialog
+        from wavesynlib.widgets.tk.progressdialog import ProgressDialog
                     
         root_node = self.root_node            
         
@@ -226,7 +226,7 @@ class AlgorithmNode(ModelNode):
         if progress_indicator is None:
             pass
         elif progress_indicator == 'progress_dialog':
-            dialog = Dialog(['Total progress:', 'Current progress:'], title=algorithm.__name__ + ' Progress')
+            dialog = ProgressDialog(['Total progress:', 'Current progress:'], title=algorithm.__name__ + ' Progress')
             def default_progressbar(k, K, *args, **kwargs):
                 progress = k / K * 100
                 dialog.set_progress(index=1, progress=progress)
@@ -266,15 +266,14 @@ class AlgorithmNode(ModelNode):
             
     @WaveSynScriptAPI
     def process_run(self, on_finished, progress_indicator, repeat_times, *args, **kwargs):
-        from wavesynlib.toolwindows.progresswindow.dialog import Dialog
+        from wavesynlib.widgets.tk.progressdialog import ProgressDialog
         
         root_node = self.root_node            
         algorithm = self.__algorithm
         algorithm_class = type(algorithm)
-        dialog = Dialog(list(range(repeat_times)), title=algorithm.__name__ + ' Progress')
+        dialog = ProgressDialog(list(range(repeat_times)), title=algorithm.__name__ + ' Progress')
             
         queue = mp.Queue()
-#        all_arg = eval_format('[([], dict({Scripting.convert_args_to_str(**kwargs)}))]*{repeat_times}')
         for k in range(repeat_times):
             mp.Process(target=parallel_func, args=(algorithm_class, k, queue, args, kwargs)).start()        
 

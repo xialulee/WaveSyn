@@ -5,8 +5,8 @@ Created on Wed Jan 27 16:47:12 2016
 @author: Feng-cong Li
 """
 
-import six.moves.tkinter as tk
-import six.moves.tkinter_ttk as ttk
+from tkinter import Frame, Toplevel, IntVar
+from tkinter.ttk import Label, Progressbar
 
 import six.moves._thread as thread
 
@@ -14,15 +14,15 @@ from wavesynlib.interfaces.timer.tk import TkTimer
 from wavesynlib.languagecenter.designpatterns import SimpleObserver
 
 
-class LabeledProgress(tk.Frame, object):
+class LabeledProgress(Frame):
     def __init__(self, *args, **kwargs):
-        tk.Frame.__init__(self, *args, **kwargs)
-        self.__label = label = ttk.Label(self)
+        super().__init__(*args, **kwargs)
+        self.__label = label = Label(self)
         label.pack(expand='yes', fill='x')
-        self.__progress = progress = tk.IntVar()
-        ttk.Progressbar(self, orient='horizontal', 
-                        variable=progress, maximum=100,
-                        length=400).pack(expand='yes', fill='x')
+        self.__progress = progress = IntVar()
+        Progressbar(self, orient='horizontal', 
+                          variable=progress, maximum=100,
+                          length=400).pack(expand='yes', fill='x')
         
     @property
     def progress(self):
@@ -41,9 +41,9 @@ class LabeledProgress(tk.Frame, object):
         self.__label['text'] = value
 
 
-class Dialog(object):
+class ProgressDialog:
     def __init__(self, text_list, title=''):
-        self.__win = win = tk.Toplevel()
+        self.__win = win = Toplevel()
         win.protocol("WM_DELETE_WINDOW", self._on_close)
         win.title(title)
         self.__lock = thread.allocate_lock() 
@@ -91,8 +91,9 @@ class Dialog(object):
             
             
 def main(argv):
-    root = tk.Tk()
-    dialog = Dialog(['abcd', 'efgh'])
+    from tkinter import Tk
+    root = Tk()
+    dialog = ProgressDialog(['abcd', 'efgh'])
     dialog.set_progress(index=0, progress=50)
     dialog.set_progress(index=1, progress=80)
     root.mainloop()
