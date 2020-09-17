@@ -17,7 +17,7 @@ from scipy.io import savemat
 import _thread as thread
 
 import hy
-from wavesynlib.toolwindows.figurewindow import FigureWindow
+from wavesynlib.widgets.tk.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.group import Group 
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
 from wavesynlib.widgets.tk.labeledentry import LabeledEntry

@@ -16,7 +16,7 @@ from shapely.geometry import Polygon
 
 from wavesynlib.fileutils.photoshop.psd import get_pil_image
 from wavesynlib.languagecenter.wavesynscript import Scripting
-from wavesynlib.toolwindows.figurewindow import FigureWindow
+from wavesynlib.widgets.tk.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.desctotk import hywidgets_to_tk
 
 from .widgets import load_grp

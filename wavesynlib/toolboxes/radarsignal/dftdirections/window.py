@@ -10,7 +10,7 @@ from tkinter import Frame
 from tkinter.ttk import Button
 from tkinter.simpledialog import askstring, askfloat
 
-from wavesynlib.toolwindows.figurewindow import FigureWindow
+from wavesynlib.widgets.tk.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
 from wavesynlib.widgets.tk.desctotk import hywidgets_to_tk
