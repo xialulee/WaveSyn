@@ -43,7 +43,7 @@
     (defprop entry-text 
         #_getter
         (fn [self] 
-            (. self.--entry get))
+            (.get self.--entry))
         #_setter
         (fn [self text]
             (.delete self.--entry 0 "end") 
