@@ -14,7 +14,7 @@
         (super-init #* args #** kwargs)
         (.pack
             (setx self.--label (Label self)) 
-            :expand "yes" :fill "y")
+            :expand "yes" :fill "x")
         (.pack 
             (Progressbar self 
                 :orient   "horizontal"
