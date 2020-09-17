@@ -5,7 +5,6 @@ from pandas import DataFrame
 
 
 def calc_directions(num_elem, dist_elem):
-    #k_range = r_[:num_elem] - num_elem//2
     k_range = r_[:num_elem]
     neg_index = (num_elem - 1) // 2
     k_range[-neg_index:] -= num_elem

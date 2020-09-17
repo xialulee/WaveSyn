@@ -5,9 +5,11 @@ Created on Tue Jan 26 10:42:50 2016
 @author: Feng-cong Li
 """
 
+import hy
+
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib import status
-from wavesynlib.toolwindows.interrupter import interrupter
+from . import window
 
 import _thread as thread
 import multiprocessing as mp
@@ -32,7 +34,7 @@ def _listener():
 
 
 def _launch_interrupter(messages_from_interrupter, messages_to_interrupter):
-    interrupter.main(messages_from_interrupter, messages_to_interrupter)
+    window.main(messages_from_interrupter, messages_to_interrupter)
 
 
 
