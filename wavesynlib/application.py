@@ -113,7 +113,7 @@ since the instance of Application is the first node created on the model tree.
         self.interfaces = Interfaces()
         self.stream_manager = StreamManager()
         
-        from wavesynlib.gui.tk import TkNode
+        from wavesynlib.gui.tk.modelnode import TkNode
         # TkNode is a ModelNode which maintains the Tk root window
         # and related utilities like value checker, balloon, and related
         # WaveSyn components. 
