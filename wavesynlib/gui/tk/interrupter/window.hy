@@ -1,5 +1,6 @@
 (import [tkinter [Tk]])
 (import [queue [Empty]])
+(import [quantities [second]])
 
 (import [wavesynlib.interfaces.timer.tk [TkTimer]])
 (import [wavesynlib.widgets.tk.desctotk [hywidgets-to-tk]])
@@ -22,7 +23,7 @@
             "command"  "interrupt_main_thread"
             "args"     ""})
         (.put messages-from-interrupter command)))
-    (setv queue-monitor (TkTimer root :interval 250))
+    (setv queue-monitor (TkTimer root :interval (* 0.25 second)))
     (.add_observer queue-monitor (fn [&rest args &kwargs kwargs]
         (try
             (setv message (.get-nowait messages-to-interrupter))

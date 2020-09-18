@@ -23,6 +23,7 @@ from datetime import datetime
 import traceback
 
 import jedi
+import quantities as pq
 
 from wavesynlib.widgets.tk.cwdindicator import CWDIndicator
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
@@ -354,7 +355,7 @@ class ConsoleText(ModelNode, ScrolledText):
 class StatusBar(Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        timer = TkTimer(widget=self, interval=200, active=False)
+        timer = TkTimer(widget=self, interval=0.2*pq.second, active=False)
         
         self.__battery_images = battery_images = {}
         image_dir = Path(Scripting.root_node.get_gui_image_path('battery'))

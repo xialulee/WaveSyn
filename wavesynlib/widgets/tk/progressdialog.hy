@@ -5,6 +5,8 @@
 
 (import -thread)
 
+(import [quantities [second]])
+
 (import [wavesynlib.interfaces.timer.tk [TkTimer]])
 
 
@@ -65,7 +67,7 @@
             (.append progressbars progressbar))
         (setv self.--timer (TkTimer 
             :widget   self.--win 
-            :interval 50))
+            :interval (* 0.05 second)))
         (.add-observer self.--timer (fn []
             (with [self.--lock]
                 (for [n (range number)]

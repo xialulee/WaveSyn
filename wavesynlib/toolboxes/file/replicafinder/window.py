@@ -15,6 +15,8 @@ import hashlib
 
 from pathlib import Path
 
+from quantities import second
+
 import hy
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.widgets.tk.desctotk import json_to_tk
@@ -50,7 +52,7 @@ class ReplicaFinder(Observable, ModelNode):
         
         self.__timer = timer
         if timer is None:
-            self.__timer = TkTimer(interval=200, active=False)
+            self.__timer = TkTimer(interval=0.2*second, active=False)
         self.__timer.add_observer(SimpleObserver(self._on_timer))
         
             

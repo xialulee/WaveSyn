@@ -1,5 +1,7 @@
 import os
 
+from quantities import second
+
 from .dirindicator import DirIndicator
 
 
@@ -11,7 +13,7 @@ class CWDIndicator(DirIndicator):
         super().__init__(*args, **kwargs)
                         
         from wavesynlib.interfaces.timer.tk import TkTimer
-        self.__timer = TkTimer(self, interval=500)
+        self.__timer = TkTimer(self, interval=0.5*second)
         self.__timer.add_observer(self)
         self.__timer.active = True
         
