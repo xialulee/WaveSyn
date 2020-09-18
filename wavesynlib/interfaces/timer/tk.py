@@ -10,6 +10,8 @@ from tkinter.ttk import Button, Checkbutton
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer, Divider
 from wavesynlib.widgets.tk.labeledentry import LabeledEntry
 
+from quantities import Quantity, millisecond
+
 
 class TkTimer(BaseObservableTimer):    
     class ConfigDialog(Toplevel):    
@@ -81,7 +83,7 @@ counter: The maximum number of the trigger, i.e., if counter=3, the timer will
 TkTimer is based on the Observer protocol. 
 '''
         super().__init__()
-        self.__interval = interval
+        self.__set_interval(interval)
         self.__active = active
         self.__counter = counter
         self.__divider_cache = {}        
@@ -89,6 +91,12 @@ TkTimer is based on the Observer protocol.
         if widget is None:
             widget  = self.ConfigDialog(timer=self)
         self.__widget   = widget 
+
+
+    def __set_interval(self, interval):
+        if isinstance(interval, Quantity):
+            interval = int(interval.rescale(millisecond))
+        self.__interval = interval
         
         
     def show_config_dialog(self, visible=True):
@@ -122,9 +130,9 @@ TkTimer is based on the Observer protocol.
         
     @interval.setter
     def interval(self, val):
+        self.__set_interval(val)
         if isinstance(self.__widget, self.ConfigDialog):
-            self.__widget.interval.entry_text    = str(val)
-        self.__interval = val
+            self.__widget.interval.entry_text    = str(self.__interval)
         
     
     @property
