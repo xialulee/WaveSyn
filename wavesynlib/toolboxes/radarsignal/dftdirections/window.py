@@ -110,7 +110,7 @@ class DFTDirectionsWindow(FigureWindow):
         for index, row in data.iterrows():
             angle_coll = row.angle_coll
             mag = ones_like(angle_coll)
-            self.figure_book.plot(
+            self.figure_book.draw(
                 angle_coll, 
                 mag, 
                 color=WaveSynColor(hsv=(index/(M+0.1*M), 1.0, 0.9)).to_matplotlib(),

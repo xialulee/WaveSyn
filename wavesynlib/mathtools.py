@@ -202,7 +202,7 @@ class AlgorithmNode(ModelNode):
     def data_container_exec(self, command, **kwargs):
         {
             'store': lambda: setattr(self.data_container, 'current_data', kwargs['data']),
-            'plot': lambda: self.data_container.plot(kwargs['data'])
+            'draw': lambda: self.data_container.draw(kwargs['data'])
         }[command]()
 
 

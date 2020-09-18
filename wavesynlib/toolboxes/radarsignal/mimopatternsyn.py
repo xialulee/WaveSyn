@@ -102,7 +102,7 @@ class OptimizeGroup(Group):
         display = self.__bDisplay.get()            
 
         with code_printer():
-            topwin.solve.new_thread_run(M=M, verbose=bool(display), on_finish=["plot"])
+            topwin.solve.new_thread_run(M=M, verbose=bool(display), on_finish=["draw"])
 
 
 
@@ -375,7 +375,7 @@ class PatternWindow(FigureWindow):
     @WaveSynScriptAPI    
     def plot_ideal_pattern(self):
         pattern = self.__piecewisePattern        
-        self.figure_book.plot(
+        self.figure_book.draw(
             pattern.samplesAngle, 
             pattern.samplesMagnitude,
             curve_name='Ideal Pattern',
@@ -383,17 +383,17 @@ class PatternWindow(FigureWindow):
         
     
     @WaveSynScriptAPI        
-    def plot_current_data(self):
+    def draw_current_data(self):
         R   = self.R
         if R is None:
             pass # To do: raise a error
 #        self.figure_book.plot(self.angles, pattern2corrmtx.corrmtx2pattern(R, self.angles),
 #            curve_name='Synthesized Pattern', color='g')
-        self.plot(R)
+        self.draw(R)
         
             
-    def plot(self, data):
-        self.figure_book.plot(
+    def draw(self, data):
+        self.figure_book.draw(
             self.angles, 
             pattern2corrmtx.corrmtx2pattern(data, self.angles), 
             curve_name='Synthesized Pattern', 
@@ -405,10 +405,10 @@ class PatternWindow(FigureWindow):
         self.__problem.M = M
         self.__problem.idealPattern = self.__piecewisePattern
         self.R = self.__problem.solve(verbose=verbose)
-        if "plot" in on_finish:
+        if "draw" in on_finish:
             @self.root_node.thread_manager.main_thread_do(block=False)
-            def plot():
-                self.plot_current_data()
+            def draw():
+                self.draw_current_data()
         return self.R
 
         

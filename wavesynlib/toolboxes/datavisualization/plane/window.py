@@ -146,7 +146,7 @@ class PlaneWindow(FigureWindow):
                 y = data[:, 1]
             self.figure_book[0].plot_function = self.__cart_scatter
             self.figure_book[1].plot_function = self.__polar_scatter
-            self.figure_book.plot(x, y, **prop)
+            self.figure_book.draw(x, y, **prop)
 
         def handle_data_for_plot_stem():
             if isinstance(data, ndarray):
@@ -160,13 +160,13 @@ class PlaneWindow(FigureWindow):
             line_data = handle_data_for_plot_stem()
             self.figure_book[0].plot_function = self.__cart_plot
             self.figure_book[1].plot_function = self.__polar_plot
-            self.figure_book.plot(*line_data, **prop)
+            self.figure_book.draw(*line_data, **prop)
 
         def stem():
             stem_data = handle_data_for_plot_stem()
             self.figure_book[0].plot_function = self.__cart_stem
             self.figure_book[1].plot_function = self.__polar_stem
-            self.figure_book.plot(*stem_data, **prop)
+            self.figure_book.draw(*stem_data, **prop)
 
         funcs = {"scatter": scatter, "plot":plot, "stem":stem}
         funcs[drawmode]()

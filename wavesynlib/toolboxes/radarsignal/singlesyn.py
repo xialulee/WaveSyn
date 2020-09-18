@@ -86,7 +86,7 @@ class OptimizeGroup(Group):
         else:
             run = self.__topwin.current_algorithm.thread_run
         with code_printer():
-            run(on_finished=['store', 'plot'], progress_indicator='progress_dialog', repeat_times=repeat_times, **params)
+            run(on_finished=['store', 'draw'], progress_indicator='progress_dialog', repeat_times=repeat_times, **params)
 
 
     def _on_stop_button_click(self):

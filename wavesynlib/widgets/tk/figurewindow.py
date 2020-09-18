@@ -611,7 +611,7 @@ The rest parameters are passed to PanedWindow.__init__.
         return self.figureTabs.index('current')
     
                 
-    def plot(self, *args, **kwargs):
+    def draw(self, *args, **kwargs):
         try:
             curve_name = kwargs.pop('curve_name')
         except KeyError:
@@ -1254,10 +1254,10 @@ class FigureWindow(TkToolWindow):
             
 
     @WaveSynScriptAPI    
-    def plot_current_data(self):        
-        self.plot(self.current_data)
+    def draw_current_data(self):        
+        self.figure_book.draw(self.current_data)
 
     
-    def plot(self, data):
-        self.figure_book.plot(data)                    
+    def draw(self, data):
+        self.figure_book.draw(data)                    
  
