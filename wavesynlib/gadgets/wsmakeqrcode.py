@@ -19,7 +19,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:],\
             'd:e:s:f:',\
-            ['nodisplay', 'stdin', \
+            ['nodisplay', 'stdin', 'clipb',\
              'size=', 'decode=', \
              'encode=', 'file=', 'wintitle='])
     except getopt.GetoptError as err:
@@ -29,6 +29,7 @@ def main(argv):
     size = 400 # default size
     nodisplay = False
     readstdin = False
+    readclipb = False
     decode = None
     encode = 'utf-8'
     filename = None
@@ -36,27 +37,37 @@ def main(argv):
     for o, a in opts:
         if o in ('-s', '--size'):
             size = int(a) # size is not implemented. 
-        if o in ('-f', '--file'):
+        elif o in ('-f', '--file'):
             filename = a
-        if o in ('-d', '--decode'):
+        elif o in ('-d', '--decode'):
             decode = a
-        if o in ('-e', '--encode'):
+        elif o in ('-e', '--encode'):
             encode = a
-        if o in ('--nodisplay',):
+        elif o in ('--nodisplay',):
             nodisplay = True
-        if o in ('--stdin',):
+        elif o in ('--stdin',):
             readstdin = True
-        if o in ('--wintitle'):
+        elif o in ('--clipb',):
+            readclipb = True
+        elif o in ('--wintitle'):
             title = a
+
+    if readclipb and readstdin:
+        print("Param Error: --stdin and --clipb should not be specified at the same time.", file=sys.stderr)
+        sys.exit(ERROR_PARAM)
             
+    (root := Tk()).withdraw()
+
     if readstdin:
         content = sys.stdin.read()
+    elif readclipb:
+        content = root.clipboard_get()
     else:
         content = args[0]
-        
+
     if decode:
         content = content.decode(decode)
-        
+
     content.encode('utf-8')
         
     qrimage = qrcode.make(content)
@@ -65,7 +76,7 @@ def main(argv):
         qrimage.save(filename)
     
     if not nodisplay:
-        root = Tk()
+        root.deiconify()
         root.title(title)
         photo = ImageTk.PhotoImage(qrimage)
         Label(root, image=photo).pack()
