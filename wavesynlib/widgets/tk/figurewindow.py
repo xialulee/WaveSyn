@@ -46,33 +46,6 @@ color_map = {
 
 
 
-def ask_class_name():
-    win = Toplevel()
-    
-    module_name  = StringVar()
-    class_name   = StringVar()
-    
-    module_item  = LabeledEntry(win)
-    module_item.label_text    = 'Module Name'
-    module_item.pack()
-    module_item.entry_variable     = module_name
-    
-    class_item   = LabeledEntry(win)
-    class_item.label_text     = 'Class Name'
-    class_item.pack()
-    class_item.entry_variable      = class_name
-    
-    Button(win, text='OK', command=win.quit).pack()
-
-    win.protocol('WM_DELETE_WINDOW', win.quit)
-    win.focus_set()
-    win.grab_set()
-    win.mainloop()
-    win.destroy()
-    return module_name.get(), class_name.get()
-
-
-
 class DataFigure(ModelNode, Observable):
     class Indicators(ModelNode):
         def __init__(self, node_name='', data_figure=None, callback=None):
