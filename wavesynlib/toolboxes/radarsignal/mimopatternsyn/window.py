@@ -23,7 +23,7 @@ from wavesynlib.widgets.tk.scrolledlist import ScrolledList
 from wavesynlib.widgets.tk.labeledentry import LabeledEntry
 from wavesynlib.languagecenter.utils import auto_subs, set_attributes
 from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer, WaveSynScriptAPI
-from wavesynlib.algorithms import pattern2corrmtx
+from .algorithms import PiecewisePattern, Problem, corrmtx2pattern
 
 
 
@@ -354,8 +354,8 @@ class PatternWindow(FigureWindow):
             figPolar.plot(angles/180.*pi, pattern, **kwargs)
                
         self.angles = r_[-90:90.1:0.1]
-        self.__problem = pattern2corrmtx.Problem()
-        self.__piecewisePattern = pattern2corrmtx.PiecewisePattern()
+        self.__problem = Problem()
+        self.__piecewisePattern = PiecewisePattern()
         self.R = None
         
                 
@@ -387,15 +387,13 @@ class PatternWindow(FigureWindow):
         R   = self.R
         if R is None:
             pass # To do: raise a error
-#        self.figure_book.plot(self.angles, pattern2corrmtx.corrmtx2pattern(R, self.angles),
-#            curve_name='Synthesized Pattern', color='g')
         self.draw(R)
         
             
     def draw(self, data):
         self.figure_book.draw(
             self.angles, 
-            pattern2corrmtx.corrmtx2pattern(data, self.angles), 
+            corrmtx2pattern(data, self.angles), 
             curve_name='Synthesized Pattern', 
             color='g')
         
