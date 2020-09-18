@@ -6,6 +6,9 @@ from numpy import array, arcsin, ones_like, r_, rad2deg, vstack, sin, cos
 
 from PIL import ImageTk
 
+from pandas import DataFrame
+import quantities as pq
+
 from tkinter import Frame
 from tkinter.ttk import Button
 from tkinter.simpledialog import askstring, askfloat
@@ -20,7 +23,7 @@ from wavesynlib.languagecenter.wavesynscript import (
     WaveSynScriptAPI, Scripting, code_printer)
 
 from .widgets import parameter_grp, export_data_grp
-from .dialogs import ask_dvplane
+from .dialogs import ask_dvplane, ask_export_to_console
 from .algorithms import calc_directions
 
 
@@ -118,8 +121,15 @@ class DFTDirectionsWindow(FigureWindow):
 
 
     @WaveSynScriptAPI
-    def export_data_to_console(self, var_name):
-        Scripting.namespaces["locals"][var_name] = self.data
+    def export_data_to_console(self, var_name, unit="rad"):
+        unit = getattr(pq, unit)
+        data = []
+        for index, row in self.data.iterrows():
+            data.append({
+                "dft_index":  row.dft_index,
+                "angle_coll": (row.angle_coll * pq.rad).rescale(unit)})
+        data = DataFrame(data)
+        Scripting.namespaces["locals"][var_name] = data
 
 
     @property
@@ -135,9 +145,11 @@ class DFTDirectionsWindow(FigureWindow):
 
 
     def __on_export_to_console_btn_click(self):
-        var_name = askstring("Variable Name", "Please input variable name here:")
+        varname, unit = ask_export_to_console()
+        if not varname:
+            raise ValueError("Variable name should not be empty. ")
         with code_printer():
-            self.export_data_to_console(var_name)
+            self.export_data_to_console(var_name=varname, unit=unit)
 
 
     def __on_export_to_dvplane_btn_click(self):

@@ -1,7 +1,7 @@
 (require [wavesynlib.languagecenter.hy.tkdef [widget]])
 
 (import [tkinter [Frame]])
-(import [tkinter.ttk [Button Combobox]])
+(import [tkinter.ttk [Button Combobox Radiobutton]])
 
 (import [wavesynlib.widgets.tk.group [Group]])
 (import [wavesynlib.widgets.tk.iconbutton [IconButton]])
@@ -21,6 +21,22 @@
             (pack :side "left" :fill "x") ])
         (child Button ok-btn [
             (init :text "Ok") ]) ]) ])
+
+
+(widget Frame ask-export-to-console-frm [
+    (pack :fill "both")
+    (child Radiobutton rad-btn [
+        (init :text "rad")
+        (pack :anchor "nw") ])
+    (child Radiobutton deg-btn [
+        (init :text "deg")
+        (pack :anchor "nw") ])
+    (child LabeledEntry varname-lent [
+        (setattr :label-text "var name:" )
+        (pack :anchor "nw")
+        (balloonmsg "Input variable name here. ") ]) 
+    (child Button ok-btn [
+        (init :text "Ok") ]) ])
 
 
 (widget Group parameter-grp [
