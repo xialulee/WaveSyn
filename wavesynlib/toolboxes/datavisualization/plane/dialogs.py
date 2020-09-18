@@ -72,13 +72,17 @@ def ask_plot_properties():
     win.destroy()
 
     marker = marker.get()
+    linestyle = linestyle.get()
+    linestyle = None if not linestyle else eval(linestyle)
+    linewidth = linewidth.get()
+    linewidth = None if not linewidth else float(linewidth)
 
     return {
         "color":     color[0], 
         "marker":    marker if marker else None,
         "alpha":     alpha.get(),
-        "linestyle": eval(linestyle.get()),
-        "linewidth": float(linewidth.get())}
+        "linestyle": linestyle,
+        "linewidth": linewidth}
 
 
 
