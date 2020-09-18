@@ -5,6 +5,8 @@ Created on Sun Aug 28 02:49:38 2016
 @author: Feng-cong Li
 """
 
+import hy
+
 import os
 from io import StringIO
 import pathlib
