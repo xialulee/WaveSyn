@@ -17,29 +17,17 @@
     (child Frame grid-frm [
         (pack :side LEFT :fill BOTH)
         (child IconButton loadvar-btn [
-            (init 
-                :text     "CON"
-                :compound LEFT
-                :width    5) 
             (setattr :common-icon "console20x20.psd")
             (balloonmsg "Load a variable from console.")
             (grid :row 0 :column 0)])
         (child IconButton loadpkl-btn [
-            (init
-                :text     "PKL"
-                :compound LEFT
-                :width    5) 
-            (setattr :common-icon "python20x20.psd")
+            (setattr :common-icon "pickle20x20.psd")
             (balloonmsg "Load a pickle file.")
-            (grid :row 1 :column 0)])
+            (grid :row 0 :column 1)])
         (child IconButton runexpr-btn [
-            (init
-                :text     "EXP"
-                :compound LEFT
-                :width    5)
             (setattr :common-icon "python20x20.psd")
             (balloonmsg "Run a python expression.")
-            (grid :row 2 :column 0) ])]) ])
+            (grid :row 0 :column 2) ])]) ])
 
 
 (widget Frame common-prop-panel [
