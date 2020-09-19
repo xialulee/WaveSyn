@@ -132,6 +132,28 @@ class DFTDirectionsWindow(FigureWindow):
         Scripting.namespaces["locals"][var_name] = data
 
 
+    @WaveSynScriptAPI
+    def export_to_dvplane(self, winid, radius, data_info=None):
+        if not data_info:
+            data_info = {
+                "source": "dftdirections",
+                "name":   "" }
+        if winid == "new":
+            winid = self.root_node.gui.windows.create(
+                module_name="wavesynlib.toolboxes.datavisualization.plane.window", 
+                class_name="PlaneWindow")
+        window = self.root_node.gui.windows[winid]
+
+        angles = []
+        for index, row in self.__data.iterrows():
+            angles.extend(row.angle_coll)
+        angles = array(angles)
+        xy = vstack([radius*cos(angles), radius*sin(angles)])
+        xy = xy.T
+
+        window.draw_data(xy, data_info)
+
+
     @property
     def data(self):
         return self.__data
@@ -158,20 +180,12 @@ class DFTDirectionsWindow(FigureWindow):
             "Radius", 
             "Please input radius:",
             initialvalue=1.0)
-        data_info = {
-            "source": "dftdirections",
-            "name":   "" }
         if sel_exist:
-            window = self.root_node.gui.windows[int(winid_str)]
+            winid = int(winid_str)
         else:
-            winid = self.root_node.gui.windows.create(module_name='wavesynlib.toolboxes.datavisualization.plane.window', class_name='PlaneWindow')
-            window = self.root_node.gui.windows[winid]
-        angles = []
-        for index, row in self.__data.iterrows():
-            angles.extend(row.angle_coll)
-        angles = array(angles)
-        xy = vstack([radius*cos(angles), radius*sin(angles)])
-        xy = xy.T
+            winid = "new"
+        with code_printer():
+            self.export_to_dvplane(winid, radius=radius)
 
-        window.draw_data(xy, data_info)
+
 

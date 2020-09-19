@@ -19,7 +19,7 @@ def ask_drawmode():
     Label(win, text="Select draw mode:").pack()
     drawmode = StringVar()
     drawmode.set("plot")
-    modes = ["plot", "stem", "scatter"]
+    modes = ["plot", "stem", "simple scatter", "scatter"]
     for mode in modes:
         Radiobutton(win, text=mode, value=mode, variable=drawmode).pack(anchor="nw")
     Button(win, text="OK", command=win.quit).pack()

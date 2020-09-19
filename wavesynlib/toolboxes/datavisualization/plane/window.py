@@ -61,9 +61,10 @@ class PlaneWindow(FigureWindow):
     def __ask_draw_properties():
         drawmode = ask_drawmode()
         prop = {
-            "plot": ask_plot_properties,
-            "stem": ask_stem_properties,
-            "scatter": ask_scatter_properties
+            "plot":           ask_plot_properties,
+            "stem":           ask_stem_properties,
+            "simple scatter": ask_scatter_properties,
+            "scatter":        ask_scatter_properties
         }[drawmode]()
         prop = {key:value for key, value in prop.items() if value is not None}
         return drawmode, prop
@@ -124,6 +125,16 @@ class PlaneWindow(FigureWindow):
             raise ValueError("Too many input data.")
         self.figure_book[1].stem(*self.xy_to_ar(x, y), **prop)
 
+    
+    def __cart_simple_scatter(self, x, y, **prop):
+        marker = prop.pop("marker", "o")
+        self.figure_book[0].plot(x, y, marker, **prop)
+
+
+    def __polar_simple_scatter(self, x, y, **prop):
+        marker = prop.pop("marker", "o")
+        self.figure_book[1].plot(*self.xy_to_ar(x, y), marker, **prop)
+
 
     def __cart_scatter(self, x, y, **prop):
         self.figure_book[0].scatter(x, y, **prop)
@@ -140,10 +151,20 @@ class PlaneWindow(FigureWindow):
 
         prop["curve_name"] = f"{data_info['source']}:{data_info['name']}:{data_info['drawmode']}"
 
-        def scatter():
+        def handle_data_for_scatter():
             if isinstance(data, ndarray):
                 x = data[:, 0]
                 y = data[:, 1]
+            return x, y
+
+        def simple_scatter():
+            x, y = handle_data_for_scatter()
+            self.figure_book[0].plot_function = self.__cart_simple_scatter
+            self.figure_book[1].plot_function = self.__polar_simple_scatter
+            self.figure_book.draw(x, y, **prop)
+
+        def scatter():
+            x, y = handle_data_for_scatter()
             self.figure_book[0].plot_function = self.__cart_scatter
             self.figure_book[1].plot_function = self.__polar_scatter
             self.figure_book.draw(x, y, **prop)
@@ -168,5 +189,9 @@ class PlaneWindow(FigureWindow):
             self.figure_book[1].plot_function = self.__polar_stem
             self.figure_book.draw(*stem_data, **prop)
 
-        funcs = {"scatter": scatter, "plot":plot, "stem":stem}
+        funcs = {
+            "scatter":        scatter, 
+            "simple scatter": simple_scatter,
+            "plot":           plot, 
+            "stem":           stem}
         funcs[drawmode]()

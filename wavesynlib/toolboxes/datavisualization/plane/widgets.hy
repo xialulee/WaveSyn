@@ -18,10 +18,10 @@
         (pack :side LEFT :fill BOTH)
         (child IconButton loadvar-btn [
             (init 
-                :text     "VAR"
+                :text     "CON"
                 :compound LEFT
                 :width    5) 
-            (setattr :common-icon "python20x20.psd")
+            (setattr :common-icon "console20x20.psd")
             (balloonmsg "Load a variable from console.")
             (grid :row 0 :column 0)])
         (child IconButton loadpkl-btn [
