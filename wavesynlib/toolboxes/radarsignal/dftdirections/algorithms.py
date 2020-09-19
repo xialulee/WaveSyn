@@ -23,11 +23,11 @@ def calc_directions(num_elem, dist_elem):
 
 def angles_to_dft_indices(num_elem, dist_elem, angles_deg=None, angles_rad=None):
     result = []
-    if angles_deg and angles_rad:
+    if angles_deg is not None and angles_rad is not None:
         raise ValueError("Only one of theta_deg and theta_rad should be specified.")
-    if angles_deg:
+    if angles_deg is not None:
         angles_rad = deg2rad(angles_deg)
-    elif angles_rad:
+    elif angles_rad is not None:
         angles_deg = rad2deg(angles_rad)
     theta_k = sin(angles_rad) * dist_elem * num_elem % num_elem
     for index, k in enumerate(theta_k):
