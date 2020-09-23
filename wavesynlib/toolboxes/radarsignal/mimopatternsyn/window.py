@@ -35,7 +35,7 @@ class OptimizeGroup(Group):
         super().__init__(*args, **kwargs)
         
         imageMLbl = ImageTk.PhotoImage(
-            file=Scripting.root_node.get_gui_image_path('Pattern_M_Label.png')
+            file=Scripting.root_node.get_gui_image_path('arrayelemnum20x20.png')
         )
         self.__gui_images.append(imageMLbl)        
         self.__M = LabeledEntry(self)

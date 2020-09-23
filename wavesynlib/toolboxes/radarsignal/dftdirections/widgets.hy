@@ -45,7 +45,7 @@
     (child LabeledEntry num-elem-lent [
         (setattr
             :label-compound    "left"
-            :label-common-icon "Pattern_M_Label.png"
+            :label-common-icon "arrayelemnum20x20.png"
             :label-text        "M"
             :label-width       3
             :entry-width       6
@@ -55,7 +55,7 @@
     (child LabeledEntry dist-elem-lent [
         (setattr
             :label-compound    "left"
-            :label-common-icon "Pattern_d_Label.png"
+            :label-common-icon "arrayelemdist20x20.png"
             :label-text        "d"
             :label-width       3
             :entry-width       6

@@ -78,13 +78,14 @@ class PlaneWindow(FigureWindow):
             "source":   "console",
             "name":     var_name,
             "drawmode": drawmode}
-        self.__draw(drawmode, data, data_info, prop)
+        self.__draw(data, data_info, prop)
 
 
-    def draw_data(self, data, data_info):
-        drawmode, prop = self.__ask_draw_properties()
-        data_info["drawmode"] = drawmode
-        self.__draw(drawmode, data, data_info, prop)
+    def draw_data(self, data, data_info, **prop):
+        if not prop:
+            drawmode, prop = self.__ask_draw_properties()
+            data_info["drawmode"] = drawmode
+        self.__draw(data, data_info, prop)
 
 
     @staticmethod
@@ -144,12 +145,13 @@ class PlaneWindow(FigureWindow):
         self.figure_book[1].scatter(*self.xy_to_ar(x, y), **prop)
 
 
-    def __draw(self, drawmode, data, data_info, prop):
+    def __draw(self, data, data_info, prop):
+        drawmode = data_info["drawmode"]
         if isinstance(data, Polygon):
             data_x, data_y = data.exterior.xy
             data = vstack([data_x, data_y]).T
 
-        prop["curve_name"] = f"{data_info['source']}:{data_info['name']}:{data_info['drawmode']}"
+        prop["curve_name"] = f"{data_info['source']}:{data_info['name']}:{drawmode}"
 
         def handle_data_for_scatter():
             if isinstance(data, ndarray):

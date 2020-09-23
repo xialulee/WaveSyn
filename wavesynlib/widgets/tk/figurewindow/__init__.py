@@ -240,7 +240,7 @@ class AxisGroup(Observable, Group):
         paramfrm =Frame(self)
         paramfrm.pack()
         names = ['xmin', 'xmax', 'ymin', 'ymax', 'major xtick', 'major ytick', 'minor xtick', 'minor ytick']
-        images= ['ViewTab_XMin.png', 'ViewTab_XMax.png', 'ViewTab_YMin.png', 'ViewTab_YMax.png', 'ViewTab_MajorXTick.png', 'ViewTab_MajorYTick.png', 'ViewTab_MinorXTick.png', 'ViewTab_MinorYTick.png']
+        images= ['xmin20x20.png', 'xmax20x20.png', 'ymin20x20.png', 'ymax20x20.png', 'ViewTab_MajorXTick.png', 'ViewTab_MajorYTick.png', 'ViewTab_MinorXTick.png', 'ViewTab_MinorYTick.png']
         for c in range(4):
             for r in range(2):
                 temp = LabeledEntry(paramfrm)
