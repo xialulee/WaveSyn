@@ -19,7 +19,7 @@ _lla_to_wgs84_transformer = pyproj.Transformer.from_proj(
 
 
 def wgs84_to_lla(x, y, z):
-    x, y, z = [arg.rescale(meter) if isinstance(arg, pq.Quantity) else arg
+    x, y, z = [arg.rescale(pq.meter) if isinstance(arg, pq.Quantity) else arg
                     for arg in (x, y, z)]
     lon, lat, alt = _wgs84_to_lla_transformer.transform(x, y, z)
     data = np.hstack((lon, lat, alt))
