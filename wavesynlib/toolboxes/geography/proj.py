@@ -37,5 +37,4 @@ def lla_to_wgs84(lon, lat, alt):
     data = np.hstack((x, y, z))
     data = data.reshape(-1, 3)
     head = ("x/m", "y/m", "z/m")
-    
     return DataFrame(columns=head, data=data)
