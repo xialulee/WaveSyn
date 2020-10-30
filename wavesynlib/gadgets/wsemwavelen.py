@@ -33,7 +33,9 @@ lambda_units = {
 
 T_units = {
     "s":  pq.second,
-    "ms": pq.millisecond }
+    "ms": pq.millisecond, 
+    "us": pq.microsecond,
+    "ns": pq.nanosecond}
 
 
 unit_map = {
@@ -145,7 +147,7 @@ class EMWavelenPanel(tk.Frame):
         except ValueError:
             for n in arg_names:
                 if n != arg_name:
-                    self.value_vars[arg_name].set("")
+                    self.value_vars[n].set("")
             return
 
         kwargs = {arg_ascii_name_map[arg_name]:value_quantity}
@@ -156,7 +158,7 @@ class EMWavelenPanel(tk.Frame):
             if n != arg_name:
                 unit_obj = self.get_unit_obj(n)
                 arg_value = calc_result[n].rescale(unit_obj).magnitude
-                self.value_vars[n].set(str(arg_value))
+                self.value_vars[n].set(f"{arg_value:f}")
 
 
     def on_unit_change(self, arg_name):
@@ -167,11 +169,11 @@ class EMWavelenPanel(tk.Frame):
             unit_obj = self.get_unit_obj(arg_name)
             previous_unit_obj = unit_map[arg_name][previous_unit_name]
             value = (value_float*previous_unit_obj).rescale(unit_obj).magnitude
-            self.value_vars[arg_name].set(str(value))
+            self.value_vars[arg_name].set(f"{value:f}")
         except ValueError:
             for n in arg_names:
                 if n != arg_name:
-                    self.value_vars[arg_name].set("")
+                    self.value_vars[n].set("")
             return
     
 
