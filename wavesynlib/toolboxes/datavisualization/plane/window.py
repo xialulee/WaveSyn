@@ -12,8 +12,6 @@ from tkinter.simpledialog import askstring
 
 from PIL import ImageTk
 
-from shapely.geometry import Polygon
-
 from wavesynlib.fileutils.photoshop.psd import get_pil_image
 from wavesynlib.languagecenter.wavesynscript import Scripting
 from wavesynlib.widgets.tk.figurewindow import FigureWindow
@@ -147,9 +145,6 @@ class PlaneWindow(FigureWindow):
 
     def __draw(self, data, data_info, prop):
         drawmode = data_info["drawmode"]
-        if isinstance(data, Polygon):
-            data_x, data_y = data.exterior.xy
-            data = vstack([data_x, data_y]).T
 
         prop["curve_name"] = f"{data_info['source']}:{data_info['name']}:{drawmode}"
 
