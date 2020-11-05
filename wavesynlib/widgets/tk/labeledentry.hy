@@ -15,7 +15,7 @@
             :side "left")
         (.pack
             (setx self.--entry (Entry self))
-            :fill "x" :expand "yes") 
+            :side "left" :fill "x" :expand "yes") 
         (setv 
             self.--checker-function None
             self.--image            None))
