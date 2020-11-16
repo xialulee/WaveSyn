@@ -47,7 +47,7 @@
             :label-compound    "left"
             :label-common-icon "arrayelemnum20x20.png"
             :label-text        "M"
-            :label-width       3
+            :label-width       4
             :entry-width       6
             :entry-text        16
             :checker-function  (. Scripting root-node gui value-checker check-int))
@@ -56,8 +56,8 @@
         (setattr
             :label-compound    "left"
             :label-common-icon "arrayelemdist20x20.png"
-            :label-text        "d"
-            :label-width       3
+            :label-text        "d/λ"
+            :label-width       4
             :entry-width       6
             :entry-text        0.5
             :checker-function (. Scripting root-node gui value-checker check-positive-float))

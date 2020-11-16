@@ -5,11 +5,23 @@ import quantities as pq
 
 
 def beam_width(lambda_, N, d, theta=0, k=0.886):
+    """
+See https://www.analog.com/en/analog-dialogue/articles/phased-array-antenna-patterns-part1.html#
+"""
+    if isinstance(lambda_, pq.Quantity):
+        lambda_ = lambda_.rescale(pq.meter).magnitude
+    if isinstance(d, pq.Quantity):
+        d = d.rescale(pq.meter).magnitude
+    if isinstance(theta, pq.Quantity):
+        theta = theta.rescale(pq.rad).magnitude
     return k*lambda_/(N*d*cos(theta))
 
 
 
 def beam_width_equation(lambda_=None, N=None, d=None, theta=None, thetaB=None, k=0.886):
+    """
+See https://www.analog.com/en/analog-dialogue/articles/phased-array-antenna-patterns-part1.html#
+"""
     if lambda_ is None:
         lambda_ = sympy.var("λ")
     elif isinstance(lambda_, pq.Quantity):
