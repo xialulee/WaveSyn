@@ -22,6 +22,16 @@ class PhysicalQuantityEntry(LabeledEntry):
         cmb.pack(side=tk.LEFT)
 
 
+    @property
+    def unit_combobox_width(self):
+        return self.__unit_combobox["width"]
+
+
+    @unit_combobox_width.setter
+    def unit_combobox_width(self, width):
+        self.__unit_combobox["width"] = width
+
+
     def fill_unit_combobox(self, unit_info):
         if unit_info:
             self.__unit_combobox["value"] = list(unit_info.keys())
