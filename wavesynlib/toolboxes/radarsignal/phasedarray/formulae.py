@@ -1,0 +1,47 @@
+from math import cos
+import sympy
+import quantities as pq
+
+
+
+def beam_width(lambda_, N, d, theta=0, k=0.886):
+    return k*lambda_/(N*d*cos(theta))
+
+
+
+def beam_width_equation(lambda_=None, N=None, d=None, theta=None, thetaB=None, k=0.886):
+    if lambda_ is None:
+        lambda_ = sympy.var("λ")
+    elif isinstance(lambda_, pq.Quantity):
+        lambda_ = lambda_.rescale(pq.meter)
+    else:
+        pass
+
+    if N is None:
+        N = sympy.var("N")
+
+    if d is None:
+        d = sympy.var("d")
+    elif isinstance(d, pq.Quantity):
+        d = d.rescale(pq.meter)
+
+    if theta is None:
+        theta = sympy.var("θ")
+    elif isinstance(theta, pq.Quantity):
+        theta = theta.rescale(pq.rad)
+
+    if thetaB is None:
+        thetaB = sympy.var("θ_B")
+    elif isinstance(thetaB, pq.Quantity):
+        thetaB = thetaB.rescale(pq.rad)
+
+    eq = k*lambda_/(N*d*sympy.cos(theta)) - thetaB
+
+    return sympy.solve(eq, set=True)
+
+
+
+
+if __name__ == "__main__":
+    result = beam_width_equation(lambda_=0.2, d=0.1, theta=0, thetaB=1*pq.degree)
+    print(result)
