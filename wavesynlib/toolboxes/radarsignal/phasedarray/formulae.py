@@ -13,7 +13,7 @@ def beam_width_equation(lambda_=None, N=None, d=None, theta=None, thetaB=None, k
     if lambda_ is None:
         lambda_ = sympy.var("λ")
     elif isinstance(lambda_, pq.Quantity):
-        lambda_ = lambda_.rescale(pq.meter)
+        lambda_ = lambda_.rescale(pq.meter).magnitude
     else:
         pass
 
@@ -23,17 +23,17 @@ def beam_width_equation(lambda_=None, N=None, d=None, theta=None, thetaB=None, k
     if d is None:
         d = sympy.var("d")
     elif isinstance(d, pq.Quantity):
-        d = d.rescale(pq.meter)
+        d = d.rescale(pq.meter).magnitude
 
     if theta is None:
         theta = sympy.var("θ")
     elif isinstance(theta, pq.Quantity):
-        theta = theta.rescale(pq.rad)
+        theta = theta.rescale(pq.rad).magnitude
 
     if thetaB is None:
         thetaB = sympy.var("θ_B")
     elif isinstance(thetaB, pq.Quantity):
-        thetaB = thetaB.rescale(pq.rad)
+        thetaB = thetaB.rescale(pq.rad).magnitude
 
     eq = k*lambda_/(N*d*sympy.cos(theta)) - thetaB
 
@@ -43,5 +43,5 @@ def beam_width_equation(lambda_=None, N=None, d=None, theta=None, thetaB=None, k
 
 
 if __name__ == "__main__":
-    result = beam_width_equation(lambda_=0.2, d=0.1, theta=0, thetaB=1*pq.degree)
+    result = beam_width_equation(lambda_=0.2*pq.meter, d=0.1*pq.meter, theta=0, thetaB=1*pq.degree)
     print(result)
