@@ -27,6 +27,15 @@ class PhysicalQuantityEntry(LabeledEntry):
         return self.__unit_combobox["width"]
 
 
+    @property
+    def quantity(self):
+        unit_name = self.__unit_combobox.get()
+        unit_obj  = self.__unit_info[unit_name]
+        value_str = self.entry_text
+        value_num = float(value_str)
+        return value_num * unit_obj
+
+
     @unit_combobox_width.setter
     def unit_combobox_width(self, width):
         self.__unit_combobox["width"] = width
