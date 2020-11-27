@@ -22,14 +22,14 @@ def wgs84_to_lla(x, y, z):
     x, y, z = [arg.rescale(pq.meter) if isinstance(arg, pq.Quantity) else arg
                     for arg in (x, y, z)]
     lon, lat, alt = _wgs84_to_lla_transformer.transform(x, y, z)
-    data = np.vstack((lon, lat, alt))
+    data = np.vstack((lat, lon, alt))
     data = data.transpose()
-    head = ["longitude/deg", "latitude/deg", "altitude/m"]
+    head = ["latitude/deg", "longitude/deg", "altitude/m"]
     return DataFrame(data=data, columns=head)
 
 
 
-def lla_to_wgs84(lon, lat, alt):
+def lla_to_wgs84(lat, lon, alt):
     lon = lon.rescale(pq.degree) if isinstance(lon, pq.Quantity) else lon
     lat = lat.rescale(pq.degree) if isinstance(lat, pq.Quantity) else lat
     alt = alt.rescale(pq.meter)  if isinstance(alt, pq.Quantity) else alt
