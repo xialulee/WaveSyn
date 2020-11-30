@@ -25,11 +25,53 @@ from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.fileutils.photoshop.psd import get_pil_image
 
 
+_xlXYScatter = -4169
+
+
+
 class ExcelUtils(ModelNode):
     def __init__(self, *args, **kwargs):
         self.__com_handle = kwargs.pop('com_handle')
         super().__init__(*args, **kwargs)
         self.__regex_for_addr = re.compile('([A-Z]+)([0-9]+)')
+
+
+    def _get_xy(self, addr): 
+        x_str, y_str = re.match(self.__regex_for_addr, addr).groups()
+        y = int(y_str) - 1
+        x = 0
+        for c in x_str:
+            x *= 26
+            x += ord(c)-64
+        return x-1, y
+        
+        
+    def _get_addr(self, x, y):
+        addr_x = []
+        while True:
+            addr_x.insert(0, x % 26 - 1)
+            x //= 26
+            if x == 0: break
+        addr_x[-1] += 1
+        addr_x_str = ''.join([chr(i+65) for i in addr_x])
+        addr_y_str = str(y+1)
+        return addr_x_str + addr_y_str                
+
+
+    def _get_workbook(self, workbook=None):
+        if workbook is None:
+            workbook = self.__com_handle.ActiveWorkbook
+        else:
+            workbook = self.__com_handle.Workbooks[workbook]
+        return workbook
+
+
+    def _get_sheet(self, workbook, sheet=None):
+        if sheet is None:
+            sheet = workbook.ActiveSheet
+        else:
+            sheet = workbook.Sheets(sheet)
+        return sheet
         
 
     @WaveSynScriptAPI
@@ -74,10 +116,11 @@ class ExcelUtils(ModelNode):
         rgsa[1].cElements = num_col
         rgsa[1].lBound = 0
                                                 
-        pa = _safearray.SafeArrayCreateEx(VT_VARIANT,
-                                          2,
-                                          rgsa,  # rgsaBound
-                                          None)  # pvExtra
+        pa = _safearray.SafeArrayCreateEx(
+            VT_VARIANT,
+            2,
+            rgsa,  # rgsaBound
+            None)  # pvExtra
                                                 
                                                 
         if not pa:
@@ -99,7 +142,7 @@ class ExcelUtils(ModelNode):
         variant.vt = VT_ARRAY | VT_VARIANT
         return variant
         
-       
+
     @WaveSynScriptAPI
     def transpose(self, data):
         if not self.is_nested_iterable(data):
@@ -157,40 +200,12 @@ class ExcelUtils(ModelNode):
                 raise TypeError('Incompatible data type.')
                 
                 
-    def _get_xy(self, addr): 
-        x_str, y_str = re.match(self.__regex_for_addr, addr).groups()
-        y = int(y_str) - 1
-        x = 0
-        for c in x_str:
-            x *= 26
-            x += ord(c)-64
-        return x-1, y
-        
-        
-    def _get_addr(self, x, y):
-        addr_x = []
-        while True:
-            addr_x.insert(0, x % 26 - 1)
-            x //= 26
-            if x == 0: break
-        addr_x[-1] += 1
-        addr_x_str = ''.join([chr(i+65) for i in addr_x])
-        addr_y_str = str(y+1)
-        return addr_x_str + addr_y_str                
                 
                 
     @WaveSynScriptAPI 
     def write_range(self, data, top_left, workbook=None, sheet=None):
-        if workbook is None:
-            workbook = self.__com_handle.ActiveWorkbook
-        else:
-            workbook = self.__com_handle.Workbooks[workbook]
-            
-        if sheet is None:
-            sheet = workbook.ActiveSheet
-        else:
-            sheet = workbook.Sheets(sheet)
-        
+        workbook = self._get_workbook(workbook)
+        sheet = self._get_sheet(workbook, sheet)
         top_left_x, top_left_y = self._get_xy(top_left)
         
         if not self.is_nested_iterable(data): # 1D data or incompatible data type.
@@ -224,15 +239,9 @@ class ExcelUtils(ModelNode):
         sheet=None,
         return_dataframe=False,
         column_labels=None):
-        if workbook is None:
-            workbook = self.__com_handle.ActiveWorkbook
-        else:
-            workbook = self.__com_handle.Workbooks[workbook]
             
-        if sheet is None:
-            sheet = workbook.ActiveSheet
-        else:
-            sheet = workbook.Sheets(sheet)
+        workbook = self._get_workbook(workbook)
+        sheet = self._get_sheet(workbook, sheet)
         
         tl_x, tl_y = self._get_xy(top_left)  
         br_x, br_y = self._get_xy(bottom_right)
@@ -249,11 +258,35 @@ class ExcelUtils(ModelNode):
             rng = pandas.DataFrame(list(rng), columns=column_labels)
 
         return rng
-        
+
+
+    @WaveSynScriptAPI
+    def add_xyxy_scatter_chart(self, top_left, bottom_right, workbook=None, sheet=None):
+        workbook = self._get_workbook(workbook)
+        sheet = self._get_sheet(workbook, sheet)
+        sheet.Shapes.AddChart2(-1, _xlXYScatter).Select()
+        chart = self.__com_handle.ActiveChart
+        sc = chart.SeriesCollection()
+        fsc = chart.FullSeriesCollection()
+
+        x_min, y_min = self._get_xy(top_left)
+        x_max, y_max = self._get_xy(bottom_right)
+
+        for counter, col_idx in enumerate(range(x_min, x_max+1-x_min, 2)):
+            sc.NewSeries()
+            coord_x_start = self._get_addr(col_idx, y_min)
+            coord_x_stop  = self._get_addr(col_idx, y_max)
+            coord_y_start = self._get_addr(col_idx+1, y_min)
+            coord_y_stop  = self._get_addr(col_idx+1, y_max)
+            # The index of FullSeriesCollection is starting from one rather than zero. 
+            fsc[counter+1].XValues = f"{sheet.Name}!{coord_x_start}:{coord_x_stop}"
+            fsc[counter+1].Values =  f"{sheet.Name}!{coord_y_start}:{coord_y_stop}"
+
         
     @WaveSynScriptAPI
-    def browser_fill_by_id(self, driver, ids, top_left, bottom_right, 
-                           workbook=None, sheet=None):
+    def browser_fill_by_id(
+        self, driver, ids, top_left, bottom_right, 
+        workbook=None, sheet=None):
         data = self.read_range(top_left, bottom_right, workbook, sheet)
         for id_row, data_row in zip(ids, data):
             for id_, item in zip(id_row, data_row):
