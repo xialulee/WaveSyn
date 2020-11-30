@@ -1,6 +1,15 @@
 from math import cos
 import sympy
 import quantities as pq
+import numpy as np
+
+from wavesynlib.toolboxes.emwave.algorithms import frequency_wavelength_period
+from wavesynlib.toolboxes.geography.proj import calc_euclidean_distance
+
+
+
+_to_meter_if_quantity  = lambda value: value.rescale(pq.meter).magnitude if isinstance(value, pq.Quantity) else value
+_to_hz_if_quantity     = lambda value: value.rescale(pq.Hz).magnitude if isinstance(value, pq.Quantity) else value
 
 
 
@@ -51,6 +60,38 @@ See https://www.analog.com/en/analog-dialogue/articles/phased-array-antenna-patt
 
     return sympy.solve(eq, set=True)
 
+
+
+def xyz_to_phase_compensation(
+    point_x, point_y, point_z, 
+    element_x, element_y, element_z,
+    carrier_frequency=None,
+    carrier_wavelength=None):
+    """Calculate phase compensation of each element for a given point."""
+    carrier_wavelength = _to_meter_if_quantity(carrier_wavelength)
+    if carrier_wavelength is not None: 
+        # Should not use *= here.
+        carrier_wavelength = carrier_wavelength * pq.meter
+
+    carrier_frequency  = _to_hz_if_quantity(carrier_frequency)
+    if carrier_frequency is not None: 
+        # Should not use *= here.
+        carrier_frequency = carrier_frequency * pq.Hz
+
+    carrier_info = frequency_wavelength_period(f=carrier_frequency, lambda_=carrier_wavelength)
+    wavelength = carrier_info["λ"]
+    print(wavelength)
+
+    dist = calc_euclidean_distance(
+        x1=point_x, 
+        y1=point_y, 
+        z1=point_z,
+        x2=element_x,
+        y2=element_y,
+        z2=element_z)
+    delta_dist = ((dist-dist[0]) / wavelength).rescale(pq.dimensionless).magnitude
+    delta_dist = np.modf(delta_dist)[0]
+    return delta_dist * 2 * np.pi * pq.rad
 
 
 

@@ -18,8 +18,8 @@ _lla_to_wgs84_transformer = pyproj.Transformer.from_proj(
 
 _flatten_if_array = lambda value: value.flatten() if isinstance(value, np.ndarray) else value
 
-_to_meter_if_quantity  = lambda value: value.rescale(pq.meter) if isinstance(value, pq.Quantity) else value
-_to_degree_if_quantity = lambda value: value.rescale(pq.degree) if isinstance(value, pq.Quantity) else value
+_to_meter_if_quantity  = lambda value: value.rescale(pq.meter).magnitude if isinstance(value, pq.Quantity) else value
+_to_degree_if_quantity = lambda value: value.rescale(pq.degree).magnitude if isinstance(value, pq.Quantity) else value
 
 
 
@@ -123,8 +123,6 @@ def calc_euclidean_distance(
         x2, y2, z2 = get_fields(wgs84_2)
     else:
         raise NotImplementedError("The type of given coord is not implemented.")
-
-    x1, y1, z1, x2, y2, z2 = (v.magnitude for v in (x1, y1, z1, x2, y2, z2))
 
     return np.sqrt( (x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2 ) * pq.meter
 
