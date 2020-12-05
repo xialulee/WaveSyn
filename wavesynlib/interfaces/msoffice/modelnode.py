@@ -16,6 +16,8 @@ from pathlib import Path
 from PIL import Image
 from ctypes import POINTER, byref, sizeof, memmove
 
+import pandas as pd
+
 from comtypes import client, _safearray, COMError
 from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
 
@@ -301,6 +303,13 @@ class WordUtils(ModelNode):
     def __init__(self, *args, **kwargs):
         self.__com_handle = kwargs.pop('com_handle')
         super().__init__(*args, **kwargs)
+
+
+    def __get_document(self, window=None):
+        if window is None:
+            return self.__com_handle.ActiveDocument
+        else:
+            return self.__com_handle.Windows[window].Document
         
     
     @WaveSynScriptAPI    
@@ -465,7 +474,29 @@ class WordUtils(ModelNode):
             Position = available_width,
             Alignment = wdAlignTabRight,
             Leader = wdTabLeaderSpaces)
-        
+
+
+    @WaveSynScriptAPI
+    def get_links_of_shapes(self, window=None):
+        doc = self.__get_document(window=window)
+        result = []
+
+        def get_link_fullname(shape_coll, index):
+            link = shape_coll[index].LinkFormat 
+            if link is not None:
+                return link.SourceFullName
+            else:
+                return None
+
+        for name, obj in [("Shape", doc.Shapes), ("InlineShape", doc.InlineShapes)]:
+            for index in range(1, obj.Count+1):
+                fullname = get_link_fullname(obj, index)
+                if fullname:
+                    result.append(dict(type=name, index=index, source=Path(fullname)))
+
+        return pd.DataFrame(result)
+
+
 
         
 class AppObject(ModelNode):    
