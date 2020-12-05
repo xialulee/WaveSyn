@@ -492,8 +492,38 @@ class WordUtils(ModelNode):
             for index in range(1, obj.Count+1):
                 fullname = get_link_fullname(obj, index)
                 if fullname:
-                    result.append(dict(type=name, index=index, source=Path(fullname)))
+                    fullname = Path(fullname)
+                    result.append(dict(type=name, index=index, source=fullname, exists=fullname.exists()))
 
+        return pd.DataFrame(result)
+
+
+    @WaveSynScriptAPI
+    def fix_links_of_shapes(self, old_root, new_root=0, only_not_exist=False, window=None):
+        """Fix links of Shapes and InlineShapes if the relative structure of the linked files is not changed."""
+        doc = self.__get_document(window=window)
+        directory = Path(doc.Path)
+        if isinstance(new_root, int):
+            while new_root > 0:
+                directory = directory.parent
+            new_root = directory
+        elif isinstance(new_root, str):
+            new_root = Path(new_root)
+
+        links = self.get_links_of_shapes(window=window)
+
+        result = []
+
+        for rowindex, row in links.iterrows():
+            source = row["source"]
+            if only_not_exist and row["exists"]:
+                continue
+            relative = source.relative_to(old_root)
+            absolute = new_root / relative
+            shape_coll = doc.Shapes if row["type"]=="Shape" else doc.InlineShapes
+            shape_coll[row["index"]].LinkFormat.SourceFullName = str(absolute)
+            result.append(dict(type=row["type"], index=row["index"], old_source=source, new_source=absolute))
+        
         return pd.DataFrame(result)
 
 
