@@ -499,32 +499,86 @@ class WordUtils(ModelNode):
 
 
     @WaveSynScriptAPI
-    def fix_links_of_shapes(self, old_root, new_root=0, only_not_exist=False, window=None):
+    def fix_links_of_shapes(self, method="relative", old_root=None, new_root=0, search_root=0, only_not_exist=False, window=None):
         """Fix links of Shapes and InlineShapes if the relative structure of the linked files is not changed."""
         doc = self.__get_document(window=window)
-        directory = Path(doc.Path)
-        if isinstance(new_root, int):
-            while new_root > 0:
-                directory = directory.parent
-            new_root = directory
-        elif isinstance(new_root, str):
-            new_root = Path(new_root)
-
         links = self.get_links_of_shapes(window=window)
 
-        result = []
+        def get_unique_filenames(files):
+            name_path = {}
+            for path in files:
+                if path.name in name_path:
+                    if path != name_path[path.name]:
+                        raise ValueError("Multiple files with a same name.")
+                    else:
+                        continue
+                name_path[path.name] = path
+            return tuple(name_path)
 
-        for rowindex, row in links.iterrows():
-            source = row["source"]
-            if only_not_exist and row["exists"]:
-                continue
-            relative = source.relative_to(old_root)
-            absolute = new_root / relative
-            shape_coll = doc.Shapes if row["type"]=="Shape" else doc.InlineShapes
-            shape_coll[row["index"]].LinkFormat.SourceFullName = str(absolute)
-            result.append(dict(type=row["type"], index=row["index"], old_source=source, new_source=absolute))
-        
-        return pd.DataFrame(result)
+        def get_root(root):
+            directory = Path(doc.Path)
+            if isinstance(root, int):
+                while root > 0:
+                    directory = directory.parent
+                result = directory
+            elif isinstance(root, str):
+                result = Path(root)
+            elif isinstance(root, Path):
+                result = root
+            else:
+                raise TypeError("The type of root is not supported.")
+            return result
+
+        def iter_links():
+            for index, row in links.iterrows():
+                if only_not_exist and row["exists"]:
+                    continue
+                shape_coll = doc.Shapes if row["type"]=="Shape" else doc.InlineShapes
+                yield index, shape_coll[row["index"]].LinkFormat
+
+        def fix_by_relative():
+            nonlocal new_root
+            new_root = get_root(new_root)
+            result = []
+            for row_index, link_format in iter_links():
+                source = Path(link_format.SourceFullName)
+                relative = source.relative_to(old_root)
+                absolute = new_root / relative
+                link_format.SourceFullName = str(absolute)
+                row = links.iloc[row_index]
+                result.append(dict(type=row["type"], index=row["index"], old_source=source, new_source=absolute))
+            return pd.DataFrame(result)
+
+        def search_name(names, search_root):
+            result = {}
+            for root, dirs, files in os.walk(search_root):
+                for name in names:
+                    if name in files:
+                        if name in result:
+                            raise ValueError(f'''Multiple files with the same name "{name}" in search root "{search_root}":
+{result[name]}
+{str(Path(root)/name)}
+''')
+                        result[name] = Path(root) / name
+            return result
+
+        def fix_by_search_name():
+            nonlocal search_root
+            result = []
+            search_root = get_root(search_root)
+            filenames = get_unique_filenames(links.source)
+            new_paths = search_name(filenames, search_root)
+            for row_index, link_format in iter_links():
+                row = links.iloc[row_index]
+                source = row["source"]
+                new_path = new_paths[source.name]
+                link_format.SourceFullName = str(new_path)
+                result.append(dict(type=row["type"], index=row["index"], old_source=source, new_source=new_path))
+            return pd.DataFrame(result)
+
+        return {
+            "relative":    fix_by_relative,
+            "search name": fix_by_search_name}[method]()
 
 
 
