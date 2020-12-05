@@ -551,7 +551,12 @@ class WordUtils(ModelNode):
 
         def search_name(names, search_root):
             result = {}
-            for root, dirs, files in os.walk(search_root):
+            for walk_item in os.walk(search_root):
+                # If I use "for root, dirs, files in os.walk()"
+                # Pylance will mark it as a problem because "dirs" is not accessed.
+                # I do not want to use "for root, _, files in os.walk()" because "_" has certain meaning. 
+                root = walk_item[0]
+                files = walk_item[2]
                 for name in names:
                     if name in files:
                         if name in result:
