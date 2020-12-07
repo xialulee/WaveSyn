@@ -3,6 +3,7 @@ import numpy as np
 
 
 def get_cluster_slices(arr):
+    arr   = arr.flatten()
     bound = arr[1:] == arr[:-1]
     bound = np.where(bound==False)[0]
     bound = np.vstack((bound, bound+1))

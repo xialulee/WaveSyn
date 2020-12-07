@@ -202,10 +202,8 @@ class ExcelUtils(ModelNode):
                 raise TypeError('Incompatible data type.')
                 
                 
-                
-                
     @WaveSynScriptAPI 
-    def write_range(self, data, top_left, workbook=None, sheet=None):
+    def write(self, data, top_left, workbook=None, sheet=None):
         workbook = self._get_workbook(workbook)
         sheet = self._get_sheet(workbook, sheet)
         top_left_x, top_left_y = self._get_xy(top_left)
@@ -235,8 +233,7 @@ class ExcelUtils(ModelNode):
         
     @WaveSynScriptAPI
     def read_range(self, 
-        top_left, 
-        bottom_right, 
+        range_,
         workbook=None, 
         sheet=None,
         return_dataframe=False,
@@ -244,13 +241,16 @@ class ExcelUtils(ModelNode):
             
         workbook = self._get_workbook(workbook)
         sheet = self._get_sheet(workbook, sheet)
+
+        top_left, bottom_right = range_.split(":")
         
         tl_x, tl_y = self._get_xy(top_left)  
         br_x, br_y = self._get_xy(bottom_right)
         
         rng = sheet.Range(
-                self._get_addr(tl_x, tl_y), 
-                self._get_addr(br_x, br_y)).Value[:]
+                "{}:{}".format(
+                    self._get_addr(tl_x, tl_y), 
+                    self._get_addr(br_x, br_y))).Value[:]
 
         if return_dataframe:
             if not column_labels:
@@ -260,6 +260,84 @@ class ExcelUtils(ModelNode):
             rng = pandas.DataFrame(list(rng), columns=column_labels)
 
         return rng
+
+
+    def auto_merge(self, range_, axis="smart", workbook=None, sheet=None, method="same data"):
+        if axis == "smart":
+            top_left, bottom_right = [self._get_xy(coord) for coord in range_.split(":")]
+            delta_y = top_left[1] - bottom_right[1]
+            if delta_y == 0:
+                axis = 1
+            else:
+                axis = 0
+
+        if method == "same data":
+            self._auto_merge_same_data(range_=range_, axis=axis, workbook=workbook, sheet=sheet)
+        else:
+            raise NotImplementedError("The specified method is not implemented.")
+
+
+    def _auto_merge_same_data(self, range_, axis=0, workbook=None, sheet=None):
+        display_alerts_backup = self.__com_handle.DisplayAlerts
+        self.__com_handle.DisplayAlerts = False
+        try:
+            workbook = self._get_workbook(workbook)
+            sheet = self._get_sheet(workbook, sheet)
+            start, stop = range_.split(":")
+            start_x, start_y = self._get_xy(start)
+            stop_x, stop_y = self._get_xy(stop)
+            if not isinstance(axis, int):
+                raise ValueError("axis should be integer.")
+            if 0<= axis < 2:
+                pass
+            elif -2 <= axis < 0:
+                axis += 2
+            else:
+                raise ValueError("axis should be in [-2, 1].")
+
+            matrix = self.read_range("{}:{}".format(
+                self._get_addr(start_x, start_y),
+                self._get_addr(stop_x, stop_y)))
+
+            if axis == 0:
+                matrix = self.transpose(matrix)
+
+            def merge(row_index, cluster_start, cluster_len):
+                # Run horizontally
+                start_row, start_col = start_y, start_x
+                if axis == 0: # Run vertically
+                    start_row, start_col = start_col, start_row
+
+                # Run horizontally
+                cluster_start_row = start_row + row_index
+                cluster_start_col = start_col + cluster_start
+                cluster_stop_row  = cluster_start_row
+                cluster_stop_col  = cluster_start_col + cluster_len - 1
+                coords = [[cluster_start_col, cluster_start_row], [cluster_stop_col, cluster_stop_row]]
+                if axis == 0: # Run vertically
+                    coords = [coord[-1::-1] for coord in coords]
+                    
+                sheet.Range("{}:{}".format(
+                    self._get_addr(*coords[0]),
+                    self._get_addr(*coords[1]))).Merge()
+
+            for i in range(len(matrix)):
+                current_row = matrix[i]
+                current_row = [*current_row, f"{current_row}!"]
+                cluster_start = 0
+                cluster_len = 0
+                cluster_value = current_row[0]
+                for cell_value in current_row:
+                    if cell_value == cluster_value:
+                        cluster_len += 1
+                    else:
+                        merge(row_index=i, cluster_start=cluster_start, cluster_len=cluster_len)
+                        cluster_start += cluster_len
+                        cluster_len = 1
+                        cluster_value = current_row[cluster_start]
+            
+        finally:
+            self.__com_handle.DisplayAlerts = display_alerts_backup
 
 
     @WaveSynScriptAPI
@@ -289,7 +367,7 @@ class ExcelUtils(ModelNode):
     def browser_fill_by_id(
         self, driver, ids, top_left, bottom_right, 
         workbook=None, sheet=None):
-        data = self.read_range(top_left, bottom_right, workbook, sheet)
+        data = self.read_range("{}:{}".format(top_left, bottom_right), workbook, sheet)
         for id_row, data_row in zip(ids, data):
             for id_, item in zip(id_row, data_row):
                 driver.find_element_by_id(id_).send_keys(str(item))
@@ -735,7 +813,7 @@ class WordObject(AppObject):
     def close_active_document(self):
         self.com_handle.ActiveDocument.Close()
             
-                      
+
     def ApplicationEvents4_DocumentOpen(self, this, doc):
         self.parent_node.notify_observers(
                 app='Word', 
