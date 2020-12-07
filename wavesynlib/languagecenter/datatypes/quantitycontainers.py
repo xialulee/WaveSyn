@@ -3,7 +3,7 @@ import quantities as pq
 
 
 
-class _PQCol:
+class _QCol:
     def __init__(self, frame):
         self.__frame = frame
 
@@ -19,10 +19,9 @@ class _PQCol:
                 if unit_obj is None:
                     unit_obj = getattr(pq, unit_name)
                 raw_col = frame[name]
-                result = {
-                    "name": raw_col.name,
-                    "index": raw_col.index,
-                    "quantities": raw_col.to_numpy()*unit_obj}
+                result = raw_col.to_numpy()*unit_obj
+                result.index = raw_col.index
+                result.name = raw_col.name
                 break
         else:
             raise KeyError(key)
@@ -31,12 +30,30 @@ class _PQCol:
 
 
 
-class QuantityFrame(DataFrame):
+
+class QuantityFrame:
     def __init__(self, *args, **kwargs):
-        unit_dict = kwargs.pop("unit_dict", {})
-        super().__init__(*args, **kwargs)
-        self.pqcol = _PQCol(self)
-        self.unit_dict = unit_dict
+        self.__unit_dict = kwargs.pop("unit_dict", {})
+        self.__dataframe = DataFrame(*args, **kwargs)
+        self.qcol = _QCol(self)
+
+
+    @property
+    def dataframe(self):
+        return self.__dataframe
+
+
+    @property
+    def unit_dict(self):
+        return self.__unit_dict
+
+
+    def __getattr__(self, attr):
+        return getattr(self.__dataframe, attr)
+
+
+    def __getitem__(self, key):
+        return self.__dataframe[key]
 
 
 
@@ -49,4 +66,4 @@ if __name__ == "__main__":
         {"velocity/(m/s)": 14},
         {"velocity/(m/s)": 15}],
         unit_dict={"(m/s)":pq.CompoundUnit("m/s")})
-    print(qf.pqcol["velocity"])
+    print(qf.qcol["velocity"])
