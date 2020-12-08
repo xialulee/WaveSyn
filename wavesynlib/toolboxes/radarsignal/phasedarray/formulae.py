@@ -1,11 +1,13 @@
 from math import cos
+from typing import Union
+from quantities.quantity import Quantity
 import sympy
 import quantities as pq
 import numpy as np
 
 from wavesynlib.toolboxes.emwave.algorithms import frequency_wavelength_period
 from wavesynlib.toolboxes.geography.proj import calc_euclidean_distance
-
+from wavesynlib.languagecenter.datatypes.quantitycontainers import QuantityFrame
 
 
 _to_meter_if_quantity  = lambda value: value.rescale(pq.meter).magnitude if isinstance(value, pq.Quantity) else value
@@ -81,7 +83,10 @@ def _get_carrier_wavelength(carrier_frequency=None, carrier_wavelength=None):
 
 
 
-def _dist_to_phase_compensation(dist, wavelength):
+def _dist_to_phase_compensation(
+    dist:       pq.Quantity, 
+    wavelength: pq.Quantity
+) -> Quantity:
     """For a given point, calculate the phase compensation of each element from the distances between the point and the elements.
 dist:      float array, the distances between a given point and the elements;
 wavelenth: Quantity, the wavelength of the carrier;
@@ -96,7 +101,8 @@ def xyz_to_phase_compensation(
     point_x, point_y, point_z, 
     element_x, element_y, element_z,
     carrier_frequency=None,
-    carrier_wavelength=None):
+    carrier_wavelength=None
+) -> pq.Quantity:
     """Calculate phase compensation of each element of an array for a given point (In cartesian system).
 
 point_x: Quantity/scalar, x-coord of the given point;
@@ -129,13 +135,26 @@ Note that one and only one of (carrier_frequency, carrier_wavelength) should be 
 
 
 
-def enu_to_phase_compensation(
-    point_e, point_n, point_u,
-    element_e, element_n, element_u,
-    origin_x=None, origin_y=None, origin_z=None,
-    origin_lat=None, origin_lon=None, origin_alt=None,
-    carrier_frequency=None,
-    carrier_wavelength=None):
+def enu_to_phase_compensation(*,
+    point_e:            Union[np.ndarray, pq.Quantity]=None, 
+    point_n:            Union[np.ndarray, pq.Quantity]=None, 
+    point_u:            Union[np.ndarray, pq.Quantity]=None,
+    point_enu:          QuantityFrame=None,
+    element_e:          Union[np.ndarray, pq.Quantity]=None, 
+    element_n:          Union[np.ndarray, pq.Quantity]=None, 
+    element_u:          Union[np.ndarray, pq.Quantity]=None,
+    element_enu:        QuantityFrame=None,
+    origin_x:           Union[np.ndarray, pq.Quantity]=None, 
+    origin_y:           Union[np.ndarray, pq.Quantity]=None, 
+    origin_z:           Union[np.ndarray, pq.Quantity]=None,
+    origin_xyz:         QuantityFrame=None,
+    origin_lat:         Union[np.ndarray, pq.Quantity]=None, 
+    origin_lon:         Union[np.ndarray, pq.Quantity]=None, 
+    origin_alt:         Union[np.ndarray, pq.Quantity]=None,
+    origin_lla:         QuantityFrame=None,
+    carrier_frequency:  Union[float, Quantity]=None,
+    carrier_wavelength: Union[float, Quantity]=None
+) -> pq.Quantity:
     """Calculate phase compensation of each element for a given point (In ENU system).
     
 point_e: Quantity/scalar, E-coord of the given point;
@@ -163,23 +182,42 @@ one and only one of the origin coord should be given (WGS84 or LLA).
         carrier_frequency=carrier_frequency,
         carrier_wavelength=carrier_wavelength)
 
-    dist = calc_euclidean_distance(
-        # Point ENU each of which is a scalar.
-        e1=point_e,
-        n1=point_n,
-        u1=point_u,
-        # Element ENU each of which is an array.
-        e2=element_e,
-        n2=element_n,
-        u2=element_u,
-        # WGS84 coord of origin if given.
-        x0=origin_x,
-        y0=origin_y,
-        z0=origin_z,
-        # LLA coord of origin if given.
-        lat0=origin_lat,
-        lon0=origin_lon,
-        alt0=origin_alt)
+    kwargs = {}
+
+    if point_e is not None:
+        kwargs["e1"] = point_e
+        kwargs["n1"] = point_n
+        kwargs["u1"] = point_u
+    elif point_enu is not None:
+        kwargs["enu1"] = point_enu
+    else:
+        raise ValueError("The coordinate of the target point is not given.")
+
+    if element_e is not None:
+        kwargs["e2"] = element_e
+        kwargs["n2"] = element_n
+        kwargs["u2"] = element_u
+    elif element_enu is not None:
+        kwargs["enu2"] = element_enu
+    else:
+        raise ValueError("The coordinates of the array elements are not given.")
+
+    if origin_x is not None:
+        kwargs["x0"] = origin_x
+        kwargs["y0"] = origin_y
+        kwargs["z0"] = origin_z
+    elif origin_xyz is not None:
+        kwargs["xyz0"] = origin_xyz
+    elif origin_lat is not None:
+        kwargs["lat0"] = origin_lat
+        kwargs["lon0"] = origin_lon
+        kwargs["alt0"] = origin_alt
+    elif origin_lla is not None:
+        kwargs["lla0"] = origin_lla
+    else:
+        raise ValueError("The coordinate of the ENU observer is not given.")
+
+    dist = calc_euclidean_distance(**kwargs)
 
     return _dist_to_phase_compensation(
         dist=dist,
