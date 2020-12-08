@@ -98,7 +98,7 @@ class OfficeController(TkToolWindow):
         self.__treeview = treeview = AppTreeview(self.tk_object)
         treeview.pack(expand='yes', fill='both')
         treeview._tree.bind('<<TreeviewSelect>>', self.__on_select)
-        app_dict = self.root_node.interfaces.msoffice
+        app_dict = self.root_node.toolboxes.msoffice
         treeview.update(app_dict)        
                 
         @SimpleObserver
@@ -153,7 +153,7 @@ class OfficeController(TkToolWindow):
         if app_name is None:
             app_name = self.root_node.lang_center.wavesynscript.constants.ASK_LIST_ITEM
 
-        msoffice = self.root_node.interfaces.msoffice
+        msoffice = self.root_node.toolboxes.msoffice
         
         with code_printer():
             if get_active:
@@ -172,7 +172,7 @@ class OfficeController(TkToolWindow):
         
         
     def __on_foreground(self):
-        office = self.root_node.interfaces.msoffice                
+        office = self.root_node.toolboxes.msoffice                
         id_, app_name, txt, is_parent = self.__get_selected()
         kwargs = {}
         if app_name == 'word' and not is_parent:
@@ -204,7 +204,7 @@ class OfficeController(TkToolWindow):
     
     
     def __on_insert_psd(self):
-        office = self.root_node.interfaces.msoffice
+        office = self.root_node.toolboxes.msoffice
         kwargs = {'filename':self.root_node.lang_center.wavesynscript.constants.ASK_OPEN_FILENAME}
         id_, app_name, txt, is_parent = self.__get_selected()
         if not is_parent:
@@ -214,7 +214,7 @@ class OfficeController(TkToolWindow):
     
     
     def __on_update_psd(self):
-        office = self.root_node.interfaces.msoffice
+        office = self.root_node.toolboxes.msoffice
         id_, app_name, txt, is_parent = self.__get_selected()
         if not is_parent:
             window = txt
@@ -227,7 +227,7 @@ class OfficeController(TkToolWindow):
     @WaveSynScriptAPI
     def copy_selected_path(self):
         id_, app_name, txt, is_parent = self.__get_selected()
-        office = self.root_node.interfaces.msoffice
+        office = self.root_node.toolboxes.msoffice
         path = f'{office.node_path}[{id_}]'
         self.root_node.interfaces.os.clipboard.write(path)        
     
@@ -239,5 +239,5 @@ class OfficeController(TkToolWindow):
             
     @WaveSynScriptAPI
     def close(self):
-        self.root_node.interfaces.msoffice.delete_observer(self.__app_observer)
+        self.root_node.toolboxes.msoffice.delete_observer(self.__app_observer)
         super().close()

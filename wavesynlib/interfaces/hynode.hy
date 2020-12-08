@@ -31,9 +31,4 @@ communicating with different software applications and hardware devices."
             self.imagemagick [
                 wavesynlib.interfaces.imagemagick
                 ImageMagickNode]) 
-        (setv self.editors (EditorDict) ) 
-        (when (= "windows" (.lower (platform.system) ) ) 
-            (BindLazyNode
-                self.msoffice [
-                    wavesynlib.interfaces.msoffice.modelnode
-                    MSOffice]) ) ) )
+        (setv self.editors (EditorDict) ) ) )

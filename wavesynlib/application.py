@@ -37,6 +37,7 @@ from wavesynlib.widgets.tk.scrolledtext import ScrolledText
 from wavesynlib.widgets.tk.pilimageframe import PILImageFrame
 from wavesynlib.widgets.tk.argentry import ArgEntry
 from wavesynlib.interfaces.modelnode import Interfaces
+from wavesynlib.toolboxes.modelnode import Toolboxes
 from wavesynlib.stdstream import StreamManager
 from wavesynlib.threadtools import ThreadManager
 from wavesynlib.processtools import ProcessDict
@@ -111,6 +112,7 @@ since the instance of Application is the first node created on the model tree.
         
         self.thread_manager = ThreadManager()
         self.interfaces = Interfaces()
+        self.toolboxes = Toolboxes()
         self.stream_manager = StreamManager()
         
         from wavesynlib.gui.tk.modelnode import TkNode
