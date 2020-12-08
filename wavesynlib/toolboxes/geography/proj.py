@@ -1,3 +1,5 @@
+from typing import Union
+
 import numpy as np
 from pandas import DataFrame
 
@@ -5,6 +7,9 @@ import pyproj
 import pymap3d
 
 import quantities as pq
+from quantities.quantity import Quantity
+
+from wavesynlib.languagecenter.datatypes.quantitycontainers import QuantityFrame
 
 
 _ecef_wgs84 = pyproj.Proj(proj="geocent", ellps="WGS84", datum="WGS84")
@@ -24,14 +29,33 @@ _to_degree_if_quantity = lambda value: value.rescale(pq.degree).magnitude if isi
 
 
 
-def wgs84_to_lla(x, y, z):
-    x, y, z = (
-        _to_meter_if_quantity(_flatten_if_array(v)) 
-            for v in (x, y, z))
+def wgs84_to_lla(*,
+    x: Union[float, np.ndarray, pq.Quantity]=None, 
+    y: Union[float, np.ndarray, pq.Quantity]=None, 
+    z: Union[float, np.ndarray, pq.Quantity]=None,
+    xyz_frame: QuantityFrame=None):
+
+    df_index = None
+
+    if x is not None:
+        x, y, z = (
+            _to_meter_if_quantity(_flatten_if_array(v)) 
+                for v in (x, y, z))
+    elif xyz_frame is not None:
+        x, y, z = (
+            xyz_frame.qcol(s).rescale(pq.meter).magnitude
+                for s in ("x", "y", "z"))
+        df_index = xyz_frame.index
+    else:
+        raise ValueError("WGS84 coordinates not given.")
+
     lon, lat, alt = _wgs84_to_lla_transformer.transform(x, y, z)
     data = np.vstack((lat, lon, alt)).transpose()
     head = ["latitude/deg", "longitude/deg", "altitude/m"]
-    return DataFrame(data=data, columns=head)
+    kwargs = {"data":data, "columns":head}
+    if df_index is not None:
+        kwargs["index"] = df_index
+    return QuantityFrame(**kwargs)
 
 
 
@@ -46,13 +70,39 @@ def lla_to_wgs84(lat, lon, alt):
 
 
 
-def wgs84_to_enu(x, y, z, x0, y0, z0, ell=None):
-    lla0 = wgs84_to_lla(x0, y0, z0)
+def wgs84_to_enu(*,
+    x:          Union[float, np.ndarray, pq.Quantity]=None, 
+    y:          Union[float, np.ndarray, pq.Quantity]=None, 
+    z:          Union[float, np.ndarray, pq.Quantity]=None, 
+    xyz_frame:  QuantityFrame=None,
+    x0:         Union[float, pq.Quantity]=None,
+    y0:         Union[float, pq.Quantity]=None,
+    z0:         Union[float, pq.Quantity]=None,
+    xyz0_frame: QuantityFrame=None
+) -> QuantityFrame:
+
+    df_index = None
+
+    if x0 is not None:
+        lla0 = wgs84_to_lla(x=x0, y=y0, z=z0)
+    elif xyz0_frame is not None:
+        if xyz0_frame.shape[0] > 1:
+            raise ValueError("Multiple origin given.")
+        lla0 = wgs84_to_lla(xyz_frame=xyz0_frame)
+    else:
+        raise ValueError("The origin of ENU is not given.")
     lon0 = lla0.iloc[0]['longitude/deg']
     lat0 = lla0.iloc[0]['latitude/deg']
     alt0 = lla0.iloc[0]['altitude/m']
 
-    lla = wgs84_to_lla(x, y, z)
+    if x is not None:
+        lla = wgs84_to_lla(x=x, y=y, z=z)
+    elif xyz_frame is not None:
+        lla = wgs84_to_lla(xyz_frame=xyz_frame)
+        df_index = xyz_frame.index
+    else:
+        raise ValueError("No WGS84 coordinates given.")
+
     lon = lla['longitude/deg'].to_numpy()
     lat = lla['latitude/deg'].to_numpy()
     alt = lla['altitude/m'].to_numpy()
@@ -60,8 +110,11 @@ def wgs84_to_enu(x, y, z, x0, y0, z0, ell=None):
     east, north, up = pymap3d.enu.geodetic2enu(lat=lat, lon=lon, h=alt, lat0=lat0, lon0=lon0, h0=alt0)
     data = np.vstack((east, north, up))
     data = data.transpose()
-    head = ("east/m", "north/m", "altitude/m")
-    return DataFrame(data=data, columns=head)
+    head = ("east/m", "north/m", "up/m")
+    kwargs = {"data":data, "columns":head}
+    if df_index is not None:
+        kwargs["index"] = df_index
+    return QuantityFrame(**kwargs)
 
 
 

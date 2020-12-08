@@ -103,6 +103,20 @@ class QuantityFrame(DataFrame):
         return constructor
 
 
+    def qcol(self, name:str)->pq.Quantity:
+        if name in self.columns:
+            result = self[name].quantities
+        else:
+            name_ = f"{name}/"
+            for column in self.columns:
+                if column.startswith(name_):
+                    result = self[column].quantities
+                    break
+            else:
+                raise KeyError("{name} not exists in this frame.")
+        return result
+
+
 
 
 if __name__ == "__main__":
@@ -115,3 +129,4 @@ if __name__ == "__main__":
     print(qf["velocity/(m/s)"].convert_unit('km/h'))
     print(qf.unit_dict is qf["time/s"].unit_dict)
     print(qf.unit_dict is qf[["velocity/(m/s)", "time/s"]].unit_dict)
+    print(qf.qcol("velocity"))
