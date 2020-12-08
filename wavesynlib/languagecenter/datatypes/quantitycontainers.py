@@ -1,5 +1,6 @@
 from pandas import Series, DataFrame
 import quantities as pq
+from quantities import quantity
 
 
 
@@ -31,22 +32,46 @@ class QuantitySeries(Series):
         return constructor
 
 
-    @property
-    def quantities(self):
+    def __search_unit(self, unit_name:str):
         unit_dict = self.unit_dict
+        if unit_dict and unit_name in unit_dict:
+            unit_obj = unit_dict[unit_name]
+        elif hasattr(pq, unit_name):
+            unit_obj = getattr(pq, unit_name)
+        else:
+            unit_obj = pq.CompoundUnit(unit_name)
+        return unit_obj
+
+
+    @property
+    def unit_object(self):
         name = self.name
         parts = name.split("/", 1)
         if len(parts) < 2:
             unit_obj = pq.dimensionless
         else:
             unit_name = parts[1]
-            if unit_dict and unit_name in unit_dict:
-                unit_obj = unit_dict[unit_name]
-            elif hasattr(pq, unit_name):
-                unit_obj = getattr(pq, unit_name)
-            else:
-                unit_obj = pq.CompoundUnit(unit_name)
-        return self.to_numpy() * unit_obj
+            unit_obj = self.__search_unit(unit_name)
+        return unit_obj
+
+
+    @property
+    def quantities(self):
+        return self.to_numpy() * self.unit_object
+
+
+    def convert_unit(self, new_unit:str):
+        quantity_name = self.name.split("/", 1)[0]
+        if set("*/").intersection(set(new_unit)):
+            new_postfix = f"({new_unit})"
+        else:
+            new_postfix = new_unit
+        new_name = f"{quantity_name}/{new_postfix}"
+        unit_obj = self.__search_unit(new_unit)
+        return Series(
+            self.quantities.rescale(unit_obj),
+            index=self.index,
+            name=new_name)
 
 
 
@@ -87,6 +112,6 @@ if __name__ == "__main__":
         "distance/km": [1000, 2000, 3000], 
         "time/s": [0.1, 0.2, 0.3]}, unit_dict=unit_dict)
     print(qf[["distance/km", "time/s"]], type(qf[["distance/km", "time/s"]]))
-    print(qf["velocity/(m/s)"].quantities.rescale(pq.km / pq.hour))
+    print(qf["velocity/(m/s)"].convert_unit('km/h'))
     print(qf.unit_dict is qf["time/s"].unit_dict)
     print(qf.unit_dict is qf[["velocity/(m/s)", "time/s"]].unit_dict)
