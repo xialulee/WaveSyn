@@ -1,69 +1,92 @@
-from pandas import DataFrame
+from pandas import Series, DataFrame
 import quantities as pq
 
 
 
-class _QCol:
-    def __init__(self, frame):
-        self.__frame = frame
+class QuantitySeries(Series):
 
+    _metadata = ["unit_dict"]
 
-    def __getitem__(self, key):
-        frame = self.__frame
-        key_ = key + "/"
-
-        for name in frame.columns:
-            if name.startswith(key_):
-                unit_name = name.split("/", 1)[1]
-                unit_obj = frame.unit_dict.get(unit_name, None)
-                if unit_obj is None:
-                    unit_obj = getattr(pq, unit_name)
-                raw_col = frame[name]
-                result = raw_col.to_numpy()*unit_obj
-                result.index = raw_col.index
-                result.name = raw_col.name
-                break
-        else:
-            raise KeyError(key)
-
-        return result
-
-
-
-
-class QuantityFrame:
     def __init__(self, *args, **kwargs):
-        self.__unit_dict = kwargs.pop("unit_dict", {})
-        self.__dataframe = DataFrame(*args, **kwargs)
-        self.qcol = _QCol(self)
+        unit_dict = kwargs.pop("unit_dict", None)
+        super().__init__(*args, **kwargs)
+        self.unit_dict = unit_dict
 
 
     @property
-    def dataframe(self):
-        return self.__dataframe
+    def _constructor(self):
+        def constructor(*args, **kwargs):
+            if "unit_dict" not in kwargs:
+                kwargs["unit_dict"] = self.unit_dict
+            return QuantitySeries(*args, **kwargs)
+        return constructor
 
 
     @property
-    def unit_dict(self):
-        return self.__unit_dict
+    def _constructor_expanddim(self):
+        def constructor(*args, **kwargs):
+            if "unit_dict" not in kwargs:
+                kwargs["unit_dict"] = self.unit_dict
+            return QuantityFrame(*args, **kwargs)
+        return constructor
 
 
-    def __getattr__(self, attr):
-        return getattr(self.__dataframe, attr)
+    @property
+    def quantities(self):
+        unit_dict = self.unit_dict
+        name = self.name
+        parts = name.split("/", 1)
+        if len(parts) < 2:
+            unit_obj = pq.dimensionless
+        else:
+            unit_name = parts[1]
+            if unit_dict and unit_name in unit_dict:
+                unit_obj = unit_dict[unit_name]
+            elif hasattr(pq, unit_name):
+                unit_obj = getattr(pq, unit_name)
+            else:
+                unit_obj = pq.CompoundUnit(unit_name)
+        return self.to_numpy() * unit_obj
 
 
-    def __getitem__(self, key):
-        return self.__dataframe[key]
+
+class QuantityFrame(DataFrame):
+
+    _metadata = ["unit_dict"]
+
+    def __init__(self, *args, **kwargs):
+        unit_dict = kwargs.pop("unit_dict", None)
+        super().__init__(*args, **kwargs)
+        self.unit_dict = unit_dict
+
+
+    @property
+    def _constructor(self):
+        def constructor(*args, **kwargs):
+            if "unit_dict" not in kwargs:
+                kwargs["unit_dict"] = self.unit_dict
+            return QuantityFrame(*args, **kwargs)
+        return constructor
+
+
+    @property
+    def _constructor_sliced(self):
+        def constructor(*args, **kwargs):
+            if "unit_dict" not in kwargs:
+                kwargs["unit_dict"] = self.unit_dict
+            return QuantitySeries(*args, **kwargs)
+        return constructor
+
 
 
 
 if __name__ == "__main__":
-    qf = QuantityFrame([
-        {"velocity/(m/s)": 10},
-        {"velocity/(m/s)": 11},
-        {"velocity/(m/s)": 12},
-        {"velocity/(m/s)": 13},
-        {"velocity/(m/s)": 14},
-        {"velocity/(m/s)": 15}],
-        unit_dict={"(m/s)":pq.CompoundUnit("m/s")})
-    print(qf.qcol["velocity"])
+    unit_dict = {"(m/s)":pq.CompoundUnit("m/s")}
+    qf = QuantityFrame({
+        "velocity/(m/s)": [10, 20, 30],
+        "distance/km": [1000, 2000, 3000], 
+        "time/s": [0.1, 0.2, 0.3]}, unit_dict=unit_dict)
+    print(qf[["distance/km", "time/s"]], type(qf[["distance/km", "time/s"]]))
+    print(qf["velocity/(m/s)"].quantities.rescale(pq.km / pq.hour))
+    print(qf.unit_dict is qf["time/s"].unit_dict)
+    print(qf.unit_dict is qf[["velocity/(m/s)", "time/s"]].unit_dict)
