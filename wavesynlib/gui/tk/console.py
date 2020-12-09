@@ -27,6 +27,7 @@ import traceback
 import jedi
 import quantities as pq
 
+from wavesynlib.stdstream import dumb_stream
 from wavesynlib.widgets.tk.cwdindicator import CWDIndicator
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
 from wavesynlib.widgets.tk.scrolledtext import ScrolledText
@@ -229,7 +230,8 @@ class ConsoleText(ModelNode, ScrolledText):
             current_code,
             [Scripting.namespaces['locals'], Scripting.namespaces['globals']])
         try:
-            cs = script.goto_assignments()
+            with dumb_stream(stderr=True):
+                cs = script.goto_assignments()
         except:
             pass
         else:

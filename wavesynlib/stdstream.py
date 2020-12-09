@@ -27,16 +27,20 @@ class DumbStream:
     
     
 @contextmanager
-def dumb_stream():
+def dumb_stream(stdout=True, stderr=True):
     backup_out = sys.stdout
     backup_err = sys.stderr
-    sys.stdout = DumbStream()
-    sys.stderr = DumbStream()
     try:
+        if stdout:
+            sys.stdout = DumbStream()
+        if stderr:
+            sys.stderr = DumbStream()
         yield
     finally:
-        sys.stdout = backup_out
-        sys.stderr = backup_err
+        if stdout:
+            sys.stdout = backup_out
+        if stderr:
+            sys.stderr = backup_err
 
 
 
