@@ -6,16 +6,31 @@
 (require [wavesynlib.languagecenter.hy.utils [super-init]])
 
 (import platform)
-(import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
-(import [wavesynlib.interfaces.editor.modelnode [EditorDict]])
+(import [importlib [import-module]])
+(import [wavesynlib.languagecenter.wavesynscript [NodeDict]])
 
 
 
-(defclass Toolboxes [ModelNode]
+(defclass Toolboxes [NodeDict]
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs) 
         (when (= "windows" (.lower (platform.system) ) ) 
             (BindLazyNode
                 self.msoffice [
                     wavesynlib.toolboxes.msoffice.modelnode
-                    MSOffice]) ) ) )
+                    MSOffice]) ) ) 
+
+    (defn --getitem-- [self toolbox-name]
+        (when (in toolbox-name self)
+            (return (.--getitem-- (super) toolbox-name)))
+        (setv mod (import-module f".{toolbox-name}.toolboxnode" (.join "." (cut (.split --name-- ".") 0 -1)) ))
+        (setv node (mod.ToolboxNode :toolbox-name toolbox-name))
+        (assoc self toolbox-name node)
+        node ) 
+        
+    (defn -make-child-path [self child]
+        f"{self.node-path}[{(repr child.-toolbox-name)}]")
+        
+    (defn -hy-make-child-path [self child]
+        ; (
+        f"{(cut self.hy-node-path 0 -1)} [{(repr child.-toolbox-name)}])") )
