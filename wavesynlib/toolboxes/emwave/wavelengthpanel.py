@@ -6,6 +6,8 @@ import quantities as pq
 
 from .algorithms import λfT_eq
 
+from wavesynlib.widgets.tk.physicalquantityentry import PhysicalQuantityEntry
+
 
 
 arg_names = ("f", "λ", "T")
@@ -14,7 +16,7 @@ arg_ascii_name_map = {"f":"f", "λ": "lambda_", "T": "T"}
 
 THz = pq.UnitQuantity("terahertz", 1000.0*pq.GHz, "THz")
 
-freq_units = {
+f_units = {
     "THz": THz,
     "GHz": pq.GHz,
     "MHz": pq.MHz,
@@ -23,7 +25,7 @@ freq_units = {
 
 dm = pq.UnitQuantity("decimeter", 100*pq.millimeter, "dm")
 
-lambda_units = {
+λ_units = {
     "km": pq.kilometer,
     "m":  pq.meter,
     "dm": dm,
@@ -39,65 +41,46 @@ T_units = {
 
 
 unit_map = {
-    "f": freq_units, 
-    "λ": lambda_units, 
+    "f": f_units, 
+    "λ": λ_units, 
     "T": T_units}
 
 
+default_units = {
+    "f": "MHz",
+    "λ": "m",
+    "T": "ms"}
 
-class QuantityItem(tk.Frame):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name_lbl = ttk.Label(self)
-        self.name_lbl.pack(side=tk.LEFT)
-        self.value_ent = ttk.Entry(self)
-        self.value_ent.pack(side=tk.LEFT, fill=tk.X, expand=tk.YES)
-        self.unit_cmb = ttk.Combobox(self)
-        self.unit_cmb.pack(side=tk.LEFT)
 
 
 
 class WavelengthPanel(tk.Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        print("real test")
         items = {}
         value_vars = {}
         unit_vars = {}
 
         for name in ("f", "λ", "T"):
-            item = QuantityItem(self)
+            item = PhysicalQuantityEntry(self, default_unit_name=default_units[name])
             item.pack(fill=tk.X, expand=tk.YES, padx=3, pady=5)
 
-            item.name_lbl["text"] = name
-            item.name_lbl["width"] = 3
+            item.label_text = name
+            item.label_width = 3
 
-            item.value_ent["width"] = 20
+            item.entry_width = 20
             textvar = tk.DoubleVar()
             textvar.set(nan)
-            item.value_ent["textvariable"] = textvar
-            item.value_ent.bind("<KeyRelease>", lambda *args, name=name: self._on_parameter_input(name))
+            item.entry_variable = textvar
+            item.entry.bind("<KeyRelease>", lambda *args, name=name: self._on_parameter_input(name))
             value_vars[name] = textvar
 
-            item.unit_cmb["value"] = list(unit_map[name].keys())
-            item.unit_cmb["width"] = 5
-            unitvar = tk.StringVar()
-            unitvar.set("")
-            item.unit_cmb["textvariable"] = unitvar
+            item.fill_unit_combobox(unit_map[name])
+            item.unit_combobox_width = 5
+            unitvar = item.unit_combobox_variable
             unit_vars[name] = unitvar
-            item.unit_cmb["stat"] = "readonly"
-            item.unit_cmb.bind("<<ComboboxSelected>>", lambda *args, name=name: self._on_unit_change(name))
             items[name] = item
-
-
-        unit_vars["f"].set("MHz")
-        unit_vars["λ"].set("m")
-        unit_vars["T"].set("ms")
-
-        self.previous_unit_names = {
-            "f": unit_vars["f"].get(),
-            "λ": unit_vars["λ"].get(),
-            "T": unit_vars["T"].get() }
 
         self.value_vars = value_vars
         self.unit_vars = unit_vars
@@ -147,21 +130,4 @@ class WavelengthPanel(tk.Frame):
                 unit_obj = self._get_unit_obj(n)
                 arg_value = calc_result.qcol(n).rescale(unit_obj).magnitude[0]
                 self.value_vars[n].set(arg_value)
-
-
-    def _on_unit_change(self, arg_name):
-        previous_unit_name = self.previous_unit_names[arg_name]
-        self.previous_unit_names[arg_name] = self.unit_vars[arg_name].get()
-        try:
-            value_float = self._get_float(arg_name)
-            unit_obj = self._get_unit_obj(arg_name)
-            previous_unit_obj = unit_map[arg_name][previous_unit_name]
-            value = (value_float*previous_unit_obj).rescale(unit_obj).magnitude
-            self.value_vars[arg_name].set(value)
-        except ValueError:
-            for n in arg_names:
-                if n != arg_name:
-                    self.value_vars[n].set(nan)
-            return
-    
 

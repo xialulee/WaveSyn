@@ -9,7 +9,7 @@ from tkinter import ttk
 class PhysicalQuantityEntry(LabeledEntry):
     def __init__(self, *args, **kwargs):
         unit_info = kwargs.pop("unit_info", None)
-        default_unit_name = kwargs.pop("default_unit_name", "")
+        default_unit_name = kwargs.pop("default_unit_name")
         self.__previous_unit_name = default_unit_name
         super().__init__(*args, **kwargs)
         self.__unit_combobox = cmb = ttk.Combobox(self)
@@ -23,17 +23,22 @@ class PhysicalQuantityEntry(LabeledEntry):
 
 
     @property
-    def unit_combobox_width(self):
-        return self.__unit_combobox["width"]
-
-
-    @property
     def quantity(self):
         unit_name = self.__unit_combobox.get()
         unit_obj  = self.__unit_info[unit_name]
         value_str = self.entry_text
         value_num = float(value_str)
         return value_num * unit_obj
+
+
+    @property
+    def unit_combobox_variable(self):
+        return self.__unit_var
+
+
+    @property
+    def unit_combobox_width(self):
+        return self.__unit_combobox["width"]
 
 
     @unit_combobox_width.setter
