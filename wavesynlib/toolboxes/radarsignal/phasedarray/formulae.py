@@ -5,7 +5,7 @@ import sympy
 import quantities as pq
 import numpy as np
 
-from wavesynlib.toolboxes.emwave.algorithms import frequency_wavelength_period
+from wavesynlib.toolboxes.emwave.algorithms import λfT_eq
 from wavesynlib.toolboxes.geography.proj import calc_euclidean_distance
 from wavesynlib.languagecenter.datatypes.quantitycontainers import QuantityFrame
 
@@ -75,11 +75,11 @@ def _get_carrier_wavelength(carrier_frequency=None, carrier_wavelength=None):
         # Should not use *= here.
         carrier_frequency = carrier_frequency * pq.Hz
 
-    carrier_info = frequency_wavelength_period(
+    carrier_info = λfT_eq(
         f=carrier_frequency, 
-        lambda_=carrier_wavelength)
+        λ=carrier_wavelength)
 
-    return carrier_info["λ"]
+    return carrier_info.qcol("λ")[0]
 
 
 

@@ -4,7 +4,7 @@ from math import nan
 
 import quantities as pq
 
-from .algorithms import frequency_wavelength_period
+from .algorithms import λfT_eq
 
 
 
@@ -140,12 +140,12 @@ class WavelengthPanel(tk.Frame):
 
         kwargs = {arg_ascii_name_map[arg_name]:value_quantity}
 
-        calc_result = frequency_wavelength_period(**kwargs)
+        calc_result = λfT_eq(**kwargs)
 
         for n in arg_names:
             if n != arg_name:
                 unit_obj = self._get_unit_obj(n)
-                arg_value = calc_result[n].rescale(unit_obj).magnitude
+                arg_value = calc_result.qcol(n).rescale(unit_obj).magnitude[0]
                 self.value_vars[n].set(arg_value)
 
 
