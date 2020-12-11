@@ -9,7 +9,7 @@ import pymap3d
 import quantities as pq
 from quantities.quantity import Quantity
 
-from wavesynlib.languagecenter.datatypes.quantitycontainers import QuantityFrame
+from wavesynlib.languagecenter.datatypes.physicalquantities.containers import QuantityFrame
 
 
 _ecef_wgs84 = pyproj.Proj(proj="geocent", ellps="WGS84", datum="WGS84")

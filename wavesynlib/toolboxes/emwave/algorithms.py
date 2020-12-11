@@ -1,7 +1,7 @@
 import numpy as np
 import quantities as pq
 
-from wavesynlib.languagecenter.datatypes.quantitycontainers import QuantityFrame
+from wavesynlib.languagecenter.datatypes.physicalquantities.containers import QuantityFrame
 
 from . import constants
 

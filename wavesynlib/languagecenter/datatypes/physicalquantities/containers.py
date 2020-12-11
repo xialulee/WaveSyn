@@ -1,6 +1,5 @@
 from pandas import Series, DataFrame
 import quantities as pq
-from quantities import quantity
 
 
 
@@ -115,7 +114,6 @@ class QuantityFrame(DataFrame):
             else:
                 raise KeyError("{name} not exists in this frame.")
         return result
-
 
 
 

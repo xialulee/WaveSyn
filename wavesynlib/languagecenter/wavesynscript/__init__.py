@@ -197,8 +197,8 @@ class ScriptCode:
     def __init__(self, code):
         self.code = code
         
-     
         
+
 class Scripting(ModelNode):
     _xmlrpcexport_  = []    
     
@@ -224,7 +224,6 @@ class Scripting(ModelNode):
         strArgs = ', '.join([paramToStr(arg) for arg in args]) if args else ''
         strKwargs = ', '.join([f'{key}={paramToStr(kwargs[key])}' \
             for key in kwargs]) if kwargs else ''    
-       
             
         if strArgs and strKwargs:
             params = f'{strArgs}, {strKwargs}'
