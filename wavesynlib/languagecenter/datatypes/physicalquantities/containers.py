@@ -1,3 +1,4 @@
+import numpy as np
 from pandas import Series, DataFrame
 import quantities as pq
 
@@ -114,6 +115,22 @@ class QuantityFrame(DataFrame):
             else:
                 raise KeyError("{name} not exists in this frame.")
         return result
+
+
+    @property 
+    def qmatrix(self) -> pq.Quantity:
+        result = []
+        unit_obj = None
+        for index, column in enumerate(self.columns):
+            name = column.split("/", 1)[0]
+            qcol = self.qcol(name)
+            if index==0:
+                unit_obj = qcol.units
+            else:
+                qcol.rescale(unit_obj)
+            result.append(qcol.reshape((-1, 1)))
+        return np.hstack(result) * unit_obj
+
 
 
 
