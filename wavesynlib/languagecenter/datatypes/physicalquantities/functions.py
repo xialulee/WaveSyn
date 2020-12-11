@@ -38,5 +38,18 @@ def modf(
 
 
 
+def norm(
+    x:Union[np.ndarray, pq.Quantity], **kwargs
+) -> Union[float, np.ndarray, pq.Quantity]:
+    
+    if isinstance(x, pq.Quantity):
+        x_unit = x.units
+    else:
+        x_unit = 1
+    result = np.linalg.norm(x, **kwargs) * x_unit
+    return result
+
+
+
 if __name__ == "__main__":
     pass
