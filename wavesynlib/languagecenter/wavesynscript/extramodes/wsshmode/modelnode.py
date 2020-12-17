@@ -22,9 +22,9 @@
 # 
 # Using quotes
 # a = "123 456"
-# #M!f print "%s" "{a}"
+# #M!f printf "%s" "{a}"
 # (should print "123 456")
-# #M!f print "%s" {a}
+# #M!f printf "%s" {a}
 # (should print "123")
 #
 # Command substitution
