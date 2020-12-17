@@ -1,4 +1,6 @@
 
+import os
+import re
 import io
 import sys
 import locale
@@ -11,6 +13,9 @@ from wavesynlib.gadgets import wswhich
 from .parse import split, group
 
 
+envvar_prog = re.compile(r"^\$\w+$")
+
+
 
 def _substitute(cmd):
     for index in range(len(cmd)):
@@ -21,6 +26,8 @@ def _substitute(cmd):
             stdout.seek(0)
             text = stdout.read().rstrip()
             cmd[index] = text
+        elif envvar_prog.match(token):
+            cmd[index] = os.environ[token[1:]]
             
 
             
