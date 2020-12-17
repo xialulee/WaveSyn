@@ -3,6 +3,7 @@ import io
 import sys
 import locale
 codename = locale.getpreferredencoding()
+import pathlib
 from subprocess import Popen, PIPE
 
 from wavesynlib.gadgets import wswhich
@@ -24,7 +25,10 @@ def _substitute(cmd):
 
             
 def _win_exe_expr(cmd):
-    path = wswhich.which(cmd[0])[0]
+    try:
+        path = wswhich.which(cmd[0])[0]
+    except IndexError:
+        path = pathlib.Path(cmd[0])
     if path.suffix.lower() == ".exe":
         expr = cmd
     elif path.suffix.lower() == ".py":
