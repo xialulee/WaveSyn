@@ -1,5 +1,5 @@
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
-from .systemshellmode import SystemShell
+from .wsshmode.modelnode import WSSh
 import hy
 from .magicmode.modelnode import Magic
 from .basemode import BaseMode
@@ -9,7 +9,7 @@ from .basemode import BaseMode
 class ExtraModesNode(ModelNode):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        mode_classes = [SystemShell, Magic]
+        mode_classes = [WSSh, Magic]
         self.__modes = []
         for mode_class in mode_classes:
             if not issubclass(mode_class, BaseMode):

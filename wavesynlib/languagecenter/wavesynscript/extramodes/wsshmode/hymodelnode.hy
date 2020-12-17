@@ -6,12 +6,15 @@
 (import subprocess)
 (import sys)
 (import re)
+(import io)
 
 (import [hy.contrib.hy-repr [hy-repr]])
 
-(import [.basemode [ModeInfo BaseMode]])
+(import [..basemode [ModeInfo BaseMode]])
 (import [wavesynlib.languagecenter.wavesynscript [
     ModelNode Scripting WaveSynScriptAPI ScriptCode code-printer]])
+
+(import [.execute [run]])
 
 
 
@@ -22,7 +25,7 @@
 
 
 
-(defclass SystemShell [ModelNode BaseMode]
+(defclass WSSh [ModelNode BaseMode]
     (setv -MODE-PREFIX "#M!") 
     (setv -PREFIX-ARG-PATTERN (re.compile
 r"(?P<exec_mode>[stnf]*)      
@@ -45,16 +48,23 @@ r"(?P<exec_mode>[stnf]*)
     (defn --init-- [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs) 
         (with [self.attribute-lock]
-            (setv self.info (ModeInfo "system_shell" False self) ) 
+            (setv self.info (ModeInfo "wssh" False self) ) 
             (setv self.result {"stdout" "" "stderr" ""}) ) ) 
             
     (defn --run-process [self command input]
-        (setv PIPE subprocess.PIPE) 
-        (setv p (subprocess.Popen command :shell True :stdin PIPE :stdout PIPE :stderr PIPE) ) 
-        (setv [stdout stderr] (.communicate p :input input) ) 
-        (, 
-            (.decode stdout -encoding "ignore") 
-            (.decode stderr -encoding "ignore") ) ) 
+        ;(setv PIPE subprocess.PIPE) 
+        ;(setv p (subprocess.Popen command :shell True :stdin PIPE :stdout PIPE :stderr PIPE) ) 
+        ;(setv [stdout stderr] (.communicate p :input input) ) 
+        ;(, 
+            ;(.decode stdout -encoding "ignore") 
+            ;(.decode stderr -encoding "ignore") ) 
+        (setv 
+            stdout (io.StringIO)
+            stderr (io.StringIO))
+        (run command :stdout stdout :stderr stderr) 
+        (.seek stdout 0) 
+        (.seek stderr 0)
+        (, (.read stdout) (.read stderr) ) )
         
     (defn test [self code]
         (if (.startswith (.lstrip code) self.-MODE-PREFIX) 

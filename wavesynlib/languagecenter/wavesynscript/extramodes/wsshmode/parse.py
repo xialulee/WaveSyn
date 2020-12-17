@@ -4,8 +4,9 @@ from wavesynlib.languagecenter.python.pattern import string as string_pattern
 
 
 
-word_pattern = r"(?P<WORD>[^\s'\"]+)"
-item_pattern = f"{string_pattern}|{word_pattern}"
+word_pattern = r"(?P<WORD>[^\s'\"|&]+)"
+op_pattern   = r"(?P<OP>[|&]|$\(|\))"
+item_pattern = f"{string_pattern}|{word_pattern}|{op_pattern}"
 item_prog = re.compile(item_pattern, re.S)
 brbs_prog = re.compile(r"\)+$")
 
@@ -28,6 +29,8 @@ def split(command):
                 result.extend([*match_str[search.start():]])
             else:
                 result.append(match_str)
+        elif match.lastgroup == "OP":
+            result.append(match_str)
         elif match.lastgroup == "STRING":
             result.append(eval(match_str))
         else:
@@ -76,8 +79,3 @@ def group(token_list):
         result[-1].append(token)
         index += 1
     return result
-
-
-
-if __name__ == "__main__":
-    pass
