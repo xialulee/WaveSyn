@@ -38,7 +38,9 @@ r"(?P<exec_mode>[stnf]*)
 # Default shell will be used if not specified.
 # [uow]: Select Ubuntu-on-Windows bash as shell.
 (?:\((?P<stdin_var>.*)\))?  
-# the var name of which the content will be written into stdin."
+# the var name of which the content will be written into stdin.
+(?:\|(?P<return_var>\w+)=)?
+# the var name of the run's (or run.new_thread_run's) return value."
         re.VERBOSE) )
     
     #@(classmethod
@@ -61,10 +63,10 @@ r"(?P<exec_mode>[stnf]*)
         (setv 
             stdout (io.StringIO)
             stderr (io.StringIO))
-        (run command :stdout stdout :stderr stderr) 
+        (setv returncode (run command :stdout stdout :stderr stderr) )
         (.seek stdout 0) 
         (.seek stderr 0)
-        (, (.read stdout) (.read stderr) ) )
+        (, returncode (.read stdout) (.read stderr) ) )
         
     (defn test [self code]
         (if (.startswith (.lstrip code) self.-MODE-PREFIX) 
@@ -72,42 +74,55 @@ r"(?P<exec_mode>[stnf]*)
         #_else
             False) ) 
             
-    #@(WaveSynScriptAPI 
-    (defn run [self command &optional [display True] [input None] [store False] [thread False]]
+    #@((WaveSynScriptAPI :thread-safe True)
+    (defn run [self command &optional [display True] [input None] [store False]]
         (comment "To-Do:
                 Support store stdout & stderr;
                 Support run in thread.") 
+        (setv result {
+            "returncode" None 
+            "stdout"     None 
+            "stderr"     None})
         (assoc self.result "stdout" "")
         (assoc self.result "stderr" "")
         (when (instance? str input) 
             (setv input (.encode input -encoding) ) )
-        (setv [stdout stderr] (.--run-process self command :input input) ) 
+        (setv [returncode stdout stderr] (.--run-process self command :input input) ) 
+        (assoc result "returncode" returncode)
         (when store
-            (assoc self.result "stdout" stdout) 
-            (assoc self.result "stderr" stderr) )
+            (assoc result "stdout" stdout) 
+            (assoc result "stderr" stderr) )
         (when display
             (print stdout) 
-            (print stderr :file sys.stderr) ) ) )
+            (print stderr :file sys.stderr) ) 
+        result ) )
         
     (defn -arg-parse [self code]
         (comment "To-Do:
-                #M!  default;
-                #M!s store stdout & stderr;
-                #M!t run in thread.") 
+                #M!  default;") 
         (setv [prefix-args code] (.-split-code self code) )
         (setv match-obj (re.match self.-PREFIX-ARG-PATTERN prefix-args) )
         (setv stdin-var  (get match-obj "stdin_var") )
         (setv exec-mode  (get match-obj "exec_mode") )
         (setv shell-name (get match-obj "shell"))
+        (setv retvar     (get match-obj "return_var"))
         (setv arg-dict {"command" code}) 
         (when stdin-var
             (assoc arg-dict "input" (ScriptCode stdin-var) ) ) 
         (when (in "s" exec-mode) 
             (assoc arg-dict "store" True) )
+        (when (in "t" exec-mode) 
+            (comment 
+                However, "thread" is not an argument.
+                It serves as a flag indicating that 
+                the command will run in a new thread.)
+            (assoc arg-dict "thread" True) )
         (when (in "n" exec-mode) 
             (assoc arg-dict "display" False) )
         (when (in "f" exec-mode) 
             (assoc arg-dict "command" (ScriptCode (+ "f" (repr code) ) ) ) )
+        (when retvar
+            (assoc arg-dict "retvar" retvar))
         (when (= shell-name "uow")
             (setv command-prefix (if (in "f" exec-mode) "f" "") )
             (assoc arg-dict 
@@ -119,11 +134,30 @@ r"(?P<exec_mode>[stnf]*)
         (setv leading-blanks (-get-leading-blanks code) )
         (call= code .lstrip)
         (setv arg-dict (.-arg-parse self code) ) 
+
+        (comment 
+            "thread" is a flag rather than an arg)
+        (setv is-thread (.pop arg-dict "thread" False) )
+        (if is-thread
+            (setv thread-code ".new_thread_run") 
+        #_else
+            (setv thread-code "") )
+
+        (setv retvar (.pop arg-dict "retvar" "") )
+
         (setv arg-str    (Scripting.convert-args-to-str #** arg-dict) )
         (setv hy-arg-str (Scripting.hy-convert-args-to-str #** arg-dict) )
-        (setv result (,
-            f"{leading-blanks}{self.node-path}.run({arg-str})" 
-            f"{leading-blanks}(.run {self.hy-node-path} {hy-arg-str})") ) 
+
+        (setv py-result 
+            f"{leading-blanks}{self.node-path}.run{thread-code}({arg-str})" )
+        (setv hy-result 
+            f"{leading-blanks}(.run{(.replace thread-code \"_\" \"-\")} {self.hy-node-path} {hy-arg-str})")
+
+        (when retvar
+            (setv py-result f"{retvar} = {py-result}")
+            (setv hy-result f"(setv {retvar} {hy-result})") )
+
+        (setv result (, py-result hy-result) ) 
         (when verbose
             (setv write self.root-node.stream-manager.write) 
             (setv lang-index 
@@ -134,8 +168,7 @@ r"(?P<exec_mode>[stnf]*)
             (write "The translated code is given as follows:\n" "TIP")
             (write f"{(get result lang-index)}\n" "HISTORY")
             (when (.get arg-dict "store" "")
-                (write f"'store=True' indicating that the contents of stdout & stderr are stored in
-{self.node-path}.result\n" "TIP") ) )
+                (write f"'store=True' indicating that the contents of stdout & stderr are stored in the return value.\n" "TIP") ) )
         result)
 
     (defn execute [self code]
