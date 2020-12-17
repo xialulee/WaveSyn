@@ -328,6 +328,8 @@ class WaveSynScriptAPIMethod:
                     display_str = expr_str
                 elif display_language == "hy":
                     display_str = f"(.new_thread_run {obj.hy_node_path[:-1]} {name}) {Scripting.hy_convert_args_to_str(*args, **kwargs)})"
+                else:
+                    raise ValueError("Display language not supported.")
                 ret = root.lang_center.wavesynscript.display_and_eval(expr=expr_str, display=display_str)
                 return ret
             finally:
