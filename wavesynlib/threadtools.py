@@ -4,7 +4,6 @@ Created on Tue Jan 17 14:05:12 2017
 
 @author: Feng-cong Li
 """
-import _thread as thread
 import threading
 from queue import Queue, Empty
 
@@ -103,12 +102,12 @@ class ThreadManager(ModelNode, metaclass=Singleton):
         
         # Instance of ThreadManager must be intitialized in the main thread. 
         with self.attribute_lock:
-            self.main_thread_id = thread.get_ident()
+            self.main_thread_id = threading.get_ident()
             
             
     @property
     def in_main_thread(self):
-        return thread.get_ident() == self.main_thread_id
+        return threading.get_ident() == self.main_thread_id
         
         
     def only_main_thread(self, block=True):
