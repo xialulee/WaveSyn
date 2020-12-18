@@ -1,5 +1,6 @@
 # from .pattern import item_prog
 import re
+import ast
 from wavesynlib.languagecenter.python.pattern import string as string_pattern
 
 
@@ -32,7 +33,7 @@ def split(command):
         elif match.lastgroup == "OP":
             result.append(match_str)
         elif match.lastgroup == "STRING":
-            result.append(eval(match_str))
+            result.append(ast.literal_eval(match_str))
         else:
             raise ValueError("Token not supported.")
         command = command[match.end():]

@@ -17,6 +17,64 @@ envvar_prog = re.compile(r"^\$\w+$")
 
 
 
+embed_envvar_pat  = r"(?P<EMBED_ENVVAR>\$\w+)"
+cmdsubs_start_pat = r"(?P<CMDSUBS_START>\$\()"
+cmdsubs_stop_pat  = r"(?P<CMDSUBS_STOP>\))"
+normal_str_pat    = r"(?P<NORMAL_STR>[^$]+)"
+escape_ds_pat     = r"(?P<ESCAPE_DS>\$\$)"
+str_parse_pat     = "|".join((escape_ds_pat, normal_str_pat, embed_envvar_pat, cmdsubs_start_pat, cmdsubs_stop_pat))
+str_parse_prog    = re.compile(str_parse_pat)
+cmdsubs_parse_prog= re.compile(f"{cmdsubs_start_pat}|{cmdsubs_stop_pat}")
+
+def _format_string(string):
+    result = []
+    subs_level = 0
+    while True:
+        match = str_parse_prog.match(string)
+        if not match:
+            break
+        match_str = match.group(0)
+        lastgroup = match.lastgroup
+        if lastgroup == "NORMAL_STR":
+            result.append(match_str)
+            string = string[len(match_str):]
+        elif lastgroup == "ESCAPE_DS":
+            result.append("$")
+            string = string[len(match_str):]
+        elif lastgroup == "EMBED_ENVVAR":
+            result.append(os.environ[match_str[1:]])
+            string = string[len(match_str):]
+        elif lastgroup == "CMDSUBS_START":
+            subs_level = 1
+            string = string[len(match_str):]
+            cmdsubs_list = []
+            search_start = 0
+            while subs_level > 0:
+                match = cmdsubs_parse_prog.search(string, pos=search_start)
+                if not match:
+                    raise SyntaxError("Round brackets of command substitution not match.")
+                match_str = match.group(0)
+                lastgroup = match.lastgroup
+                if lastgroup == "CMDSUBS_STOP":
+                    subs_level -= 1
+                    if subs_level == 0:
+                        cmdsubs_list.append(string[:match.start()])
+                        string = string[match.end():]
+                elif lastgroup == "CMDSUBS_START":
+                    subs_level += 1
+                search_start = match.end()
+            cmdsubs_str = "".join(cmdsubs_list)
+            stdout = io.StringIO()
+            run(command=cmdsubs_str, stdout=stdout)
+            stdout.seek(0)
+            result.append(stdout.read().rstrip())
+        else:
+            raise SyntaxError("Unknown Error.")
+    return "".join(result)
+
+
+
+
 def _substitute(cmd):
     for index in range(len(cmd)):
         token = cmd[index]
@@ -28,6 +86,9 @@ def _substitute(cmd):
             cmd[index] = text
         elif envvar_prog.match(token):
             cmd[index] = os.environ[token[1:]]
+        elif "$" in token:
+            token = _format_string(token)
+            cmd[index] = token
             
 
             

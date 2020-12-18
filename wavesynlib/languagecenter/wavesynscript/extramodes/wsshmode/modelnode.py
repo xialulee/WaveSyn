@@ -29,7 +29,14 @@
 #
 # Command substitution
 # #M!t gvim $(which test.py)
-
+#
+# Use Environ var and Command substitution in strings:
+# #M! printf "%s" "--$(which python)--"
+# #M! printf "%s" "---- $(which $(echo python)) ----"
+# #M! printf "%s" "--$PATH--"
+# Use $$ as escape of $:
+# #M! printf "%s" "$$(which python)"
+# (SHould print "$(which python)")
 
 
 
