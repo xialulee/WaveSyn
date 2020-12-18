@@ -29,7 +29,12 @@
 
 (setv 
     -kalpha 
-    (QuantityFrame (pd.read-csv (/ (. (pathlib.Path --file--) parent) "kalpha.csv"))))
+    (-> --file-- 
+        (pathlib.Path) 
+        (. parent) 
+        (/ "kalpha.csv") 
+        (pd.read-csv) 
+        (QuantityFrame)))
 
 
 
