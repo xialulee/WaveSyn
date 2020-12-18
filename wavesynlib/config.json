@@ -3,11 +3,11 @@
         {"Name":"Toolboxes", "TearOff":0, "UnderLine":0, "SubMenu":[
             {"Name":"Data Visualization", "TearOff":0, "UnderLine":0, "SubMenu":[
                 {"Name":"2D Plane", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.datavisualization.plane.window', class_name='PlaneWindow')"} ]},
-            {"Name":"Radar Signal", "TearOff":0, "UnderLine":0, "SubMenu":[
-                {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.singlesyn', class_name='SingleWindow')"},
+            {"Name":"Radar", "TearOff":0, "UnderLine":0, "SubMenu":[
+                {"Name":"New SingleSyn Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radar.singlesyn', class_name='SingleWindow')"},
                 {"Name":"New MIMOSyn Window", "UnderLine":4, "Command":"print('Not Implemented', file=sys.stderr)"},
-                {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.mimopatternsyn.window', class_name='PatternWindow')"},
-                {"Name":"New DFT Directions Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radarsignal.dftdirections.window', class_name='DFTDirectionsWindow')"} ]}, 
+                {"Name":"New MIMO PatternFitting Window", "UnderLine":9, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radar.mimopatternsyn.window', class_name='PatternWindow')"},
+                {"Name":"New DFT Directions Window", "UnderLine":4, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.radar.dftdirections.window', class_name='DFTDirectionsWindow')"} ]}, 
             {"Name":"MS Office", "TearOff":0, "UnderLine":0, "SubMenu":[
                 {"Name":"Controller", "UnderLine":0, "Command":"wavesyn.gui.windows.create(module_name='wavesynlib.toolboxes.msoffice.controllerwindow', class_name='OfficeController')"} ]},
             {"Name":"File", "TearOff":0, "UnderLine":0, "SubMenu":[
