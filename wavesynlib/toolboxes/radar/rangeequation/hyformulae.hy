@@ -68,7 +68,8 @@
             (np.exp (* -⅕ (+ hᵣ+hₛ (/ r² 2kₑAₑ) rsinθ) )) )
         :a 0 :b R #_dr))
         
-    (setv result (first result))
-    (setv result (* (. (k_α f) magnitude) result)) 
-    (setv result (** 10 (/ result 10))) 
-    result)
+    (as-> 
+        (first result) it
+        (* (. (k_α f) magnitude) it) 
+        (/ it 10)
+        (** 10 it) ) )
