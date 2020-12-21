@@ -12,7 +12,7 @@ from wavesynlib.languagecenter.datatypes.physicalquantities.containers import Qu
 
 from .constants import A_e, k_e
 
-from .hyformulae import L_α
+from .hyformulae import *
 
 
 
