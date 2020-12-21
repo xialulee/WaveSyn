@@ -89,7 +89,7 @@ f:   carrier frequency (in GHz or an instance of Quantity)"
 
 
 
-(defn T_a [R θ h_r h_s f k_g G_s L_a]
+(defn antenna-temp [R θ h_r h_s f k_g G_s L_a]
 "Calculate the antenna temperature in kelvins. 
 
 R:   range (in km or an instance of Quantity)
@@ -111,6 +111,40 @@ L_a: antenna loss as ratio."
         #_else
             (+ (/ k_g f²·⁵) 5) ) ) 
     (setv T_a_ (+ Tₐ₁ T_g)) 
-    (+ T₀ (/ 
-        (* (- 1 G_s) (- T_a_ T₀) ) 
-        L_a)) )
+    (* (+ T₀ (/ 
+            (* (- 1 G_s) (- T_a_ T₀) ) 
+            L_a)) 
+        pq.kelvin) )
+
+
+
+(defn rxline-temp [L_r T_tr]
+"Calculate the receiving line temperature in kelvins.
+
+L_r:  the receiving line loss as ratio
+T_tr: the physical temperature of line in kelvins"
+    (when (instance? pq.Quantity T_tr)
+        (setv T_tr (-> T_tr (to_K) (. magnitude)) ) )
+    (-> L_r 
+        (- 1)
+        (* T_tr)
+        (* pq.kelvin)))
+
+
+
+(defn receiver-temp [F_n]
+"Calculate the receiver temperature.
+
+F_n: the reciever noise figure as ratio."
+    (* T_0 (- F_n 1)) )
+
+
+
+(defn sysnoise-temp [T_a T_r T_e L_r]
+"Calculate the system noise temperature.
+
+T_a: the antenna temperature (in kelvin or an instance of Quantity)
+T_r: the receiving line temperature (in kelvin or an instance of Quantity)
+T_e: the receiver temperature (in kelvin or an instance of Quantity)
+L_r: the receiving line loss as ratio"
+    (+ T_a T_r (* L_r T_e)))
