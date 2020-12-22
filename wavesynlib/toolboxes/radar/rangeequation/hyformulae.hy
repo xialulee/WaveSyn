@@ -6,10 +6,11 @@
 (import [quantities :as pq])
 (import [pandas :as pd])
 
-(import [wavesynlib.languagecenter.datatypes.physicalquantities.containers [QuantityFrame]])
-(import [wavesynlib.languagecenter.datatypes.physicalquantities.conversions [to_K]])
+(import [wavesynlib.toolboxes.emwave.algorithms [λfT-eq]])
+(import [wavesynlib.languagecenter.datatypes.physicalquantities.containers [QuantityFrame Decibel]])
+(import [wavesynlib.languagecenter.datatypes.physicalquantities.conversions [to-K]])
 
-(import [.constants [A_e k_e T_0]])
+(import [.constants [A_e k_e T_0 K_r]])
 
 
 
@@ -20,16 +21,42 @@
         x))
 
 
+(defn -to-K [x]
+    (if (instance? pq.Quantity x)
+        (-> x (to-K) (. magnitude)) 
+    #_else  
+        x) )
+
+
+(defn -to-W [x]
+    (-to-unit x pq.W))
+
+
 (defn -to-km [x]
     (-to-unit x pq.km))
+
+
+(defn -to-m² [x]
+    (-to-unit x (** pq.m 2)))
 
 
 (defn -to-rad [x]
     (-to-unit x pq.rad))
 
 
+(defn -to-s [x]
+    (-to-unit x pq.second))
+
+
 (defn -to-GHz [x]
     (-to-unit x pq.GHz) )
+
+
+(defn -to-ratio [x]
+    (if (instance? Decibel x)
+        (. x pow-ratio)
+    #_else
+        x))
 
 
 
@@ -100,6 +127,8 @@ f:   carrier frequency (in GHz or an instance of Quantity)
 k_g: galactic constant: 1.6=quiet, 10=average, 60=high
 G_s: sidelobe fraction of integrated antenna pattern
 L_a: antenna loss as ratio." 
+    (setv
+        L_a (-to-ratio L_a))
     (setv f²·⁵ (** (-to-GHz f) 2.5))
     (setv T₀ (. (to_K T_0) magnitude) )
     (setv L_αt (L_α R θ h_r h_s f) ) 
@@ -148,3 +177,69 @@ T_r: the receiving line temperature (in kelvin or an instance of Quantity)
 T_e: the receiver temperature (in kelvin or an instance of Quantity)
 L_r: the receiving line loss as ratio"
     (+ T_a T_r (* L_r T_e)))
+
+
+
+
+(defn freespace-range [
+    P   ; power
+    t   ; pulse width or CPI
+    G_t ; transmit antenna power gain as ratio
+    G_r ; receive antenna power gain as ratio
+    σ   ; target cross section in m²
+    f   ; carrier frequency in GHz
+    T_s ; system temperature (can be calculated by sysnoise-temp)
+    D   ; detectability factor as ratio
+    M   ; matching factor as ratio
+    L_p ; beamshape loss as ratio
+    L_x ; signal processing loss as ratio
+    L_t ; transmit line loss as ratio 
+    ]
+    (setv 
+        P   (-to-W     P)
+        t   (-to-s     t)
+        G_t (-to-ratio G_t)
+        G_r (-to-ratio G_r)
+        σ   (-to-m²    σ)
+        T_s (-to-K     T_s) 
+        D   (-to-ratio D)
+        M   (-to-ratio M)
+        L_p (-to-ratio L_p)
+        L_x (-to-ratio L_x)
+        L_t (-to-ratio L_t))
+
+    (setv 
+        λ (as-> f it 
+                (λfT-eq :f it) 
+                (.qcol it "λ") 
+                (first it)
+                (.rescale it pq.meter)
+                (. it magnitude)) 
+        λ² (** λ 2))
+
+    (setv X (/ (* P t G_t G_r σ λ² K_r) T_s D M L_p L_x L_t))
+    (-> X 
+        (** 0.25) 
+        (* pq.km)))
+
+
+
+(defn atmospheric-factor [
+    R   ; range
+    θ_t ; target elevation angle
+    h_r
+    h_s
+    f
+    ]
+
+    (setv R (-to-km R) )
+
+    (setv L_α1 (L_α R θ_t h_r h_s f))
+    
+    (setv δ_1 (** (/ 1 L_α1) 0.25))
+    (setv 
+        R_1  (* R δ_1)
+        L_α2 (L_α R_1 θ_t h_r h_s f))
+
+    (setv δ_2 (** (/ L_α1 L_α2) 0.25))
+    (* δ_1 δ_2))

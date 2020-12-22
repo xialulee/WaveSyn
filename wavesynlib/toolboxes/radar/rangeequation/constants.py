@@ -1,4 +1,5 @@
 
+from numpy import pi as π
 import quantities as pq
 
 
@@ -17,3 +18,6 @@ k_e = 1.333
 
 # Standard temperature in kelvins
 T_0 = 290 * pq.kelvin
+
+# Range equation constant (for range in km)
+K_r  = 1 / ((4*π)**3 * k_b * 1e12)

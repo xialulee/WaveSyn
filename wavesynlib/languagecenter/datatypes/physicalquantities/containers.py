@@ -133,6 +133,23 @@ class QuantityFrame(DataFrame):
 
 
 
+class Decibel:
+    def __init__(self, value):
+        self.__value = value
+        
+
+    @property
+    def pow_ratio(self):
+        return 10 ** (self.__value / 10)
+
+
+    @property
+    def mag_ratio(self):
+        return np.sqrt(self.pow_ratio)
+
+
+
+
 
 if __name__ == "__main__":
     unit_dict = {"(m/s)":pq.CompoundUnit("m/s")}
