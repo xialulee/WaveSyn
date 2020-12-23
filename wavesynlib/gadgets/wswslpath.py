@@ -42,11 +42,7 @@ def main(args):
     args = parser.parse_args(args)
     path = args.path
     path = pathlib.PureWindowsPath(path)
-    try:
-        print(_w2l(path))
-    except TypeError:
-        print("OS not supported.", file=sys.stderr)
-        sys.exit(1)
+    print(_w2l(path))
 
 
 
