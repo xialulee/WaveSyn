@@ -1,4 +1,8 @@
+import hy
+
 import quantities as pq
+
+from .hyconversions import *
 
 
 
