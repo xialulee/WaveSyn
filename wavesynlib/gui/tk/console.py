@@ -226,17 +226,17 @@ class ConsoleText(ModelNode, ScrolledText):
     def on_key_release(self, event):
         r, c = self.get_cursor_pos('insert')
         current_code = self.text.get(f'{r}.4', f'{r}.{c}')
-        script = jedi.api.Interpreter(
-            current_code,
-            [Scripting.namespaces['locals'], Scripting.namespaces['globals']])
-        try:
-            with dumb_stream(stderr=True):
-                cs = script.goto_assignments()
-        except:
-            pass
-        else:
-            if cs:
-                self.__encounter_func_callback(cs)
+        #script = jedi.api.Interpreter(
+            #current_code,
+            #[Scripting.namespaces['locals'], Scripting.namespaces['globals']])
+        #try:
+            #with dumb_stream(stderr=True):
+                #cs = script.goto_assignments()
+        #except:
+            #pass
+        #else:
+            #if cs:
+                #self.__encounter_func_callback(cs)
 
 
     def _on_launch_autocomplete(self):
