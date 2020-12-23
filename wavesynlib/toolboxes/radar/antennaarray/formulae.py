@@ -5,7 +5,7 @@ import sympy
 import quantities as pq
 import numpy as np
 
-from wavesynlib.toolboxes.emwave.algorithms import λfT_eq
+from wavesynlib.toolboxes.emwave.algorithms import λfT_eq, dist_to_phase
 from wavesynlib.toolboxes.geography.proj import calc_euclidean_distance
 from wavesynlib.languagecenter.datatypes.physicalquantities.containers import QuantityFrame
 
@@ -83,17 +83,16 @@ def _get_carrier_wavelength(carrier_frequency=None, carrier_wavelength=None):
 
 
 
-def _dist_to_phase_compensation(
+def dist_to_phase_compensation(
     dist:       pq.Quantity, 
     wavelength: pq.Quantity
 ) -> Quantity:
     """For a given point, calculate the phase compensation of each element from the distances between the point and the elements.
-dist:      float array, the distances between a given point and the elements;
+dist:      float array, the distances between a given point and the elements of the antenna array;
 wavelenth: Quantity, the wavelength of the carrier;
 return:    Quantity, the compensation phase in rad."""
-    delta_dist = ((dist-dist[0])/wavelength).rescale(pq.dimensionless).magnitude
-    delta_dist = np.modf(delta_dist)[0]
-    return delta_dist * 2 * np.pi * pq.rad
+    Δd = dist - dist[0]
+    return -dist_to_phase(dist=Δd, λ=wavelength)
 
 
 
@@ -129,7 +128,7 @@ Note that one and only one of (carrier_frequency, carrier_wavelength) should be 
         y2=element_y,
         z2=element_z)
 
-    return _dist_to_phase_compensation(
+    return dist_to_phase_compensation(
         dist=dist, 
         wavelength=wavelength)
 
@@ -219,7 +218,7 @@ one and only one of the origin coord should be given (WGS84 or LLA).
 
     dist = calc_euclidean_distance(**kwargs)
 
-    return _dist_to_phase_compensation(
+    return dist_to_phase_compensation(
         dist=dist,
         wavelength=wavelength)
 

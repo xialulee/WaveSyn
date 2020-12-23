@@ -7,6 +7,14 @@ from . import constants
 
 
 
+def _to_meter(x):
+    if isinstance(x, pq.Quantity):
+        return x.rescale(pq.meter).magnitude
+    else:
+        return x
+
+
+
 def λfT_eq(λ=None, f=None, T=None):
     def regularize(arg, unit):
         if not isinstance(arg, pq.Quantity):
@@ -41,6 +49,14 @@ def λfT_eq(λ=None, f=None, T=None):
         "λ/m": λ,
         "f/Hz": f,
         "T/s": T})
+
+
+
+def dist_to_phase(dist, λ=None, f=None, T=None):
+    λfT = λfT_eq(λ=λ, f=f, T=T)
+    λ = λfT.qcol("λ").rescale(pq.meter).magnitude
+    dist = _to_meter(dist)
+    return -2 * np.pi * np.modf(dist/λ)[0] * pq.rad
 
 
 
