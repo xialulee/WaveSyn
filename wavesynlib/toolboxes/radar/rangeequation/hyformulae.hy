@@ -3,6 +3,7 @@
 (import [numpy :as np])
 (import [numpy [sqrt :as √]])
 (import [scipy.integrate [quad :as ∫ₐᵇ]])
+(import [scipy.stats [chi2]])
 (import [quantities :as pq])
 (import [pandas :as pd])
 
@@ -177,6 +178,25 @@ T_r: the receiving line temperature (in kelvin or an instance of Quantity)
 T_e: the receiver temperature (in kelvin or an instance of Quantity)
 L_r: the receiving line loss as ratio"
     (+ T_a T_r (* L_r T_e)))
+
+
+
+(defn K [x n]
+"Probability that the chi-square distribution with 2n degrees of freedom exceeds x"
+    (- 1 (.cdf chi2 x :df (* n 2))))
+
+
+
+(defn K_1 [p n]
+"Inverse of Q(x,n): value of x that is exceeded with probability p"
+    (.ppf chi2 (- 1 p) (* 2 n)))
+
+
+
+(defn detectability-factor [P_d P_fa n n_e]
+"Detectability factor for integration of a pulses with n_e independent signal samples"
+    (/ (- (K_1 P_fa n) (K_1 P_d n_e) (* 2 (- n n_e)))
+        (* (/ n n_e) (K_1 P_d n_e))))
 
 
 

@@ -18,6 +18,11 @@ G_s = 0.12
 L_a = dB(0.2)
 L_r = 10**0.1
 
+P_d = 0.9
+P_fa = 1e-6
+n=24
+n_e = 1
+
 print(L_α(np.inf, 1*pq.deg, h_r, h_s, f))
 
 T_a = antenna_temp(np.inf, θ_t, 10*pq.m, 0*pq.m, 3*pq.GHz, k_g, G_s, L_a)
@@ -55,4 +60,7 @@ print(f"Atmospheric factor: {δ}")
 
 R_m = r_f * δ
 print(f"Final result: {R_m}")
+
+D_k = detectability_factor(P_d, P_fa, n, n_e)
+print(f"Detectability_factor: {D_k}")
 
