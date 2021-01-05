@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 
 import os
 from pathlib import Path
+from typing import Callable
 import hy
 try:
     from wavesynlib.languagecenter.datatypes import treetype
@@ -20,6 +21,8 @@ except hy.errors.HyCompilerError:
     hy_path = Path(__file__).parent / 'treetype.hy'
     os.system(f'hyc {hy_path}')
     from wavesynlib.languagecenter.datatypes import treetype
+
+from wavesynlib.languagecenter.designpatterns import Observable
 
 
 
@@ -37,6 +40,36 @@ class ArgSaveAs(ArgType):
 
 class ArgChooseDir(ArgType):
     pass
+
+
+
+class CommandObject(Observable):
+    def __init__(self, execute: Callable, can_execute: Callable = None):
+        self.__execute = execute
+        self.__can_execute = can_execute
+        super().__init__()
+
+
+    def can_execute(self):
+        retval = None
+        if self.__can_execute is None:
+            retval = True
+        else:
+            retval = self.__can_execute()
+        return retval
+        
+
+    def change_can_execute(self):
+        self.notify_observers("can_execute_changed")
+
+
+    def __call__(self):
+        retval = None
+        if self.can_execute():
+            retval = self.__execute()
+        else:
+            retval = None
+        return retval
 
 
 
