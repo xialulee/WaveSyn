@@ -88,7 +88,7 @@ M: The number of array elements."
     (setv Nₐ (len angles))
     (setv M (first R.shape) ) 
     (setv A (matA M angles) ) 
-    (setv p (‖v A :weight R) )
+    (setv p (. (‖v A :weight R) real) )
     (/ p (max p) ) )
 
 
