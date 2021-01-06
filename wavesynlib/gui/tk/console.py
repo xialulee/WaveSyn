@@ -537,7 +537,7 @@ Red:   main-thread is busy.''')
         
         cpu_progbar = Progressbar(self, orient="horizontal", length=60, maximum=100, variable=self.__cpubar)
         cpu_progbar.pack(side='right', fill='y')
-        cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('wscpumeter.pyw'))
+        cpu_progbar.bind('<Double-Button-1>', lambda dumb: on_progbar_dbclick('wscpugauge.pyw'))
         cpubar_tip = balloon.bind_widget(cpu_progbar, balloonmsg='Total CPU usage: ')        
         cpubar_tip.show_callback = lambda: f' {Scripting.root_node.interfaces.os.get_cpu_usage()}%.'
         
