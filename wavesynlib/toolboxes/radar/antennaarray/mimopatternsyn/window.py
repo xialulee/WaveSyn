@@ -73,7 +73,7 @@ class OptimizeGroup(Group):
         self.__bDisplay = IntVar(0)
         chk_display = Checkbutton(
             self, 
-            text="Display", 
+            text="Verbose", 
             image=image_display, 
             compound='left', 
             variable=self.__bDisplay)
