@@ -575,9 +575,8 @@ class ConsoleWindow(ModelNode):
         self.__stdstream_text = stdstream_text = self.console_text
         stdstream_text.pack(expand='yes', fill='both')
                     
-        @busy_doing.add_observer
-        def busy_status_observer(busy):
-            status_bar.set_busy(busy)        
+        busy_doing.add_observer(
+            lambda event: status_bar.set_busy(True if event.name=="busy" else False))
 
         tag_defs = self.__tag_defs
         for key in tag_defs:
