@@ -484,7 +484,7 @@ Red:   main-thread is busy.''')
         get_cpu_usage    = os_node.get_cpu_usage
         get_battery_status = os_node.get_battery_status
                                 
-        def check_cpu_mem_battery():
+        def check_cpu_mem_battery(event):
             with code_printer(print_=False):
                 self.__membar.set(get_memory_usage())
                 self.__cpubar.set(get_cpu_usage())

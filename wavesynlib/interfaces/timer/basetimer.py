@@ -4,6 +4,7 @@ Created on Mon March 30 2015
 
 @author: Feng-cong Li
 """
+from wavesynlib.languagecenter.datatypes import Event
 from wavesynlib.languagecenter.designpatterns import Observable
 from abc import ABCMeta, abstractproperty, abstractmethod
 
@@ -67,6 +68,6 @@ class Divider(Observable):
         def on_timer(event=None):
             self.__counter += 1
             if self.__counter == divide_by:
-                self.notify_observers()
+                self.notify_observers(Event())
                 self.__counter = 0
                 
