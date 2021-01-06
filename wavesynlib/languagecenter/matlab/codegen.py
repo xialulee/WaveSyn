@@ -3,6 +3,26 @@ import numpy as np
 
 
 _array_types = (np.ndarray, list, tuple)
+_linespec_types = (str, dict)
+
+
+
+def _repr(x):
+    if isinstance(x, str):
+        return f"'{x}'"
+    else:
+        return repr(x)
+
+
+
+def _linespec_to_str(linespec):
+    if isinstance(linespec, str):
+        return f"'{linespec}'"
+    elif isinstance(linespec, dict):
+        templist = []
+        for key, value in linespec.items():
+            templist.append(f"'{key}', {_repr(value)}")
+        return ", ".join(templist)
 
 
 
@@ -16,7 +36,7 @@ def _args_y(y):
 
 
 def _args_y_linespec(y, linespec):
-    return f"{_args_y(y)}, '{linespec}'"
+    return f"{_args_y(y)}, {_linespec_to_str(linespec)}"
 
 
 def _args_x_y(x, y):
@@ -26,7 +46,7 @@ def _args_x_y(x, y):
 
 
 def _args_x_y_linespec(x, y, linespec):
-    return f"{_args_x_y(x, y)}, '{linespec}'"
+    return f"{_args_x_y(x, y)}, {_linespec_to_str(linespec)}"
 
 
 
@@ -56,7 +76,7 @@ def commonplot(*args, func="plot"):
                     arglist.append(_args_x_y(*templist))
                     del templist[:]
                 templist.append(arg)
-            elif isinstance(arg, str):
+            elif isinstance(arg, _linespec_types):
                 templist.append(arg)
                 lentl = len(templist)
                 if lentl == 2:
@@ -71,7 +91,7 @@ def commonplot(*args, func="plot"):
     if len_args == 1:
         return y()
     elif len_args == 2:
-        if isinstance(args[1], str):
+        if isinstance(args[1], _linespec_types):
             return yls()
         elif isinstance(args[1], _array_types):
             return xy()
