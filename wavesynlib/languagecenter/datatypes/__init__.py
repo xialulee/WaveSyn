@@ -8,6 +8,7 @@ import sys
 import json
 from collections import OrderedDict
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 
 
@@ -43,6 +44,13 @@ class ArgChooseDir(ArgType):
 
 
 
+@dataclass
+class Event:
+    sender: object
+    name: str = ""
+
+
+
 class CommandObject(Observable):
     def __init__(self, execute: Callable, can_execute: Callable = None):
         self.__execute = execute
@@ -60,7 +68,7 @@ class CommandObject(Observable):
         
 
     def change_can_execute(self):
-        self.notify_observers("can_execute_changed")
+        self.notify_observers(Event(sender=self, name="can_execute_changed"))
 
 
     def __call__(self):
