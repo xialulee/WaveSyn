@@ -171,7 +171,7 @@ since the instance of Application is the first node created on the model tree.
             self.command_queue_timer = self.create_timer(interval=50, active=False)
         
         @self.command_queue_timer.add_observer
-        def command_queue_observer():
+        def command_queue_observer(event):
             try:
                 while True:
                     command_slot = self.command_queue.get_nowait()

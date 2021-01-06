@@ -64,7 +64,7 @@
 
     (defn on-connect [self]
         (setv self.--timer (.create-timer self.root-node :interval 50) ) 
-        (.add-observer self.--timer (fn []
+        (.add-observer self.--timer (fn [&optional event]
             (try
                 (while True
                     (setv id- (.get-nowait self.--queue) )

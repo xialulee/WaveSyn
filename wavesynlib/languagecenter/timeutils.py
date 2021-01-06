@@ -95,7 +95,7 @@ class DoNode(ModelNode):
         timer.interval = self.__duration
         
         @timer.add_observer
-        def callback():
+        def callback(event=None):
             if self.__first_call:
                 self.__first_call = False
                 return
@@ -127,7 +127,7 @@ class DoNode(ModelNode):
         timer.interval = self.__duration
         
         @timer.add_observer
-        def callback():
+        def callback(event=None):
             try:
                 args = next(it)
             except StopIteration:

@@ -51,7 +51,7 @@ def main():
     timer = TkTimer(widget=root, interval=2000) # No Config Dialog
     
     @timer.add_observer   
-    def show_disk_io():
+    def show_disk_io(event=None):
         percent = disk_time.percent
         label['text']   = f'Disk IO time percent: {percent}%'
         root.title(f'Disk IO {percent}%')

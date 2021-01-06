@@ -53,10 +53,10 @@ class ReplicaFinder(Observable, ModelNode):
         self.__timer = timer
         if timer is None:
             self.__timer = TkTimer(interval=0.2*second, active=False)
-        self.__timer.add_observer(SimpleObserver(self._on_timer))
+        self.__timer.add_observer(self._on_timer)
         
             
-    def _on_timer(self):
+    def _on_timer(self, event=None):
         while True:
             if self.__dead_event.is_set():
                 self.notify_observers(None, None, None, stop=True)

@@ -34,7 +34,7 @@ def main():
     timer = TkTimer(widget=root, interval=2000) # No Config Dialog
     
     @timer.add_observer   
-    def show_memory_usage():
+    def show_memory_usage(event=None):
         memusage = get_memory_usage()
         label['text']   = f'Memory Usage: {memusage}%'
         root.title(f'RAM {memusage}%')

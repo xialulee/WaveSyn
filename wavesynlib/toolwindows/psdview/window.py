@@ -175,7 +175,7 @@ load_grp, export_grp, resize_grp, external_viewer_grp, wallpaper_grp]
         
         self.__timer = TkTimer(widget=self.tk_object)
         @self.__timer.add_observer
-        def watch():
+        def watch(event=None):
             if self.__psd_path:
                 mtime = self.__psd_path.stat().st_mtime
                 if mtime > self.__mtime:

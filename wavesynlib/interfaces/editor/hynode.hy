@@ -70,7 +70,7 @@
         (super-init) 
         (setv self.--editor-dict editor-dict)) 
         
-    (defn update [self]
+    (defn update [self event]
         (when self.--editor-dict
             (for [[key editor] (.items self.--editor-dict)]
                 (unless (.alive? editor) 

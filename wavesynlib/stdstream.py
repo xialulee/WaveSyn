@@ -113,7 +113,7 @@ class StreamManager(ModelNode, Observable):
         self.queue.put((stream_type, content, extras))
         
         
-    def update(self): # Usually called by a timer.
+    def update(self, event=None): # Usually called by a timer.
         try:
             while True:
                 stream_type, content, extras = self.queue.get_nowait()

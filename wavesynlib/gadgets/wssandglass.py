@@ -30,7 +30,7 @@ def main(argv):
     timer = TkTimer(widget=root, interval=1000)
     
     @timer.add_observer
-    def show_left():
+    def show_left(event=None):
         current[0] += 1
         percent = int(current[0] / total * 100)
         tb_icon.progress = percent

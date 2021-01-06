@@ -68,7 +68,7 @@
         (setv self.--timer (TkTimer 
             :widget   self.--win 
             :interval (* 0.05 second)))
-        (.add-observer self.--timer (fn []
+        (.add-observer self.--timer (fn [&optional event]
             (with [self.--lock]
                 (for [n (range number)]
                     (setv 

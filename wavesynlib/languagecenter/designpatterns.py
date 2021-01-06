@@ -48,7 +48,10 @@ class Observable:
         
     def notify_observers(self, *args, **kwargs):
         for observer in self.__observers:
-            observer.update(*args, **kwargs)
+            try: # temporarily added for detecting new protocol errors. 
+                observer.update(*args, **kwargs)
+            except TypeError:
+                print(observer)
             
 
             

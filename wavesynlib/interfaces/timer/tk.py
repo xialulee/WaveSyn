@@ -9,6 +9,7 @@ from tkinter import Toplevel, IntVar
 from tkinter.ttk import Button, Checkbutton
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer, Divider
 from wavesynlib.widgets.tk.labeledentry import LabeledEntry
+from wavesynlib.languagecenter.datatypes import Event
 
 from quantities import Quantity, millisecond
 
@@ -114,7 +115,7 @@ TkTimer is based on the Observer protocol.
                 # This is the last time executing the timer function. 
                 self.active = False
                 
-            self.notify_observers()
+            self.notify_observers(Event())
             # Observer protocol.
             
             self.__widget.after(self.interval, self.__timer_callback)

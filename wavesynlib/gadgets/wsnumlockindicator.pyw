@@ -38,7 +38,7 @@ def main():
     timer = TkTimer(widget=root, interval=250)
     
     @timer.add_observer
-    def show_numlock():
+    def show_numlock(event=None):
         if GetKeyState(0x90) & 0xffff:
             label['text'] = 'On'
             tb_icon.progress = 100
