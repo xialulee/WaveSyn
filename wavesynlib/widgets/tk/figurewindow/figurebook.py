@@ -13,6 +13,7 @@ from wavesynlib.languagecenter.wavesynscript import (
     code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.languagecenter.utils import set_attributes
+from wavesynlib.languagecenter.matlab import codegen
 
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
 
@@ -349,13 +350,13 @@ The rest parameters are passed to PanedWindow.__init__.
                       'figure;', sep = '\n',
                       file=file)
                 for line in figure.line_objects:
-                    params = {}
-                    for name in ('xdata', 'ydata', 'color'):
-                        params[name] = pyplot.getp(line[0], name)
-                    params['func'] = 'polar' if figure.is_polar else 'plot'
-                    params['xdata'] = ','.join((str(i) for i in params['xdata']))
-                    params['ydata'] = ','.join((str(i) for i in params['ydata']))
-                    print("{func}([{xdata}], [{ydata}], '{color}');hold on".format(**params), file=file)
+                    line0 = line[0]
+                    func = "polarplot" if figure.is_polar else "plot"
+                    xdata = pyplot.getp(line0, "xdata")
+                    ydata = pyplot.getp(line0, "ydata")
+                    linespec = pyplot.getp(line0, "color")
+                    print(codegen.commonplot(xdata, ydata, linespec, func=func), file=file)
+                    print("hold on", file=file)
                     # To do: Grid
                     
                                         
