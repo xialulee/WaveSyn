@@ -593,9 +593,12 @@ class ConsoleWindow(ModelNode):
         menu = self.__menu
         make_menu(root, menu, json=True)
         self.__default_cursor = self.__stdstream_text.text['cursor']
-        @self.root_node.stream_manager.add_observer
-        def observer(stream_type, content, extras):
-            self.console_text.update_content(tag=stream_type, content=content, extras=extras)
+
+        self.root_node.stream_manager.add_observer(lambda event:
+            self.console_text.update_content(
+                tag=event.kwargs["stream_type"],
+                content=event.kwargs["content"],
+                extras=event.kwargs["extras"]))
             
         self.doc_window = ModelNode(
             is_lazy=True, 

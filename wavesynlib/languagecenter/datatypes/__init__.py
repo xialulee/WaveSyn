@@ -46,8 +46,10 @@ class ArgChooseDir(ArgType):
 
 @dataclass
 class Event:
-    sender: object
-    name: str = ""
+    sender: object = None
+    name:   str    = ""
+    args:   tuple  = None
+    kwargs: dict   = None
 
 
 

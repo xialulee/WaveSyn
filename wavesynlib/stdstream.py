@@ -9,6 +9,7 @@ import queue
 import _thread as thread
 from contextlib import contextmanager
 
+from wavesynlib.languagecenter.datatypes import Event
 from wavesynlib.languagecenter.designpatterns import  Observable
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 
@@ -116,6 +117,11 @@ class StreamManager(ModelNode, Observable):
         try:
             while True:
                 stream_type, content, extras = self.queue.get_nowait()
-                self.notify_observers(stream_type, content, extras)
+                self.notify_observers(Event(
+                    sender = self,
+                    kwargs = {
+                        "stream_type": stream_type,
+                        "content":     content,
+                        "extras":      extras}))
         except queue.Empty:
             pass
