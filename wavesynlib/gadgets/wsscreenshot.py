@@ -2,6 +2,8 @@
 # xialulee
 
 from tkinter import Canvas, Tk
+
+from wavesynlib.languagecenter.datatypes import Event
 from wavesynlib.languagecenter.designpatterns import Observable
 from tkinter.filedialog import asksaveasfilename
 from PIL import ImageGrab
@@ -35,7 +37,14 @@ class RectSelCanvas(Canvas, Observable):
     
     def onButton1Release(self, event):
         self.delete(self.__boxId)
-        self.notify_observers(self.__start_x, self.__start_y, event.x, event.y)
+        self.notify_observers(
+            Event(
+                name="rect_selected",
+                args=(
+                    self.__start_x,
+                    self.__start_y,
+                    event.x,
+                    event.y)))
         self.__start_x   = None
         self.__start_y   = None
         
@@ -57,7 +66,8 @@ if __name__ == '__main__':
             self.__image    = image
             self.__root     = root
         
-        def update(self, *box):
+        def update(self, event):
+            box = event.args
             cropImage   = self.__image.crop(box)
             filename = asksaveasfilename(defaultextension='.png', filetypes=[('PNG Image', '*.png'), ('JPEG Image', '*.jpg')])
             if filename != '':
