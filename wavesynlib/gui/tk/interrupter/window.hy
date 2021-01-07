@@ -24,7 +24,7 @@
             "args"     ""})
         (.put messages-from-interrupter command)))
     (setv queue-monitor (TkTimer root :interval (* 0.25 second)))
-    (.add_observer queue-monitor (fn [&rest args &kwargs kwargs]
+    (.add-observer queue-monitor (fn [event]
         (try
             (setv message (.get-nowait messages-to-interrupter))
         (except [Empty]

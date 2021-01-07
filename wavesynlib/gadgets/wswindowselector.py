@@ -47,7 +47,7 @@ class WindowSelector:
         timer      = self.__timer
         
         @timer.add_observer
-        def get_window(*args, **kwargs):
+        def get_window(event):
             GetCursorPos(byref(cursor_pos))
             handle = WindowFromPoint(cursor_pos)            
             GetWindowRect(self_handle, byref(self_rect))

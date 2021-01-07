@@ -22,6 +22,7 @@ from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.dirindicator import DirIndicator
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
+from wavesynlib.languagecenter.datatypes import Event
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
@@ -56,17 +57,29 @@ class ReplicaFinder(Observable, ModelNode):
         self.__timer.add_observer(self._on_timer)
         
             
-    def _on_timer(self, event=None):
+    def _on_timer(self, event):
         while True:
             if self.__dead_event.is_set():
-                self.notify_observers(None, None, None, stop=True)
+                self.notify_observers(Event(
+                    name = "stop_searching",
+                    kwargs = {
+                        "md5":         None,
+                        "path":        None,
+                        "current_dir": None,
+                        "stop":        True }))
                 self.__dead_event.clear()
                 self.__is_alive = False
                 break
 
             try:
                 md5, path, current_dir = self.__queue.get_nowait()
-                self.notify_observers(md5, path, current_dir, stop=not self.__is_alive)
+                self.notify_observers(Event(
+                    name = "find",
+                    kwargs = {
+                        "md5": md5,
+                        "path": path,
+                        "current_dir": current_dir,
+                        "stop": not self.__is_alive }))
             except queue.Empty:
                 break
             
@@ -157,7 +170,11 @@ class ReplicaTreeview(tk.Frame):
         tree_container.on_item_double_click.add_function(self._on_item_doubleclick)
         
         
-    def update(self, md5, path, current_dir, stop):
+    def update(self, event):
+        kwargs = event.kwargs
+        md5         = kwargs["md5"]
+        path        = kwargs["path"]
+        stop        = kwargs["stop"]
         if md5 is None:
             return
             
@@ -229,7 +246,12 @@ class ReplicaFinderWindow(TkToolWindow):
         self.__current_dir_label = widgets['current_dir_lbl']
               
         
-    def update(self, md5, path, current_dir, stop, laststate=[None]):
+    def update(self, event, laststate=[None]):
+        kwargs = event.kwargs
+        md5 = kwargs["md5"]
+        path = kwargs["path"]
+        current_dir = kwargs["current_dir"]
+        stop = kwargs["stop"]
         if not stop: 
             if current_dir:
                 self.__current_dir_label['text'] = current_dir

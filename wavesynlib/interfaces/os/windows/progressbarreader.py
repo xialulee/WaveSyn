@@ -48,7 +48,7 @@ if __name__ == '__main__':
     timer    = TkTimer()
 
     @timer.add_observer    
-    def observer(*args, **kwargs):
+    def observer(event):
         tbIcon.progress = pbReader.position
         
     timer.active = True
