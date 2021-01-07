@@ -13,12 +13,7 @@
 
 (defclass Toolboxes [NodeDict]
     (defn --init-- [self &rest args &kwargs kwargs]
-        (super-init #* args #** kwargs) 
-        (when (= "windows" (.lower (platform.system) ) ) 
-            (BindLazyNode
-                self.msoffice [
-                    wavesynlib.toolboxes.msoffice.modelnode
-                    MSOffice]) ) ) 
+        (super-init #* args #** kwargs) ) 
 
     (defn --getitem-- [self toolbox-name]
         (when (in toolbox-name self)

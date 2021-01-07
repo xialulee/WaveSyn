@@ -21,11 +21,13 @@ import pandas as pd
 from comtypes import client, _safearray, COMError
 from comtypes.automation import VARIANT, VT_VARIANT, VT_ARRAY, _VariantClear
 
+from wavesynlib.languagecenter.datatypes import Event
 from wavesynlib.languagecenter.wavesynscript import (
     Scripting, ModelNode, WaveSynScriptAPI, NodeDict, code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.fileutils.photoshop.psd import get_pil_image
 
+from ..basetoolboxnode import BaseToolboxNode
 
 _xlXYScatter = -4169
 
@@ -815,11 +817,13 @@ class WordObject(AppObject):
             
 
     def ApplicationEvents4_DocumentOpen(self, this, doc):
-        self.parent_node.notify_observers(
+        self.parent_node.notify_observers(Event(
+            sender = this,
+            name = "DocumentOpen",
+            kwargs = dict(
                 app='Word', 
                 source='Application', 
-                event='DocumentOpen', 
-                doc=doc)
+                doc=doc)))
     
         
         
@@ -831,40 +835,58 @@ class WordObject(AppObject):
                 doc_wrapper = WordDocumentObject(parent=self, handle=doc)
                 doc_wrapper._event_connection = client.GetEvents(doc, doc_wrapper)
                 self._doc_list.append(doc_wrapper)          
-        self.parent_node.notify_observers(
+        self.parent_node.notify_observers(Event(
+            sender = this,
+            name = "NewDocument",
+            kwargs = dict(
                 app='Word',
                 source='Application',
-                event='NewDocument', 
-                doc=doc)        
+                doc=doc)))
                 
         
     def ApplicationEvents4_WindowDeactivate(self, this, doc, win):
         # When a window loses focus or it is destroyed, 
         # this will be triggered. 
-        self.parent_node.notify_observers(
+        self.parent_node.notify_observers(Event(
+            sender = this,
+            name = "WindowDeactivate",
+            kwargs = dict(
                 app='Word',
                 source='Application',
-                event='WindowDeactivate', 
-                doc=doc, win=win)
+                doc=doc, 
+                win=win)))
         
         
     def ApplicationEvents4_Quit(self, this):
         self.parent_node._on_app_quit(self)
-        self.parent_node.notify_observers(
+        self.parent_node.notify_observers(Event(
+            sender = this,
+            name = "Quit",
+            kwargs = dict(
                 app='Word',
-                source='Application',
-                event='Quit')
+                source='Application')))
+
         
     def DocumentEvents2_Close(self, this, doc_wrapper):
-        self.parent_node.notify_observers(
+        self.parent_node.notify_observers(Event(
+            sender = this, 
+            name = "Close",
+            kwargs = dict(
                 app='Word',
-                source='Document',
-                event='Close')
+                source='Document')))
         self._doc_list.remove(doc_wrapper)
             
 
 
-class MSOffice(NodeDict, Observable):
+
+class ToolboxNode(BaseToolboxNode):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.app_dict = AppDict()
+
+
+
+class AppDict(NodeDict, Observable):
     _prog_info = {
         'word':  {'id':'Word.Application', 'class':WordObject},
         'excel': {'id':'Excel.Application', 'class':ExcelObject}
