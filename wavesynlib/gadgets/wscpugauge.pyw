@@ -61,7 +61,7 @@ def main():
     timer = TkTimer(widget=root, interval=2000) # No Config Dialog
     
     @timer.add_observer   
-    def show_cpu_usage():
+    def show_cpu_usage(event):
         cpu_usage = get_cpu_usage(mode=mode.get())
         label['text']   = f'CPU Usage: {cpu_usage}%'
         root.title(f'CPU {cpu_usage}%')

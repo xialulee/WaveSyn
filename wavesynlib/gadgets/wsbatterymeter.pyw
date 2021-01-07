@@ -66,7 +66,7 @@ def main():
     timer = TkTimer(widget=root, interval=5000) # No Config Dialog
     
     @timer.add_observer   
-    def show_percent_status():
+    def show_percent_status(event):
         percent = battery.percent
         status = battery.status
         if status in (1, 3, 4, 5, 10, 11):
