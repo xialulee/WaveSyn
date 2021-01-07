@@ -12,6 +12,7 @@ from wavesynlib.languagecenter.wavesynscript import (
     WaveSynScriptAPI,
     code_printer)
 from wavesynlib.languagecenter.designpatterns import Observable
+from wavesynlib.languagecenter.datatypes import Event
 from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.matlab import codegen
 
@@ -65,7 +66,11 @@ an instance of the GridGroup class.
             self.__figure_book   = figure_book
             
             
-        def update(self, major_grid, minor_grid, props=None):
+        def update(self, event):
+            kwargs = event.kwargs
+            major_grid = kwargs["major_grid"]
+            minor_grid = kwargs["minor_grid"]
+            props      = kwargs.pop("props", None)
             if not props:
                 props   = {'major':{}, 'minor':{}}
                 
@@ -87,7 +92,15 @@ an instance of the GridGroup class.
             self.__figure_book = figure_book
             
             
-        def update(self, xlim, ylim, major_x_tick, major_y_tick, minor_x_tick, minor_y_tick, auto_scale=False):
+        def update(self, event):
+            kwargs = event.kwargs
+            xlim = kwargs["xlim"]
+            ylim = kwargs["ylim"]
+            major_x_tick = kwargs["major_x_tick"]
+            major_y_tick = kwargs["major_y_tick"]
+            minor_x_tick = kwargs["minor_x_tick"]
+            minor_y_tick = kwargs["minor_y_tick"]
+            auto_scale   = kwargs.pop("auto_scale", False)
             with code_printer():
                 current_figure = self.__figure_book.current_figure
                 if auto_scale:
@@ -111,11 +124,12 @@ an instance of the GridGroup class.
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
-        def update(self, delType):           
+        def update(self, event):
+            del_type = event.kwargs["del_type"]
             with code_printer():
-                if delType == 'all':
+                if del_type == 'all':
                     self.__figure_book.clear()
-                elif delType == 'sel':
+                elif del_type == 'sel':
                     self.__figure_book.delete_selected_lines(index=None)
                 else:
                     return
@@ -126,11 +140,14 @@ an instance of the GridGroup class.
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
-        def update(self, labelType, labelString):
-            nameMap     = {'title':'set_title', 'xlabel':'setXLabel', 'ylabel':'setYLabel'}            
+        def update(self, event):
+            kwargs = event.kwargs
+            label_type = kwargs["label_type"]
+            label_string = kwargs["label_string"]
+            name_map     = {'title':'set_title', 'xlabel':'setXLabel', 'ylabel':'setYLabel'}            
             with code_printer():
                 current_figure   = self.__figure_book.current_figure
-                getattr(current_figure, nameMap[labelType])(labelString)
+                getattr(current_figure, name_map[label_type])(label_string)
                 
                 
                         
@@ -138,7 +155,8 @@ an instance of the GridGroup class.
         def __init__(self, figure_book):
             self.__figure_book   = figure_book
             
-        def update(self, meta):            
+        def update(self, event):
+            meta = event.kwargs["meta"]
             if meta['type'] in ('axvspan', 'axhspan'):
                 if meta['type'] == 'axvspan':
                     the_min  = meta['xmin']
@@ -160,8 +178,8 @@ an instance of the GridGroup class.
             self.__figure_book   = figure_book
             
             
-        def update(self, *args, **kwargs):
-            self.__figure_book.notify_observers(*args, **kwargs)
+        def update(self, event):
+            self.__figure_book.notify_observers(event)
             
         
     def __init__(self, *args, **kwargs):
@@ -243,7 +261,8 @@ The rest parameters are passed to PanedWindow.__init__.
         return super().append(val)
     
             
-    def notify_observers(self, **kwargs):
+    def notify_observers(self, event):
+        kwargs = event.kwargs
         current_figure = self.current_figure
         
         attributes = ['major_grid', 'minor_grid', 'xlim', 'ylim', 
@@ -259,7 +278,7 @@ The rest parameters are passed to PanedWindow.__init__.
             if kwargs['minor_x_tick'] is not None:
                 kwargs['minor_x_tick']    = rad2deg(kwargs['minor_x_tick'])
                 
-        super().notify_observers(**kwargs)       
+        super().notify_observers(event)       
         
         
     def pack(self, *args, **kwargs):
@@ -312,7 +331,7 @@ The rest parameters are passed to PanedWindow.__init__.
                 color = colormap.get(color, color)
             
         self.__list.item_config('end', fg=color)
-        self.notify_observers()
+        self.notify_observers(Event(kwargs={}))
     
     
     @WaveSynScriptAPI
@@ -323,11 +342,14 @@ The rest parameters are passed to PanedWindow.__init__.
         del self.data_pool[:]
         self.current_figure.indicators.clear()
         self.update_indicator_list()
-        self.notify_observers(major_grid=False, minor_grid=False)
+        self.notify_observers(Event(
+            kwargs=dict(
+                major_grid=False, 
+                minor_grid=False)))
         
 
     def _on_tab_change(self, event): 
-        self.notify_observers()
+        self.notify_observers(Event(kwargs={}))
         self.update_indicator_list()     
         
         
@@ -339,7 +361,9 @@ The rest parameters are passed to PanedWindow.__init__.
             pyplot.setp(figure.line_objects[index], linewidth=2)
             figure.update()
         self.__selected_curve = (index, label)
-        self.notify_observers(curve_selected=True)
+        self.notify_observers(Event(
+            kwargs = dict(
+                curve_selected=True)))
             
             
     @WaveSynScriptAPI            

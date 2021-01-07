@@ -21,6 +21,7 @@ from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import (
     Scripting, WaveSynScriptAPI, code_printer)
 from wavesynlib.languagecenter.utils import set_attributes
+from wavesynlib.languagecenter.datatypes import Event
 from wavesynlib.languagecenter.designpatterns import Observable
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
@@ -37,7 +38,8 @@ class GridGroup(Observable, Group):
         def __init__(self, grid_group):
             self.__grid_group    = grid_group
             
-        def update(self, **kwargs):
+        def update(self, event):
+            kwargs = event.kwargs
             if 'major_grid' in kwargs:
                 self.__grid_group.major_checkbox = kwargs['major_grid']
             if 'minor_grid'  in kwargs:
@@ -122,8 +124,11 @@ class GridGroup(Observable, Group):
                         props[name][key] = value
             major.set(1)
             minor.set(1)
-            self.notify_observers(major_grid=major.get(), 
-                                  minor_grid=minor.get(), props=props)
+            self.notify_observers(Event(
+                kwargs = dict(
+                    major_grid=major.get(), 
+                    minor_grid=minor.get(), 
+                    props=props)))
                                     
         with open(Scripting.root_node.get_gui_image_path("GridTab_Major.psd"), "rb") as image_file:
             icon = ImageTk.PhotoImage(psd.get_pil_image(image_file, read_channels=4)[0])
@@ -159,8 +164,10 @@ class GridGroup(Observable, Group):
         return self.__figure_observer
 
     def _on_check_click(self):
-        self.notify_observers(major_grid=self.__major.get(), 
-                              minor_grid=self.__minor.get())
+        self.notify_observers(Event(
+            kwargs = dict(
+                major_grid=self.__major.get(), 
+                minor_grid=self.__minor.get())))
                 
         
     class __EnableDelegator:
@@ -210,7 +217,8 @@ class AxisGroup(Observable, Group):
     class FigureObserver:
         def __init__(self, axis_group):
             self.__axis_group    = axis_group            
-        def update(self, **kwargs):
+        def update(self, event):
+            kwargs = event.kwargs
             for XY in ('X', 'Y'):
                 for mm in ('major', 'minor'):
                     prop    = ''.join((mm,XY,'Tick'))
@@ -303,11 +311,26 @@ class AxisGroup(Observable, Group):
             except:
                 return None
         p = [to_float(v.get()) for v in self.__params]
-        self.notify_observers(xlim=p[0:2], ylim=p[2:4], major_x_tick=p[4], major_y_tick=p[5], minor_x_tick=p[6], minor_y_tick=p[7])
+        self.notify_observers(Event(
+            kwargs = dict(
+                xlim=p[0:2], 
+                ylim=p[2:4], 
+                major_x_tick=p[4], 
+                major_y_tick=p[5], 
+                minor_x_tick=p[6], 
+                minor_y_tick=p[7])))
 
 
     def _on_auto_button_click(self):
-        self.notify_observers(xlim=None, ylim=None, major_x_tick=None, major_y_tick=None, minor_x_tick=None, minor_y_tick=None, auto_scale=True)
+        self.notify_observers(Event(
+            kwargs = dict(
+                xlim=None, 
+                ylim=None, 
+                major_x_tick=None, 
+                major_y_tick=None, 
+                minor_x_tick=None, 
+                minor_y_tick=None, 
+                auto_scale=True)))
 
 
 
@@ -321,11 +344,15 @@ class ClearGroup(Observable, Group):
         
 
     def _on_clear_all(self):
-        self.notify_observers('all')
+        self.notify_observers(Event(
+            kwargs = dict(
+                del_type = 'all')))
         
 
     def _on_delete_selected(self):
-        self.notify_observers('sel')
+        self.notify_observers(Event(
+            kwargs = dict(
+                del_type = 'sel')))
         
 
     def onDelUnSel(self):           
@@ -343,9 +370,13 @@ class LabelGroup(Observable, Group):
         
         
     def _on_title_click(self):
-        title_string = askstring('Title', 
-                                 'Enter the title of current figure:')
-        self.notify_observers('title', title_string)
+        title_string = askstring(
+            'Title', 
+            'Enter the title of current figure:')
+        self.notify_observers(Event(
+            dict(
+                label_type   = 'title', 
+                label_string = title_string)))
         
     
     def _on_label_click(self):
@@ -417,7 +448,9 @@ class IndicatorGroup(Observable, Group):
                 meta['xmax']    = 1.0
                 meta['ymin']    = the_min
                 meta['ymax']    = the_max
-            self.notify_observers(meta) 
+            self.notify_observers(Event(
+                kwargs = dict(
+                    meta = meta)))
             
 
 

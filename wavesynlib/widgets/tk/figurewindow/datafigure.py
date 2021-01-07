@@ -9,6 +9,7 @@ from wavesynlib.languagecenter.wavesynscript import (
     WaveSynScriptAPI)
 from wavesynlib.languagecenter.utils import set_attributes
 from wavesynlib.languagecenter.designpatterns import Observable
+from wavesynlib.languagecenter.datatypes import Event
 
 
 
@@ -214,7 +215,7 @@ class DataFigure(ModelNode, Observable):
     @WaveSynScriptAPI    
     def update(self):
         self.__canvas.draw()
-        self.notify_observers()
+        self.notify_observers(Event(kwargs={}))
         
 
     # To do: fix clipboard copy functionality.
