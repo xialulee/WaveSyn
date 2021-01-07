@@ -197,8 +197,10 @@ since the instance of Application is the first node created on the model tree.
         
         
         @self.interfaces.editors.manager.add_observer
-        def editor_observer(editor):
+        def editor_observer(event):
+            editor = event.args[0]
             code = editor.code
+
             if (not code) or (not editor.run_on_exit):
                 return
             

@@ -5,6 +5,7 @@
 (import tempfile)
 (import subprocess)
 
+(import [wavesynlib.languagecenter.datatypes [Event]])
 (import [wavesynlib.languagecenter.wavesynscript [Scripting WaveSynScriptAPI ModelNode NodeDict]])
 (import [wavesynlib.languagecenter.designpatterns [Observable]])
 
@@ -71,10 +72,13 @@
         (setv self.--editor-dict editor-dict)) 
         
     (defn update [self event]
+        (comment "Observe a timer.")
         (when self.--editor-dict
             (for [[key editor] (.items self.--editor-dict)]
                 (unless (.alive? editor) 
-                    (.notify-observers self editor) 
+                    (.notify-observers self (Event
+                        :name "editor_exit"
+                        :args (, editor))) 
                     (.pop self.--editor-dict key) 
                     (break) ) ) ) ) )
 
