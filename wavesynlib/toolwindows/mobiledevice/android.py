@@ -273,13 +273,16 @@ if action == "read":
                 mark = '=' if read else '*'
                 direction = 'From' if read else 'To'
                 wtext = self.__scrolled_text
+                devinfo = json.loads(device_code)
                 wtext.append_text(f'''
-{mark*30}
+{mark*60}
 {direction} Device
-Device Code: {device_code}
+Device Info: 
+    Manufacturer: {devinfo["manufacturer"]}
+    Model:        {devinfo["model"]}
 IP: {addr[0]}
 {datetime.datetime.now().isoformat()}
-{mark*30}''')   
+{mark*60}''')   
                 
                 
             def clear_qr_image():
@@ -311,9 +314,11 @@ IP: {addr[0]}
                 password = struct.unpack('!I', ih.recv(4))[0]
                 if password != self.__password:
                     return True, None, 0                
-                device_code = ih.recv(MAXDEVCODELEN).decode('utf-8')
+                devinfolen = struct.unpack("!I", ih.recv(4))[0]
+                devinfo = ih.recv(devinfolen).decode("utf-8")
+                # device_code = ih.recv(MAXDEVCODELEN).decode('utf-8')
                 datalen = struct.unpack('!I', ih.recv(4))[0]
-                return False, device_code, datalen
+                return False, devinfo, datalen
             
             
             def recv_data(ih):
