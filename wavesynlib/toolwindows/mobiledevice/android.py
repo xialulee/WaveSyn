@@ -11,15 +11,21 @@ import json
 import datetime
 import importlib
 
+from base64 import b64encode
 from pathlib import Path
 from io import BytesIO
 from threading import Lock, Event
+from tempfile import TemporaryFile
 
 import qrcode
 from PIL import ImageTk, Image
 
 import tkinter as tk
 import tkinter.ttk as ttk
+
+from Crypto.Cipher import AES
+from Crypto.Util import Padding
+from Crypto.Random import get_random_bytes
 
 import hy
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
@@ -57,6 +63,25 @@ def load_plugins():
             mod_path = f'wavesynlib.toolwindows.mobiledevice.plugins.{name}.{mod_name}'
             mod = importlib.import_module(mod_path)
             _plugins[name].append(mod.Plugin(Scripting.root_node))
+
+
+
+def _decrypt_text(encrypted, key, iv):
+    aes = AES.new(key, AES.MODE_CBC, iv=iv)
+    barr = aes.decrypt(encrypted)
+    barr = Padding.unpad(barr, block_size=16)
+    text = barr.decode("utf-8")
+    return text
+
+
+
+def _decrypt_buf(encrypted, key, iv, unpad=False):
+    aes = AES.new(key, AES.MODE_CBC, iv=iv)
+    barr = aes.decrypt(encrypted)
+    if unpad:
+        barr = Padding.unpad(barr, block_size=16)
+    return barr
+    
         
 
 
@@ -173,6 +198,8 @@ if action == "read":
         self.__qr_image = None
         self.__qr_id = None
         self.__password = None
+        self.__iv = None
+        self.__key = None
         self.__data = None
         self.__on_finish = None
         self.__save_file_dir = None
@@ -248,8 +275,19 @@ if action == "read":
             self_port = port
             with self.__lock:
                 self.__ip_port = (self_ip, self_port)
+
             self.__password = password = random.randint(0, 65535)
-            qr_string = json.dumps({'ip':self_ip, 'port':self_port, 'password':password, 'command':command})
+            self.__iv = iv = get_random_bytes(16)
+            self.__key = key = get_random_bytes(32)
+
+            qr_string = json.dumps({
+                "ip":       self_ip, 
+                "port":     self_port, 
+                "password": password, 
+                "aes": {
+                    "iv":   b64encode(iv).decode(),
+                    "key":  b64encode(key).decode()},
+                "command":  command})
             image = qrcode.make(qr_string).resize((self.qr_size, self.qr_size))        
             self.__qr_image = ImageTk.PhotoImage(image=image) 
      
@@ -269,17 +307,16 @@ if action == "read":
         # Launch the data transfer thread    
         @self.root_node.thread_manager.new_thread_do
         def transfer():
-            def show_head(device_code, addr, read):
+            def show_head(datainfo, addr, read):
                 mark = '=' if read else '*'
                 direction = 'From' if read else 'To'
                 wtext = self.__scrolled_text
-                devinfo = json.loads(device_code)
                 wtext.append_text(f'''
 {mark*60}
 {direction} Device
 Device Info: 
-    Manufacturer: {devinfo["manufacturer"]}
-    Model:        {devinfo["model"]}
+    Manufacturer: {datainfo["manufacturer"]}
+    Model:        {datainfo["model"]}
 IP: {addr[0]}
 {datetime.datetime.now().isoformat()}
 {mark*60}''')   
@@ -308,17 +345,18 @@ IP: {addr[0]}
             def recv_head(ih):
                 exit_flag = ih.recv(1)
                 if exit_flag != b'\x00':
-                    # The first byte is not zero, which means abort this transfer mission.
-                    # Not used currently. 
+                    # WaveSyn can abort a misson by sending a zero to itself.
                     return True, None, 0
-                password = struct.unpack('!I', ih.recv(4))[0]
-                if password != self.__password:
-                    return True, None, 0                
-                devinfolen = struct.unpack("!I", ih.recv(4))[0]
-                devinfo = ih.recv(devinfolen).decode("utf-8")
-                # device_code = ih.recv(MAXDEVCODELEN).decode('utf-8')
-                datalen = struct.unpack('!I', ih.recv(4))[0]
-                return False, devinfo, datalen
+                head_len = struct.unpack("!I", ih.recv(4))[0]
+                head_json = ih.recv(head_len).decode("utf-8")
+                head_obj = json.loads(head_json)
+                if head_obj["password"] != self.__password:
+                    return True, None, 0
+                info_len = head_obj["info_len"]
+                encrypted_info = ih.recv(info_len)
+                decrypted_info = _decrypt_text(encrypted_info, key=self.__key, iv=self.__iv)
+                datainfo = json.loads(decrypted_info)
+                return False, datainfo, head_obj["data_len"]
             
             
             def recv_data(ih):
@@ -353,11 +391,13 @@ IP: {addr[0]}
                 # Always manipulate the GUI components in the main thread.                
                 self.root_node.thread_manager.main_thread_do(block=False)(clear_qr_image)
         
-                exit_flag, device_code, datalen = recv_head(ih)
+                exit_flag, datainfo, datalen = recv_head(ih)
                 if exit_flag:
                     return
                     
                 if command['action'] == 'read':
+                    data = None
+
                     # Loop receiving data
                     if command['source'] != 'storage':
                         # For file transfer mission,
@@ -367,11 +407,10 @@ IP: {addr[0]}
                     
                     if command['source'] in ('clipboard', 'location_sensor'):
                         # Store received data
-                        text = data.decode('utf-8')
-                        data_obj = json.loads(text)
-                        text = data_obj['data']
-                        self.__data = {'data':text, 'type':'text'}
-                        # End store received data
+                        text = _decrypt_text(data, key=self.__key, iv=self.__iv)
+                        self.__data = {
+                            "data": text,
+                            "type": "text"}
                         
                         if command['source'] == 'location_sensor':
                             pos = json.loads(text)                    
@@ -381,7 +420,7 @@ IP: {addr[0]}
                         def show_text():
                             # Always manipulate the GUI components in the main thread!
                             scrolled_text = self.__scrolled_text
-                            show_head(device_code=device_code, addr=addr, read=True)
+                            show_head(datainfo, addr=addr, read=True)
                             scrolled_text.append_text(f'\n\n{text}\n\n\n')
                             
                             generate_plugin_link(data=text, type_='text')
@@ -397,7 +436,7 @@ IP: {addr[0]}
                         @self.root_node.thread_manager.main_thread_do(block=False)
                         def show_image():
                             scrolled_text = self.__scrolled_text
-                            show_head(device_code=device_code, addr=addr, read=True)
+                            show_head(datainfo, addr=addr, read=True)
                             scrolled_text.append_text('\n'*2)
                             pil_frame = PILImageFrame(
                                 scrolled_text.text, 
@@ -408,8 +447,7 @@ IP: {addr[0]}
                             scrolled_text.see('end')
                             
                     elif command['source'] == 'storage':
-                        namelen = ord(ih.recv(1))
-                        filename = Path(ih.recv(namelen).decode('utf-8'))
+                        filename = Path(datainfo["filename"])
                         directory = Path(self.__save_file_dir)
                         path = directory/filename
                         if path.exists():
@@ -419,22 +457,38 @@ IP: {addr[0]}
                                 path = directory/filename
                                 if not path.exists():
                                     break
-                        with path.open('wb') as f:
-                            buflen = 65536
-                            filelen = datalen
+                        with TemporaryFile() as tf:
                             recvcnt = 0
-                            self.__transfer_progress.set(0)
+                            self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__transfer_progress.set(0))
                             while True:
-                                buf = ih.recv(buflen)
+                                buf = ih.recv(65536)
                                 if not buf:
-                                    self.__transfer_progress.set(0)
+                                    self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__transfer_progress.set(0))
                                     break
-                                f.write(buf)
-                                recvcnt += buflen
-                                self.__transfer_progress.set(int(recvcnt/filelen*100))
+                                tf.write(buf)
+                                recvcnt += len(buf)
+                                self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__transfer_progress.set(int(recvcnt/datalen*100)))
+                            
+                            tf.seek(0, 0)
+                            with path.open('wb') as f:
+                                buflen = 65536
+                                aes = AES.new(self.__key, AES.MODE_CBC, iv=self.__iv)
+                                last_buf = b""
+                                while True:
+                                    buf = tf.read(buflen)
+                                    recvcnt += buflen
+                                    decrypted_buf = aes.decrypt(last_buf)
+                                    if not buf:
+                                        decrypted_buf = Padding.unpad(decrypted_buf, block_size=16)
+                                    f.write(decrypted_buf)
+                                    if not buf:
+                                        break
+                                    else:
+                                        last_buf = buf
+
                         @self.root_node.thread_manager.main_thread_do(block=False)
                         def show_info():
-                            show_head(device_code=device_code, addr=addr, read=True)
+                            show_head(datainfo, addr=addr, read=True)
                             scrolled_text = self.__scrolled_text
                             scrolled_text.append_text(f'\n\n{str(path)}\n\n')
                             generate_plugin_link(data=str(path), type_='file')
@@ -483,7 +537,7 @@ IP: {addr[0]}
                     def on_finish():
                         self.__data_book.select(self._data_tab)
                         scrolled_text = self.__scrolled_text
-                        show_head(device_code=device_code, addr=addr, read=False)
+                        show_head(datainfo, addr=addr, read=False)
                         scrolled_text.append_text('\n'*3)
                         scrolled_text.see('end')
             except AbortException:
