@@ -60,6 +60,18 @@ class CommandObject(Observable):
         super().__init__()
 
 
+    def bind_tkvar(self, var, expr=None):
+        if expr:
+            def func():
+                return expr(var)
+        else:
+            def func():
+                return var.get()
+        self.__can_execute = func
+        var.trace_add("write", lambda *args: self.change_can_execute())
+        
+
+
     def can_execute(self):
         retval = None
         if self.__can_execute is None:

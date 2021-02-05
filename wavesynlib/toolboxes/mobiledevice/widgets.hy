@@ -20,11 +20,15 @@
     (child Frame clipb-grid-frm [
         (child WSButton read-clipb-btn [
             (grid :row 0 :column 0)
-            (init :image (/ -res-dir "readclipb.png"))
+            (init 
+                :image (/ -res-dir "readclipb.png")
+                :command-object (bind "read_clipb"))
             (balloonmsg "Read the clipboard of an Android device.") ])
         (child WSButton write-clipb-btn [
             (grid :row 0 :column 1)
-            (init :image (/ -res-dir "writeclipb.png"))
+            (init 
+                :image (/ -res-dir "writeclipb.png")
+                :command-object (bind "write_clipb"))
             (balloonmsg "Write the clipboard of an Android device.") ])
         (child WSButton send-clipb-image-btn [
             (grid :row 0 :column 2)

@@ -38,6 +38,7 @@ from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI,
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
 from wavesynlib.misc.socketutils import AbortException, InterruptHandler
 from .widgets import clipb_grp, storage_grp, sensors_grp, manage_grp
+from .viewmodel import ViewModel
 
 
 
@@ -80,12 +81,6 @@ class DataTransferWindow(TkToolWindow):
     _qr_tab = 0
     _data_tab = 1
 
-
-    class ViewModel:
-        def __init__(self, window):
-            self.transfer_progress = tk.IntVar()
-
-    
     def __init__(self):
         '''Structure of command:
 action: read / write
@@ -94,7 +89,7 @@ if action == "read":
     source = clipboard / location_sensor / album
 '''
         super().__init__()
-        self.__view_model = self.ViewModel(self)
+        self.__view_model = ViewModel(self)
         
         
     def on_connect(self):
@@ -119,8 +114,6 @@ if action == "read":
 
         widgets_desc = [clipb_grp, storage_grp, sensors_grp, manage_grp]
         widgets = hywidgets_to_tk(tab, widgets_desc, view_model=self.__view_model, balloon=balloon)
-        widgets["read_clipb_btn"]["command"] = self.__on_read_device_clipboard
-        widgets["write_clipb_btn"]["command"] = self.__on_write_device_clipboard
         widgets["send_clipb_image_btn"]["command"] = self.__on_send_clipboard_image_to_device
 
         widgets["get_file_btn"]["command"] = self.__on_get_device_file
@@ -183,8 +176,6 @@ if action == "read":
     def __enable_transfer_widgets(self, enable=True):
         w = self.__widgets
         widgets = [
-            w['read_clipb_btn'],
-            w['write_clipb_btn'],
             w['get_file_btn'],
             w['get_image_btn'],
             w['read_gps_btn'],
@@ -255,6 +246,7 @@ if action == "read":
             raise err
             
         self.__enable_transfer_widgets(False)
+        self.__view_model.idle.set(False)
         
         # Launch the data transfer thread    
         @self.root_node.thread_manager.new_thread_do
@@ -498,8 +490,10 @@ IP: {addr[0]}
                 sockobj.close()
                 with self.__lock:
                     self.__ip_port = None 
-                self.root_node.thread_manager.main_thread_do(block=False)(\
-                    lambda: self.__enable_transfer_widgets(True))
+                @self.root_node.thread_manager.main_thread_do(block=False)
+                def finished():
+                    self.__enable_transfer_widgets(True)
+                    self.__view_model.idle.set(True)
                     
     
     @WaveSynScriptAPI
@@ -572,19 +566,9 @@ IP: {addr[0]}
             self.abort()
         
         
-    def __on_read_device_clipboard(self, on_finish=None):
-        with code_printer():
-            self.read_device_clipboard(on_finish=on_finish)
-            
-            
     def __on_read_device_location(self, on_finish=None):
         with code_printer():
             self.read_device_location(on_finish=on_finish)
-            
-            
-    def __on_write_device_clipboard(self):
-        with code_printer():
-            self.write_device_clipboard()
             
             
     def __on_send_clipboard_image_to_device(self):

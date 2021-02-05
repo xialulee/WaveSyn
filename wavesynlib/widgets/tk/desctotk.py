@@ -9,11 +9,16 @@ class Bind:
 
 
 def _make_bind(view_model, kwargs):
+    # Do not change kwargs,
+    # or the widgets desc will be modified
+    # and affect newly generated widgets.
+    retval = {}
     for key in kwargs:
         obj = kwargs[key]
         if isinstance(obj, Bind):
-            kwargs[key] = getattr(view_model, obj.path)
-    return kwargs
+            obj = getattr(view_model, obj.path)
+        retval[key] = obj
+    return retval
 
 
 
@@ -55,7 +60,7 @@ Example: [
 
         init_kwargs = _make_bind(view_model, item.get("init", {}))
         
-        widget = cls(parent, **item.get('init', init_kwargs))
+        widget = cls(parent, **init_kwargs)
         if 'grid' in item:
             widget.grid(**item.get('grid', {}))        
         else:
