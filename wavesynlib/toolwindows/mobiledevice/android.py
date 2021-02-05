@@ -29,7 +29,7 @@ from Crypto.Random import get_random_bytes
 
 import hy
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
-from wavesynlib.widgets.tk.desctotk import json_to_tk
+from wavesynlib.widgets.tk.desctotk import json_to_tk, hywidgets_to_tk
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.scrolledcanvas import ScrolledCanvas
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
@@ -39,6 +39,7 @@ from wavesynlib.widgets.tk.labeledentry import LabeledEntry
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
 from wavesynlib.misc.socketutils import AbortException, InterruptHandler
+from .widgets import clipb_grp, storage_grp, sensors_grp, manage_grp
 
 
 
@@ -118,70 +119,28 @@ if action == "read":
         default_qr_size = 200
         
         self.__transfer_progress = tk.IntVar()
-        
-        widgets_desc = [
-{'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Clipboard'}, 'children':[
-    {'class':'Frame', 'children':[
-        {'class':'Button', 'name':'read_clipb', 'grid':{'row':0, 'column':0},
-             'balloonmsg':'Read the clipboard of an Android device.',
-             'init':{'image':image_read_clipb, 'command':self.__on_read_device_clipboard}},
-        {'class':'Button', 'name':'write_clipb','grid':{'row':0, 'column':1},
-             'balloonmsg':'Write the clipboard of an Android device.',
-             'init':{'image':image_write_clipb, 'command':self.__on_write_device_clipboard}}, 
-        {'class':'Button', 'name':'send_clipb_image', 'grid':{'row':0, 'column':2},
-             'balloonmsg':'Send image in clipboard to the Android device.',
-             'init':{'image':image_send_clipb_image, 'command':self.__on_send_clipboard_image_to_device}}
-    ]}
-]},
-    
-{'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Storage'}, 'children':[
-    {'class':'Frame', 'children':[
-        {'class':'Button', 'name':'get_file', 'grid':{'row':0, 'column':0},
-             'balloonmsg':'Get gallery photos.',
-             'init':{'text':'Get Image', 'image':image_get_image, 'command':self.__on_pick_gallery_photo}},
-        {'class':'Button', 'name':'get_image', 'grid':{'row':0, 'column':1},
-             'balloonmsg':'Get File',
-             'init':{'text':'Get File', 'image':image_get_file, 'command':self.__on_get_device_file}},
-        {'class':'Button', 'name':'send_image', 'grid':{'row':1, 'column':0},
-             'balloonmsg':'Send a picture to device',
-             'init':{'text':'Send Image', 'image':image_send_clipb_image, 'command':self.__on_send_image_to_device}},
-        {'class':'Button', 'name':'send_file', 'grid':{'row':1, 'column':1},
-             'balloonmsg':'Send a file to device',
-             'init':{'text':'Send File', 'image':image_send_file, 'command':self.__on_send_file_to_device}},
-        {'class':'Progressbar', 'name':'transfer_progressbar', 'grid':{'row':2, 'columnspan':2},
-             'balloonmsg':'Data transfer progress',
-             'init':{'length':60, 'variable':self.__transfer_progress, 'maximum':100}}
-    ]}
-]},
-
-{'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Sensors'}, 'children':[
-    {'class':'Button', 'name':'read_gps',
-         'balloonmsg':'Read the AGPS sensor of an Android device.',
-         'init':{'text':'Location', 'image':image_sensor_location, 'compound':'left', 'command':self.__on_read_device_location}}
-]},
-
-{'class':Group, 'pack':{'side':'left', 'fill':'y'}, 'setattr':{'name':'Manage'}, 'children':[
-    {'class':'Frame', 'pack':{'side':'left', 'fill':'y'}, 'children':[
-        {'class':LabeledEntry, 'name':'qr_size', 
-             'balloonmsg':'Size (pixels) of the generated QR code.',
-             'setattr':{
-                 'label_text':'QR Size', 
-                 'label_width':7, 
-                 'entry_width':4,
-                 'entry_text':str(default_qr_size),
-                 'checker_function':self.root_node.gui.value_checker.check_int}},
-        {'class':'Button', 'init':{'text':'Ok'}},
-        {'class':'Button', 'init':{'text':'Abort', 'command':self.__on_abort}}
-    ]},
-    {'class':'Frame', 'pack':{'side':'left'}, 'children':[
-        {'class':ScrolledList, 'name':'ip_list', 'pack':{}}
-    ]}
-]}
-]
 
         balloon = self.root_node.gui.balloon
         tab = tk.Frame(tool_tabs)
-        self.__widgets = widgets = json_to_tk(tab, widgets_desc, balloon=balloon)
+
+        widgets_desc = [clipb_grp, storage_grp, sensors_grp, manage_grp]
+        widgets = hywidgets_to_tk(tab, widgets_desc, balloon=balloon)
+        widgets["read_clipb_btn"]["command"] = self.__on_read_device_clipboard
+        widgets["write_clipb_btn"]["command"] = self.__on_write_device_clipboard
+        widgets["send_clipb_image_btn"]["command"] = self.__on_send_clipboard_image_to_device
+
+        widgets["get_file_btn"]["command"] = self.__on_get_device_file
+        widgets["get_image_btn"]["command"] = self.__on_pick_gallery_photo
+        widgets["send_image_btn"]["command"] = self.__on_send_image_to_device
+        widgets["send_file_btn"]["command"] = self.__on_send_file_to_device
+        widgets["transfer_progressbar"]["variable"] = self.__transfer_progress
+
+        widgets["read_gps_btn"]["command"] = self.__on_read_device_location
+
+        widgets["misson_abort_btn"]["command"] = self.__on_abort
+        widgets["qr_size_lent"].checker_function = self.root_node.gui.value_checker.check_int
+        
+        self.__widgets = widgets
         ip_list = widgets['ip_list']
         ip_list.list.config(height=4, width=15, exportselection=False)
         addrlist = socket.gethostbyname_ex('')[2]
@@ -231,14 +190,14 @@ if action == "read":
     def __enable_transfer_widgets(self, enable=True):
         w = self.__widgets
         widgets = [
-            w['read_clipb'],
-            w['write_clipb'],
-            w['get_file'],
-            w['get_image'],
-            w['read_gps'],
-            w['send_clipb_image'],
-            w['send_image'],
-            w['send_file']]
+            w['read_clipb_btn'],
+            w['write_clipb_btn'],
+            w['get_file_btn'],
+            w['get_image_btn'],
+            w['read_gps_btn'],
+            w['send_clipb_image_btn'],
+            w['send_image_btn'],
+            w['send_file_btn']]
         for widget in widgets:
             widget['state'] = 'normal' if enable else 'disabled'
         
@@ -246,7 +205,7 @@ if action == "read":
         
     @property
     def qr_size(self):
-        return int(self.__widgets['qr_size'].entry_text)
+        return int(self.__widgets['qr_size_lent'].entry_text)
         
         
     @property
@@ -546,9 +505,8 @@ IP: {addr[0]}
                 sockobj.close()
                 with self.__lock:
                     self.__ip_port = None 
-                @self.root_node.thread_manager.main_thread_do(block=False)
-                def enable():
-                    self.__enable_transfer_widgets()
+                self.root_node.thread_manager.main_thread_do(block=False)(\
+                    lambda: self.__enable_transfer_widgets)
                     
     
     @WaveSynScriptAPI
