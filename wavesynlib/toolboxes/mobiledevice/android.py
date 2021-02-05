@@ -29,13 +29,11 @@ from Crypto.Random import get_random_bytes
 
 import hy
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
-from wavesynlib.widgets.tk.desctotk import json_to_tk, hywidgets_to_tk
-from wavesynlib.widgets.tk.group import Group
+from wavesynlib.widgets.tk.desctotk import hywidgets_to_tk
 from wavesynlib.widgets.tk.scrolledcanvas import ScrolledCanvas
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
 from wavesynlib.widgets.tk.scrolledtext import ScrolledText
 from wavesynlib.widgets.tk.pilimageframe import PILImageFrame
-from wavesynlib.widgets.tk.labeledentry import LabeledEntry
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.utils import get_caller_dir, call_immediately
 from wavesynlib.misc.socketutils import AbortException, InterruptHandler
@@ -44,7 +42,7 @@ from .widgets import clipb_grp, storage_grp, sensors_grp, manage_grp
 
 
 _plugins = {'locationsensor':[], 'file':[], 'text':[]}
-from wavesynlib.toolwindows.mobiledevice import datatransferclient
+from wavesynlib.toolboxes.mobiledevice import datatransferclient
 MAXDEVCODELEN = datatransferclient.MAXDEVCODELEN
 
 
@@ -61,7 +59,7 @@ def load_plugins():
             if file.name == '__init__.py':
                 continue
             mod_name = file.name[:-3] # Remove the suffix ".py" which has three chars.
-            mod_path = f'wavesynlib.toolwindows.mobiledevice.plugins.{name}.{mod_name}'
+            mod_path = f'wavesynlib.toolboxes.mobiledevice.plugins.{name}.{mod_name}'
             mod = importlib.import_module(mod_path)
             _plugins[name].append(mod.Plugin(Scripting.root_node))
 
@@ -76,20 +74,17 @@ def _decrypt_text(encrypted, key, iv):
 
 
 
-def _decrypt_buf(encrypted, key, iv, unpad=False):
-    aes = AES.new(key, AES.MODE_CBC, iv=iv)
-    barr = aes.decrypt(encrypted)
-    if unpad:
-        barr = Padding.unpad(barr, block_size=16)
-    return barr
-    
-        
-
 
 class DataTransferWindow(TkToolWindow):
     window_name = 'WaveSyn-DataTransfer'
     _qr_tab = 0
     _data_tab = 1
+
+
+    class ViewModel:
+        def __init__(self, window):
+            self.transfer_progress = tk.IntVar()
+
     
     def __init__(self):
         '''Structure of command:
@@ -99,6 +94,7 @@ if action == "read":
     source = clipboard / location_sensor / album
 '''
         super().__init__()
+        self.__view_model = self.ViewModel(self)
         
         
     def on_connect(self):
@@ -118,13 +114,11 @@ if action == "read":
         
         default_qr_size = 200
         
-        self.__transfer_progress = tk.IntVar()
-
         balloon = self.root_node.gui.balloon
         tab = tk.Frame(tool_tabs)
 
         widgets_desc = [clipb_grp, storage_grp, sensors_grp, manage_grp]
-        widgets = hywidgets_to_tk(tab, widgets_desc, balloon=balloon)
+        widgets = hywidgets_to_tk(tab, widgets_desc, view_model=self.__view_model, balloon=balloon)
         widgets["read_clipb_btn"]["command"] = self.__on_read_device_clipboard
         widgets["write_clipb_btn"]["command"] = self.__on_write_device_clipboard
         widgets["send_clipb_image_btn"]["command"] = self.__on_send_clipboard_image_to_device
@@ -133,7 +127,6 @@ if action == "read":
         widgets["get_image_btn"]["command"] = self.__on_pick_gallery_photo
         widgets["send_image_btn"]["command"] = self.__on_send_image_to_device
         widgets["send_file_btn"]["command"] = self.__on_send_file_to_device
-        widgets["transfer_progressbar"]["variable"] = self.__transfer_progress
 
         widgets["read_gps_btn"]["command"] = self.__on_read_device_location
 
@@ -418,15 +411,15 @@ IP: {addr[0]}
                                     break
                         with TemporaryFile() as tf:
                             recvcnt = 0
-                            self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__transfer_progress.set(0))
+                            self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__view_model.transfer_progress.set(0))
                             while True:
                                 buf = ih.recv(65536)
                                 if not buf:
-                                    self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__transfer_progress.set(0))
+                                    self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__view_model.transfer_progress.set(0))
                                     break
                                 tf.write(buf)
                                 recvcnt += len(buf)
-                                self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__transfer_progress.set(int(recvcnt/datalen*100)))
+                                self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__view_model.transfer_progress.set(int(recvcnt/datalen*100)))
                             
                             tf.seek(0, 0)
                             with path.open('wb') as f:
@@ -487,11 +480,11 @@ IP: {addr[0]}
                                 while True:                                    
                                     buf = file_send.read(buflen)
                                     if not buf:
-                                        self.__transfer_progress.set(0)
+                                        self.__view_model.transfer_progress.set(0)
                                         break
                                     ih.send(buf)
                                     sendcnt += len(buf)
-                                    self.__transfer_progress.set(int(sendcnt/filelen*100))
+                                    self.__view_model.transfer_progress.set(int(sendcnt/filelen*100))
                     @self.root_node.thread_manager.main_thread_do(block=False)
                     def on_finish():
                         self.__data_book.select(self._data_tab)
@@ -506,7 +499,7 @@ IP: {addr[0]}
                 with self.__lock:
                     self.__ip_port = None 
                 self.root_node.thread_manager.main_thread_do(block=False)(\
-                    lambda: self.__enable_transfer_widgets)
+                    lambda: self.__enable_transfer_widgets(True))
                     
     
     @WaveSynScriptAPI

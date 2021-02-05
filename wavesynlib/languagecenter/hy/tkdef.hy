@@ -1,3 +1,12 @@
+(import [wavesynlib.widgets.tk.desctotk [Bind :as bind]])
+
+(defmacro init-hywidget []
+    '(do
+        (require [wavesynlib.languagecenter.hy.tkdef [widget]])
+        (import [wavesynlib.widgets.tk.desctotk [Bind :as bind]]) ) )
+
+
+
 (defn -args-to-dict [args]
     (setv retval {})
     (for [[key value] (partition args)]

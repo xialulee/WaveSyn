@@ -3,7 +3,7 @@
 (import [tkinter [*]])
 (import [tkinter.ttk [Button Combobox]])
 (import [wavesynlib.widgets.tk.group [Group]])
-(import [wavesynlib.widgets.tk.iconbutton [IconButton]])
+(import [wavesynlib.widgets.tk.wsbutton [WSButton]])
 (import [wavesynlib.widgets.tk.labeledentry [LabeledEntry]])
 (import [wavesynlib.widgets.tk.labeledscale [LabeledScale]])
 
@@ -16,22 +16,22 @@
     (setattr :name "Load")
     (child Frame grid-frm [
         (pack :side LEFT :fill BOTH)
-        (child IconButton loadvar-btn [
+        (child WSButton loadvar-btn [
             (setattr :common-icon "console20x20.psd")
             (balloonmsg "Load a variable from console.")
             (grid :row 0 :column 0)])
-        (child IconButton loadpkl-btn [
+        (child WSButton loadpkl-btn [
             (setattr :common-icon "pickle20x20.psd")
             (balloonmsg "Load a pickle file.")
             (grid :row 0 :column 1)])
-        (child IconButton runexpr-btn [
+        (child WSButton runexpr-btn [
             (setattr :common-icon "python20x20.psd")
             (balloonmsg "Run a python expression.")
             (grid :row 0 :column 2) ])]) ])
 
 
 (widget Frame common-prop-panel [
-    (child IconButton color-btn [
+    (child WSButton color-btn [
         (init 
             :text     "color"
             :compound LEFT)

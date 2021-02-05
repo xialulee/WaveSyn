@@ -1,19 +1,41 @@
-(require [wavesynlib.languagecenter.hy.utils [super-init]])
+(require [wavesynlib.languagecenter.hy.utils [super-init defprop]])
 
+(import [pathlib [Path]])
 (import tkinter)
 (import [tkinter.ttk [Button]])
+(import [PIL [ImageTk]])
 (import [typing [Any]])
 
 (import [wavesynlib.languagecenter.datatypes [CommandObject]])
+(import [.utils.loadicon [load-icon]])
 
 
 
 (defclass WSButton [Button]
     (defn --init-- [self &rest args &kwargs kwargs]
+        (setv icon (.pop kwargs "image" None))
+        (when icon
+            (when (instance? (, Path str) icon)
+                (setv icon (load-icon icon :common True)))
+            (assoc kwargs "image" icon))
+        (setv self.--icon icon)
+
         (setv command-object (.pop kwargs "command_object" None))
+
         (super-init #* args #** kwargs)
+        
         (when command-object    
             (assoc self "command_object" command-object)))
+
+
+    (defprop common-icon
+        #_getter
+        (fn [self]
+            self.--icon)
+        #_setter
+        (fn [self icon]
+            (assoc self "image"
+                (setx self.--icon (load-icon icon :common True)))) ) 
             
     
     (defn --setitem-- ^None [self ^str key ^Any value]

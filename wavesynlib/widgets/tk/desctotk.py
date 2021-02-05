@@ -2,7 +2,22 @@ import json
 
 
 
-def json_to_tk(parent, json_code, balloon=None):
+class Bind:
+    def __init__(self, path):
+        self.path = path
+
+
+
+def _make_bind(view_model, kwargs):
+    for key in kwargs:
+        obj = kwargs[key]
+        if isinstance(obj, Bind):
+            kwargs[key] = getattr(view_model, obj.path)
+    return kwargs
+
+
+
+def json_to_tk(parent, json_code, view_model=None, balloon=None):
     '''\
 Example: [
     {"name":"alert_button", "class":"Button", "module":"ttk", 
@@ -37,8 +52,10 @@ Example: [
                 cls = ttk.__dict__[class_name]
             else:
                 cls = tk.__dict__[class_name]
+
+        init_kwargs = _make_bind(view_model, item.get("init", {}))
         
-        widget = cls(parent, **item.get('init', {}))
+        widget = cls(parent, **item.get('init', init_kwargs))
         if 'grid' in item:
             widget.grid(**item.get('grid', {}))        
         else:
@@ -48,7 +65,7 @@ Example: [
             balloon.bind_widget(widget, balloonmsg=item.get('balloonmsg'))
         
         if 'children' in item:
-            sub_widgets = json_to_tk(widget, item.get('children'), balloon=balloon)
+            sub_widgets = json_to_tk(widget, item.get('children'), view_model=view_model, balloon=balloon)
             for sub_widget in sub_widgets:
                 if sub_widget in retval:
                     raise ValueError('Multiple widgets have a same name.')
@@ -63,5 +80,5 @@ Example: [
 
 
 
-def hywidgets_to_tk(parent, hy_code, balloon=None):
-    return json_to_tk(parent, hy_code, balloon)
+def hywidgets_to_tk(parent, hy_code, view_model=None, balloon=None):
+    return json_to_tk(parent, hy_code, view_model=view_model, balloon=balloon)

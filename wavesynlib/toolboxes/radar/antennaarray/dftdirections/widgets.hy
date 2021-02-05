@@ -4,7 +4,7 @@
 (import [tkinter.ttk [Button Combobox Radiobutton]])
 
 (import [wavesynlib.widgets.tk.group [Group]])
-(import [wavesynlib.widgets.tk.iconbutton [IconButton]])
+(import [wavesynlib.widgets.tk.wsbutton [WSButton]])
 (import [wavesynlib.widgets.tk.labeledentry [LabeledEntry]])
 
 (import [wavesynlib.languagecenter.wavesynscript [Scripting]])
@@ -62,7 +62,7 @@
             :entry-text        0.5
             :checker-function (. Scripting root-node gui value-checker check-positive-float))
         (balloonmsg "The space between elements (with respect to wavelength).") ])
-    (child IconButton run-btn [
+    (child WSButton run-btn [
         (init
             :compound "left")
         (setattr
@@ -73,11 +73,11 @@
     (pack :side "left" :fill "y")
     (setattr :name "Data")
     (child Frame export-button-frame [
-        (child IconButton export-to-console-btn [
+        (child WSButton export-to-console-btn [
             (setattr :common-icon "console20x20.psd")
             (grid :row 0 :column 0) 
             (balloonmsg "Export data to the console.") ]) 
-        (child IconButton export-to-dvplane-btn [
+        (child WSButton export-to-dvplane-btn [
             (setattr :common-icon "figurewindow20x20.psd")
             (grid :row 0 :column 1)
             (balloonmsg "Export data to a data visualization plane window.") ]) ]) ])
