@@ -6,7 +6,6 @@
 
 (defclass ViewModel []
     (defn --init-- [self window]
-        (print window)
         (setv self.transfer-progress (IntVar) ) 
         (setv self.idle (BooleanVar) ) 
         (.set self.idle True)

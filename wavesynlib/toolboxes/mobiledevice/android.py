@@ -90,6 +90,11 @@ if action == "read":
 '''
         super().__init__()
         self.__view_model = ViewModel(self)
+
+
+    def _close_callback(self):
+        self.abort()
+        return super()._close_callback()
         
         
     def on_connect(self):
@@ -182,8 +187,11 @@ if action == "read":
             w['send_clipb_image_btn'],
             w['send_image_btn'],
             w['send_file_btn']]
-        for widget in widgets:
-            widget['state'] = 'normal' if enable else 'disabled'
+        try:
+            for widget in widgets:
+                widget['state'] = 'normal' if enable else 'disabled'
+        except tk.TclError:
+            pass
         
         
         
@@ -267,7 +275,10 @@ IP: {addr[0]}
                 
                 
             def clear_qr_image():
-                self.__qr_canvas.canvas.delete(self.__qr_id)
+                try:
+                    self.__qr_canvas.canvas.delete(self.__qr_id)
+                except tk.TclError:
+                    pass
                 self.__qr_id = None                
                 
                 

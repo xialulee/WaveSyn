@@ -46,13 +46,16 @@
             
             (.add-observer command-object (fn [event]
                 (when (= event.name "can_execute_changed")
-                    (assoc self "state"
-                        (if (.can-execute event.sender)
-                            "normal"
-                        #_else
-                            "disabled") ) )))
+                    (try
+                        (assoc self "state"
+                            (if (.can-execute event.sender)
+                                "normal"
+                            #_else
+                                "disabled") ) 
+                    (except [tkinter.TclError]
+                        #_pass) ) ) ) )
 
-            (.change-can-execute command-object)
+        (.change-can-execute command-object)
             (assoc self "command" command-object)
             (return))
         (.--setitem-- (super) key value)) 
