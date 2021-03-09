@@ -23,12 +23,12 @@ from wavesynlib.interfaces.os.windows.inputsender.utils import send_mouse_input
 
 
 class _KeyToMouse:
-    def __init__(self, mouse_btn):
+    def __init__(self, mouse_btn:str):
         self.__previous = None
         self.__mouse_btn = mouse_btn
 
 
-    def __callback(self, key_stat) -> bool:
+    def __callback(self, key_stat:str) -> bool:
         if self.__previous == key_stat:
             return True
         else:
@@ -64,7 +64,7 @@ class KeyboardHook(ModelNode):
         self.__c_khook = KHOOKPROC(self.__khookproc)
 
 
-    def add_key_to_mouse(self, key, mouse_btn):
+    def add_key_to_mouse(self, key:int, mouse_btn:str) -> None:
         mapobj = _KeyToMouse(mouse_btn=mouse_btn)
         self.__remap[key] = mapobj
 
@@ -73,26 +73,23 @@ class KeyboardHook(ModelNode):
         vk_code = lParam.contents.vkCode
         mapobj = self.__remap.get(vk_code, None)
         if mapobj:
-            if wParam == WM_KEYDOWN:
-                eat = mapobj.on_keydown()
-            elif wParam == WM_KEYUP:
-                eat = mapobj.on_keyup()
-            else:
-                eat = False
-            if eat:
-                return -1
+            eat = {
+                WM_KEYDOWN: mapobj.on_keydown, 
+                WM_KEYUP:   mapobj.on_keyup}\
+            .get(wParam, lambda:False)()
+            if eat: return -1
         return CallNextHookEx(self.__hkhook, nCode, wParam, lParam)
 
 
-    def hook(self):
+    def hook(self) -> None:
         self.__hkhook = SetWindowsHookExA(WH_KEYBOARD_LL, self.__c_khook, None, 0)
         if not self.__hkhook:
             raise OSError("Failed to setup global keyboard hook.")
 
 
-    def unhook(self):
+    def unhook(self) -> None:
         UnhookWindowsHookEx(self.__hkhook)
 
 
-    def unhook_at_exit(self):
+    def unhook_at_exit(self) -> None:
         atexit.register(self.unhook)
