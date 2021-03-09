@@ -1,3 +1,4 @@
+import hy
 from wavesynlib.interfaces.os.windows.inputhook.keyboardhook import KeyboardHook
 
 from tkinter import Tk
