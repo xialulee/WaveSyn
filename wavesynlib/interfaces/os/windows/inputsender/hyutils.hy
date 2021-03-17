@@ -13,7 +13,18 @@
 
 
 
-(defn send-key-input [code &optional press release]
+(defn send-key-input ^int [^int code &optional ^bool press ^bool release]
+"Generate a synthesized keystroke.
+
+Parameters:
+    [int] code: The key code. The module win32con provides the corresponing constants start with VK_.
+    Optional:
+    [bool] press: Generate a KEYEVENTF_KEYDOWN event.
+    [bool] release: Generate a KEYEVENTF_KEYUP event.
+    
+Return value:
+    [int] 0 if failed, the number of the event if success. (See SendInput for more information)"
+
     (defn generate-keybd-event [code &optional release]
         (setv ki-args {"wVk" code})
         (when release
@@ -35,7 +46,28 @@
 
 
 
-(defn send-mouse-input [dx dy button &optional absolute press release wheel wheel-data [time 0]]
+(defn send-mouse-input [
+        ^int dx ^int dy  
+        &optional 
+        ^str [button ""]
+        ^bool absolute ^bool press ^bool release 
+        ^bool wheel ^int wheel-data ^int [time 0]]
+"Generate a synthesized mouse event. 
+
+Parameters:
+    [int] dx, dy: a given absolute/relative coordinate for mouse pointer.
+    Optional:
+    [str] button: The name of the mouse button. Valid names include: left, middle and right.
+    [bool] absolute: The new mouse pointer coordinate is (dx+x, dy+y) where (x, y) is the current mouse position if true, else (dx+0, dy+0)
+    [bool] press: Generate a MOUSEEVENTF_{button}DOWN event.
+    [bool] release: Generate a MOUSEEVENTF_{button}UP event.
+    [bool] wheel: Generate a MOUSEEVENTF_WHEEL event.
+    [int] wheel_data: The amount of wheel movement. See MOUSEINPUT (winuser.h) for more information.
+    [int] time: The time stamp for the event, in milliseconds. If it is 0, the system will provide its own time stamp.
+    
+Return value: 
+    [int] 0 if failed, the number of the event if success. (See SendInput for more information)"
+
     (setv mi-args {"dx" dx "dy" dy})
     (setv dw-flags 0)
     (when absolute
