@@ -11,7 +11,7 @@
 
 (import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
 (import [wavesynlib.languagecenter.datatypes.wintypes.hook [KHOOKPROC]])
-(import [wavesynlib.interfaces.os.windows.inputsender.utils [send-mouse-input]])
+(import [wavesynlib.interfaces.os.windows.inputsender.utils [send-mouse-input send-key-input]])
 
 
 
@@ -43,6 +43,19 @@
         (return (.--callback self "keyup"))))
 
 
+(defclass -KeyToKey []
+    (defn --init-- ^None [self ^int new-key-code]
+        (setv self.--new-key-code new-key-code))
+        
+    (defn on-keydown ^bool [self]
+        (send-key-input self.--new-key-code :press True)
+        True)
+        
+    (defn on-keyup ^bool [self]
+        (send-key-input self.--new-key-code :release True)
+        True))
+
+
 (defclass KeyboardHook [ModelNode]
     (defn --init-- ^None [self &rest args &kwargs kwargs]
         (super-init #* args #** kwargs)
@@ -54,6 +67,10 @@
     (defn add-key-to-mouse [self ^int key ^str mouse-btn]
         (setv mapobj (-KeyToMouse :mouse-btn mouse-btn))
         (assoc self.--remap key mapobj))
+
+    (defn add-key-to-key [self ^int old-key ^int new-key]
+        (setv mapobj (-KeyToKey :new-key-code new-key))
+        (assoc self.--remap old-key mapobj))
         
     (defn --khookproc [self nCode wParam lParam]
         (setv 
