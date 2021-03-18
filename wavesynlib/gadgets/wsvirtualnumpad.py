@@ -1,12 +1,49 @@
+from wavesynlib.widgets.tk.taskbaricon import TaskbarIcon
+from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
+
 import tkinter as tk
 from tkinter import ttk
+import threading
+import win32con
+
+from ctypes import byref, windll
+from ctypes.wintypes import MSG
+user32 = windll.user32
+
+global numlock
+numlock = False
+
+global hotkey_id
+hotkey_id = 1
+
+
+
+def hotkey_thread_func(alt, ctrl, shift, key):
+    modifiers = 0
+    if alt:
+        modifiers |= win32con.MOD_ALT
+    if ctrl:
+        modifiers |= win32con.MOD_CONTROL
+    if shift:
+        modifiers |= win32con.MOD_SHIFT
+    user32.RegisterHotKey(None, hotkey_id, modifiers, key)
+    msg = MSG()
+    try:
+        while user32.GetMessageW(byref(msg), None, 0, 0): 
+            if msg.message == win32con.WM_HOTKEY:
+                print("Hotkey.")
+            elif msg.message == win32con.WM_USER:
+                break
+    finally:
+        user32.UnregisterHotKey(None, hotkey_id)
 
 
 
 class HotKeyFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        entry_key = ttk.Entry(self)
+        self.__key = tk.StringVar()
+        entry_key = ttk.Entry(self, textvariable=self.__key)
         entry_key["width"] = 3
         entry_key.pack(side=tk.LEFT)
 
@@ -23,6 +60,11 @@ class HotKeyFrame(tk.Frame):
 
 
     @property
+    def key(self):
+        return ord(self.__key.get().strip().upper())
+
+
+    @property
     def ctrl(self):
         return self.__ctrl.get()
 
@@ -33,7 +75,7 @@ class HotKeyFrame(tk.Frame):
 
     @property
     def shift(self):
-        return self.shift.get()
+        return self.__shift.get()
     
 
 
@@ -75,11 +117,40 @@ class NumpadFrame(tk.Frame):
 
 
 
-if __name__ == "__main__":
+def main():
     root = tk.Tk()
+    tb_icon = TaskbarIcon(root)
+    tb_icon.progress = 0
     tk.Label(root, text="Numlock Hotkey:").pack(anchor=tk.W)
     htk = HotKeyFrame(root)
     htk.pack(anchor=tk.W)
     frm = NumpadFrame(root)
     frm.pack()
+
+    thread_obj = None
+    button_start = ttk.Button(root, text="Start")
+    def on_start_click():
+        nonlocal thread_obj
+        button_text = button_start["text"]
+        if button_text == "Start":
+            button_start["text"] = "Stop"
+            thread_obj = threading.Thread(target=hotkey_thread_func, 
+                args=(htk.alt, htk.ctrl, htk.shift, htk.key))
+            thread_obj.setDaemon(True)
+            thread_obj.start()
+            tb_icon.state = TBPFLAG.TBPF_NORMAL
+            tb_icon.progress = 100
+        elif button_text == "Stop":
+            button_start["text"] = "Start"
+            user32.PostThreadMessageW(thread_obj.ident, win32con.WM_USER, 0, None)
+            thread_obj = None
+            tb_icon.state = TBPFLAG.TBPF_NORMAL
+            tb_icon.progress = 0
+    button_start["command"] = on_start_click
+    button_start.pack(anchor=tk.E)
     root.mainloop()
+
+
+
+if __name__ == "__main__":
+    main()
