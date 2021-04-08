@@ -4,9 +4,13 @@ Created on Tue Oct 14 22:10:03 2014
 
 @author: Feng-cong Li
 """
+
 from tkinter import Tk, Frame
+
+import matplotlib
+matplotlib.use('TkAgg')
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 from matplotlib.widgets import  RectangleSelector
 from matplotlib.patches import Circle
@@ -94,7 +98,7 @@ class ImageFrame(Frame):
         canvas.mpl_connect('key_press_event',self._on_keypress)
         canvas.draw()
         self.__canvas  = canvas
-        toolbar    = NavigationToolbar2TkAgg(canvas, master)
+        toolbar    = NavigationToolbar2Tk(canvas, master)
         toolbar.update()
         canvas.get_tk_widget().pack(side='top', fill='both', expand='yes')
         toolbar.pack()
