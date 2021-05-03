@@ -1,5 +1,10 @@
+import hy
+from wavesynlib.interfaces.os.windows.inputhook.keyboardhook import KeyboardHook
 from wavesynlib.widgets.tk.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG
+from wavesynlib.interfaces.timer.tk import TkTimer
+
+from quantities import second
 
 import tkinter as tk
 from tkinter import ttk
@@ -17,6 +22,13 @@ global hotkey_id
 hotkey_id = 1
 
 
+hotkey_event = threading.Event()
+
+ZERO_CODE = 0x30
+LETTER_CODES = {chr(ord("a")+i):0x41+i for i in range(26)}
+
+
+
 
 def hotkey_thread_func(alt, ctrl, shift, key):
     modifiers = 0
@@ -31,7 +43,7 @@ def hotkey_thread_func(alt, ctrl, shift, key):
     try:
         while user32.GetMessageW(byref(msg), None, 0, 0): 
             if msg.message == win32con.WM_HOTKEY:
-                print("Hotkey.")
+                hotkey_event.set()
             elif msg.message == win32con.WM_USER:
                 break
     finally:
@@ -121,11 +133,43 @@ def main():
     root = tk.Tk()
     tb_icon = TaskbarIcon(root)
     tb_icon.progress = 0
+    tb_icon.state = TBPFLAG.TBPF_NORMAL
     tk.Label(root, text="Numlock Hotkey:").pack(anchor=tk.W)
     htk = HotKeyFrame(root)
     htk.pack(anchor=tk.W)
     frm = NumpadFrame(root)
     frm.pack()
+
+    khook = KeyboardHook()
+    khook.unhook_at_exit()
+    khook.add_key_to_key(old_key=LETTER_CODES["m"], new_key=win32con.VK_NUMPAD0)
+    khook.add_key_to_key(old_key=LETTER_CODES["j"], new_key=win32con.VK_NUMPAD1)
+    khook.add_key_to_key(old_key=LETTER_CODES["k"], new_key=win32con.VK_NUMPAD2)
+    khook.add_key_to_key(old_key=LETTER_CODES["l"], new_key=win32con.VK_NUMPAD3)
+    khook.add_key_to_key(old_key=LETTER_CODES["u"], new_key=win32con.VK_NUMPAD4)
+    khook.add_key_to_key(old_key=LETTER_CODES["i"], new_key=win32con.VK_NUMPAD5)
+    khook.add_key_to_key(old_key=LETTER_CODES["o"], new_key=win32con.VK_NUMPAD6)
+    khook.add_key_to_key(old_key=ZERO_CODE+7, new_key=win32con.VK_NUMPAD7)
+    khook.add_key_to_key(old_key=ZERO_CODE+8, new_key=win32con.VK_NUMPAD8)
+    khook.add_key_to_key(old_key=ZERO_CODE+9, new_key=win32con.VK_NUMPAD9)
+
+
+    timer = TkTimer(widget=root, interval=0.1*second)
+
+    def event_monitor(event):
+        global numlock
+        if hotkey_event.is_set():
+            hotkey_event.clear()
+            numlock = not numlock
+            if numlock:
+                tb_icon.progress = 100
+                khook.hook()
+            else:
+                tb_icon.progress = 0
+                khook.unhook()
+
+    timer.add_observer(event_monitor)
+    timer.active = True
 
     thread_obj = None
     button_start = ttk.Button(root, text="Start")
@@ -138,13 +182,10 @@ def main():
                 args=(htk.alt, htk.ctrl, htk.shift, htk.key))
             thread_obj.setDaemon(True)
             thread_obj.start()
-            tb_icon.state = TBPFLAG.TBPF_NORMAL
-            tb_icon.progress = 100
         elif button_text == "Stop":
             button_start["text"] = "Start"
             user32.PostThreadMessageW(thread_obj.ident, win32con.WM_USER, 0, None)
             thread_obj = None
-            tb_icon.state = TBPFLAG.TBPF_NORMAL
             tb_icon.progress = 0
     button_start["command"] = on_start_click
     button_start.pack(anchor=tk.E)
