@@ -7,7 +7,7 @@ def dbscan_detect_outliers(*args, **kwargs):
     len_args = len(args)
     samples = None
     if len_args == 0:
-        raise ValueError("No sample input.")
+        raise TypeError("Missing sample input.")
     elif len_args == 1:
         samples = args[0]
     else:
