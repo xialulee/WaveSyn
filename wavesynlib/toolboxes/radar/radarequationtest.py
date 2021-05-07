@@ -1,7 +1,6 @@
 import numpy as np
 
 import quantities as pq
-import quantities as pq
 from rangeequation.formulae import *
 
 from wavesynlib.languagecenter.datatypes.physicalquantities.containers import Decibel as dB
@@ -63,4 +62,6 @@ print(f"Final result: {R_m}")
 
 D_k = detectability_factor(P_d, P_fa, n, n_e)
 print(f"Detectability_factor: {D_k}")
+
+print(f"D_c1: {10*np.log10(D_c1(P_d=0.9, P_fa=1e-6))}")
 

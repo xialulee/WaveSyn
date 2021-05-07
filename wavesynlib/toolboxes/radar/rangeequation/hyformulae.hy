@@ -3,7 +3,7 @@
 (import [numpy :as np])
 (import [numpy [sqrt :as √]])
 (import [scipy.integrate [quad :as ∫ₐᵇ]])
-(import [scipy.stats [chi2]])
+(import [scipy.stats [norm chi2]])
 (import [quantities :as pq])
 (import [pandas :as pd])
 
@@ -181,6 +181,13 @@ L_r: the receiving line loss as ratio"
 
 
 
+
+(defn D_c1 [P_fa P_d]
+"Detectability Factor: Steady target, single pulse, and coherent detection (known phase)."
+    (/ (** (- (norm.isf P_fa) (norm.isf P_d)) 2) 2) )
+
+
+
 (defn K [x n]
 "Probability that the chi-square distribution with 2n degrees of freedom exceeds x"
     (- 1 (.cdf chi2 x :df (* n 2))))
@@ -263,3 +270,4 @@ L_r: the receiving line loss as ratio"
 
     (setv δ_2 (** (/ L_α1 L_α2) 0.25))
     (* δ_1 δ_2))
+
