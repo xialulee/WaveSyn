@@ -72,6 +72,12 @@
 
 
 
+(defn T_g [f k_g]
+    (setv f (-to-GHz f))
+    (+ 5 (/ k_g (** f 2.5))))
+
+
+
 (defn k_α [f]
     (setv 
         freq-array (.qcol -kalpha "freq")
