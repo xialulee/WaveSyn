@@ -73,6 +73,9 @@
 
 
 (defn T_g [f k_g]
+"Galactic noise temperature in kelvin at specified frequency.
+f:   the frequency, in GHz or a instance of Quantity;
+k_g: galactic constant: 1.6=quiet, 10=average, 60=high"
     (setv f (-to-GHz f))
     (+ 5 (/ k_g (** f 2.5))))
 
@@ -141,12 +144,12 @@ L_a: antenna loss as ratio."
     (setv L_αt (L_α R θ h_r h_s f) ) 
     (setv Tₐ₁ (->> L_αt
         (√) (/ 1) (- 1) (* 0.75 T₀) ) )
-    (setv T_g 
+    (setv T_g_ 
         (if (< θ 0) 
             290
         #_else
-            (+ (/ k_g f²·⁵) 5) ) ) 
-    (setv T_a_ (+ Tₐ₁ T_g)) 
+            (T_g f k_g) ) ) 
+    (setv T_a_ (+ Tₐ₁ T_g_)) 
     (* (+ T₀ (/ 
             (* (- 1 G_s) (- T_a_ T₀) ) 
             L_a)) 
@@ -262,8 +265,7 @@ L_r: the receiving line loss as ratio"
     θ_t ; target elevation angle
     h_r
     h_s
-    f
-    ]
+    f]
 
     (setv R (-to-km R) )
 
