@@ -14,7 +14,9 @@ T_0 = 290
 A_e = 6.5e3 * pq.km
 
 # Effective radius factor
-k_e = 1.333
+# The so called four-thirds earth model.
+# See https://en.wikipedia.org/wiki/Radar_horizon.
+k_e = 4/3
 
 # Standard temperature in kelvins
 T_0 = 290 * pq.kelvin
