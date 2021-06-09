@@ -271,11 +271,13 @@ L_r: the receiving line loss as ratio"
 
     (setv L_α1 (L_α R θ_t h_r h_s f))
     
+    (comment "Initial range reduction factor as ratio")
     (setv δ_1 (** (/ 1 L_α1) 0.25))
     (setv 
         R_1  (* R δ_1)
         L_α2 (L_α R_1 θ_t h_r h_s f))
 
+    (comment "Range increase factor as ratio")
     (setv δ_2 (** (/ L_α1 L_α2) 0.25))
     (* δ_1 δ_2))
 
