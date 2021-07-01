@@ -210,7 +210,7 @@ L_r: the receiving line loss as ratio"
 
 
 (defn detectability-factor [P_d P_fa n n_e]
-"Detectability factor for integration of a pulses with n_e independent signal samples"
+"Detectability factor for integration of n pulses with n_e independent signal samples"
     (/ (- (K_1 P_fa n) (K_1 P_d n_e) (* 2 (- n n_e)))
         (* (/ n n_e) (K_1 P_d n_e))))
 
