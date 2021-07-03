@@ -1,9 +1,50 @@
 import numpy as np
 import quantities as pq
 
+import re
 from pathlib import Path
 import json
 from dataclasses import dataclass, field
+
+
+
+def read_adc_data(directory, frame_index, index=0):
+    paths = get_paths(directory)
+    config = read_mmwave_json(paths["mmwave.json"])
+    chirp_per_loop = config.num_loops
+    num_loops = config.angles_to_steer.size
+    device_names = ("master", "slave1", "slave2", "slave3")
+    data_list = []
+    for device_name in device_names:
+        data_list.append(
+            read_bin_file(
+                paths["data"][index][device_name], 
+                frame_index, config.sample_per_chirp, chirp_per_loop, num_loops, 4))
+    # angles, antenna elements, slow time, fast time
+    data_cube = np.concatenate(data_list, axis=1)
+    return data_cube
+
+
+
+def get_paths(directory):
+    data_regex = re.compile(r"([^_]+)_(\d+)_data.bin")
+    directory = Path(directory)
+    result = {}
+    result["mmwave.json"] = next(directory.glob("*.mmwave.json"))
+    result["data"] = result_data = {}
+    for p in directory.glob("*_*_data.bin"):
+        match = data_regex.match(p.name)
+        device, index = match[1], match[2]
+        index = int(index)
+        if index not in result_data:
+            result_data[index] = {}
+        result_data[index][device] = p
+    return result
+
+
+
+def hann(M):
+    return np.hanning(M+2)[1:-1]
 
 
 
@@ -16,6 +57,7 @@ class Config:
     ramp_end_time:      pq.Quantity = None
     sampling_rate:      pq.Quantity = None
     sample_per_chirp:   int = None
+    chirp_per_loop:     int = None
     num_loops:          int = None
     num_frames:         int = None
     angles_to_steer:    np.ndarray = None
@@ -70,6 +112,8 @@ def read_bin_file(path, frame_index, sample_per_chirp, chirp_per_loop, loop_per_
     adc_double  = np.double(adc_int)
     adc_complex = adc_double[::2] + 1j*adc_double[1::2]
     adc_cube = adc_complex.reshape((loop_per_frame, chirp_per_loop, sample_per_chirp, rx_per_device))
+    ax_loop, ax_chirp, ax_sample, ax_rx = range(4)
+    adc_cube = adc_cube.transpose((ax_loop, ax_rx, ax_chirp, ax_sample))
     return adc_cube
 
 
@@ -82,3 +126,7 @@ if __name__ == '__main__':
     path = r"D:\LocalWork\Cascade\20210626\20_29_53_06_26_21\20_29_53_06_26_21.mmwave.json"
     config = read_mmwave_json(path)
     print(config)
+    paths = get_paths(r"D:\LocalWork\Cascade\20210626\20_29_53_06_26_21")
+    print(paths)
+    data_cube = read_adc_data(r"D:\LocalWork\Cascade\20210626\20_29_53_06_26_21", frame_index=2)
+    print(data_cube)
