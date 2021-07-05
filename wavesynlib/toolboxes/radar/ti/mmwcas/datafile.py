@@ -6,6 +6,20 @@ from pathlib import Path
 import json
 from dataclasses import dataclass, field
 
+from wavesynlib.languagecenter.cutils import ctype_build, StructReader
+
+
+from ctypes import c_uint32, c_uint64
+
+@ctype_build("struct")
+def Info(
+    tag:          c_uint32,
+    version:      c_uint32,
+    flags:        c_uint32,
+    numIdx:       c_uint32,
+    dataFileSize: c_uint64
+):pass
+
 
 
 def read_adc_data(directory, frame_index, index=0):
@@ -124,6 +138,14 @@ def read_bin_file(path, frame_index, sample_per_chirp, chirp_per_loop, loop_per_
 
 
 
+def get_valid_num_frames(paths, index=0):
+    master_idx = paths["idx"][index]["master"]
+    with open(master_idx, "rb") as f:
+        info = StructReader(Info).read(f)
+    return info.numIdx, info.dataFileSize
+
+
+
 if __name__ == '__main__':
     # Test
     path = r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21\slave1_0000_data.bin"
@@ -134,5 +156,7 @@ if __name__ == '__main__':
     print(config)
     paths = get_paths(r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21")
     print(paths)
+    num_idx, data_file_size = get_valid_num_frames(paths)
+    print(num_idx, data_file_size)
     data_cube = read_adc_data(r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21", frame_index=2)
     print(data_cube)
