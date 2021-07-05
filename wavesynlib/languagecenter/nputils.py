@@ -10,7 +10,7 @@ class NamedAxisArray:
 
 
     def indexing(self, **kwargs):
-        axes = sorted((self.__axis_names.index(item[0]), item[1]) for item in kwargs.items())
+        axes = sorted((self.name_to_axis_indices(item[0]), item[1]) for item in kwargs.items())
         indexing = tuple(i[1] for i in axes)
         new_names = [] 
         for idx, name in enumerate(self.__axis_names):
@@ -21,7 +21,7 @@ class NamedAxisArray:
 
 
     def permute(self, *args):
-        new_order = tuple(self.__axis_names.index(name) for name in args)
+        new_order = self.name_to_axis_indices(*args)
         new_array = self.__arr.transpose(new_order)
         return type(self)(new_array, args)
 
@@ -32,8 +32,20 @@ class NamedAxisArray:
             assert(isinstance(arr, cls))
             assert(arr.axis_names == args[0].axis_names)
         axis_name = kwargs["axis"]
-        axis = args[0].axis_names.index(axis_name)
+        axis = args[0].name_to_axis_indices(axis_name)
         return cls(np.concatenate(tuple(arg.array for arg in args), axis=axis), args[0].axis_names)
+
+
+    def rename_axes(self, **kwargs):
+        name_list = list(self.__axis_names)
+        for old_name, new_name in kwargs.items():
+            name_list[name_list.index(old_name)] = new_name
+        self.__axis_names = tuple(name_list)
+
+
+    def name_to_axis_indices(self, *args):
+        result = tuple(self.__axis_names.index(name) for name in args)
+        return result[0] if len(result)==1 else result
 
 
     @property
