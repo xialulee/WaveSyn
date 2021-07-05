@@ -2,7 +2,7 @@ import numpy as np
 
 
 
-class NamedAxisArray:
+class NamedAxesArray:
     def __init__(self, array, axis_names):
         assert(len(array.shape) == len(axis_names))
         self.__arr = array
@@ -71,12 +71,12 @@ class NamedAxisArray:
 if __name__ == "__main__":
     # Test 
     echo = np.array([[1, 2, 3], [4, 5, 6]])
-    echo = NamedAxisArray(echo, ("slow_time", "fast_time"))
+    echo = NamedAxesArray(echo, ("slow_time", "fast_time"))
 
     echo2 = echo.permute("fast_time", "slow_time")
 
-    echo3 = NamedAxisArray.concat(echo2, echo2, axis="slow_time")
-    echo4 = NamedAxisArray.concat(echo2, echo2, axis="fast_time")
+    echo3 = NamedAxesArray.concat(echo2, echo2, axis="slow_time")
+    echo4 = NamedAxesArray.concat(echo2, echo2, axis="fast_time")
 
     echo5 = echo3.indexing(slow_time=1, fast_time=np.s_[:])
     echo6 = echo3.indexing(slow_time=[1], fast_time=np.s_[:3])

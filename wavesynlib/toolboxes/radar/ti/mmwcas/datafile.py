@@ -7,7 +7,7 @@ import json
 from dataclasses import dataclass, field
 
 from wavesynlib.languagecenter.cutils import ctype_build, StructReader
-from wavesynlib.languagecenter.nputils import NamedAxisArray
+from wavesynlib.languagecenter.nputils import NamedAxesArray
 
 from ctypes import c_uint32, c_uint64
 
@@ -34,7 +34,7 @@ def read_adc_data(directory, frame_index, index=0):
             read_bin_file(
                 paths["data"][index][device_name], 
                 frame_index, config.sample_per_chirp, chirp_per_loop, num_loops, 4))
-    data_cube = NamedAxisArray.concat(*data_list, axis="rx_elements")
+    data_cube = NamedAxesArray.concat(*data_list, axis="rx_elements")
     data_cube = data_cube.indexing(
         fast_time   = np.s_[:],
         slow_time   = np.s_[:],
@@ -137,7 +137,7 @@ def read_bin_file(path, frame_index, sample_per_chirp, chirp_per_loop, loop_per_
     adc_double  = np.double(adc_int)
     adc_complex = adc_double[::2] + 1j*adc_double[1::2]
     adc_cube = adc_complex.reshape((loop_per_frame, chirp_per_loop, sample_per_chirp, rx_per_device))
-    adc_cube = NamedAxisArray(adc_cube, axis_names=("tx_steering", "slow_time", "fast_time", "rx_elements"))
+    adc_cube = NamedAxesArray(adc_cube, axis_names=("tx_steering", "slow_time", "fast_time", "rx_elements"))
     adc_cube = adc_cube.permute("tx_steering", "rx_elements", "slow_time", "fast_time")
     return adc_cube
 
