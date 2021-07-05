@@ -34,9 +34,6 @@ def read_adc_data(directory, frame_index, index=0):
             read_bin_file(
                 paths["data"][index][device_name], 
                 frame_index, config.sample_per_chirp, chirp_per_loop, num_loops, 4))
-    # angles, antenna elements, slow time, fast time
-    #data_cube = np.concatenate(data_list, axis=1)
-    #data_cube = data_cube[:, config.cascade_rx_id, :, :]
     data_cube = NamedAxisArray.concat(*data_list, axis="rx_elements")
     data_cube = data_cube.indexing(
         fast_time   = np.s_[:],
@@ -140,8 +137,6 @@ def read_bin_file(path, frame_index, sample_per_chirp, chirp_per_loop, loop_per_
     adc_double  = np.double(adc_int)
     adc_complex = adc_double[::2] + 1j*adc_double[1::2]
     adc_cube = adc_complex.reshape((loop_per_frame, chirp_per_loop, sample_per_chirp, rx_per_device))
-    #ax_loop, ax_chirp, ax_sample, ax_rx = range(4)
-    #adc_cube = adc_cube.transpose((ax_loop, ax_rx, ax_chirp, ax_sample))
     adc_cube = NamedAxisArray(adc_cube, axis_names=("tx_steering", "slow_time", "fast_time", "rx_elements"))
     adc_cube = adc_cube.permute("tx_steering", "rx_elements", "slow_time", "fast_time")
     return adc_cube

@@ -10,8 +10,8 @@ class NamedAxisArray:
 
 
     def indexing(self, **kwargs):
-        axises = sorted((self.__axis_names.index(item[0]), item[1]) for item in kwargs.items())
-        indexing = tuple(i[1] for i in axises)
+        axes = sorted((self.__axis_names.index(item[0]), item[1]) for item in kwargs.items())
+        indexing = tuple(i[1] for i in axes)
         new_names = [] 
         for idx, name in enumerate(self.__axis_names):
             if not isinstance(indexing[idx], int):
