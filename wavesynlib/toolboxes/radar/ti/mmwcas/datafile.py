@@ -84,7 +84,7 @@ class Config:
     chirp_per_loop:     int = None
     num_loops:          int = None
     num_frames:         int = None
-    angles_to_steer:    np.ndarray = None
+    angles_to_steer:    pq.Quantity = None
     dutycycle:          float = 0.5
     chirp_duration:     pq.Quantity = field(init=False)
     sample_per_channel: int = field(init=False)
@@ -121,7 +121,7 @@ def read_mmwave_json(path):
     kwargs["sample_per_chirp"] = rl_profiles["numAdcSamples"]
     kwargs["num_loops"]        = frame_seq['subFrameCfg'][0]['rlSubFrameCfg_t']['numLoops']
     kwargs["num_frames"]       = frame_seq["numFrames"]
-    kwargs["angles_to_steer"]  = np.arange(-30, 31, 2)
+    kwargs["angles_to_steer"]  = np.arange(-30, 31, 2) * pq.deg
     return Config(**kwargs)
 
 
