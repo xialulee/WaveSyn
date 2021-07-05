@@ -27,18 +27,24 @@ def read_adc_data(directory, frame_index, index=0):
 
 
 def get_paths(directory):
-    data_regex = re.compile(r"([^_]+)_(\d+)_data.bin")
     directory = Path(directory)
     result = {}
     result["mmwave.json"] = next(directory.glob("*.mmwave.json"))
-    result["data"] = result_data = {}
-    for p in directory.glob("*_*_data.bin"):
-        match = data_regex.match(p.name)
-        device, index = match[1], match[2]
-        index = int(index)
-        if index not in result_data:
-            result_data[index] = {}
-        result_data[index][device] = p
+
+    def get_dev_file_paths(file_type):
+        regex = re.compile(rf"([^_]+)_(\d+)_{file_type}.bin")
+        result[file_type] = result_file_type = {}
+        for p in directory.glob(f"*_*_{file_type}.bin"):
+            match = regex.match(p.name)
+            device, index = match[1], match[2]
+            index = int(index)
+            if index not in result_file_type:
+                result_file_type[index] = {}
+            result_file_type[index][device] = p
+
+    get_dev_file_paths("data")
+    get_dev_file_paths("idx")
+
     return result
 
 
@@ -120,13 +126,13 @@ def read_bin_file(path, frame_index, sample_per_chirp, chirp_per_loop, loop_per_
 
 if __name__ == '__main__':
     # Test
-    path = r"D:\LocalWork\Cascade\20210626\20_29_53_06_26_21\slave1_0000_data.bin"
+    path = r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21\slave1_0000_data.bin"
     cube = read_bin_file(path, 2, 256, 64, 31, 4)
 
-    path = r"D:\LocalWork\Cascade\20210626\20_29_53_06_26_21\20_29_53_06_26_21.mmwave.json"
+    path = r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21\20_29_53_06_26_21.mmwave.json"
     config = read_mmwave_json(path)
     print(config)
-    paths = get_paths(r"D:\LocalWork\Cascade\20210626\20_29_53_06_26_21")
+    paths = get_paths(r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21")
     print(paths)
-    data_cube = read_adc_data(r"D:\LocalWork\Cascade\20210626\20_29_53_06_26_21", frame_index=2)
+    data_cube = read_adc_data(r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21", frame_index=2)
     print(data_cube)
