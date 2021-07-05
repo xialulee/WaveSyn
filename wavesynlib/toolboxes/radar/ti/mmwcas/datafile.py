@@ -7,7 +7,7 @@ import json
 from dataclasses import dataclass, field
 
 from wavesynlib.languagecenter.cutils import ctype_build, StructReader
-
+from wavesynlib.languagecenter.nputils import NamedAxisArray
 
 from ctypes import c_uint32, c_uint64
 
@@ -35,7 +35,14 @@ def read_adc_data(directory, frame_index, index=0):
                 paths["data"][index][device_name], 
                 frame_index, config.sample_per_chirp, chirp_per_loop, num_loops, 4))
     # angles, antenna elements, slow time, fast time
-    data_cube = np.concatenate(data_list, axis=1)
+    #data_cube = np.concatenate(data_list, axis=1)
+    #data_cube = data_cube[:, config.cascade_rx_id, :, :]
+    data_cube = NamedAxisArray.concat(*data_list, axis="rx_elements")
+    data_cube = data_cube.indexing(
+        fast_time   = np.s_[:],
+        slow_time   = np.s_[:],
+        tx_steering = np.s_[:],
+        rx_elements = config.cascade_rx_id)
     return data_cube
 
 
@@ -87,6 +94,7 @@ class Config:
     center_freq:        pq.Quantity = field(init=False)
     angle_per_sweep:    int = field(init=False)
     range_resolution:   pq.Quantity = field(init=False)
+    cascade_rx_id:      np.ndarray = np.array([12, 13, 14 ,15 ,0 ,1 ,2 ,3 ,8 ,9 ,10 ,11 ,4 ,5 ,6 ,7])
 
 
     def __post_init__(self):
@@ -132,8 +140,10 @@ def read_bin_file(path, frame_index, sample_per_chirp, chirp_per_loop, loop_per_
     adc_double  = np.double(adc_int)
     adc_complex = adc_double[::2] + 1j*adc_double[1::2]
     adc_cube = adc_complex.reshape((loop_per_frame, chirp_per_loop, sample_per_chirp, rx_per_device))
-    ax_loop, ax_chirp, ax_sample, ax_rx = range(4)
-    adc_cube = adc_cube.transpose((ax_loop, ax_rx, ax_chirp, ax_sample))
+    #ax_loop, ax_chirp, ax_sample, ax_rx = range(4)
+    #adc_cube = adc_cube.transpose((ax_loop, ax_rx, ax_chirp, ax_sample))
+    adc_cube = NamedAxisArray(adc_cube, axis_names=("tx_steering", "slow_time", "fast_time", "rx_elements"))
+    adc_cube = adc_cube.permute("tx_steering", "rx_elements", "slow_time", "fast_time")
     return adc_cube
 
 
@@ -148,12 +158,13 @@ def get_valid_num_frames(paths, index=0):
 
 if __name__ == '__main__':
     # Test
-    path = r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21\slave1_0000_data.bin"
-    cube = read_bin_file(path, 2, 256, 64, 31, 4)
-
     path = r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21\20_29_53_06_26_21.mmwave.json"
     config = read_mmwave_json(path)
     print(config)
+
+    path = r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21\slave1_0000_data.bin"
+    cube = read_bin_file(path, 2, 256, 64, 31, 4)
+
     paths = get_paths(r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21")
     print(paths)
     num_idx, data_file_size = get_valid_num_frames(paths)
