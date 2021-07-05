@@ -36,6 +36,17 @@ class NamedAxesArray:
         return cls(np.concatenate(tuple(arg.array for arg in args), axis=axis), args[0].axis_names)
 
 
+    def expand_dims_as(self, target):
+        assert(set(self.__axis_names).issubset(target.axis_names))
+        new_shape = [1] * (len(target.axis_names) - len(self.axis_names))
+        new_shape.extend(self.array.shape)
+        new_array = np.reshape(self.array, new_shape)
+        new_axis_names = (*(set(target.axis_names)-set(self.__axis_names)), *self.__axis_names)
+        result = type(self)(new_array, new_axis_names)
+        result = result.permute(*target.axis_names)
+        return result
+
+
     def rename_axes(self, **kwargs):
         name_list = list(self.__axis_names)
         for old_name, new_name in kwargs.items():
@@ -82,3 +93,7 @@ if __name__ == "__main__":
     echo6 = echo3.indexing(slow_time=[1], fast_time=np.s_[:3])
 
     print(echo3)
+
+    window = NamedAxesArray(np.array([100, 200, 300]), axis_names=("fast_time",))
+    window = window.expand_dims_as(echo3)
+    print(window)
