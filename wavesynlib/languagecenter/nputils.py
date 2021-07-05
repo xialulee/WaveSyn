@@ -58,6 +58,14 @@ class NamedAxisArray:
         return self.__arr
 
 
+    @property
+    def shape(self):
+        arr_shape = self.__arr.shape
+        result = {}
+        for index, name in enumerate(self.__axis_names):
+            result[name] = arr_shape[index]
+        return result
+
 
 
 if __name__ == "__main__":
