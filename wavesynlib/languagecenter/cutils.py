@@ -8,26 +8,21 @@ This decorator is a helper for defining C struct/union datatypes.
 
 An example:
 @ctype_build('struct')
-def XINPUT_GAMEPAD(
-    wButtons: WORD,
-    bLeftTrigger: BYTE,
-    bRightTrigger: BYTE,
-    sThumbLX: SHORT,
-    sThumbLY: SHORT,
-    sThumbRX: SHORT,
+class XINPUT_GAMEPAD:
+    wButtons: WORD
+    bLeftTrigger: BYTE
+    bRightTrigger: BYTE
+    sThumbLX: SHORT
+    sThumbLY: SHORT
+    sThumbRX: SHORT
     sThumbRY: SHORT
-):pass    
 '''
     type_ = type_.lower()
     
     def the_decorator(f):
-        field_names = f.__code__.co_varnames[:f.__code__.co_argcount]
-        field_types = f.__annotations__
-        
         field_desc = []
         anonymous = []
-        for name in field_names:
-            type_desc = field_types[name]
+        for name, type_desc in f.__annotations__.items():
             if isinstance(type_desc, (list, tuple)):
                 for prop in type_desc[1:]:
                     if prop == 'anonymous':
@@ -64,10 +59,9 @@ Not thread-safe.
         arr  = ctypes.c_uint8 * size
 
         @ctype_build("union")
-        def Helper(
-            struct:   struct_type,
+        class Helper:
+            struct:   struct_type
             byte_arr: arr
-        ):pass
 
         self.__helper = Helper()
         self.__size   = size

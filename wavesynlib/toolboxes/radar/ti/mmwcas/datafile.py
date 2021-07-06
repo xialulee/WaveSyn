@@ -12,13 +12,12 @@ from wavesynlib.languagecenter.nputils import NamedAxesArray
 from ctypes import c_uint32, c_uint64
 
 @ctype_build("struct")
-def Info(
-    tag:          c_uint32,
-    version:      c_uint32,
-    flags:        c_uint32,
-    numIdx:       c_uint32,
+class Info:
+    tag:          c_uint32
+    version:      c_uint32
+    flags:        c_uint32
+    numIdx:       c_uint32
     dataFileSize: c_uint64
-):pass
 
 
 
