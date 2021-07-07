@@ -1,3 +1,5 @@
+import operator
+
 import numpy as np
 
 
@@ -7,6 +9,32 @@ class NamedAxesArray:
         assert(len(array.shape) == len(axis_names))
         self.__arr = array
         self.__axis_names = tuple(axis_names)
+
+
+    def __binop(self, other, op):
+        assert(isinstance(other, type(self)))
+        my_dim = len(self.__axis_names)
+        other_dim = len(other.axis_names)
+        if my_dim >= other_dim:
+            A, B = self, other
+        else:
+            A, B = other, self
+        B = B.expand_dims_as(A)
+        Carr = op(A.array, B.array)
+        C = type(self)(Carr, A.axis_names)
+        return C
+
+
+    def __add__(self, other):
+        return self.__binop(other, op=operator.add)
+
+
+    def __sub__(self, other):
+        return self.__binop(other, op=operator.sub)
+
+
+    def __mul__(self, other):
+        return self.__binop(other, op=operator.mul)
 
 
     def indexing(self, **kwargs):
@@ -95,5 +123,6 @@ if __name__ == "__main__":
     print(echo3)
 
     window = NamedAxesArray(np.array([100, 200, 300]), axis_names=("fast_time",))
-    window = window.expand_dims_as(echo3)
+    # window = window.expand_dims_as(echo3)
+    windowed_echo = window - echo3
     print(window)
