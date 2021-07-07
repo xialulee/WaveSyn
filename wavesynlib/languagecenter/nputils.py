@@ -27,7 +27,7 @@ class NamedAxesArray:
         axis = kwargs.pop("axis", -1)
         if axis != -1:
             assert(isinstance(axis, str))
-            axis = self.name_to_axis_indices("axis")
+            axis = self.name_to_axis_indices(axis)
         kwargs["axis"] = axis
         result_arr = np.fft.fft(self.__arr, **kwargs)
         result = type(self)(result_arr, axis_names=self.__axis_names)
