@@ -11,20 +11,6 @@ class NamedAxesArray:
         self.__axis_names = tuple(axis_names)
 
 
-    def __binop(self, other, op):
-        assert(isinstance(other, type(self)))
-        my_dim = len(self.__axis_names)
-        other_dim = len(other.axis_names)
-        if my_dim >= other_dim:
-            A, B = self, other
-        else:
-            A, B = other, self
-        B = B.expand_dims_as(A)
-        Carr = op(A.array, B.array)
-        C = type(self)(Carr, A.axis_names)
-        return C
-
-
     def __add__(self, other):
         return self.__binop(other, op=operator.add)
 
@@ -35,6 +21,17 @@ class NamedAxesArray:
 
     def __mul__(self, other):
         return self.__binop(other, op=operator.mul)
+
+
+    def fft(self, **kwargs):
+        axis = kwargs.pop("axis", -1)
+        if axis != -1:
+            assert(isinstance(axis, str))
+            axis = self.name_to_axis_indices("axis")
+        kwargs["axis"] = axis
+        result_arr = np.fft.fft(self.__arr, **kwargs)
+        result = type(self)(result_arr, axis_names=self.__axis_names)
+        return result
 
 
     def indexing(self, **kwargs):
@@ -104,6 +101,20 @@ class NamedAxesArray:
         for index, name in enumerate(self.__axis_names):
             result[name] = arr_shape[index]
         return result
+
+
+    def __binop(self, other, op):
+        assert(isinstance(other, type(self)))
+        my_dim = len(self.__axis_names)
+        other_dim = len(other.axis_names)
+        if my_dim >= other_dim:
+            A, B = self, other
+        else:
+            A, B = other, self
+        B = B.expand_dims_as(A)
+        Carr = op(A.array, B.array)
+        C = type(self)(Carr, A.axis_names)
+        return C
 
 
 
