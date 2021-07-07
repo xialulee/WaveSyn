@@ -2,6 +2,8 @@ import operator
 
 import numpy as np
 
+from wavesynlib.languagecenter.datatypes.physicalquantities.functions import expj
+
 
 
 class NamedAxesArray:
@@ -15,12 +17,32 @@ class NamedAxesArray:
         return self.__binop(other, op=operator.add)
 
 
+    def __iadd__(self, other):
+        return self.__inplaceop(other, op=operator.iadd)
+
+
     def __sub__(self, other):
         return self.__binop(other, op=operator.sub)
 
 
+    def __isub__(self, other):
+        return self.__inplaceop(other, op=operator.isub)
+
+
     def __mul__(self, other):
         return self.__binop(other, op=operator.mul)
+
+
+    def __imul__(self, other):
+        return self.__inplaceop(other, op=operator.imul)
+
+
+    def conj(self):
+        return self.__unaryop(op=np.conj)
+
+
+    def expj(self):
+        return self.__unaryop(op=expj)
 
 
     def fft(self, **kwargs):
@@ -117,6 +139,18 @@ class NamedAxesArray:
         return C
 
 
+    def __unaryop(self, op):
+        result_arr = op(self.__arr)
+        result = type(self)(result_arr, axis_names=self.__axis_names)
+        return result
+
+
+    def __inplaceop(self, other, op):
+        other = other.expand_dims_as(self)
+        op(self.__arr, other.array)
+        return self
+
+
 
 if __name__ == "__main__":
     # Test 
@@ -137,3 +171,6 @@ if __name__ == "__main__":
     # window = window.expand_dims_as(echo3)
     windowed_echo = window - echo3
     print(window)
+
+    echo3 += window
+    print(echo3)
