@@ -37,6 +37,30 @@ class NamedAxesArray:
         return self.__inplaceop(other, op=operator.imul)
 
 
+    def add1d(self, other, axis):
+        return self.__binop1d(other, op=operator.add, axis=axis)
+
+
+    def iadd1d(self, other, axis):
+        return self.__inplace1dop(other, op=operator.iadd, axis=axis)
+
+
+    def sub1d(self, other, axis):
+        return self.__binop1d(other, op=operator.sub, axis=axis)
+
+
+    def isub1d(self, other, axis):
+        return self.__inplace1dop(other, op=operator.isub, axis=axis)
+
+
+    def mul1d(self, other, axis):
+        return self.__binop1d(other, op=operator.mul, axis=axis)
+
+
+    def imul1d(self, other, axis):
+        return self.__inplace1dop(other, op=operator.imul, axis=axis)
+
+
     def conj(self):
         return self.__unaryop(op=np.conj)
 
@@ -139,6 +163,13 @@ class NamedAxesArray:
         return C
 
 
+    def __binop1d(self, other, op, axis):
+        assert(len(other.shape)==1)
+        other = type(self)(other, axis_names=(axis,))
+        other = other.expand_dims_as(self)
+        return op(self, other)
+
+
     def __unaryop(self, op):
         result_arr = op(self.__arr)
         result = type(self)(result_arr, axis_names=self.__axis_names)
@@ -146,6 +177,14 @@ class NamedAxesArray:
 
 
     def __inplaceop(self, other, op):
+        other = other.expand_dims_as(self)
+        op(self.__arr, other.array)
+        return self
+
+
+    def __inplace1dop(self, other, op, axis):
+        assert(len(other.shape)==1)
+        other = type(self)(other, axis_names=(axis,))
         other = other.expand_dims_as(self)
         op(self.__arr, other.array)
         return self
@@ -173,4 +212,6 @@ if __name__ == "__main__":
     print(window)
 
     echo3 += window
+    echo3.imul1d(window.array, axis="fast_time")
+    echo3.mul1d(window.array, axis="fast_time")
     print(echo3)
