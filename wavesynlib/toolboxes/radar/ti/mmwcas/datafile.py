@@ -43,6 +43,31 @@ def read_adc_data(directory, frame_index, index=0):
 
 
 
+def signal_processing(data_cube, config):
+    assert(isinstance(data_cube, NamedAxesArray))
+    # Range processing
+    #   Windowing along fast_time sampling
+    window = NamedAxesArray(hann(data_cube.shape["fast_time"]), axis_names=("fast_time",))
+    cube_r = data_cube * window
+    #   FFT along fast_time sampling
+    cube_r = cube_r.fft(axis="fast_time")
+    cube_r.rename_axes(fast_time="range")
+    # Doppler processing
+    #   Windowing along slow_time sampling
+    window = NamedAxesArray(hann(cube_r.shape["slow_time"]), axis_names=("slow_time",))
+    cube_rd = cube_r * window
+    #   FFT along slow_time sampling
+    cube_rd = cube_rd.fft(axis="slow_time")
+    cube_rd.rename_axes(slow_time="Doppler")
+    # Rx calibration
+    rx_mismatch = config.rx_mismatch
+    rx_mismatch = NamedAxesArray(rx_mismatch, axis_names=("rx_elements",))
+    rx_mismatch = rx_mismatch.expj().conj()
+    cube_rd *= rx_mismatch
+    return cube_rd
+
+
+
 def get_paths(directory):
     directory = Path(directory)
     result = {}
@@ -91,6 +116,7 @@ class Config:
     angle_per_sweep:    int = field(init=False)
     range_resolution:   pq.Quantity = field(init=False)
     cascade_rx_id:      np.ndarray = np.array([12, 13, 14 ,15 ,0 ,1 ,2 ,3 ,8 ,9 ,10 ,11 ,4 ,5 ,6 ,7])
+    rx_mismatch:        pq.Quantity = field(init=False)
 
 
     def __post_init__(self):
@@ -100,6 +126,9 @@ class Config:
         self.sample_per_channel = self.sample_per_chirp * self.num_loops * self.angle_per_sweep * self.num_frames
         self.center_freq        = (self.start_freq + self.sample_per_chirp/self.sampling_rate*self.chirp_slope/2).rescale(pq.GHz)
         self.range_resolution   = (3e8*pq.m/pq.s / 2 / (self.sample_per_chirp / self.sampling_rate * self.chirp_slope)).rescale(pq.m)
+        
+        with open(Path(__file__).parent/"calibration"/"rxmismatch.npy", "rb") as rxmismatch_file:
+            self.rx_mismatch = np.load(rxmismatch_file) * pq.deg
 
 
 
@@ -165,3 +194,5 @@ if __name__ == '__main__':
     print(num_idx, data_file_size)
     data_cube = read_adc_data(r"C:\LocalWork\Cascade\20210626\20_29_53_06_26_21", frame_index=2)
     print(data_cube)
+    cube_rd = signal_processing(data_cube, config)
+    print(cube_rd)
