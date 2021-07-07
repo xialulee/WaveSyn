@@ -16,13 +16,6 @@ import os
 from pathlib import Path
 from typing import Callable
 import hy
-try:
-    from wavesynlib.languagecenter.datatypes import treetype
-except hy.errors.HyCompilerError:
-    hy_path = Path(__file__).parent / 'treetype.hy'
-    os.system(f'hyc {hy_path}')
-    from wavesynlib.languagecenter.datatypes import treetype
-
 from wavesynlib.languagecenter.designpatterns import Observable
 
 
