@@ -35,6 +35,6 @@ setup(
         # .m files for Matlab functions and scripts.
         # .ps1 files for PowerShell scripts.
         '': ['*.json', '*.png', '*.psd', '*.ico', '*.dll', '*.pyw', 
-             '*.hy', '*.ps1', '*.bat', '*.m', '*.txt', '*.csv']
+             '*.hy', '*.ps1', '*.bat', '*.m', '*.txt', '*.csv', '*.npy']
       }
 )
