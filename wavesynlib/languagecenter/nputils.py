@@ -80,6 +80,21 @@ class NamedAxesArray:
         return result
 
 
+    def sum(self, axis):
+        if isinstance(axis, str):
+            axis = (axis,)
+        assert(isinstance(axis, tuple))
+        axes = self.name_to_axis_indices(*axis)
+        if not isinstance(axes, tuple):
+            axes = (axes,)
+        result_arr = self.array.sum(axis=axes)
+        axis_names = list(self.__axis_names)
+        for name in axis:
+            axis_names.remove(name)
+        result = type(self)(result_arr, axis_names=axis_names)
+        return result
+
+
     def indexing(self, **kwargs):
         axes = sorted((self.name_to_axis_indices(item[0]), item[1]) for item in kwargs.items())
         indexing = tuple(i[1] for i in axes)
