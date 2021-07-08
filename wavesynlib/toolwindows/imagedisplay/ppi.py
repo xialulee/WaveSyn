@@ -7,8 +7,9 @@ Created on Mon May 08 22:17:47 2017
 __DEBUG__ = False
 
 
+import numpy as np
 from math import pi
-from scipy.ndimage import imread
+# from scipy.ndimage import imread
 from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
@@ -69,8 +70,11 @@ void main(){
     if (length(texcoord)<=1){
         angle = 2*PI-(atan(texcoord.y, texcoord.x) + PI);
         len = length(texcoord);      
+        /*
         color.g = (texture(image, vec2(angle / TWO_PI, len)) 
             * max(1 - mod(angle+current_angle, TWO_PI) / TWO_PI * 3, 0)).g;
+        */
+        color.g = (texture(image, vec2(angle / TWO_PI, len))).g;
         color.rb = vec2(0.0, 0.0);
     }
             
@@ -88,6 +92,7 @@ void main(){
 
 class Canvas(app.Canvas):
     def __init__(self, image):
+        self.__scale = 1
         app.Canvas.__init__(self, title='WaveSyn-ImageViewer', size=(512, 512),
                             keys='interactive')
 
@@ -103,7 +108,6 @@ class Canvas(app.Canvas):
         self.program['current_angle'] = 0.0
 
         set_clear_color('black')
-        self.__scale = 1
         self.__last_pos = 0+1j*0
         self.__offset = 0+1j*0
         
@@ -185,6 +189,6 @@ class Canvas(app.Canvas):
 
 
 if __name__ == '__main__':
-    mat = imread('c:/lab/test.jpg')
-    canvas = Canvas(image=mat)
+    # mat = imread('c:/lab/test.jpg')
+    canvas = Canvas(image=np.ones((128, 128, 3), dtype=np.uint8)*255)
     app.run()
