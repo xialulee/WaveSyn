@@ -95,6 +95,22 @@ class NamedAxesArray:
         return result
 
 
+    def cdot1d(self, other, axis):
+        """\
+Consider self as a collection of vectors along the given axis,
+calculating the dot product (with complex conjugate) of 
+self vectors and 'other' (which is a vector).
+
+For example: 
+A = NamedAxesArray(np.array([1,2,3], [4,5,6]), axis_names=('slow_time', 'fast_time'))
+A.cdot1d(np.array([10, 100]), axis='slow_time') 
+is equivalent to 
+A@np.array([[10], [100]])"""
+        assert(len(other.shape)==1)
+        temp = self.mul1d(other.conj(), axis=axis)
+        return temp.sum(axis=axis)
+
+
     def indexing(self, **kwargs):
         axes = sorted((self.name_to_axis_indices(item[0]), item[1]) for item in kwargs.items())
         indexing = tuple(i[1] for i in axes)
