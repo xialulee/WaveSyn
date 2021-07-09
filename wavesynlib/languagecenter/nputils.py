@@ -11,6 +11,7 @@ class NamedAxesArray:
         assert(len(array.shape) == len(axis_names))
         self.__arr = array
         self.__axis_names = tuple(axis_names)
+        self.__scale = {}
 
 
     def __add__(self, other):
@@ -147,6 +148,19 @@ A@np.array([[10], [100]])"""
         result = type(self)(new_array, new_axis_names)
         result = result.permute(*target.axis_names)
         return result
+
+
+    def set_scale(self, scale, axis):
+        assert(len(scale) == self.shape[axis])
+        self.__scale[axis] = scale
+
+
+    def get_scale(self, axis):
+        return self.__scale[axis]
+
+
+    def del_scale(self, axis):
+        del self.__scale[axis]
 
 
     def rename_axes(self, **kwargs):
