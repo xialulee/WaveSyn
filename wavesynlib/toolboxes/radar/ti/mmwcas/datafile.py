@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from wavesynlib.languagecenter.cutils import ctype_build, StructReader
 from wavesynlib.languagecenter.nputils import NamedAxesArray
 from wavesynlib.languagecenter.datatypes.physicalquantities.functions import expj2π
-from wavesynlib.toolwindows.imagedisplay.ppi import Canvas, app
+from wavesynlib.toolboxes.radar.display.ppi import Canvas, app
 
 from ctypes import c_uint32, c_uint64
 
@@ -77,6 +77,7 @@ def signal_processing(data_cube, config):
         cube_angle.imul1d(steering, axis="rx_elements")
     cube_rda = cube_rd.sum(axis="rx_elements")
     cube_rda *= cube_rda.conj()
+    cube_rda.rename_axes(tx_steering="azimuth")
     return cube_rda
 
 
@@ -84,22 +85,15 @@ def signal_processing(data_cube, config):
 def show_ppi(cube, config):
     ca = cube.array
     ca /= ca.max()
-    delta_angle = 2 * pq.deg
-    buf_width  = int((360*pq.deg / delta_angle).rescale(pq.dimensionless).magnitude)
-    buf_height = config.sample_per_chirp
+    buf_height  = len(config.angles_to_steer)
+    buf_width   = config.sample_per_chirp
     buf = np.zeros((buf_height, buf_width, 3), dtype=np.uint8)
-    #buf[:, :16, 1] = cube.indexing(
-        #tx_steering = np.s_[15:],
-        #Doppler = 0, 
-        #range = np.s_[:]).array.real.T * 4096
-    #buf[:, -15:, 1] = cube.indexing(
-        #tx_steering = np.s_[:15],
-        #Doppler = 0,
-        #range = np.s_[:]).array.real.T * 4096
-    buf[:, :31, 1] = cube.indexing(
-        tx_steering = np.s_[:],
+    buf[:31, :, 1] = cube.indexing(
+        azimuth = np.s_[:],
         Doppler = 0, 
-        range = np.s_[:]).array.real.T * 4096
+        range   = np.s_[:]).array.real * 4096
+    buf = NamedAxesArray(buf, axis_names=("azimuth", "range", "rgb"))
+    buf.set_scale(config.angles_to_steer, axis="azimuth")
     canvas = Canvas(image=buf)
     app.run()
 
