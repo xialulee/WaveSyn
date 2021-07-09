@@ -6,16 +6,18 @@ Created on Mon May 08 22:17:47 2017
 """
 __DEBUG__ = False
 
+from pathlib import Path
 
 import numpy as np
+import quantities as pq
 from math import pi
-# from scipy.ndimage import imread
 from vispy import app
 from vispy.gloo import clear, set_clear_color, set_viewport, Program
 
 from jinja2 import Template
 from wavesynlib.languagecenter.pysl.utils import hit_circle, hit_line
 from wavesynlib.languagecenter.pysl.constants import pi as PI_STR
+from wavesynlib.languagecenter.nputils import NamedAxesArray
 
 # The PyQt5 support of VisPy still has some problems.
 # Hence we use the GLFW backend here. 
@@ -23,67 +25,13 @@ app.use_app(backend_name='glfw')
 
 
 
-vertex = """
-#version 420
-
-attribute vec2 position;
-out vec2 texcoord;
+with open(Path(__file__).parent/"ppi.vert", "r") as vert_file:
+    vertex = vert_file.read()
 
 
-void main(){
-    gl_Position = vec4(position, 0.0, 1.0 );
-    texcoord = position;
-}
-"""
-
-
-fragment = Template("""
-#version 420
-
-#define PI {{pi}}
-#define TWO_PI (2*PI)
-
-uniform sampler2D image;
-uniform float current_angle;
-in vec2 texcoord;
-out vec3 frag_color;
-
-{{hit_circle}}
-{{hit_line}}
-
-void main(){
-    float angle;    
-    float len;
-    float hit;
-
-    for (int i=1; i<=3; ++i){    
-        hit = hit_circle(texcoord, 1.0/3.0*i, 0.005);
-        if (hit>0) break;
-    }
-    
-    if (hit == 0.0) {
-        hit = hit_line(texcoord, vec2(-1.0, 0.0), vec2(1.0, 0.0), 0.005);
-        hit += hit_line(texcoord, vec2(0.0, -1.0), vec2(0.0, 1.0), 0.005);
-    }
-        
-    vec3 color = vec3(0.0, 0.0, 0.0);        
-    if (length(texcoord)<=1){
-        angle = 2*PI-(atan(texcoord.y, texcoord.x) + PI);
-        len = length(texcoord);      
-        /*
-        color.g = (texture(image, vec2(angle / TWO_PI, len)) 
-            * max(1 - mod(angle+current_angle, TWO_PI) / TWO_PI * 3, 0)).g;
-        */
-        color.g = (texture(image, vec2(angle / TWO_PI, len))).g;
-        color.rb = vec2(0.0, 0.0);
-    }
-            
-    if (hit>0.0)
-        frag_color = mix(color, vec3(0.0, 1.0, 0.0)*hit*0.5, 0.35);
-    else
-        frag_color = color;
-}
-""").render(
+with open(Path(__file__).parent/"ppi.frag", "r") as frag_file:
+    frag_temp = frag_file.read()
+fragment = Template(frag_temp).render(    
     pi=PI_STR,
     hit_circle=hit_circle.partial('hit_circle', center='vec2(0.0,0.0)').to_code(),
     hit_line=hit_line.to_code())
@@ -92,19 +40,33 @@ void main(){
 
 class Canvas(app.Canvas):
     def __init__(self, image):
+        assert(isinstance(image, NamedAxesArray))
+        assert(image.axis_names[:2]==("azimuth", "range"))
         self.__scale = 1
+        self.__image_ratio = 1
         app.Canvas.__init__(self, title='WaveSyn-ImageViewer', size=(512, 512),
                             keys='interactive')
 
-        height, width, dumb = image.shape        
-        self.__image_ratio = 1
+        azimuth_scale = image.get_scale(axis='azimuth')
+        azimuth_scale = azimuth_scale.rescale(pq.rad).magnitude
+        azimuth_scale = np.unwrap(azimuth_scale)
+        while azimuth_scale.max() > 2*np.pi:
+            azimuth_scale -= 2*np.pi
+        start_angle    = azimuth_scale.min()
+        stop_angle     = azimuth_scale.max()
+        angle_interval = stop_angle - start_angle
+
+        height, width, dumb = image.array.shape        
         self.__image_size = width + 1j*height
 
         self.program = Program(vertex, fragment, 4)
         self.program['position'] = (-1, -1), (-1, +1), (+1, -1), (+1, +1)
 
-        self.program['image'] = image
+        self.program['image'] = image.array
         self.program['image'].interpolation = 'linear'
+        self.program["start_angle"] = start_angle
+        self.program["stop_angle"] = stop_angle
+        self.program["angle_interval"] = angle_interval
         self.program['current_angle'] = 0.0
 
         set_clear_color('black')
@@ -158,7 +120,7 @@ class Canvas(app.Canvas):
             self.__last_pos = pos
             self._set_viewport()
             self.update()
-                   
+
 
     def on_draw(self, event):
         clear(color=True, depth=True)
@@ -188,7 +150,7 @@ class Canvas(app.Canvas):
         
 
 
-if __name__ == '__main__':
-    # mat = imread('c:/lab/test.jpg')
-    canvas = Canvas(image=np.ones((128, 128, 3), dtype=np.uint8)*255)
-    app.run()
+#if __name__ == '__main__':
+    ## mat = imread('c:/lab/test.jpg')
+    #canvas = Canvas(image=np.ones((128, 128, 3), dtype=np.uint8)*255)
+    #app.run()
