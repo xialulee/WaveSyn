@@ -96,6 +96,27 @@ class NamedAxesArray:
         return result
 
 
+    def apply_along_axis(self, func1d, axis):
+        assert(isinstance(axis, str))
+        assert(axis in self.axis_names)
+        ai = self.name_to_axis_indices(axis)
+        result_arr = np.apply_along_axis(func1d, ai, self.array)
+        len_old_shape = len(self.array.shape)
+        len_new_shape = len(result_arr.shape)
+        if len_old_shape == len_new_shape:
+            result = type(self)(result_arr, axis_names=self.axis_names)
+        elif len_old_shape < len_new_shape:
+            name_list = list(self.axis_names)
+            for k in range(len_new_shape-len_old_shape):
+                name_list.insert(ai, f"unnamed_axis{k}")
+            result = type(self)(result_arr, axis_names=name_list)
+        else:
+            name_list = list(self.axis_names)
+            name_list.remove(axis)
+            result = type(self)(result_arr, axis_names=name_list)
+        return result
+
+
     def cdot1d(self, other, axis):
         """\
 Consider self as a collection of vectors along the given axis,
