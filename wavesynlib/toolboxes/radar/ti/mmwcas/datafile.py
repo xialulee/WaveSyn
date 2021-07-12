@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from wavesynlib.languagecenter.cutils import ctype_build, StructReader
 from wavesynlib.languagecenter.nputils import NamedAxesArray
 from wavesynlib.languagecenter.datatypes.physicalquantities.functions import expj2π
-from wavesynlib.toolboxes.radar.display.ppi import Canvas, app
+from wavesynlib.toolboxes.radar.display.ppi import Canvas
 
 from ctypes import c_uint32, c_uint64
 
@@ -91,11 +91,11 @@ def show_ppi(cube, config):
     buf[:31, :, 1] = cube.indexing(
         azimuth = np.s_[:],
         Doppler = 0, 
-        range   = np.s_[:]).array.real * 4096
+        range   = np.s_[:]).array.real * 8192
     buf = NamedAxesArray(buf, axis_names=("azimuth", "range", "rgb"))
     buf.set_scale(config.angles_to_steer, axis="azimuth")
     canvas = Canvas(image=buf)
-    app.run()
+    canvas.app.run()
 
 
 

@@ -52,15 +52,19 @@ void main() {
     if (range<=1) {
         angle = atan(texcoord.x, texcoord.y);
         if (is_angle_valid(angle, start_angle, stop_angle)) {
-            /*
-            color.g = (texture(image, vec2(angle / TWO_PI, len)) 
-                * max(1 - mod(angle+current_angle, TWO_PI) / TWO_PI * 3, 0)).g;
-            */
+            //color.g = (texture(
+                //image, 
+                //vec2(
+                    //range, 
+                    //(angle - start_angle)/angle_interval))).g 
+                //* max(1 - mod(angle+current_angle, TWO_PI) / TWO_PI * 0.8, 0);
+            
             color.g = (texture(
                 image, 
                 vec2(
                     range, 
                     (angle - start_angle)/angle_interval))).g;
+            
             color.rb = vec2(0.0, 0.0);
         }
     }
