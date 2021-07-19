@@ -89,7 +89,8 @@ class DFTDirectionsWindow(FigureWindow):
         fig_polar.plot_function = lambda *args, **kwargs: fig_polar.stem(*args, **kwargs)
 
         @figure_book.add_observer
-        def on_curve_selected(**kwargs):
+        def on_curve_selected(event):
+            kwargs = event.kwargs
             if "curve_selected" in kwargs:
                 _list = self._ambig_group._list
                 _list.clear()

@@ -50,7 +50,9 @@ class Observable:
         for observer in self.__observers:
             try: # temporarily added for detecting new protocol errors. 
                 observer.update(*args, **kwargs)
-            except TypeError:
+            except TypeError as e:
+                print("Observer protocol not compatible. ")
+                print(e)
                 print(observer)
             
 
