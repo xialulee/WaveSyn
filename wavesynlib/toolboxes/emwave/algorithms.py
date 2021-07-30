@@ -25,16 +25,24 @@ def λfT_eq(λ=None, f=None, T=None):
             raise ValueError("The given argument should be a positive real number.")
         return result
 
+    def valid(v):
+        if v is None:
+            return False
+        if isinstance(v, np.ndarray):
+            return (v>0).all()
+        else:
+            return v>0
+
     c = constants.c
-    if λ is not None:
+    if valid(λ):
         λ = regularize(λ, pq.meter)
         T = λ / c
         f = 1 / T
-    elif T is not None and T>0:
+    elif valid(T):
         T = regularize(T, pq.second)
         λ = c * T
         f = 1 / T
-    elif f is not None and f>0:
+    elif valid(f):
         f = regularize(f, pq.Hz)
         T = 1 / f
         λ = c * T

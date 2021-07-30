@@ -1,5 +1,5 @@
 import numpy as np
-from pandas import Series, DataFrame
+from pandas import Series, DataFrame, read_csv
 import quantities as pq
 
 
@@ -101,6 +101,12 @@ class QuantityFrame(DataFrame):
                 kwargs["unit_dict"] = self.unit_dict
             return QuantitySeries(*args, **kwargs)
         return constructor
+
+
+    @classmethod
+    def read_csv(cls, filename):
+        temp = read_csv(filename)
+        return cls(temp)
 
 
     def qcol(self, name:str)->pq.Quantity:
