@@ -175,6 +175,20 @@ class LookupTable:
 class TypeLinks(ABC):
     @abstractmethod
     def get_link_info(self): pass
+
+
+
+class ModulePath(str):
+    @property
+    def parent(self):
+        return self.rsplit(".", 1)[0]
+
+
+    def __truediv__(self, other:str):
+        if not other.startswith("."):
+            other = f".{other}"
+        return type(self)(f"{self}{other}")
+
         
         
 
