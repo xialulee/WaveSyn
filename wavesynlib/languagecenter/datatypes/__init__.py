@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 
 import os
+import re
 from pathlib import Path
 from typing import Callable
 import hy
@@ -179,16 +180,19 @@ class TypeLinks(ABC):
 
 
 class ModulePath(str):
-    # Todo: please support ".."
     @property
     def parent(self):
         return type(self)(self.rsplit(".", 1)[0])
 
 
     def __truediv__(self, other:str):
-        if not other.startswith("."):
-            other = f".{other}"
-        return type(self)(f"{self}{other}")
+        match_dots = re.match(r"^\.*", other)
+        num_dots = match_dots.end()
+        names = other[num_dots:]
+        parent = self
+        for k in range(num_dots-1):
+            parent = parent.parent
+        return type(self)(f"{parent}.{names}")
 
 
 
