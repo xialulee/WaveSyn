@@ -5,7 +5,7 @@
 
 (import [importlib [import-module]])
 (import [wavesynlib.languagecenter.designpatterns [Observable]])
-
+(import [wavesynlib.languagecenter.python.utils [get-module-path]])
 
 
 (defclass -ModelTreeMonitor [Observable]
@@ -208,7 +208,21 @@ then node will have a property named 'a', which cannot be re-assigned."
                         node
                     #_else
                         (recur node.parent-node) ) ) ) ) 
-            self.--root-node) ) ) 
+            self.--root-node) ) 
+            
+    (defprop module-path
+        #_getter
+        (fn [self]
+            (get-module-path self))) 
+            
+    (defn add-lazy-local-node [self node-name module-name class-name]
+        (setattr 
+            self 
+            node-name
+            (ModelNode 
+                :is-lazy     True
+                :module-name (/ self.module-path.parent module-name) 
+                :class-name  class-name) ) ) ) 
 
 
 
