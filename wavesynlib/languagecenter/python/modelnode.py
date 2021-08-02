@@ -14,6 +14,6 @@ class Python(ModelNode):
         super().__init__(*args, **kwargs)
         self.table_utils = ModelNode(
             is_lazy=True,
-            module_name='wavesynlib.languagecenter.python.utils',
+            module_name='wavesynlib.languagecenter.python.tableutils',
             class_name='TableUtils')
         
