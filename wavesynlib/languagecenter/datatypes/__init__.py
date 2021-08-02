@@ -179,9 +179,10 @@ class TypeLinks(ABC):
 
 
 class ModulePath(str):
+    # Todo: please support ".."
     @property
     def parent(self):
-        return self.rsplit(".", 1)[0]
+        return type(self)(self.rsplit(".", 1)[0])
 
 
     def __truediv__(self, other:str):
@@ -189,8 +190,7 @@ class ModulePath(str):
             other = f".{other}"
         return type(self)(f"{self}{other}")
 
-        
-        
+
 
 if __name__ == '__main__':
     lang    = sys.argv[1]
