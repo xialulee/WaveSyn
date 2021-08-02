@@ -185,6 +185,11 @@ class ModulePath(str):
         return type(self)(self.rsplit(".", 1)[0])
 
 
+    @property
+    def root(self):
+        return type(self)(self.split(".", 1)[0])
+
+
     def __truediv__(self, other:str):
         match_dots = re.match(r"^\.*", other)
         num_dots = match_dots.end()
