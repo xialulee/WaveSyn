@@ -1,4 +1,4 @@
-﻿name,min_freq/GHz,max_freq/GHz
+﻿band_name,min_freq/GHz,max_freq/GHz
 HF,0.003 ,0.030 
 VHF,0.030 ,0.300 
 UHF,0.300 ,1.000 
