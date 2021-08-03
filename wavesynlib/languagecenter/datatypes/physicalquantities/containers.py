@@ -20,6 +20,18 @@ def _field_name_to_unit_obj(name, unit_dict=None):
 
 
 
+def _get_field_fullname(name_coll, name):
+    if name in name_coll:
+        return name
+    name_ = f"{name}/"
+    for n in name_coll:
+        if n.startswith(name_):
+            return n
+    else:
+        raise KeyError("Cannot find the corresponding fullname.")
+
+
+
 class QuantitySeries(Series):
 
     _metadata = ["unit_dict"]
@@ -67,6 +79,10 @@ class QuantitySeries(Series):
         else:
             unit_obj = _field_name_to_unit_obj(name, self.unit_dict)
             return self[name] * unit_obj
+
+
+    def get_elem_fullname(self, name):
+        return _get_field_fullname(self.index, name)
 
 
     @property
@@ -126,6 +142,10 @@ class QuantityFrame(DataFrame):
     def read_csv(cls, filename):
         temp = read_csv(filename)
         return cls(temp)
+
+
+    def get_column_fullname(self, name):
+        return _get_field_fullname(self.columns, name)
 
 
     def qcol(self, name:str)->pq.Quantity:
