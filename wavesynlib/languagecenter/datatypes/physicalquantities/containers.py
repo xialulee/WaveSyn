@@ -178,6 +178,38 @@ class QuantityFrame(DataFrame):
 
 
 
+class Query:
+    def __init__(self):
+        self.__select = None
+        self.__from = None
+        self.__where = None
+
+
+    def SELECT(self, *args):
+        self.__select = args
+        return self
+
+
+    def FROM(self, quantityframe):
+        self.__from = quantityframe
+        return self
+
+
+    def WHERE(self, func):
+        self.__where = func
+        return self
+
+
+    def FIRST(self):
+        qf = self.__from
+        fullnames = [qf.get_column_fullname(name) for name in self.__select]
+        for idx, row in qf.iterrows():
+            if self.__where(row):
+                result = {fullname:row[fullname] for fullname in fullnames}
+                return idx, QuantitySeries(result)
+
+
+
 class Decibel:
     def __init__(self, value):
         self.__value = value
