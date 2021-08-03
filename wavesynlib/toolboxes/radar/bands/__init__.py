@@ -1,4 +1,4 @@
-from wavesynlib.languagecenter.datatypes.physicalquantities.containers import QuantityFrame
+from wavesynlib.languagecenter.datatypes.physicalquantities.containers import QuantityFrame, Query
 from wavesynlib.toolboxes.emwave.algorithms import λfT_eq
 
 from pathlib import Path
@@ -34,9 +34,12 @@ ieee_radar_bands = _read_csv()
 
 
 
-def f_to_name(f):
+def freq_to_name(f):
     if not isinstance(f, pq.Quantity):
         f = f*pq.Hz
-    frm = ieee_radar_bands
-    result = frm["name"][np.logical_and(frm.qcol("min_freq")<=f, f<frm.qcol("max_freq"))]
-    return result.iloc[0]
+    result = Query()\
+        .SELECT("band_name")\
+        .FROM(ieee_radar_bands)\
+        .WHERE(lambda r: r.qelem("min_freq") < f < r.qelem("max_freq"))\
+        .FIRST()
+    return result[1]["band_name"]
