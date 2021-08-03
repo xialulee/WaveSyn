@@ -40,6 +40,6 @@ def freq_to_name(f):
     result = Query()\
         .SELECT("band_name")\
         .FROM(ieee_radar_bands)\
-        .WHERE(lambda r: r.qelem("min_freq") < f < r.qelem("max_freq"))\
+        .WHERE(lambda r: r.qelem("min_freq") <= f < r.qelem("max_freq"))\
         .FIRST()
     return result[1]["band_name"]
