@@ -190,6 +190,20 @@ class ModulePath(str):
         return type(self)(self.split(".", 1)[0])
 
 
+    def is_valid(self):
+        if self.startswith("."):
+            raise ValueError("Relative path not supported.")
+        return self in sys.modules 
+
+
+    def is_package(self):
+        if not self.is_valid():
+            raise ValueError(f"{self} is not a valid path.")
+        mod = sys.modules[self]
+        path = Path(mod.__file__)
+        return True if path.name == "__init__.py" else False
+
+
     def __truediv__(self, other:str):
         match_dots = re.match(r"^\.*", other)
         num_dots = match_dots.end()
