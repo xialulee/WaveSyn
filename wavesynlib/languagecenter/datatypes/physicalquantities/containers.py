@@ -4,6 +4,22 @@ import quantities as pq
 
 
 
+def _field_name_to_unit_obj(name, unit_dict=None):
+        parts = name.split("/", 1)
+        if len(parts) < 2:
+            unit_obj = pq.dimensionless
+        else:
+            unit_name = parts[1]
+            if unit_dict and unit_name in unit_dict:
+                unit_obj = unit_dict[unit_name]
+            elif hasattr(pq, unit_name):
+                unit_obj = getattr(pq, unit_name)
+            else:
+                unit_obj = pq.CompoundUnit(unit_name)
+        return unit_obj
+
+
+
 class QuantitySeries(Series):
 
     _metadata = ["unit_dict"]
@@ -32,27 +48,30 @@ class QuantitySeries(Series):
         return constructor
 
 
-    def __search_unit(self, unit_name:str):
-        unit_dict = self.unit_dict
-        if unit_dict and unit_name in unit_dict:
-            unit_obj = unit_dict[unit_name]
-        elif hasattr(pq, unit_name):
-            unit_obj = getattr(pq, unit_name)
+    def qelem(self, name:str)->pq.Quantity:
+        if "/" not in name:
+            if name in self.index:
+                # Dimensionless field
+                return self[name] * pq.dimensionless
+            else:
+                # Name without unit
+                name_ = f"{name}/"
+                for index_name in self.index:
+                    if index_name.startswith(name_):
+                        name = index_name
+                        break
+                else:
+                    raise KeyError(f"{name} not in this Series.")
+                unit_obj = _field_name_to_unit_obj(name, self.unit_dict)
+                return self[name] * unit_obj
         else:
-            unit_obj = pq.CompoundUnit(unit_name)
-        return unit_obj
+            unit_obj = _field_name_to_unit_obj(name, self.unit_dict)
+            return self[name] * unit_obj
 
 
     @property
     def unit_object(self):
-        name = self.name
-        parts = name.split("/", 1)
-        if len(parts) < 2:
-            unit_obj = pq.dimensionless
-        else:
-            unit_name = parts[1]
-            unit_obj = self.__search_unit(unit_name)
-        return unit_obj
+        return _field_name_to_unit_obj(self.name, self.unit_dict)
 
 
     @property
@@ -119,7 +138,7 @@ class QuantityFrame(DataFrame):
                     result = self[column].quantities
                     break
             else:
-                raise KeyError("{name} not exists in this frame.")
+                raise KeyError(f"{name} not exists in this frame.")
         return result
 
 
