@@ -179,21 +179,32 @@ class QuantityFrame(DataFrame):
         return np.hstack(result) * unit_obj
 
 
+    @property 
+    def qfquery(self):
+        return Query().FROM(self)
+
+
 
 class Query:
     def __init__(self):
         self.__select = None
+        self.__select_fullnames = None
         self.__from = None
-        self.__where = None
+        self.__where = lambda x: x
+        self.__order_param = None
 
 
     def SELECT(self, *args):
         self.__select = args
+        if self.__from is not None:
+            self.__select_fullnames = [self.__from.get_column_fullname(name) for name in self.__select]
         return self
 
 
     def FROM(self, quantityframe):
         self.__from = quantityframe
+        if self.__select:
+            self.__select_fullnames = [quantityframe.get_column_fullname(name) for name in self.__select]
         return self
 
 
@@ -202,39 +213,96 @@ class Query:
         return self
 
 
-    def ITER(self):
-        qf = self.__from
-        for idx, row in qf.iterrows():
-            if self.__where(row):
-                if self.__select:
-                    fullnames = [qf.get_column_fullname(name) for name in self.__select]
-                    result = {fullname:row[fullname] for fullname in fullnames}
-                    yield idx, QuantitySeries(result)
-                else:
-                    yield idx, row
+    #def ITER(self):
+        #qf = self.__from
+        #for idx, row in qf.iterrows():
+            #if self.__where(row):
+                #if self.__select:
+                    #fullnames = [qf.get_column_fullname(name) for name in self.__select]
+                    #result = {fullname:row[fullname] for fullname in fullnames}
+                    #yield idx, QuantitySeries(result)
+                #else:
+                    #yield idx, row
+
+
+    def ORDERBY(self, *args, ASCENDING=True, INPLACE=False):
+        self.__order_param = {
+            "args":args,
+            "kwargs": { 
+                "ascending":ASCENDING, 
+                "inplace":INPLACE}}
+        return self
 
 
     def FIRST(self):
-        return next(self.ITER())
+        return self.HEAD(1).iloc[0]
 
 
     def HEAD(self, n):
         if n <= 0:
             return
-        k = 0
-        row_coll = []
-        idx_coll = []
-        for idx, row in self.ITER():
-            idx_coll.append(idx)
-            row_coll.append(row)
-            k += 1
-            if k >= n:
-                break
-        return QuantityFrame(row_coll, index=idx_coll)
+        if not self.__order_param:
+            k = 0
+            row_coll = []
+            idx_coll = []
+            for idx, row in self.__iter():
+                idx_coll.append(idx)
+                row_coll.append(row)
+                k += 1
+                if k >= n:
+                    break
+            return self.__sort(QuantityFrame(row_coll, index=idx_coll))
+        else:
+            row_coll = []
+            idx_coll = []
+            for idx, row in self.__iter():
+                idx_coll.append(idx)
+                row_coll.append(row)
+            result = QuantityFrame(row_coll, index=idx_coll)
+            result = self.__sort(result)
+            if n == inf:
+                result = result
+            else:
+                result = result.iloc[:n]
+            if self.__select_fullnames:
+                return result[self.__select_fullnames]
+            else:
+                return result
 
 
     def ALL(self):
         return self.HEAD(inf)
+
+
+    def __iter(self):
+        qf = self.__from
+        if self.__select:
+            select_for_order = []
+            for name in self.__select:
+                select_for_order.append(qf.get_column_fullname(name))
+            if self.__order_param:
+                by = self.__order_param["args"]
+                for name in by:
+                    fullname = qf.get_column_fullname(name)
+                    if fullname not in select_for_order:
+                        select_for_order.append(fullname)
+        for idx, row in qf.iterrows():
+            if self.__where(row):
+                if self.__select:
+                    result = {fullname:row[fullname] for fullname in select_for_order}
+                    yield idx, QuantitySeries(result)
+                else:
+                    yield idx, row
+
+
+    def __sort(self, qf):
+        if not self.__order_param:
+            return qf
+        else:
+            by = self.__order_param["args"]
+            fullnames = [self.__from.get_column_fullname(name) for name in by]
+            kwargs = self.__order_param
+            return qf.sort_values(fullnames, **self.__order_param["kwargs"])
 
 
 
@@ -262,6 +330,7 @@ if __name__ == "__main__":
         "velocity/(m/s)": [10, 20, 30],
         "distance/km": [1000, 2000, 3000], 
         "time/s": [0.1, 0.2, 0.3]}, unit_dict=unit_dict)
+    print(qf.qfquery.SELECT('velocity').WHERE(lambda r: r.qelem('distance')>1000*pq.km).ORDERBY("distance").ALL())
     print(qf[["distance/km", "time/s"]], type(qf[["distance/km", "time/s"]]))
     print(qf["velocity/(m/s)"].convert_unit('km/h'))
     print(qf.unit_dict is qf["time/s"].unit_dict)
