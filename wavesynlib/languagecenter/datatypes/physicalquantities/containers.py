@@ -277,9 +277,7 @@ class Query:
     def __iter(self):
         qf = self.__from
         if self.__select:
-            select_for_order = []
-            for name in self.__select:
-                select_for_order.append(qf.get_column_fullname(name))
+            select_for_order = [*self.__select_fullnames]
             if self.__order_param:
                 by = self.__order_param["args"]
                 for name in by:
