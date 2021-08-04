@@ -202,11 +202,14 @@ class Query:
 
     def FIRST(self):
         qf = self.__from
-        fullnames = [qf.get_column_fullname(name) for name in self.__select]
         for idx, row in qf.iterrows():
             if self.__where(row):
-                result = {fullname:row[fullname] for fullname in fullnames}
-                return idx, QuantitySeries(result)
+                if self.__select:
+                    fullnames = [qf.get_column_fullname(name) for name in self.__select]
+                    result = {fullname:row[fullname] for fullname in fullnames}
+                    return idx, QuantitySeries(result)
+                else:
+                    return idx, row
 
 
 
