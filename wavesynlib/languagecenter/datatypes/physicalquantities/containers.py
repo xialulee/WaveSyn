@@ -5,6 +5,16 @@ from pandas import Series, DataFrame, read_csv
 import quantities as pq
 
 
+def _unit_name_to_unit_obj(unit_name:str, unit_dict:dict=None):
+    if unit_dict and unit_name in unit_dict:
+        unit_obj = unit_dict[unit_name]
+    elif hasattr(pq, unit_name):
+        unit_obj = getattr(pq, unit_name)
+    else:
+        unit_obj = pq.CompoundUnit(unit_name)
+    return unit_obj
+
+
 
 def _field_name_to_unit_obj(name, unit_dict=None):
         parts = name.split("/", 1)
@@ -104,7 +114,7 @@ class QuantitySeries(Series):
         else:
             new_postfix = new_unit
         new_name = f"{quantity_name}/{new_postfix}"
-        unit_obj = self.__search_unit(new_unit)
+        unit_obj = _unit_name_to_unit_obj(new_unit, self.unit_dict)
         return Series(
             self.quantities.rescale(unit_obj),
             index=self.index,
@@ -190,7 +200,7 @@ class Query:
         self.__select = None
         self.__select_fullnames = None
         self.__from = None
-        self.__where = lambda x: x
+        self.__where = lambda x: True
         self.__order_param = None
 
 
@@ -213,16 +223,11 @@ class Query:
         return self
 
 
-    #def ITER(self):
-        #qf = self.__from
-        #for idx, row in qf.iterrows():
-            #if self.__where(row):
-                #if self.__select:
-                    #fullnames = [qf.get_column_fullname(name) for name in self.__select]
-                    #result = {fullname:row[fullname] for fullname in fullnames}
-                    #yield idx, QuantitySeries(result)
-                #else:
-                    #yield idx, row
+    def ITER(self):
+        if self.__order_param is not None:
+            raise SyntaxError("ITER is incompatible with ORDERBY.")
+        for idx, row in self.__iter():
+            yield idx, row
 
 
     def ORDERBY(self, *args, ASCENDING=True, INPLACE=False):
