@@ -1,3 +1,5 @@
+from math import inf
+
 import numpy as np
 from pandas import Series, DataFrame, read_csv
 import quantities as pq
@@ -200,16 +202,39 @@ class Query:
         return self
 
 
-    def FIRST(self):
+    def ITER(self):
         qf = self.__from
         for idx, row in qf.iterrows():
             if self.__where(row):
                 if self.__select:
                     fullnames = [qf.get_column_fullname(name) for name in self.__select]
                     result = {fullname:row[fullname] for fullname in fullnames}
-                    return idx, QuantitySeries(result)
+                    yield idx, QuantitySeries(result)
                 else:
-                    return idx, row
+                    yield idx, row
+
+
+    def FIRST(self):
+        return next(self.ITER())
+
+
+    def HEAD(self, n):
+        if n <= 0:
+            return
+        k = 0
+        row_coll = []
+        idx_coll = []
+        for idx, row in self.ITER():
+            idx_coll.append(idx)
+            row_coll.append(row)
+            k += 1
+            if k >= n:
+                break
+        return QuantityFrame(row_coll, index=idx_coll)
+
+
+    def ALL(self):
+        return self.HEAD(inf)
 
 
 
