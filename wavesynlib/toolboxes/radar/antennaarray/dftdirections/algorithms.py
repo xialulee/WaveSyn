@@ -4,7 +4,7 @@ from pandas import DataFrame
 
 
 
-def calc_directions(num_elem, dist_elem):
+def calc_directions(num_elem, dist_elem, flatten=False):
     k_range = r_[:num_elem]
     neg_index = (num_elem - 1) // 2
     k_range[-neg_index:] -= num_elem
@@ -14,9 +14,15 @@ def calc_directions(num_elem, dist_elem):
     for k in k_range:
         ratio_coll = (k+steps)/dist_elem/num_elem
         ratio_coll = [ratio for ratio in ratio_coll if -1<=ratio<=1]
-        result.append(dict(
-            dft_index=k,
-            angle_coll=[asin(ratio) for ratio in ratio_coll]))
+        if flatten:
+            for ratio in ratio_coll:
+                result.append(dict(
+                    dft_index=k,
+                    angle=asin(ratio)))
+        else:
+            result.append(dict(
+                dft_index=k,
+                angle_coll=[asin(ratio) for ratio in ratio_coll]))
     return DataFrame(result)
 
 
