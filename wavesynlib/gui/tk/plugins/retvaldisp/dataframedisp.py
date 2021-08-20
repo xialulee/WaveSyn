@@ -1,4 +1,5 @@
 from pandas import DataFrame
+from tkinter.filedialog import asksaveasfilename
 
 from wavesynlib.widgets.tk import dataframedisplay
 
@@ -22,8 +23,22 @@ class Plugin:
     def action(self, data):
         if not self.test_data(data):
             return
-        self.__root.gui.console.show_tips([{
-            "type":"link",
-            "content":"Display this DataFrame object in a window.",
-            "command":lambda *args:dataframedisplay.show(data)}])
+
+        def saveas_cvs(data):
+            files = [
+                ("CSV Files", "*.csv"), 
+                ("All Files", "*.*") ]
+            filename = asksaveasfilename(filetypes=files, defaultextension=".csv")
+            data.to_csv(filename)
+
+        self.__root.gui.console.show_tips([
+            {
+                "type":"link",
+                "content":"Display in a window.",
+                "command": lambda *args: dataframedisplay.show(data)},
+
+            {
+                "type":"link",
+                "content":"Save as CSV file.",
+                "command": lambda *args: saveas_cvs(data) }])
 
