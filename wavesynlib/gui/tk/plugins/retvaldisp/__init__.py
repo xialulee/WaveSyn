@@ -5,7 +5,11 @@ Created on Fri Apr 07 17:08:49 2017
 @author: Feng-cong Li
 """
 
-class BasePlugin:
+import abc
+
+
+
+class BasePlugin(abc.ABC):
     _type = None
 
     def __init__(self, root_node):
@@ -22,3 +26,8 @@ class BasePlugin:
             return True
         else:
             return False
+
+
+    @abc.abstractmethod
+    def action(self, data):
+        pass
