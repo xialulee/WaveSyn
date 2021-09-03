@@ -12,9 +12,12 @@
 
 (import [numpy [
     complex :as ℂ
+    log10 eye 
     zeros atleast-1d real
     sin exp radians kron outer
     pi :as π]])
+
+(import [numpy.linalg [eigvals]])
 
 (import [cvxpy :as cp])
 
@@ -80,7 +83,16 @@ M: The number of array elements."
                 (-) ) ) 
             (setv g #┇[m t])
             (. (outer g g) real) ) ) ) 
-    (/ G N) )
+    (/= G N) 
+    (setv min-ev (-> G (eigvals) (real) (min)))
+    (when (< min-ev 0.0)
+        (setv 
+            -min-ev (- min-ev)
+            _2/3    (/ 2 3))
+        (setv δ (** 10 (* _2/3 (log10 -min-ev))))
+        (setv M²+1 (inc (** M 2)))
+        (+= G (* δ (eye M²+1))))
+    G)
 
 
 
