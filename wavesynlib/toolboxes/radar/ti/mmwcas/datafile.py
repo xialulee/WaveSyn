@@ -6,7 +6,7 @@ from pathlib import Path
 import json
 from dataclasses import dataclass, field
 
-from wavesynlib.languagecenter.cutils import ctype_build, StructReader
+from wavesynlib.languagecenter.cpp.typeutils import ctype_build, StructReader
 from wavesynlib.languagecenter.nputils import NamedAxesArray
 from wavesynlib.languagecenter.datatypes.physicalquantities.functions import expj2π
 from wavesynlib.toolboxes.radar.display.ppi import Canvas
