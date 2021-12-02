@@ -76,7 +76,7 @@ class ComplexScalar:
         result = f"{self.__var_type} {self.__var_name}"
         if self.__init_value:
             result = f"{result} = {self.__init_value}"
-        return f"{result};"
+        return f"{result}"
 
     def __return_aux(self, real, imag):
         return ComplexScalar(
@@ -108,6 +108,12 @@ class ComplexScalar:
         return self.__return_aux(
             real=f"({r1}*{r2} - {i1}*{i2})",
             imag=f"({r1}*{i2} + {r2}*{i1})")
+
+    def __div__(self, other):
+        r1, i1, r2, i2 = self.to_list(self, other)
+        return self.__return_aux(
+            real=f"(({r1}*{r2}+{i1}*{i2})/({r2}*{r2}+{i2}*{i2}))",
+            imag=f"(({r2}*{i1}-{r1}*{i2})/({r2}*{r2}+{i2}*{i2}))")
 
     def conj(self):
         r1, i1 = self.to_list(self)
