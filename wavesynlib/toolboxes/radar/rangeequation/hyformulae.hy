@@ -72,6 +72,10 @@
 
 
 
+(defn get-k_α-table [] -kalpha)
+
+
+
 (defn T_g [f k_g]
 "Galactic noise temperature in kelvin at specified frequency.
 f:   the frequency, in GHz or a instance of Quantity;
