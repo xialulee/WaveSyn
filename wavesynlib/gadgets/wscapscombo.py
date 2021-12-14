@@ -5,7 +5,7 @@ from tkinter import Tk
 import tkinter.messagebox as msgbox
 import win32con
 
-from wavesynlib.interfaces.os.windows.inputhook.keyboardhook import KeyboardHook, KeyToAction, KeyToKey
+from wavesynlib.interfaces.os.windows.inputhook.keyboardhook import KeyboardHook, KeyToAction, KeyToKey, KeyToMouse
 
 
 @dataclass
@@ -45,6 +45,24 @@ class KeyToKeyWithStatus(KeyToKey):
             return False
 
 
+class KeyToMouseWithStatus(KeyToMouse):
+    def __init__(self, mouse_btn: str, status:Status):
+        self.__status = status
+        super().__init__(mouse_btn)
+
+    def on_keydown(self) -> bool:
+        if self.__status.caps == -1:
+            return super().on_keydown()
+        else:
+            return False
+
+    def on_keyup(self) -> bool:
+        if self.__status.caps == -1:
+            return super().on_keyup()
+        else:
+            return False
+
+
 default_map = {
     ord("A"): win32con.VK_LEFT,
     ord("S"): win32con.VK_DOWN,
@@ -53,7 +71,10 @@ default_map = {
     ord("Q"): (win32con.VK_LEFT, (win32con.VK_CONTROL,)),
     ord("E"): (win32con.VK_RIGHT, (win32con.VK_CONTROL,)),
     ord("R"): win32con.VK_HOME,
-    ord("F"): win32con.VK_END}
+    ord("F"): win32con.VK_END,
+    ord("Z"): "left",
+    ord("X"): "right",
+    ord("C"): "middle"}
 
 
 
@@ -66,6 +87,8 @@ if __name__ == "__main__":
     for k, v in default_map.items():
         if isinstance(v, tuple):
             khook.add_key_to_action(k, KeyToKeyWithStatus(v[0], status, modifiers=v[1]))
+        elif isinstance(v, str):
+            khook.add_key_to_action(k, KeyToMouseWithStatus(v, status))
         else:
             khook.add_key_to_action(k, KeyToKeyWithStatus(v, status))
     try:
