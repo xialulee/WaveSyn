@@ -8,14 +8,22 @@
 
 (import [win32con [WM-KEYDOWN WM-KEYUP WH-KEYBOARD-LL]])
 (import atexit)
+(import [abc [ABC]])
 
 (import [wavesynlib.languagecenter.wavesynscript [ModelNode]])
 (import [wavesynlib.languagecenter.datatypes.wintypes.hook [KHOOKPROC]])
 (import [wavesynlib.interfaces.os.windows.inputsender.utils [send-mouse-input send-key-input]])
 
 
+(defclass KeyToAction [ABC]
+    (defn on-keydown ^bool [self]
+        (raise (NotImplementedError)))
+        
+    (defn on-keyup ^bool [self]
+        (raise (NotImplementedError))))
 
-(defclass -KeyToMouse [] 
+
+(defclass KeyToMouse [KeyToAction] 
     (defn --init-- ^None [self ^str mouse-btn]
         (setv 
             self.--previous  None
@@ -43,7 +51,7 @@
         (return (.--callback self "keyup"))))
 
 
-(defclass -KeyToKey []
+(defclass KeyToKey [KeyToAction]
     (defn --init-- ^None [self ^int new-key-code]
         (setv self.--new-key-code new-key-code))
         
@@ -65,12 +73,15 @@
             self.--c-khook  (KHOOKPROC self.--khookproc)))
             
     (defn add-key-to-mouse [self ^int key ^str mouse-btn]
-        (setv mapobj (-KeyToMouse :mouse-btn mouse-btn))
+        (setv mapobj (KeyToMouse :mouse-btn mouse-btn))
         (assoc self.--remap key mapobj))
 
     (defn add-key-to-key [self ^int old-key ^int new-key]
-        (setv mapobj (-KeyToKey :new-key-code new-key))
+        (setv mapobj (KeyToKey :new-key-code new-key))
         (assoc self.--remap old-key mapobj))
+
+    (defn add-key-to-action [self ^int key ^KeyToAction action]
+        (assoc self.--remap key action))
         
     (defn --khookproc [self nCode wParam lParam]
         (setv 
