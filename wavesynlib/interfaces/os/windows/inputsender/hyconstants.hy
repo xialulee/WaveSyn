@@ -1,3 +1,6 @@
+(import win32con)
+
+
 (require [wavesynlib.languagecenter.hy.utils [
     bit-names dyn-setv]])
 
@@ -30,6 +33,14 @@
 (setv VK_SHIFT  0x10)
 (setv VK_LSHIFT 0xA0)
 (setv VK_RSHIFT 0xA1)
+
+(setv 
+    VK_LEFT  win32con.VK_LEFT
+    VK_RIGHT win32con.VK_RIGHT
+    VK_UP    win32con.VK_UP
+    VK_DOWN  win32con.VK_DOWN
+    VK_HOME  win32con.VK_HOME
+    VK_END   win32con.VK_END)
 
 
 (for [k (range 24)]

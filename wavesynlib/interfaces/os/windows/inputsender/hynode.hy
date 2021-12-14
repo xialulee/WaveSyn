@@ -40,6 +40,8 @@
     (assoc name-to-code k constants.VK_LALT))
 (for [k ["ralt" "rmenu" "right alt" "right menu"]]
     (assoc name-to-code k constants.VK_RALT))
+(for [k ["left" "right" "up" "down"]]
+    (assoc name-to-code k (getattr constants f"VK_{(.upper k)}")))
 
 
 

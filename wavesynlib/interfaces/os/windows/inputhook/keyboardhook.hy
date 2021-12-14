@@ -52,14 +52,20 @@
 
 
 (defclass KeyToKey [KeyToAction]
-    (defn --init-- ^None [self ^int new-key-code]
-        (setv self.--new-key-code new-key-code))
+    (defn --init-- ^None [self ^int new-key-code &optional [modifiers []]]
+        (setv 
+            self.--new-key-code new-key-code
+            self.--modifiers    modifiers))
         
     (defn on-keydown ^bool [self]
+        (for [m self.--modifiers]
+            (send-key-input m :press True))
         (send-key-input self.--new-key-code :press True)
         True)
         
     (defn on-keyup ^bool [self]
+        (for [m self.--modifiers]
+            (send-key-input m :release True))
         (send-key-input self.--new-key-code :release True)
         True))
 

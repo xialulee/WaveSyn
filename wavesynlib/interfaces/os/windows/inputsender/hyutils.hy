@@ -26,13 +26,19 @@ Return value:
     [int] 0 if failed, the number of the event if success. (See SendInput for more information)"
 
     (defn generate-keybd-event [code &optional release]
+        (setv dwFlags 0)
+        (when (in code (, 
+                VK_LEFT VK_RIGHT VK_DOWN VK_UP
+                VK_HOME VK_END))
+            (|= dwFlags KEYEVENTF_EXTENDEDKEY))
         (setv ki-args {"wVk" code})
         (when release
-            (assoc ki-args "dwFlags" KEYEVENTF_KEYUP))
+            (|= dwFlags KEYEVENTF_KEYUP))
+        (assoc ki-args "dwFlags" dwFlags)
         (setv ki (KEYBDINPUT #** ki-args))
         (setv inp (INPUT
             :type INPUT_KEYBOARD
-            :ki ki))
+            :ki   ki))
         (SendInput 1 #→[inp] (sizeof inp)))
         
     (cond
