@@ -1,3 +1,23 @@
+import sys
+import hy
+
+from jinja2.filters import FILTERS, environmentfilter
+
+
+def hyeval(expr:str):
+    expr = hy.read_str(expr)
+    return hy.eval(expr)
+
+
+@environmentfilter
+def efhyeval(environment, value, attribute=None):
+    expr = hy.read_str(value)
+    return hy.eval(expr, locals=sys._getframe(1).f_locals)
+
+FILTERS["efhyeval"] = efhyeval
+
+
+
 class MDArray:
     def __init__(self, name, size):
         self.__name = name
