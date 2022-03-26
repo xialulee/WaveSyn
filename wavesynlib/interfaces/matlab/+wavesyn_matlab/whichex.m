@@ -15,30 +15,24 @@ function varargout = whichex(varargin)
         s = {s};
     end
 
-    open_folder = 'matlab:system(''explorer /select,%s'');';
-    open_file = 'matlab:open(''%s'');';
-    link = '<a href="%s">%s</a>\\<a href="%s">%s</a>';
-
     for idx = 1 : numel(s)
+        line = s{idx};
+        
         pattern = java.util.regex.Pattern.compile('^built-in \((.*)\)');
-        matcher = pattern.matcher(java.lang.String(s{idx}));
+        matcher = pattern.matcher(java.lang.String(line));
         success = matcher.matches();
 
         if success
-            path = char(matcher.group(1));
-            command = sprintf('built-in (%s)', link);
+            fprintf('%s\n', line)
         else
-            path = s{idx};
-            command = link;
+            path = line;
+            if exist(path)
+                fprintf('%s\n', link_sel(path));
+            else
+                fprintf('%s\n', line);
+            end
         end
         
-        [folder, file] = pathsplit(path);    
-        fprintf([command '\n'], ...
-            sprintf(open_folder, path), ...
-            folder, ...
-            sprintf(open_file, path), ...
-            file ...
-        );    
     end
 end
 
@@ -46,4 +40,20 @@ end
 function [path, file] = pathsplit(path)
     [path, name, ext] = fileparts(path);
     file = [name, ext];
+end
+
+
+function result = link_sel(path)
+    [folder, file] = pathsplit(path);
+    result = strcat( ...
+        sprintf('<a href="matlab:system(''explorer /select,%s'');">%s</a>\\', path, folder), ...
+        sprintf('<a href="matlab:open(''%s'');">%s</a>', path, file));
+end
+
+
+function result = link_nosel(path)
+    [folder, file] = pathsplit(path);
+    result = strcat( ...
+        sprintf('<a href="matlab:system(''explorer %s'');">%s</a>\\', folder, folder), ...
+        file);
 end
