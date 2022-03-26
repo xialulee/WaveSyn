@@ -4,6 +4,7 @@ from quantities.quantity import Quantity
 import sympy
 import quantities as pq
 import numpy as np
+from numpy import pi, sin, cos, exp
 
 from wavesynlib.toolboxes.emwave.algorithms import λfT_eq, dist_to_phase
 from wavesynlib.toolboxes.geography.proj import calc_euclidean_distance
@@ -224,6 +225,38 @@ one and only one of the origin coord should be given (WGS84 or LLA).
 
 
 
+_to_rad_if_quantity = lambda value: value.rescale(pq.rad).magnitude if isinstance(value, pq.Quantity) else value
+_to_meter_if_quantity = lambda value: value.rescale(pq.meter).magnitude if isinstance(value, pq.Quantity) else value
+
+def calc_steering(elem_pos, az_angles, el_angles, wavelength):
+    elem_num = elem_pos.shape[0]
+    elem_pos = _to_meter_if_quantity(elem_pos)
+    wavelength = _to_meter_if_quantity(wavelength)
+    az_angles = _to_rad_if_quantity(az_angles)
+    az_angles = np.atleast_1d(az_angles)
+    el_angles = _to_rad_if_quantity(el_angles)
+    el_angles = np.atleast_1d(el_angles)
+    az_num = len(az_angles)
+    el_num = len(el_angles)
+    steering = np.empty((el_num, az_num, elem_num), dtype=np.complex)
+    for el_idx in range(el_num):
+        for az_idx in range(az_num):
+            el = el_angles[el_idx]
+            az = az_angles[az_idx]
+            dir_vec = np.array([
+                cos(el) * sin(az),  # x-axis
+                sin(el)             # y-axis
+                # cos(el) * cos(az) # z-axis
+            ])
+            path_diff = elem_pos @ dir_vec
+            phase_diff = path_diff / wavelength * 2 * pi
+            steering[el_idx, az_idx, :] = exp(1j * phase_diff)
+    return steering
+
+
+
+
 if __name__ == "__main__":
-    result = beam_width_equation(lambda_=0.2*pq.meter, d=0.1*pq.meter, theta=0, thetaB=1*pq.degree)
-    print(result)
+    # result = beam_width_equation(lambda_=0.2*pq.meter, d=0.1*pq.meter, theta=0, thetaB=1*pq.degree)
+    # print(result)
+    print(calc_steering(np.array([[0, 0], [0.5, 0]]), [0,10,30,60]*pq.deg, 0*pq.deg, 1))
