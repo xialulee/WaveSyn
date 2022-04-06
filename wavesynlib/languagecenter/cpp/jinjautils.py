@@ -96,7 +96,7 @@ class ComplexScalar:
         result = f"{self.__var_type} {self.__var_name}"
         if self.__init_value:
             result = f"{result} = {self.__init_value}"
-        return f"{result}"
+        return f"{result};"
 
     def __return_aux(self, real, imag):
         return ComplexScalar(
