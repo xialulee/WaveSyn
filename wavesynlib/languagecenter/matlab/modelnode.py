@@ -5,8 +5,8 @@ Created on Thu Dec 31 16:07:51 2015
 @author: Feng-cong Li
 """
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode
-import wavesynlib.interfaces.matlab.client   as matlabclient
-import wavesynlib.interfaces.matlab.mupad    as mupadtypes
+import wavesynlib.toolboxes.matlab.client   as matlabclient
+import wavesynlib.toolboxes.matlab.mupad    as mupadtypes
 import mupad
 
 class MatlabServerNode(ModelNode):

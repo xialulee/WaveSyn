@@ -1,0 +1,9 @@
+function drive_names = get_logical_drive_letters()
+    [stat, drvs] = system(strcat(...
+        'python -c "import win32api;', ... 
+        'drvs=win32api.GetLogicalDriveStrings().split(''\x00'');', ...
+        '[print(n[:n.find('':'')]) for n in drvs]"'));
+    drvs = strsplit(drvs);
+    drvs(cellfun('isempty', drvs)) = [];
+    drive_names = drvs;
+end

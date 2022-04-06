@@ -13,7 +13,7 @@ from scipy                           import special
 
 
 from wavesynlib.languagecenter.utils     import auto_subs, eval_format
-from wavesynlib.interfaces.matlab.mupad  import Symbol
+from wavesynlib.toolboxes.matlab.mupad  import Symbol
 
 class OperatorMap(object):
     def __init__(self):
