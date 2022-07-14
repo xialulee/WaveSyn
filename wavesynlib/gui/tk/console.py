@@ -246,7 +246,7 @@ class ConsoleText(ModelNode, ScrolledText):
             [Scripting.namespaces['locals'], 
                 Scripting.namespaces['globals']])
 
-        completions = script.completions()
+        completions = script.complete()
 
         if len(completions)==0:
             return 
