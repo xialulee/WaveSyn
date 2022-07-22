@@ -131,6 +131,55 @@ def wgs84_to_enu(*,
 
 
 
+def lla_to_enu(*,
+    lat:  Union[float, np.ndarray, pq.Quantity]=None, 
+    lon:  Union[float, np.ndarray, pq.Quantity]=None, 
+    alt:  Union[float, np.ndarray, pq.Quantity]=None, 
+    lla:  QuantityFrame=None,
+    lat0: Union[float, pq.Quantity]=None,
+    lon0: Union[float, pq.Quantity]=None,
+    alt0: Union[float, pq.Quantity]=None,
+    lla0: QuantityFrame=None
+) -> QuantityFrame:
+
+    df_index = None
+
+    if _all_not_None(lat0, lon0, alt0):
+        pass
+    elif _any_not_None(lat0, lon0, alt0):
+        raise ValueError("LLA lat0/lon0/alt0 incomplete.")
+    elif lla0 is not None:
+        if lla0.shape[0] > 1:
+            raise ValueError("Multiple origin given.")
+        lon0 = lla0.iloc[0]['longitude/deg']
+        lat0 = lla0.iloc[0]['latitude/deg']
+        alt0 = lla0.iloc[0]['altitude/m']
+    else:
+        raise ValueError("The origin of ENU is not given.")
+
+    if _all_not_None(lat, lon, alt):
+        #lla = wgs84_to_lla(x=x, y=y, z=z)
+        pass
+    elif _any_not_None(lat, lon, alt):
+        raise ValueError("LLA lat/lon/alt incomplete.")
+    elif lla is not None:
+        df_index = lla.index
+        lon = lla['longitude/deg'].to_numpy()
+        lat = lla['latitude/deg'].to_numpy()
+        alt = lla['altitude/m'].to_numpy()
+    else:
+        raise ValueError("No LLA coordinates given.")
+
+    east, north, up = pymap3d.enu.geodetic2enu(lat=lat, lon=lon, h=alt, lat0=lat0, lon0=lon0, h0=alt0)
+    data = np.vstack((east, north, up))
+    data = data.transpose()
+    head = ("east/m", "north/m", "up/m")
+    kwargs = {"data":data, "columns":head}
+    if df_index is not None:
+        kwargs["index"] = df_index
+    return QuantityFrame(**kwargs)
+
+
 def enu_to_wgs84(
     e: Union[float, np.ndarray, Quantity], 
     n: Union[float, np.ndarray, Quantity], 
@@ -165,6 +214,12 @@ def enu_to_wgs84(
 
     lat, lon, alt = pymap3d.enu.enu2geodetic(e, n, u, lat0=lat0, lon0=lon0, h0=alt0)
     return lla_to_wgs84(lat=lat, lon=lon, alt=alt)
+
+
+
+def enu_to_lla(*args, **kwargs):
+    xyz = enu_to_wgs84(*args, **kwargs)
+    return wgs84_to_lla(xyz=xyz)
 
 
 
