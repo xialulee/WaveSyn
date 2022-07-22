@@ -55,7 +55,7 @@ class ExcelUtils(ModelNode):
         self.__com_handle = kwargs.pop('com_handle')
         super().__init__(*args, **kwargs)
         addr_regex  = "([a-zA-Z]+)([0-9]+)"
-        range_regex = f"{addr_regex}:{addr_regex}"
+        range_regex = f"[a-zA-Z]*[0-9]*:[a-zA-Z]*[0-9]*"
         self.__addr_regex  = re.compile(f"^{addr_regex}$")
         self.__range_regex = re.compile(f"^{range_regex}$")
 
