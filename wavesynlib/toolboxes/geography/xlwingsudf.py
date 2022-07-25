@@ -1,21 +1,48 @@
+from pathlib import Path
 import numpy as np
 import xlwings as xw
 
+from ..basetoolboxnode import BaseXLWingsUDFNode
 from . import proj
+
+
+class XLWingsUDFNode(BaseXLWingsUDFNode):
+    def get_module_path(self) -> str:
+        return f"{self.parent_node.toolbox_package_path}.{Path(__file__).stem}"
 
 
 @xw.func
 @xw.arg("lla", np.array, ndim=2)
 def lla_to_wgs84(lla):
-    wgs84 = proj.lla_to_wgs84(*(col for col in lla.T))
+    wgs84 = proj.lla_to_wgs84(
+        lat = lla[:, 0],
+        lon = lla[:, 1],
+        alt = lla[:, 2])
     return np.array(wgs84)
 
 
 @xw.func
 @xw.arg("wgs84", np.array, ndim=2)
 def wgs84_to_lla(wgs84):
-    lla = proj.wgs84_to_lla(*(col for col in wgs84.T))
+    lla = proj.wgs84_to_lla(
+        x = wgs84[:, 0],
+        y = wgs84[:, 1],
+        z = wgs84[:, 2])
     return np.array(lla)
+
+
+@xw.func
+@xw.arg("lla", np.array, ndim=2)
+@xw.arg("lla0", np.array, ndim=1)
+def lla_to_enu(lla, lla0):
+    enu = proj.lla_to_enu(
+        lat = lla[:, 0],
+        lon = lla[:, 1],
+        alt = lla[:, 2],
+        lat0 = lla0[0], 
+        lon0 = lla0[1],
+        alt0 = lla0[2])
+    return np.array(enu)
 
 
 @xw.func
