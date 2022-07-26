@@ -1,6 +1,8 @@
 from pathlib import Path
 import numpy as np
+
 import xlwings as xw
+import quantities as pq
 
 from ..basetoolboxnode import BaseXLWingsUDFNode
 from . import proj
@@ -49,7 +51,7 @@ def lla_to_enu(lla, lla0):
 @xw.arg("xyz1", np.array, ndim=2)
 @xw.arg("xyz2", np.array, ndim=2)
 def dist_wgs84(xyz1, xyz2):
-    dist = proj.calc_euclidean_distance(
+    dist = proj.calc_euclid_dist(
         # coord 1
         x1=xyz1[:, 0],
         y1=xyz1[:, 1],
@@ -64,14 +66,30 @@ def dist_wgs84(xyz1, xyz2):
 @xw.func
 @xw.arg("lla1", np.array, ndim=2)
 @xw.arg("lla2", np.array, ndim=2)
-def dist_lla(lla1, lla2):
-    dist = proj.calc_euclidean_distance(
+def dist_lla(
+    lla1, 
+    lla2, 
+    alt1_unit="m", 
+    alt2_unit="m", 
+    dist_unit="m"):
+    """\
+Calculate the distance between lla1 and lla2.
+lla1:      the first LLA coordinate;
+lla2:      the second LLA coordinate;
+alt1_unit: the unit of lla1's altitude (m by default);
+alt2_unit: the unit of lla2's altitude (m by default);
+dist_unit: the unit of the distance (m by default).
+
+The range of lla1 and lla2 should comprises three columns (lat, lon and alt). 
+Either lla1 and lla2 have the same shape, or one of them only has one LLA coordinate.
+"""
+    dist = proj.calc_euclid_dist(
         # coord 1
         lat1=lla1[:, 0],
         lon1=lla1[:, 1],
-        alt1=lla1[:, 2],
+        alt1=lla1[:, 2] * pq.CompoundUnit(alt1_unit),
         # coord 2
         lat2=lla2[:, 0], 
         lon2=lla2[:, 1],
-        alt2=lla2[:, 2])
-    return dist.magnitude.reshape((dist.size, 1))
+        alt2=lla2[:, 2] * pq.CompoundUnit(alt2_unit))
+    return dist.rescale(pq.CompoundUnit(dist_unit)).magnitude.reshape((dist.size, 1))

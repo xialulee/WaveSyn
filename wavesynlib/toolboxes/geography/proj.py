@@ -223,7 +223,7 @@ def enu_to_lla(*args, **kwargs):
 
 
 
-def calc_euclidean_distance(*,
+def calc_euclid_dist(*,
     x1:   Union[np.ndarray, Quantity]=None, 
     y1:   Union[np.ndarray, Quantity]=None, 
     z1:   Union[np.ndarray, Quantity]=None, 
