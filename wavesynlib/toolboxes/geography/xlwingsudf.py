@@ -6,6 +6,7 @@ import quantities as pq
 
 from ..basetoolboxnode import BaseXLWingsUDFNode
 from . import proj
+from . import bingmaps
 
 
 class XLWingsUDFNode(BaseXLWingsUDFNode):
@@ -93,3 +94,10 @@ Either lla1 and lla2 have the same shape, or one of them only has one LLA coordi
         lon2=lla2[:, 1],
         alt2=lla2[:, 2] * pq.CompoundUnit(alt2_unit))
     return dist.rescale(pq.CompoundUnit(dist_unit)).magnitude.reshape((dist.size, 1))
+
+
+@xw.func
+@xw.arg("lla", np.array, ndim=2)
+def bingmaps_display_lla_points(names, lla):
+    bingmaps.display_multiple_points(names, lla=lla)
+    return "SUCCESS"
