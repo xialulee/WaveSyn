@@ -7,17 +7,17 @@ from wavesynlib.languagecenter.datatypes.physicalquantities.containers import Qu
 
 
 
-def display_multiple_points(names, lla=None, wgs84=None):
-    if lla is not None:
-        if isinstance(lla, (list, tuple)):
-            lla = np.array(lla)
+def display_multiple_points(names, latlon=None, wgs84=None):
+    if latlon is not None:
+        if isinstance(latlon, (list, tuple)):
+            latlon = np.array(latlon)
 
-        if isinstance(lla, QuantityFrame):
+        if isinstance(latlon, QuantityFrame):
             pass
-        elif isinstance(lla, np.ndarray):
-            lla = QuantityFrame({
-                "latitude/deg":  lla[:, 0],
-                "longitude/deg": lla[:, 1]})
+        elif isinstance(latlon, np.ndarray):
+            latlon = QuantityFrame({
+                "latitude/deg":  latlon[:, 0],
+                "longitude/deg": latlon[:, 1]})
         else:
             raise NotImplementedError()
     elif wgs84 is not None:
@@ -27,7 +27,7 @@ def display_multiple_points(names, lla=None, wgs84=None):
 
     uri = []
 
-    for idx, coord in enumerate(lla.iloc):
+    for idx, coord in enumerate(latlon.iloc):
         lat = coord.qelem("latitude").magnitude
         lon = coord.qelem("longitude").magnitude
         name = quote(str(names[idx]), safe="")
