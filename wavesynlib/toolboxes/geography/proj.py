@@ -170,7 +170,13 @@ def lla_to_enu(*,
     else:
         raise ValueError("No LLA coordinates given.")
 
-    east, north, up = pymap3d.enu.geodetic2enu(lat=lat, lon=lon, h=alt, lat0=lat0, lon0=lon0, h0=alt0)
+    east, north, up = pymap3d.enu.geodetic2enu(
+        lat  =_to_degree_if_quantity(lat), 
+        lon  =_to_degree_if_quantity(lon), 
+        h    =_to_meter_if_quantity(alt), 
+        lat0 =_to_degree_if_quantity(lat0), 
+        lon0 =_to_degree_if_quantity(lon0), 
+        h0   =_to_meter_if_quantity(alt0))
     data = np.vstack((east, north, up))
     data = data.transpose()
     head = ("east/m", "north/m", "up/m")
