@@ -31,3 +31,13 @@ start, stop and step_: the arguments of the slice object (scalar).
     args = (None if arg is None else int(arg) for arg in (slice_start, slice_stop, slice_step))
     slice_obj = slice(*args)
     return _vec_str_slice(str_in, slice_obj)
+
+
+@xw.func
+@xw.arg("arr_in", np.array, ndim=2)
+def elementwise_eval(func_str, arr_in):
+    arr_out = np.empty(shape=arr_in.shape, dtype=object)
+    for idx, elem in enumerate(arr_in.flat):
+        _ = elem
+        arr_out.flat[idx] = eval(func_str)
+    return arr_out
