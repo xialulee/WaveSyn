@@ -25,6 +25,7 @@ _flatten_if_array = lambda value: value.flatten() if isinstance(value, np.ndarra
 
 _to_meter_if_quantity  = lambda value: value.rescale(pq.meter).magnitude if isinstance(value, pq.Quantity) else value
 _to_degree_if_quantity = lambda value: value.rescale(pq.degree).magnitude if isinstance(value, pq.Quantity) else value
+_to_rad_if_quantity    = lambda value: value.rescale(pq.rad).magnitude if isinstance(value, pq.Quantity) else value
 
 _any_not_None = lambda *t: any(i is not None for i in t)
 _all_not_None = lambda *t: all(i is not None for i in t)
@@ -228,6 +229,44 @@ def enu_to_lla(*args, **kwargs):
     return wgs84_to_lla(xyz=xyz)
 
 
+def aer_to_enu(*,
+    a: Union[float, np.ndarray, pq.Quantity]=None, 
+    e: Union[float, np.ndarray, pq.Quantity]=None, 
+    r: Union[float, np.ndarray, pq.Quantity]=None,
+    aer: QuantityFrame=None):
+
+    df_index = None
+
+    if _all_not_None(a, e, r):
+        a = _to_degree_if_quantity(a)
+        e = _to_degree_if_quantity(e)
+        r = _to_meter_if_quantity(r)
+    elif _any_not_None(a, e, r):
+        raise ValueError("AER a/e/r incomplete.")
+    elif aer is not None:
+        a = aer.qcol("azimuth").rescale(pq.degree).magnitude
+        e = aer.qcol("elevation").rescale(pq.degree).magnitude
+        r = aer.qcol("slant range").rescale(pq.meter).magnitude
+        df_index = aer.index
+    else:
+        raise ValueError("AER coordinates a/e/r not given.")
+    
+    a = np.array(a).ravel() / 180 * np.pi
+    e = np.array(e).ravel() / 180 * np.pi
+    sr = r
+
+    up    = sr * np.sin(e)
+    r     = sr * np.cos(e)
+    east  = r * np.sin(a)
+    north = r * np.cos(a)
+
+    data = np.vstack((east, north, up)).transpose()
+    head = ["east/m", "north/m", "up/m"]
+    kwargs = {"data":data, "columns":head}
+    if df_index is not None:
+        kwargs["index"] = df_index
+    return QuantityFrame(**kwargs)
+    
 
 def calc_euclid_dist(*,
     x1:   Union[np.ndarray, Quantity]=None, 
