@@ -74,6 +74,24 @@ enu_unit:  the unit of enu.
 
 
 @xw.func
+@xw.arg("aer", np.array, ndim=2)
+def aer_to_enu(aer, az_unit="deg", el_unit="deg", sr_unit="m", enu_unit="m"):
+    """\
+Convert AER coordinates to ENU coordinates.
+aer:     AER coordinates of the given points;
+az_unit: the azimuth unit of aer;
+el_unit: the elevation unit of aer;
+sr_unit: the slant range unit of aer.
+"""
+    enu = proj.aer_to_enu(
+        a = aer[:, 0] * pq.CompoundUnit(az_unit),
+        e = aer[:, 1] * pq.CompoundUnit(el_unit),
+        r = aer[:, 2] * pq.CompoundUnit(sr_unit))
+    enu_unit = pq.CompoundUnit(enu_unit)
+    return enu.qmatrix.rescale(enu_unit).magnitude
+
+
+@xw.func
 @xw.arg("xyz1", np.array, ndim=2)
 @xw.arg("xyz2", np.array, ndim=2)
 def dist_wgs84(xyz1, xyz2, xyz1_unit="m", xyz2_unit="m", dist_unit="m"):
