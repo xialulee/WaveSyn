@@ -41,3 +41,19 @@ def elementwise_eval(func_str, arr_in):
         _ = elem
         arr_out.flat[idx] = eval(func_str)
     return arr_out
+
+
+@xw.func
+@xw.arg("args", np.array, ndim=2)
+def hstack(*args):
+    """\
+Stack arrays in sequence horizontally (column wise)."""
+    return np.hstack(args)
+
+
+@xw.func
+@xw.arg("args", np.array, ndim=2)
+def vstack(*args):
+    """\
+Stack arrays in sequence vertically (row wise)."""
+    return np.vstack(args)
