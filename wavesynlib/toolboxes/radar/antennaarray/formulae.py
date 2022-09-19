@@ -7,7 +7,7 @@ import numpy as np
 from numpy import pi, sin, cos, exp
 
 from wavesynlib.toolboxes.emwave.algorithms import λfT_eq, dist_to_phase
-from wavesynlib.toolboxes.geography.proj import calc_euclidean_distance
+from wavesynlib.toolboxes.geography.proj import calc_euclid_dist
 from wavesynlib.languagecenter.datatypes.physicalquantities.containers import QuantityFrame
 
 
@@ -121,7 +121,7 @@ Note that one and only one of (carrier_frequency, carrier_wavelength) should be 
         carrier_frequency=carrier_frequency,
         carrier_wavelength=carrier_wavelength)
 
-    dist = calc_euclidean_distance(
+    dist = calc_euclid_dist(
         x1=point_x, 
         y1=point_y, 
         z1=point_z,
@@ -217,7 +217,7 @@ one and only one of the origin coord should be given (WGS84 or LLA).
     else:
         raise ValueError("The coordinate of the ENU observer is not given.")
 
-    dist = calc_euclidean_distance(**kwargs)
+    dist = calc_euclid_dist(**kwargs)
 
     return dist_to_phase_compensation(
         dist=dist,

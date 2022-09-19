@@ -25,6 +25,7 @@ _flatten_if_array = lambda value: value.flatten() if isinstance(value, np.ndarra
 
 _to_meter_if_quantity  = lambda value: value.rescale(pq.meter).magnitude if isinstance(value, pq.Quantity) else value
 _to_degree_if_quantity = lambda value: value.rescale(pq.degree).magnitude if isinstance(value, pq.Quantity) else value
+_to_rad_if_quantity    = lambda value: value.rescale(pq.rad).magnitude if isinstance(value, pq.Quantity) else value
 
 _any_not_None = lambda *t: any(i is not None for i in t)
 _all_not_None = lambda *t: all(i is not None for i in t)
@@ -131,6 +132,61 @@ def wgs84_to_enu(*,
 
 
 
+def lla_to_enu(*,
+    lat:  Union[float, np.ndarray, pq.Quantity]=None, 
+    lon:  Union[float, np.ndarray, pq.Quantity]=None, 
+    alt:  Union[float, np.ndarray, pq.Quantity]=None, 
+    lla:  QuantityFrame=None,
+    lat0: Union[float, pq.Quantity]=None,
+    lon0: Union[float, pq.Quantity]=None,
+    alt0: Union[float, pq.Quantity]=None,
+    lla0: QuantityFrame=None
+) -> QuantityFrame:
+
+    df_index = None
+
+    if _all_not_None(lat0, lon0, alt0):
+        pass
+    elif _any_not_None(lat0, lon0, alt0):
+        raise ValueError("LLA lat0/lon0/alt0 incomplete.")
+    elif lla0 is not None:
+        if lla0.shape[0] > 1:
+            raise ValueError("Multiple origin given.")
+        lon0 = lla0.iloc[0]['longitude/deg']
+        lat0 = lla0.iloc[0]['latitude/deg']
+        alt0 = lla0.iloc[0]['altitude/m']
+    else:
+        raise ValueError("The origin of ENU is not given.")
+
+    if _all_not_None(lat, lon, alt):
+        #lla = wgs84_to_lla(x=x, y=y, z=z)
+        pass
+    elif _any_not_None(lat, lon, alt):
+        raise ValueError("LLA lat/lon/alt incomplete.")
+    elif lla is not None:
+        df_index = lla.index
+        lon = lla['longitude/deg'].to_numpy()
+        lat = lla['latitude/deg'].to_numpy()
+        alt = lla['altitude/m'].to_numpy()
+    else:
+        raise ValueError("No LLA coordinates given.")
+
+    east, north, up = pymap3d.enu.geodetic2enu(
+        lat  =_to_degree_if_quantity(lat), 
+        lon  =_to_degree_if_quantity(lon), 
+        h    =_to_meter_if_quantity(alt), 
+        lat0 =_to_degree_if_quantity(lat0), 
+        lon0 =_to_degree_if_quantity(lon0), 
+        h0   =_to_meter_if_quantity(alt0))
+    data = np.vstack((east, north, up))
+    data = data.transpose()
+    head = ("east/m", "north/m", "up/m")
+    kwargs = {"data":data, "columns":head}
+    if df_index is not None:
+        kwargs["index"] = df_index
+    return QuantityFrame(**kwargs)
+
+
 def enu_to_wgs84(
     e: Union[float, np.ndarray, Quantity], 
     n: Union[float, np.ndarray, Quantity], 
@@ -168,7 +224,51 @@ def enu_to_wgs84(
 
 
 
-def calc_euclidean_distance(*,
+def enu_to_lla(*args, **kwargs):
+    xyz = enu_to_wgs84(*args, **kwargs)
+    return wgs84_to_lla(xyz=xyz)
+
+
+def aer_to_enu(*,
+    a: Union[float, np.ndarray, pq.Quantity]=None, 
+    e: Union[float, np.ndarray, pq.Quantity]=None, 
+    r: Union[float, np.ndarray, pq.Quantity]=None,
+    aer: QuantityFrame=None):
+
+    df_index = None
+
+    if _all_not_None(a, e, r):
+        a = _to_degree_if_quantity(a)
+        e = _to_degree_if_quantity(e)
+        r = _to_meter_if_quantity(r)
+    elif _any_not_None(a, e, r):
+        raise ValueError("AER a/e/r incomplete.")
+    elif aer is not None:
+        a = aer.qcol("azimuth").rescale(pq.degree).magnitude
+        e = aer.qcol("elevation").rescale(pq.degree).magnitude
+        r = aer.qcol("slant range").rescale(pq.meter).magnitude
+        df_index = aer.index
+    else:
+        raise ValueError("AER coordinates a/e/r not given.")
+    
+    a = np.array(a).ravel() / 180 * np.pi
+    e = np.array(e).ravel() / 180 * np.pi
+    sr = r
+
+    up    = sr * np.sin(e)
+    r     = sr * np.cos(e)
+    east  = r * np.sin(a)
+    north = r * np.cos(a)
+
+    data = np.vstack((east, north, up)).transpose()
+    head = ["east/m", "north/m", "up/m"]
+    kwargs = {"data":data, "columns":head}
+    if df_index is not None:
+        kwargs["index"] = df_index
+    return QuantityFrame(**kwargs)
+    
+
+def calc_euclid_dist(*,
     x1:   Union[np.ndarray, Quantity]=None, 
     y1:   Union[np.ndarray, Quantity]=None, 
     z1:   Union[np.ndarray, Quantity]=None, 

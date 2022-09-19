@@ -34,14 +34,42 @@ _xlXYScatter = -4169
 
 
 class ExcelUtils(ModelNode):
+    _auto_fill_type = {
+        # xlAutoFillType
+        "copy":         (1, "Copy the values and formats from the source range to the target range, repeating if necessary."),
+        "days":         (5, "Extend the names of the days of the week in the source range into the target range. Formats are copied from the source range to the target range, repeating if necessary."),
+        "default":      (0, "Excel determines the values and formats used to fill the target range."), 
+        "formats":      (3, "Copy only the formats from the source range to the target range, repeating if necessary."),
+        "months":       (7, "Extend the names of the months in the source range into the target range. Formats are copied from the source range to the target range, repeating if necessary."),
+        "series":       (2, "Extend the values in the source range into the target range as a series (for example, '1, 2' is extended as '3, 4, 5'). Formats are copied from the source range to the target range, repeating if necessary."),
+        "values":       (4, "Copy only the values from the source range to the target range, repeating if necessary."), 
+        "weekdays":     (6, "Extend the names of the days of the workweek in the source range into the target range. Formats are copied from the source range to the target range, repeating if necessary."), 
+        "years":        (8, "Extend the years in the source range into the target range. Formats are copied from the source range to the target range, repeating if necessary."), 
+        "growth trend": (10, "Extend the numeric values from the source range to the target range, assuming that the relationships between the numbers in the source range are multiplicative (for example, '1, 2' is extended as '4, 8, 16', assuming that each number is a result of multiplying the previous number by some value). Formats are copied from the source range to the target range, repeating if necessary."),
+        "linear trend": (9, "Extend the numeric values from the source range into the target range, assuming that the relationships between the numbers is additive (for example, '1, 2' is extended as '3, 4, 5', assuming that each number is a result of adding some value to the previous number). Formats are copied from the source range to the target range, repeating if necessary."),
+        "flash":        (11, "Extend the values from the source range into the target range based on the detected pattern of previous user actions, repeating if necessary.")
+    }
+
+
     def __init__(self, *args, **kwargs):
         self.__com_handle = kwargs.pop('com_handle')
         super().__init__(*args, **kwargs)
-        self.__regex_for_addr = re.compile('([A-Z]+)([0-9]+)')
+        addr_regex  = "([a-zA-Z]+)([0-9]+)"
+        range_regex = f"[a-zA-Z]*[0-9]*:[a-zA-Z]*[0-9]*"
+        self.__addr_regex  = re.compile(f"^{addr_regex}$")
+        self.__range_regex = re.compile(f"^{range_regex}$")
+
+
+    def _check_addr(self, addr):
+        return re.match(self.__addr_regex, addr)
+
+
+    def _check_range(self, range_):
+        return re.match(self.__range_regex, range_)
 
 
     def _get_xy(self, addr): 
-        x_str, y_str = re.match(self.__regex_for_addr, addr).groups()
+        x_str, y_str = re.match(self.__addr_regex, addr).groups()
         y = int(y_str) - 1
         x = 0
         for c in x_str:
@@ -126,7 +154,6 @@ class ExcelUtils(ModelNode):
             rgsa,  # rgsaBound
             None)  # pvExtra
                                                 
-                                                
         if not pa:
             raise MemoryError()
     
@@ -202,7 +229,34 @@ class ExcelUtils(ModelNode):
                     data[index] = cell.replace(old, new)
             else:
                 raise TypeError('Incompatible data type.')
-                
+
+
+    @WaveSynScriptAPI
+    def select(self, addr, workbook=None, sheet=None):
+        workbook = self._get_workbook(workbook)
+        sheet = self._get_sheet(workbook, sheet)
+        sheet.Activate()
+        if not (self._check_addr(addr) or self._check_range(addr)):
+            raise ValueError("Invalid address or range.")
+        rng = sheet.Range(addr)
+        rng.Select()
+
+
+    @WaveSynScriptAPI
+    def auto_fill(self, source, destination, type_=0, workbook=None, sheet=None): # fill type not implemented
+        if isinstance(type_, str):
+            type_ = self._auto_fill_type[type_][0]
+
+        workbook = self._get_workbook(workbook)
+        sheet = self._get_sheet(workbook, sheet)
+        sheet.Activate()
+        for addr in (source, destination):
+            if not (self._check_addr(addr) or self._check_range(addr)):
+                raise ValueError("Invalid address or range.")
+        src_obj  = sheet.Range(source)
+        dest_obj = sheet.Range(destination)
+        src_obj.AutoFill(dest_obj, type_)
+
                 
     @WaveSynScriptAPI 
     def write(self, data, top_left, workbook=None, sheet=None):
@@ -213,29 +267,35 @@ class ExcelUtils(ModelNode):
         if not self.is_nested_iterable(data): # 1D data or incompatible data type.
             if isinstance(data, (list, tuple)): # 1D data
                 list_len = len(data)
-                sheet.Range(self._get_addr(top_left_x, top_left_y), 
-                            self._get_addr(top_left_x+list_len-1, top_left_y)).Value[:] = data
+                range_ = "{}:{}".format(
+                    self._get_addr(top_left_x, top_left_y),
+                    self._get_addr(top_left_x+list_len-1, top_left_y))
+                sheet.Range(range_).Value[:] = data
                 return
             else: # Incomplete data types. 
                 raise TypeError('Input data is not nested list/tuple.')
             
         if self.is_ragged(data):
             for m, row in enumerate(data):
-                sheet.Range(self._get_addr(top_left_x, top_left_y+m),
-                            self._get_addr(top_left_x+len(row)-1, top_left_y+m)).Value[:] = row
+                range_ = "{}:{}".format(
+                    self._get_addr(top_left_x, top_left_y+m),
+                    self._get_addr(top_left_x+len(row)-1, top_left_y+m))
+                sheet.Range(range_).Value[:] = row
             return
         else: # Regular matrix
             row_num = len(data)
             col_num = len(data[0])
             variant = self.set_variant_matrix(data)
-            sheet.Range(self._get_addr(top_left_x, top_left_y),
-                        self._get_addr(top_left_x+col_num-1, top_left_y+row_num-1)).Value[:] = variant
+            range_ = "{}:{}".format(
+                self._get_addr(top_left_x, top_left_y),
+                self._get_addr(top_left_x+col_num-1, top_left_y+row_num-1))
+            sheet.Range(range_).Value[:] = variant
             return          
         
         
     @WaveSynScriptAPI
-    def read_range(self, 
-        range_,
+    def read(self, 
+        addr,
         workbook=None, 
         sheet=None,
         return_dataframe=False,
@@ -244,16 +304,11 @@ class ExcelUtils(ModelNode):
         workbook = self._get_workbook(workbook)
         sheet = self._get_sheet(workbook, sheet)
 
-        top_left, bottom_right = range_.split(":")
+        if not (self._check_addr(addr) or self._check_range(addr)):
+            raise ValueError("Invalid address or range.")
+            
+        rng = sheet.Range(addr).Value[:]
         
-        tl_x, tl_y = self._get_xy(top_left)  
-        br_x, br_y = self._get_xy(bottom_right)
-        
-        rng = sheet.Range(
-                "{}:{}".format(
-                    self._get_addr(tl_x, tl_y), 
-                    self._get_addr(br_x, br_y))).Value[:]
-
         if return_dataframe:
             if not column_labels:
                 column_labels = rng[0]
@@ -297,7 +352,7 @@ class ExcelUtils(ModelNode):
             else:
                 raise ValueError("axis should be in [-2, 1].")
 
-            matrix = self.read_range("{}:{}".format(
+            matrix = self.read("{}:{}".format(
                 self._get_addr(start_x, start_y),
                 self._get_addr(stop_x, stop_y)))
 
@@ -369,7 +424,7 @@ class ExcelUtils(ModelNode):
     def browser_fill_by_id(
         self, driver, ids, top_left, bottom_right, 
         workbook=None, sheet=None):
-        data = self.read_range("{}:{}".format(top_left, bottom_right), workbook, sheet)
+        data = self.read("{}:{}".format(top_left, bottom_right), workbook, sheet)
         for id_row, data_row in zip(ids, data):
             for id_, item in zip(id_row, data_row):
                 driver.find_element_by_id(id_).send_keys(str(item))
@@ -881,6 +936,10 @@ class WordObject(AppObject):
 
 class ToolboxNode(BaseToolboxNode):
     def __init__(self, *args, **kwargs):
+        self.xlwings_udf = ModelNode(
+            is_lazy=True,
+            module_name=f"{self.toolbox_package_path}.xlwingsudf", 
+            class_name="XLWingsUDFNode")
         super().__init__(*args, **kwargs)
         self.app_dict = AppDict()
 
