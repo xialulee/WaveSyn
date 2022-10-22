@@ -74,7 +74,17 @@ default_map = {
     ord("F"): win32con.VK_END,
     ord("Z"): "left",
     ord("X"): "right",
-    ord("C"): "middle"}
+    ord("C"): "middle",
+    ord("M"): win32con.VK_NUMPAD0,
+    ord("J"): win32con.VK_NUMPAD1,
+    ord("K"): win32con.VK_NUMPAD2,
+    ord("L"): win32con.VK_NUMPAD3,
+    ord("U"): win32con.VK_NUMPAD4,
+    ord("I"): win32con.VK_NUMPAD5,
+    ord("O"): win32con.VK_NUMPAD6,
+    ord("7"): win32con.VK_NUMPAD7,
+    ord("8"): win32con.VK_NUMPAD8,
+    ord("9"): win32con.VK_NUMPAD9 }
 
 
 
