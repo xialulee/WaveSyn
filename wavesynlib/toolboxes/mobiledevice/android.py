@@ -23,9 +23,12 @@ from PIL import ImageTk, Image
 import tkinter as tk
 import tkinter.ttk as ttk
 
-from Crypto.Cipher import AES
-from Crypto.Util import Padding
-from Crypto.Random import get_random_bytes
+try:
+    from Crypto.Cipher import AES
+    from Crypto.Util import Padding
+    from Crypto.Random import get_random_bytes
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("Please install pycryptodome to use this toolbox.")
 
 import hy
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
@@ -67,7 +70,7 @@ def load_plugins():
 
 
 def _decrypt_text(encrypted, key, iv):
-    aes = AES.new(key, AES.MODE_CBC, iv=iv)
+    aes = AES.new(key, AES.MODE_CBC, IV=iv)
     barr = aes.decrypt(encrypted)
     barr = Padding.unpad(barr, block_size=16)
     text = barr.decode("utf-8")
