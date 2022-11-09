@@ -35,7 +35,7 @@ class EvalFormatter(Formatter):
         self.caller = None # Will be set by method "format".
         self.level  = level
         
-                             
+
     def get_value(self, expr, args=None, kwargs=None):
         caller   = self.caller        
         return eval(expr, caller.f_globals, caller.f_locals)
@@ -59,7 +59,7 @@ def eval_format(format_string):
 
 class MethodDelegator(object):
     def __init__(self, attribute_name, method_name):
-        super(MethodDelegator, self).__init__()
+        super().__init__()
         self.attribute_name   = attribute_name
         self.method_name = method_name
     

@@ -167,6 +167,7 @@ if action == "read":
             data_book, horizontal_scroll=True)
         scrolled_text.disable_keys = True
         scrolled_text.auto_url_link = True
+        scrolled_text.tag_configure("HEAD", foreground="gray")
         
         def on_url_link_click(url):
             with code_printer():
@@ -266,15 +267,15 @@ if action == "read":
                 mark = '=' if read else '*'
                 direction = 'From' if read else 'To'
                 wtext = self.__scrolled_text
-                wtext.append_text(f'''
+                wtext.append_text(f"""
 {mark*60}
 {direction} Device
 Device Info: 
-    Manufacturer: {datainfo["manufacturer"]}
-    Model:        {datainfo["model"]}
+    Manufacturer: {datainfo['manufacturer']}
+    Model:        {datainfo['model']}
 IP: {addr[0]}
 {datetime.datetime.now().isoformat()}
-{mark*60}''')   
+{mark*60}""", "HEAD")   
                 
                 
             def clear_qr_image():

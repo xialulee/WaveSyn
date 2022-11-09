@@ -1,6 +1,8 @@
 from tkinter import Frame, IntVar
 from tkinter.ttk import Scrollbar
 
+from wavesynlib.languagecenter.utils import MethodDelegator
+
 from .textwinhotkey import TextWinHotkey
 
 __DEBUG__ = False
@@ -9,8 +11,12 @@ __DEBUG__ = False
 
 class ScrolledText(Frame):
     '''This class is based on Programming Python 3rd Edition P517'''
+    for __method_name in ("tag_configure",):
+        locals()[__method_name] = MethodDelegator("text_widget", __method_name)
+
+
     def __init__(self, 
-                 parent=None, text='', file=None, horizontal_scroll=False):
+            parent=None, text='', file=None, horizontal_scroll=False):
         super().__init__(parent)
         self.pack(expand='yes', fill='both')
         self.make_widgets(horizontal_scroll=horizontal_scroll)
