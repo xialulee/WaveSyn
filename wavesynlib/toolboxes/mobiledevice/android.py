@@ -75,8 +75,14 @@ def _decrypt_text(encrypted, key, iv):
     barr = Padding.unpad(barr, block_size=16)
     text = barr.decode("utf-8")
     return text
+    
 
 
+def _encrypt_text(text, key, iv):
+    aes = AES.new(key, AES.MODE_CBC, IV=iv)
+    text = Padding.pad(text, block_size=16)
+    barr = aes.encrypt(text)
+    return barr
 
 
 class DataTransferWindow(TkToolWindow):
@@ -467,7 +473,9 @@ IP: {addr[0]}
                     if command['target'] == 'clipboard':
                         text = self.root_node.interfaces.os.clipboard.read()
                         data = {'data':text, 'type':'text'}
-                        ih.send(json.dumps(data).encode('utf-8'))
+                        json_text = json.dumps(data).encode('utf-8')
+                        encrypted = _encrypt_text(json_text, self.__key, self.__iv)
+                        ih.send(encrypted)
                     elif command['target'].startswith('dir:'):
                         if command['source'] == 'clipboard:image':
                             from PIL import ImageGrab
