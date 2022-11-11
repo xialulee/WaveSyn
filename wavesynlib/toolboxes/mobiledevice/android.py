@@ -45,7 +45,7 @@ from .widgets import clipb_grp, storage_grp, sensors_grp, manage_grp
 from .viewmodel import ViewModel
 from .datatypes import Command, DataHead, DataInfo 
 from .cryptutils import AESUtil
-from .comm import Communicator
+from .comm import bind_port, recv_head, recv_raw
 
 
 _plugins = {'locationsensor':[], 'file':[], 'text':[]}
@@ -134,8 +134,6 @@ class DataTransferWindow(TkToolWindow):
         self.__qr_image = None
         self.__qr_id = None
         self.__password = None
-#        self.__iv = None
-#        self.__key = None
         self.__aes_util = None
         self.__data = None
         self.__on_finish = None
@@ -216,8 +214,8 @@ class DataTransferWindow(TkToolWindow):
                 
 
     def __show_head(self, datainfo, addr, read):
-        mark = '=' if read else '*'
-        direction = 'From' if read else 'To'
+        mark = "=" if read else "*"
+        direction = "From" if read else "To"
         wtext = self.__scrolled_text
         wtext.append_text(f"""
 {mark*60}
@@ -236,17 +234,13 @@ IP: {addr[0]}
         abort_event.clear()
         self_ip = self.__widgets['ip_list'].current_data[0]
         sockobj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        communicator = Communicator(sockobj)
 
         try:
-            communicator.bind_port(self_ip)
-            self_port = communicator.port
+            self_port = bind_port(sockobj, self_ip)
             with self.__lock:
                 self.__ip_port = (self_ip, self_port)
 
             self.__password = password = random.randint(0, 65535)
-#            self.__iv = iv = get_random_bytes(16)
-#            self.__key = key = get_random_bytes(32)
             self.__aes_util = AESUtil(mode=AES.MODE_CBC)
 
             qr_string = json.dumps({
@@ -297,7 +291,7 @@ IP: {addr[0]}
                 # Always manipulate the GUI components in the main thread.                
                 self.root_node.thread_manager.main_thread_do(block=False)(self.__clear_qr_image)
         
-                exit_flag, datainfo, datalen = communicator.recv_head(self.__password, self.__aes_util)
+                exit_flag, datainfo, datalen = recv_head(ih, self.__password, self.__aes_util)
                 if exit_flag:
                     return
                     
@@ -308,7 +302,7 @@ IP: {addr[0]}
                     if command.source != 'storage':
                         # For file transfer mission,
                         # if the file is large, recv_raw will be memory consuming. 
-                        data = communicator.recv_raw()
+                        data = recv_raw(ih)
                     # End receiving data            
                     
                     if command.source in ('clipboard', 'location_sensor'):
