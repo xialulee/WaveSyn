@@ -2,7 +2,7 @@
 """
 Created on Fri May 23 10:56:05 2014
 
-@author: whhit
+@author: F. C. Li
 """
 import os
 import sys
