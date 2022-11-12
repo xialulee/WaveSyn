@@ -44,7 +44,7 @@ from wavesynlib.misc.socketutils import AbortException, InterruptHandler
 from .widgets import clipb_grp, storage_grp, sensors_grp, manage_grp
 from .viewmodel import ViewModel
 from .datatypes import Command, DataHead, DataInfo 
-from .cryptutils import AESUtil
+from .cryptutils import AESUtil, IV_LEN
 from .comm import bind_port, recv_head, recv_raw
 
 
@@ -302,11 +302,12 @@ IP: {addr[0]}
                     if command.source != 'storage':
                         # For file transfer mission,
                         # if the file is large, recv_raw will be memory consuming. 
-                        data = recv_raw(ih)
+                        iv, data = recv_raw(ih)
                     # End receiving data            
                     
                     if command.source in ('clipboard', 'location_sensor'):
-                        # Store received data
+                        # Decrypt and store received data
+                        self.__aes_util.iv = iv
                         text = self.__aes_util.decrypt_text(data)
                         self.__data = {
                             "data": text,
@@ -359,6 +360,8 @@ IP: {addr[0]}
                                     break
                         with TemporaryFile() as tf:
                             recvcnt = 0
+                            iv = ih.recv(IV_LEN)
+                            self.__aes_util.iv = iv
                             self.root_node.thread_manager.main_thread_do(block=False)(lambda: self.__view_model.transfer_progress.set(0))
                             while True:
                                 buf = ih.recv(65536)
