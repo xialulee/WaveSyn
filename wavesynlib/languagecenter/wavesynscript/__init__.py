@@ -16,7 +16,7 @@ from hy.contrib.hy_repr import hy_repr
 from wavesynlib.languagecenter.utils import MethodLock
 from wavesynlib.languagecenter.designpatterns import Observable
 
-from .hydatatypes import Constant, Constants, ModelNode, NodeDict, model_tree_monitor
+from .datatypes import Constant, Constants, ModelNode, NodeDict, model_tree_monitor
         
 
                 
