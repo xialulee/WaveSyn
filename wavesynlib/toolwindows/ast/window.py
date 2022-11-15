@@ -7,8 +7,6 @@ Created on Mon Feb  5 00:45:09 2018
 import ast
 import tkinter as tk
 
-import hy 
-
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.scrolledtext import ScrolledText
@@ -17,19 +15,8 @@ from wavesynlib.languagecenter.wavesynscript import Scripting, code_printer
 
 import os
 from pathlib import Path
-# The following code generates the bytecode file of the 
-# widgets.hy which is written in Hy.
-# If we import a module written in hy directly in wavesyn,
-# it will fail, and I cannot figure out why. 
-import hy
-try:
-    from wavesynlib.toolwindows.ast.widgets import source_grp
-except hy.errors.HyCompileError:
-# After the bytecode file generated, we can import the module written by hy.    
-    widgets_path = Path(__file__).parent / 'widgets.hy'
-    os.system(f'hyc {widgets_path}')    
-    from wavesynlib.toolwindows.ast.widgets import source_grp
 
+from .widgets import source_grp
 
 
 opmap = {

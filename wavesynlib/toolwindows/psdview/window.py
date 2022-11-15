@@ -4,6 +4,7 @@ Created on Fri Mar 11 13:01:11 2016
 
 @author: Feng-cong Li
 """
+
 import os
 from pathlib import Path
 import tempfile
@@ -15,7 +16,6 @@ import psd_tools
 from PIL import Image
 from PIL import ImageTk
 
-import hy
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.scrolledcanvas import ScrolledCanvas
@@ -24,7 +24,7 @@ from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.utils import MethodDelegator
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.languagecenter.datatypes.treetype import AbstractTreeNode, tree_trans
-from wavesynlib.toolwindows.psdview.widgets import (
+from .widgets import (
         load_grp, export_grp, resize_grp,
         external_viewer_grp, wallpaper_grp)
 
