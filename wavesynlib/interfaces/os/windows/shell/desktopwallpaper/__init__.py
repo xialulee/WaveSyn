@@ -5,15 +5,7 @@ Created on Mon Jan 16 14:34:51 2017
 @author: Feng-cong Li
 """
 
-import os
-from os.path import dirname, join
-import hy
-try:
-    from wavesynlib.interfaces.os.windows.shell.desktopwallpaper.interfaces import *
-except hy.errors.HyCompilerError:
-    interfaces_path = join(dirname(__file__), 'interfaces.hy')
-    os.system(f'hyc {interfaces_path}')
-    from wavesynlib.interfaces.os.windows.shell.desktopwallpaper.interfaces import *
+from .interfaces import *
 
 
 #from comtypes import GUID, IUnknown, COMMETHOD, HRESULT, c_voidp
