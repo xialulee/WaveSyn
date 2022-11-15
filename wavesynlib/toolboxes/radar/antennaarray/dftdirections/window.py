@@ -1,5 +1,3 @@
-import hy
-
 from math import ceil, pi
 
 from numpy import array, arcsin, ones_like, r_, rad2deg, vstack, sin, cos
