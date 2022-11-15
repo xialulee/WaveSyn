@@ -17,7 +17,6 @@ from pathlib import Path
 
 from quantities import second
 
-import hy
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.dirindicator import DirIndicator
