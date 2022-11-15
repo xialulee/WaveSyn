@@ -1,8 +1,19 @@
-import hy
-
 import quantities as pq
 
-from .hyconversions import *
+
+
+def to_unit_ifq(x, unit, mag=None):
+    if isinstance(x, pq.Quantity):
+        x = x.rescale(unit)
+        if mag:
+            x = x.magnitude
+    return x
+
+
+_module_namespace = locals()
+for _unit_name in ('mm', 'cm', 'dm', 'm', 'km', 'Hz', 'kHz', 'MHz', 'GHz'):
+    _module_namespace[f"to_{_unit_name}"] = lambda x, mag=None, __unit_name=_unit_name: \
+        to_unit_ifq(x, getattr(pq, __unit_name), mag=mag)
 
 
 
