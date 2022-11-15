@@ -5,26 +5,8 @@
 
 from comtypes import GUID
 
-
-import os
-from pathlib import Path
-# The following code generates the bytecode file of the 
-# widgets.hy which is written in Hy.
-# If we import a module written in hy directly in wavesyn,
-# it will fail, and I cannot figure out why. 
-
-import hy
-try:
-    from wavesynlib.interfaces.os.windows.shell.taskbarmanager.interfaces \
-    import (
-        ITaskbarList, ITaskbarList2, ITaskbarList3, ITaskbarList4)
-except hy.errors.HyCompileError:
-# After the bytecode file generated, we can import the module written by hy.
-    interfaces_path = Path(__file__).parent / 'interfaces.hy'
-    os.system(f'hyc {interfaces_path}')    
-    from wavesynlib.interfaces.os.windows.shell.taskbarmanager.interfaces\
-    import (
-        ITaskbarList, ITaskbarList2, ITaskbarList3, ITaskbarList4)
+from .interfaces import (
+    ITaskbarList, ITaskbarList2, ITaskbarList3, ITaskbarList4)
 
 
 GUID_CTaskbarList   = GUID('{56FDF344-FD6D-11d0-958A-006097C9A090}')
