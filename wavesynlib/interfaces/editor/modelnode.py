@@ -1,22 +1,141 @@
-from wavesynlib.languagecenter.wavesynscript  import Scripting, ModelNode, NodeDict
-from wavesynlib.languagecenter.designpatterns import Observable
-
 import subprocess
 import tempfile
 import os
-import collections
+
+from wavesynlib.languagecenter.datatypes import Event
+from wavesynlib.languagecenter.wavesynscript import WaveSynScriptAPI, ModelNode, NodeDict
+from wavesynlib.languagecenter.designpatterns import Observable
 
 
 
-import hy
-from os.path import dirname, join
-try:
-    from wavesynlib.interfaces.editor.hynode import *
-except hy.errors.HyCompileError:
-    hynode_path = join(dirname(__file__), 'hynode.hy')
-    os.system(f'hyc {hynode_path}')
-    from wavesynlib.interfaces.editor.hynode import *
+class EditorNode(ModelNode):
+    def __init__(self, node_name='', editor_path=''):
+        super().__init__(node_name=node_name)
+        with self.attribute_lock:
+            self.editor_path = editor_path
+        self.__thread = None
+        self.__run_on_exit = None
+        self.__is_temp = None
+        self.code = None
+        self.filename = None
 
+    def launch(self, code='', file_path=None, run_on_exit=True):
+        if self.__thread:
+            raise Exception('Editor has already been launched.')
+        self.__run_on_exit = run_on_exit
+        if not file_path:
+            [fd, filename] = tempfile.mkstemp(suffix='.py', text=True)
+            with os.fdopen(fd, 'w') as f:
+                if code: f.write(code)
+            self.__is_temp = True
+        else:
+            self.__is_temp = False
+            filename = str(file_path)
+        with self.attribute_lock:
+            self.filename = filename
+        self.__thread = self.root_node.thread_manager.create_thread_object(
+            lambda : subprocess.call([self.editor_path, self.filename]))
+        self.__thread.start()
+
+    @property
+    def is_temp_file(self):
+        return self.__is_temp
+
+    @property
+    def run_on_exit(self):
+        return self.__run_on_exit
+
+    def is_alive(self):
+        alive = self.__thread.is_alive()
+        if (not alive) and (self.code is None):
+            try:
+                with open(self.filename, 'r') as f:
+                    self.code = f.read()
+            finally:
+                if self.is_temp_file: os.remove(self.filename)
+        return alive
+
+
+
+class EditorManager(Observable):
+    def __init__(self, editor_dict):
+        super().__init__()
+        self.__editor_dict = editor_dict
+
+    def update(self, event):
+        # Observe a timer
+        if self.__editor_dict:
+            for key, editor in self.__editor_dict.items():
+                if not editor.is_alive():
+                    self.notify_observers(
+                        Event(
+                            name='editor_exit', 
+                            args=(editor,)
+                        )
+                    )
+                    self.__editor_dict.pop(key)
+                    break
+
+
+
+class EditorDict(NodeDict):
+    def __init__(self, node_name=''):
+        super().__init__(node_name=node_name)
+        with self.attribute_lock:
+            self.manager = EditorManager(self)
+
+    def __setitem__(self, key, val):
+        if not isinstance(val, EditorNode):
+            raise TypeError(
+                f'{self.node_path} only accepts instances of EditorNode or its subclasses.'
+            )
+        if key != id(val):
+            raise TypeError(
+                'The key should be identical to the ID of the editor.'
+            )
+        return super().__setitem__(key, val)
+
+    def add(self, node):
+        id_node = id(node)
+        self[id_node] = node
+        return id_node
+
+    @WaveSynScriptAPI
+    def launch(self, 
+            editor_path = None, 
+            code = "", 
+            file_path = None, 
+            run_on_exit = False
+        ):
+        """Launch a specified editor. When the editor terminated, it will notify the observer of .manager.
+  editor_path: String. Specify the path of the editor. If None is given, it will launch the one specified in config.json.
+  code: A string representing the code to be edited, or the CLIPBOARD_TEXT const.
+  file_path: a path of a file or a list of paths of several files, or the CLIPBOARD_PATH_LIST const.
+  run_on_exit: run the content of the editor while the editor terminates."""
+        if not editor_path:
+            editor_path = self.root_node.editor_info['Path']
+        code = self.root_node.interfaces.os.clipboard.constant_handler_CLIPBOARD_TEXT(code)
+        file_path = self.root_node.interfaces.os.clipboard.constant_handler_CLIPBOARD_PATH_LIST(file_path)
+        if file_path is None:
+            file_path = [None]
+        if isinstance(file_path, str):
+            file_path = [file_path]
+
+        id_list = []
+        for item in file_path:
+            editor_id = self.add(EditorNode(editor_path=editor_path))
+            self[editor_id].launch(code=code, file_path=item, run_on_exit=run_on_exit)
+            id_list.append(editor_id)
+        return id_list
+
+    @WaveSynScriptAPI
+    def launch_gvim(self, code='', file_path=None, run_on_exit=False):
+        return self.launch(
+            editor_path = 'gvim', 
+            code = code, 
+            file_path = file_path, 
+            run_on_exit = run_on_exit
+        )
 #class EditorNode(ModelNode):
     #def __init__(self, node_name='', editor_path=''):
         #ModelNode.__init__(self, node_name=node_name)
