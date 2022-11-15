@@ -1,17 +1,56 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Dec 30 22:24:49 2018
+import win32con
 
-@author: Feng-cong Li
-"""
+KEYEVENTF_EXTENDEDKEY = 1
+KEYEVENTF_KEYUP = 2
+KEYEVENTF_UNICODE = 4
+KEYEVENTF_SCANCODE = 8
 
-import os
-from pathlib import Path
-import hy
-try:
-    from wavesynlib.interfaces.os.windows.inputsender.hyconstants import *
-except hy.errors.HyCompileError:
-    hy_path = Path(__file__).parent / 'hyconstants.hy'
-    os.system(f'hyc {hy_path}')
-    from wavesynlib.interfaces.os.windows.inputsender.hyconstants import *
-    
+INPUT_MOUSE = 0
+INPUT_KEYBOARD = 1
+INPUT_HARDWARE = 2
+
+VK_CONTROL = 0x11
+VK_CTRL = VK_CONTROL
+VK_LCONTROL = 0xA2
+VK_LCTRL = VK_LCONTROL
+VK_RCONTROL = 0xA3
+VK_RCTRL = VK_RCONTROL
+
+VK_MENU = 0x12
+VK_ALT = VK_MENU
+VK_LMENU = 0xA4
+VK_LALT = VK_LMENU
+VK_RMENU = 0xA5
+VK_RALT = VK_RMENU
+
+VK_SHIFT = 0x10
+VK_LSHIFT = 0xA0
+VK_RSHIFT = 0xA1
+
+VK_LEFT = win32con.VK_LEFT
+VK_RIGHT = win32con.VK_RIGHT
+VK_UP = win32con.VK_UP
+VK_DOWN = win32con.VK_DOWN
+VK_HOME = win32con.VK_HOME
+VK_END = win32con.VK_END
+
+for k in range(24):
+    locals()[f'VK_F{k + 1}'] = k + 0x70
+
+MOUSEEVENTF_ABSOLUTE = 0x8000
+MOUSEEVENTF_HWHEEL = 0x1000
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_MOVE_NOCOALESCE = 0x2000
+MOUSEEVENTF_LEFTDOWN = 0x0002
+MOUSEEVENTF_LEFTUP = 0x0004
+MOUSEEVENTF_RIGHTDOWN = 0x0008
+MOUSEEVENTF_RIGHTUP = 0x0010
+MOUSEEVENTF_MIDDLEDOWN = 0x0020
+MOUSEEVENTF_MIDDLEUP = 0x0040
+MOUSEEVENTF_VIRTUALDESK = 0x4000
+MOUSEEVENTF_WHEEL = 0x0800
+MOUSEEVENTF_XDOWN = 0x0080
+MOUSEEVENTF_XUP = 0x0100
+
+XBUTTON1 = 1
+XBUTTON2 = 2
