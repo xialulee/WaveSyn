@@ -1,4 +1,3 @@
-import hy
 from ctypes import windll
 from win32con import WM_KEYDOWN, WM_KEYUP, WH_KEYBOARD_LL
 import atexit
