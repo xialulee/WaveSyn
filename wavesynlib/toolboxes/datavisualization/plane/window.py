@@ -1,8 +1,6 @@
 # Created on Sun Sep 13 15:36 2020
 # @author: Feng-cong Li
 
-import hy
-
 from pathlib import Path
 from numpy import arange, arctan2, ndarray, sqrt, vstack
 
