@@ -6,18 +6,19 @@ Created on Sat Nov 24 00:34:39 2018
 """
 
 from __future__ import annotations
-from typing import Final
 
 import ctypes
-from ctypes import byref
-from ctypes.wintypes import UINT, MSG
 from copy import deepcopy
-from queue import Queue, Empty
+from ctypes import byref
+from ctypes.wintypes import MSG, UINT
+from queue import Empty, Queue
+from typing import Final, Callable, Iterable, Mapping
+from dataclasses import dataclass
 
-from win32con import WM_HOTKEY, PM_REMOVE
+from win32con import PM_REMOVE, WM_HOTKEY
 
-from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib.languagecenter.designpatterns import Observable
+from wavesynlib.languagecenter.wavesynscript import ModelNode
 
 _user32 = ctypes.windll.user32
 _ID_UPPER_BOUND: Final[int] = 0xBFFF + 1
@@ -31,7 +32,7 @@ class Modifiers(UINT):
         [3,  "win"], 
         [14, "norepeat"]
     ]
-    for [bitpos, name] in _attr_names:
+    for bitpos, name in _attr_names:
         def __getter(self, bitpos=bitpos) -> int:
             return self.value & (1 << bitpos)
         
@@ -42,11 +43,19 @@ class Modifiers(UINT):
                 self.value &= ~(1 << bitpos)
                 
         locals()[name] = property(__getter).setter(__setter)
+
+
+
+@dataclass
+class HotkeyInfo:
+    modifiers: Modifiers 
+    vk:        int
+    func:      Callable[[], None]
                 
 
 
 
-def _modifier_name_convert(name):
+def _modifier_name_convert(name: str) -> str:
     name = name.lower()
     if name in ["alt", "menu"]:
         return "alt"   
@@ -57,7 +66,7 @@ def _modifier_name_convert(name):
 
 
 
-def _modifier_names_to_obj(modifiers):
+def _modifier_names_to_obj(modifiers: Iterable[str]) -> Modifiers:
     modobj = Modifiers(0)
     for modifier in modifiers:
         setattr(modobj, _modifier_name_convert(modifier), 1)
@@ -66,20 +75,19 @@ def _modifier_names_to_obj(modifiers):
 
 
 class GlobalHotkeyManager(ModelNode, Observable):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.__hotkey_info = {}
+        self.__hotkey_info: Mapping[int, HotkeyInfo] = {}
         self.__repeater = None
         self.__queue = Queue()
         self.__timer = None
 
         @self.add_observer
-        def on_event(id_, info):
-            it = info[2]
-            if it:
-                it()
+        def on_event(id_: int, info: HotkeyInfo) -> None:
+            if func := info.func:
+                func()
                 
-    def on_connect(self):
+    def on_connect(self) -> None:
         self.__timer = timer = self.root_node.create_timer(interval=50)
         @timer.add_observer
         def on_timer(event=None):
@@ -90,16 +98,16 @@ class GlobalHotkeyManager(ModelNode, Observable):
             except Empty:
                 pass
 
-    def set_timer_interval(self, interval):
+    def set_timer_interval(self, interval: int) -> None:
         self.__timer.interval = interval
 
-    def start_timer(self):
+    def start_timer(self) -> None:
         self.__timer.active = True
 
-    def stop_timer(self):
+    def stop_timer(self) -> None:
         self.__timer.active = False
 
-    def __get_new_id(self):
+    def __get_new_id(self) -> int:
         for i in range(1, _ID_UPPER_BOUND):
             if i not in self.__hotkey_info:
                 return i
@@ -121,19 +129,27 @@ class GlobalHotkeyManager(ModelNode, Observable):
         return self.__repeater
     
     @property
-    def hotkey_info(self):
+    def hotkey_info(self) -> Mapping[int, HotkeyInfo]:
         return deepcopy(self.__hotkey_info)
 
-    def register(self, modifiers, vk, func=None):
+    def register(self, 
+            modifiers: Iterable[str], 
+            vk:        int, 
+            func:      Callable[[], None] = None
+        ) -> int:
         modifiers = _modifier_names_to_obj(modifiers)
         id_ = self.__get_new_id()
-        success = self._repeater.do_once(lambda : 
+        success = self._repeater.do_once(lambda: 
             _user32.RegisterHotKey(None, id_, modifiers, vk))
         if success:
-            self.__hotkey_info[id_] = modifiers, vk, func
+            self.__hotkey_info[id_] = HotkeyInfo(modifiers, vk, func)
         return success
 
-    def unregister(self, modifiers=None, vk=None, id_=None):
+    def unregister(self, 
+            modifiers: Iterable[str] = None, 
+            vk:        int = None, 
+            id_:       int = None
+        ) -> None:
         if modifiers:
             modifiers = _modifier_names_to_obj(modifiers)
         if not id_:
@@ -146,6 +162,6 @@ class GlobalHotkeyManager(ModelNode, Observable):
                 _user32.UnregisterHotKey(None, id_))
             del self.__hotkey_info[id_]
 
-    def unregister_all(self):
+    def unregister_all(self) -> None:
         for id_ in tuple(self.__hotkey_info.keys()):
             self.unregister(id_=id_)
