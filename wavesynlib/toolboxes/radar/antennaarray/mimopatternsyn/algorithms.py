@@ -10,8 +10,7 @@ import cvxpy as cp
 from collections.abc import Iterable
 from abc import ABCMeta, abstractproperty
 
-import hy
-from .hypattern2corrmtx import matA, matP, matG, corrmtx2pattern, make_problem
+from .pattern2corrmtx import make_quadform_matrix, corrmtx2pattern, make_problem
 
 
 
@@ -67,6 +66,8 @@ class Problem(object):
         self.__M    = None
         self.__idealPattern   = None
         self.__Gamma    = None
+        self.__problem = None
+        self.__R = None
     
     @property
     def M(self):
@@ -92,7 +93,7 @@ class Problem(object):
             raise TypeError('angle and magnitude of idealPattern should be iterable.')
         if len(val.samplesAngle) != len(val.samplesMagnitude):
             raise Exception('len(idealPattern.angle) should equal len(idealPattern.magnitude).')
-        Gamma   = matG(self.M, val.samplesAngle, val.samplesMagnitude)
+        Gamma   = make_quadform_matrix(self.M, (val.samplesAngle, val.samplesMagnitude))
         self.__Gamma    = Gamma 
         self.__idealPattern = val
             
