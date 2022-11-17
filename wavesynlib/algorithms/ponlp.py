@@ -5,61 +5,92 @@ Created on Fri Mar 18 12:11:35 2016
 @author: Feng-cong Li
 """
 import numpy as np
-from numpy import fft
+from numpy.fft import fft, ifft
 from scipy.optimize import fmin_ncg
+from numpy import diag, exp, outer, roll 
 
 from wavesynlib.mathtools import Algorithm, Expression, Parameter
 
-import hy
-from .hyponlp import objective, gradient, hessian
 
 
-#def objective(phi, Qr):
-    #N = len(phi)
-    #s = np.exp(1j*phi)
-    #Fs = fft.fft(s, 2*N)
-    #ac = fft.ifft(Fs * Fs.conj())
-    #return np.sum(np.abs(ac[Qr])**2)
-    
-    
-#def gradient(phi, Qr):
-    #N = len(phi)
-    #s = np.exp(1j*phi)
-    #Fs = fft.fft(s, 2*N)
-    #ac = fft.ifft(Fs * Fs.conj())
-    #grad = np.zeros((N,), dtype=np.complex128)
-    #for k in Qr:
-        #grad += ac[k].conj()*dak_dphi(k, s)
-    #return 2*grad.real
-    
-    
-#def hessian(phi, Qr):
-    #N = len(phi)
-    #s = np.exp(1j*phi)
-    #Fs = fft.fft(s, 2*N)
-    #ac = fft.ifft(Fs * Fs.conj())
-    #H = np.zeros((N, N), dtype=np.complex128)
-    #for k in Qr:
-        #d = dak_dphi(k, s)
-        #H += np.outer(d, d.conj()) + ac[k].conj()*d2ak_dphi2(k, s)
-    #return 2*H.real
+def U(n, x):
+    """The upper shift operator. See Eq.8 in [1]."""
+    n = -n
+    if n == 0:
+        x = x.copy()
+    else:
+        if n > 0:
+            x = roll(x, n)
+            x[:n] = 0
+        else:
+            if n < 0:
+                x = x.copy()
+                x[0:-n] = 0
+                x = roll(x, n)
+    return x
 
 
+def abs_square(x):
+    return x.real**2 + x.imag**2
 
-#def dak_dphi(k, s):
-    #t1 = 1j * s * np.hstack((np.zeros(k), s[:-k].conj()))    
-    #t2 = -1j * s.conj() * np.hstack((s[k:], np.zeros(k)))
-    #return t1 + t2
-    
-    
-#def d2ak_dphi2(k, s):
-    #diag = np.diag
-    #t1 = diag(s.conj()) @ diag(s[k:], k)
-    #t2 = -diag(s.conj()) @ diag(np.hstack((s[k:], np.zeros((k,)))))
-    #t3 = diag(s) @ diag(s[:-k], -k)
-    #t4 = -diag(s) @ diag(np.hstack((np.zeros((k,)), s[:-k])).conj())
-    #return t1 + t2 + t3 + t4
-    
+
+def autocorr(x):
+    N = len(x)
+    F = fft(x, n=2*N)
+    return ifft(F * F.conj())
+
+
+def objective(phase_vec, select_vec):
+    return sum(abs_square(autocorr(exp(1j*phase_vec))[select_vec]))
+
+
+def dan_dɸ(𝐬, n):
+    sc = s.conj()
+    # See Eq.44 in [1]
+    t1 =  1j * s  * U(-n, sc)
+    t2 = -1j * sc * U( n, s)
+    return t1 + t2
+
+
+def gradient(phase_vec, Q):
+    s = exp(1j * phase_vec)
+    a = autocorr(s)
+    # See Eq.43 in [1]
+    grad = sum(
+        a[k].conj() * dan_dɸ(s, n=k) for k in Q
+    )
+    return 2 * grad.real
+
+
+def d2an_dɸdɸ(s, n):
+    Diag_s = diag(s)
+    Diag_sc = diag(s.conj())
+    U_Diag_s = diag(s[n:], n)
+    Diag_U_s = diag(U(n, s))
+    UT_Diag_sc = diag(s[0:-n], -n).conj()
+    Diag_UT_sc = diag(U(-n, s).conj())
+    # See Eq.49 in [1]
+    t1 = Diag_sc @ U_Diag_s
+    t2 = -Diag_sc @ Diag_U_s
+    t3 = Diag_s @ UT_Diag_sc
+    t4 = -Diag_s @ Diag_UT_sc
+    return t1 + t2 + t3 + t4
+
+
+def hessian(phase_vec, select_vec):
+    s = exp(1j * phase_vec)
+    a = autocorr(s)
+
+    H = 0
+    for k in select_vec:
+        dak_dɸ = dan_dɸ(s, n=k)
+        # See Eq.48 in [1].
+        H += \
+            a[k].conj() * d2an_dɸdɸ(s, n=k) +\
+            outer(dak_dɸ, dak_dɸ.conj())
+        
+    return 2 * H.real
+
         
 class PONLP(Algorithm):
     __name__ = 'PONLP'
