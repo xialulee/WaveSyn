@@ -18,7 +18,7 @@ def field(type_: type, anonymous:bool = False):
 
 
 
-def ctype_build(type_, doc=''):
+def ctype_build(type_, pack=None, endian=None, doc=''):
     '''\
 This decorator is a helper for defining C struct/union datatypes.
 
@@ -46,13 +46,20 @@ class XINPUT_GAMEPAD:
             field_desc.append((name, type_desc))
             
         if type_ in ('struct', 'structure'):
-            base_class = ctypes.Structure
+            if endian == "big":
+                base_class = ctypes.BigEndianStructure
+            elif endian == "little":
+                base_class = ctypes.LittleEndianStructure
+            else:
+                base_class = ctypes.Structure
         elif type_ == 'union':
             base_class = ctypes.Union
         else:
             raise TypeError('Not supported type.')
         
         class TheType(base_class):
+            if pack:
+                _pack_ = pack
             if doc:
                 __doc__ = doc
             if anonymous:

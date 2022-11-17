@@ -1,4 +1,3 @@
-import hy
 import struct
 from ctypes import sizeof
 
