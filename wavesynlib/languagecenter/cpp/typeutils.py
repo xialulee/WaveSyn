@@ -1,4 +1,20 @@
+from __future__ import annotations
+
+from typing import get_type_hints
 import ctypes
+
+
+
+class Field:
+    pass
+
+
+def field(type_: type, anonymous:bool = False):
+    # Todo: support bit field
+    class TheField(Field):
+        _type = type_
+        _anonymous = anonymous
+    return TheField
 
 
 
@@ -19,15 +35,14 @@ class XINPUT_GAMEPAD:
 '''
     type_ = type_.lower()
     
-    def the_decorator(f):
+    def the_decorator(cls):
         field_desc = []
         anonymous = []
-        for name, type_desc in f.__annotations__.items():
-            if isinstance(type_desc, (list, tuple)):
-                for prop in type_desc[1:]:
-                    if prop == 'anonymous':
-                        anonymous.append(name)
-                type_desc = type_desc[0]
+        for name, type_desc in get_type_hints(cls).items():
+            if issubclass(type_desc, Field):
+                if type_desc._anonymous:
+                    anonymous.append(name)
+                type_desc = type_desc._type
             field_desc.append((name, type_desc))
             
         if type_ in ('struct', 'structure'):

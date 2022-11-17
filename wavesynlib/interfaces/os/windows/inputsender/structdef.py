@@ -7,46 +7,47 @@ Created on Sun Dec 30 22:39:13 2018
 from ctypes import Structure, Union
 from ctypes.wintypes import WORD, DWORD, LONG, WPARAM
 
+from wavesynlib.languagecenter.cpp.typeutils import ctype_build, field
+
 # See https://stackoverflow.com/a/13615802.
 ULONG_PTR = WPARAM
 
 
-class MOUSEINPUT(Structure):
-    _fields_ = [
-        ('dx', LONG), 
-        ('dy', LONG), 
-        ('mouseData', DWORD), 
-        ('dwFlags', DWORD), 
-        ('time', DWORD), 
-        ('dwExtraInfo', ULONG_PTR)
-    ]
+
+@ctype_build("struct")
+class MOUSEINPUT:
+    dx: LONG 
+    dy: LONG 
+    mouseData:   DWORD 
+    dwFlags:     DWORD 
+    time:        DWORD 
+    dwExtraInfo: ULONG_PTR
 
 
-class KEYBDINPUT(Structure):
-    _fields_ = [
-        ('wVk', WORD), 
-        ('wScan', WORD), 
-        ('dwFlags', DWORD), 
-        ('time', DWORD), 
-        ('dwExtraInfo', ULONG_PTR)
-    ]
+
+@ctype_build("struct")
+class KEYBDINPUT:
+    wVk:     WORD
+    wScan:   WORD
+    dwFlags: DWORD
+    time:    DWORD
+    dwExtraInfo: ULONG_PTR
 
 
-class HARDWAREINPUT(Structure):
-    _fields_ = [
-        ('uMsg', DWORD), 
-        ('wParamL', WORD), 
-        ('wParamH', WORD)
-    ]
+
+@ctype_build("struct")
+class HARDWAREINPUT:
+    uMsg:    DWORD
+    wParamL: WORD
+    wParamH: WORD
 
 
-class _DUMMYUNIONNAME(Union):
-    _fields_ = [
-        ('mi', MOUSEINPUT), 
-        ('ki', KEYBDINPUT), 
-        ('hi', HARDWAREINPUT)
-    ]
 
+@ctype_build("union")
+class _DUMMYUNIONNAME:
+    mi: MOUSEINPUT
+    ki: KEYBDINPUT
+    hi: HARDWAREINPUT
 
 # According to Microsoft, INPUT is used by SendInput to store information for 
 # synthesizing input events such as keystrokes, mouse movement, and mouse clicks.
@@ -62,9 +63,7 @@ class _DUMMYUNIONNAME(Union):
 #     mi: MOUSEINPUT. The information about a simulated mouse event.
 #     ki: KEYBDINPUT. The information about a simulated keyboard event.
 #     hi: HARDWAREINPUT. The information about a simulated hardware event. 
-class INPUT(Structure):
-    _anonymous_ = 'dummy',
-    _fields_ = [
-        ('type', DWORD), 
-        ('dummy', _DUMMYUNIONNAME)
-    ]
+@ctype_build("struct")
+class INPUT:
+    type:  DWORD
+    dummy: field(_DUMMYUNIONNAME, anonymous=True)
