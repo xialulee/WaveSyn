@@ -13,33 +13,85 @@ from numpy import abs, angle, array, atleast_1d, \
 from numpy.linalg import eigh, eigvals, pinv
 from numpy.random import randn
 
-import hy
-from .hyfreq import *
 from wavesynlib.formulae.noise import complex_gaussian
+    
+from numpy import (
+    array, arange, correlate, roots, trace, atleast_1d, exp, 
+    zeros, eye, unravel_index, einsum, full, 
+    c_,
+    inf, angle, pi as π
+)
+from numpy.linalg import eigh, eigvals, pinv, lstsq, det
+from itertools import combinations
+from .autocorrmtx import Rx, autocorrelate
+
+_2π = 2 * π
 
 
-autocorrelate   = lambda x: correlate(x, x, mode='full')
-    
-    
-    
-#def root_MUSIC(Rx, p):
-    #'''Estimate signal frequencies using root-MUSIC algorithm
-    #Rx: auto-correlation matrix of signal;
-    #p:  number of complex sinusoids;
-    #return value: normalized frequencies.
-    #'''
-    #p       = int(p)
-    #N       = Rx.shape[0]
-    #D, U    = eigh(Rx) # Notice! Ascending order!
-    #M       = N - p # The dimension of the noise subspace.
-    #Un      = array(U[:, :M]) # orthonormal basis of the noise subspace.    
-    #P       = sum(autocorrelate(Un[:, k]) for k in range(M))
-    #rootsP  = roots(P)
-    ## Remove all the roots outside the unit circle
-    #rootsP  = rootsP[(abs(rootsP)<=1).nonzero()]
-    ## Sort roots with respect to its distance to the unit circle
-    #rootsP  = rootsP[(abs(abs(rootsP) - 1)).argsort()]
-    #return angle(rootsP[:p]) / 2 / pi
+
+def LS_ESPRIT(Rx, p):
+    """Estimate signal frequencies using LS-ESPRIT algorithm
+Rx: autocorrelation matrix of signal;
+p:   number of complex sinusoids;
+return value: normalized frequencies."""
+    p, N = int(p), Rx.shape[0]
+    D, U = eigh(Rx)
+#    Obtain signal subspace from U
+#    Unlike numpy.linalg.svd, 
+#    the eigenvalue and the corresponding eigenvectors 
+#    calculated by eigh are in ascending order. 
+    U_s = U[:, N-p:]
+    U_0 = U_s[:-1, :]
+    U_1 = U_s[1:, :]
+    U1_U0 = lstsq(U_1, U_0, rcond=None)[0]
+    return -(angle(eigvals(U1_U0)) / _2π)
+
+
+
+def root_MUSIC(Rx, p):
+    """Estimate signal frequencies using root-MUSIC algorithm
+Rx: auto-correlation matrix of signal;
+p:  number of complex sinusoids;
+return value: normalized frequencies."""
+    p, N = int(p), Rx.shape[0]
+    # Eigenvalue in ascending order.
+    D, U = eigh(Rx)
+    # An orth base of the noise subspace.
+    U_n = U[:, :N-p]
+    P = sum(autocorrelate(u) for u in U_n.T)
+    roots_P = roots(P)
+    # Remove all the roots outside the unit circle.
+    roots_P = roots_P[(abs(roots_P) <= 1).nonzero()]
+    # Sort the roots with respect to its distance to the unit circle.
+    roots_P = roots_P[abs(roots_P).argsort()]
+    return angle(roots_P[-1:-p-1:-1]) / _2π
+
+
+
+def MLE(Rx, p, freq_samps=arange(0, 1, 0.01)):
+    p, N, Nf = int(p), Rx.shape[0], len(freq_samps)
+    I = eye(N)
+
+    def Es(freqs):
+        """Create a steering matrix."""
+        freqs = atleast_1d(freqs)
+        n = c_[:N]
+        ω = _2π * freqs
+        return exp(1j * n * ω)
+    F = full([Nf] * p, inf)
+    for idx in combinations(range(Nf), p):
+        A = Es(freq_samps[array(idx)])
+        Aᴴ = A.T.conj()
+        pinv_A = pinv(A)
+        pinv_A_H = pinv_A.T.conj()
+        P_A = A @ pinv_A
+        P_N = eye(P_A.shape[0]) - P_A
+        σ_sq = (einsum('ij,ji->', P_N, Rx) / (N - p)).real
+        σ_sq_I = σ_sq * I
+        Rs = pinv_A @ (Rx - σ_sq_I) @ pinv_A_H
+        F[idx] = det(A @ Rs @ Aᴴ + σ_sq_I).real
+    sub = array(unravel_index(F.argmin(), F.shape))
+    return freq_samps[sub]
     
     
 
