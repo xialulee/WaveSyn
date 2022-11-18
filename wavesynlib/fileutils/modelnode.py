@@ -4,6 +4,9 @@ Created on Sat Sep 28 01:13:49 2019
 
 @author: Feng-cong Li
 """
+from __future__ import annotations
+
+from typing import Callable, Iterable, Mapping 
 
 from io import IOBase
 from pathlib import PurePath
@@ -29,7 +32,11 @@ class FileUtils(ModelNode):
         
         
     @WaveSynScriptAPI(thread_safe=True)
-    def calc_hash(self, file:datatypes.ArgOpenFile, algorithm, on_finish=None):
+    def calc_hash(self, 
+            file:      datatypes.ArgOpenFile | str | IOBase, 
+            algorithm: str, 
+            on_finish: Iterable[Callable[[str], None] | str] | None = None
+        ) -> str:
         '''\
 Calculate the hash code of a given file.
 
@@ -40,12 +47,21 @@ algorithm: the name of the hash algorithm.
 '''
         from wavesynlib.fileutils import calc_hash
 
-        command_dict = {"display": lambda code: print(code)}
+        command_dict: Mapping[str, Callable[[str], None]] = {
+            "display": print,
+            "print":   print
+        }
 
-        def do_on_finish(code):
+        def do_on_finish(code: str) -> None:
             if on_finish:
                 for command in on_finish:
-                    command_dict[command](code)
+                    if isinstance(command, str):
+                        command = command_dict[command]
+                    elif callable(command):
+                        pass
+                    else:
+                        raise TypeError("Elements of on_finish should be command strings or callable objects.")
+                    command(code)
         
         file = self.root_node.gui.dialogs.constant_handler_ASK_OPEN_FILENAME(
                 file, 
@@ -60,3 +76,5 @@ algorithm: the name of the hash algorithm.
             result = calc_hash(file, algorithm) 
             do_on_finish(result)
             return result
+        else:
+            raise TypeError("Type of file is unsupported.")
