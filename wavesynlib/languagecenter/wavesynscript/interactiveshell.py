@@ -114,7 +114,7 @@ class InteractiveShell(ModelNode):
             def execute():
                 nonlocal code
                 try:
-                    code = wavesynscript.extra_modes.translate(code, verbose=True)[0]
+                    code = wavesynscript.extra_modes.translate(code, verbose=True)
                 except SyntaxError:
                     pass
                 return wavesynscript.execute(code)
