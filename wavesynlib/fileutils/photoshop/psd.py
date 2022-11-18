@@ -1,3 +1,9 @@
+from __future__ import annotations
+
+from typing import (
+    BinaryIO, 
+    Final, Mapping, Tuple
+)
 import struct
 from ctypes import sizeof
 
@@ -5,12 +11,14 @@ import numpy as np
 from PIL import Image
 import time
 
+from wavesynlib.languagecenter.cpp.typeutils import StructReader
+
 from .packbits import packbits
-from .structdef import Head
+from .structdef import HeadStruct
 
 
 
-COLORMODE = {
+COLORMODE: Final[Mapping[int, str]] = {
     0: "Bitmap",
     1: "Grayscale",
     2: "Indexed",
@@ -22,7 +30,10 @@ COLORMODE = {
 
 
 
-def get_image_matrix(psd_file, read_channels=-1):
+def get_image_matrix(
+        psd_file: BinaryIO, 
+        read_channels:int = -1
+    ) -> Tuple[np.ndarray, str]:
     """\
 Get the numpy array of the image in the given psd_file.
 
@@ -32,8 +43,9 @@ read_channels:
     -1: read all channels;
     a positive integer: read specified number of channels."""
     psd_file.seek(0)
-    head = Head()
-    head.bytes[:] = psd_file.read(sizeof(Head))
+#    head = Head()
+#    head.bytes[:] = psd_file.read(sizeof(Head))
+    head = StructReader(HeadStruct).read(psd_file)
 
     if head.signature != b"8BPS":
         raise TypeError("Given file is not PSD.")
@@ -89,7 +101,10 @@ read_channels:
 
 
 
-def get_pil_image(psd_file, read_channels=-1):
+def get_pil_image(
+        psd_file: BinaryIO, 
+        read_channels:int = -1
+    ) -> Tuple[Image.Image, str]:
     matrix, colormode = get_image_matrix(psd_file, read_channels)
     return Image.fromarray(matrix), colormode
 

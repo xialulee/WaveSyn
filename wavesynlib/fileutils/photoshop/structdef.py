@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Final
+
 from wavesynlib.languagecenter.cpp.typeutils import ctype_build, field
 
 from ctypes import (
@@ -24,7 +28,7 @@ class HeadStruct:
     colormode:  UINT16
     
 
-HEADLEN = sizeof(HeadStruct)
+HEADLEN: Final[int] = sizeof(HeadStruct)
 HEADBYTES = UINT8 * HEADLEN
 
 @ctype_build("union")

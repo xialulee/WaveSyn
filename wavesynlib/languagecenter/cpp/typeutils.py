@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import get_type_hints
+from typing import get_type_hints, BinaryIO, Callable, Literal
 import ctypes
 
 
@@ -18,7 +18,12 @@ def field(type_: type, anonymous:bool = False):
 
 
 
-def ctype_build(type_, pack=None, endian=None, doc=''):
+def ctype_build(
+        type_: Literal["struct", "structure", "union"], 
+        pack: int = 0, 
+        endian: Literal["big", "little", None] = None, 
+        doc: str = ""
+    ) -> Callable[[type], type]:
     '''\
 This decorator is a helper for defining C struct/union datatypes.
 
@@ -33,9 +38,7 @@ class XINPUT_GAMEPAD:
     sThumbRX: SHORT
     sThumbRY: SHORT
 '''
-    type_ = type_.lower()
-    
-    def the_decorator(cls):
+    def the_decorator(cls: type) -> type:
         field_desc = []
         anonymous = []
         for name, type_desc in get_type_hints(cls).items():
@@ -76,19 +79,20 @@ class StructReader:
 An util for reading struct data in a binary file. 
 Not thread-safe. 
 """
-    def __init__(self, struct_type):
+    def __init__(self, struct_type) -> None:
         size = ctypes.sizeof(struct_type)
         arr  = ctypes.c_uint8 * size
 
-        @ctype_build("union")
-        class Helper:
-            struct:   struct_type
-            byte_arr: arr
+        class Helper(ctypes.Union):
+            _fields_ = [
+                ("struct_object", struct_type),
+                ("byte_array", arr)
+            ]
 
         self.__helper = Helper()
         self.__size   = size
 
 
-    def read(self, io_obj):
+    def read(self, io_obj: BinaryIO) -> ctypes.Structure:
         self.__helper.byte_arr[:] = io_obj.read(self.__size)
-        return self.__helper.struct
+        return self.__helper.struct_object
