@@ -94,5 +94,5 @@ Not thread-safe.
 
 
     def read(self, io_obj: BinaryIO) -> ctypes.Structure:
-        self.__helper.byte_arr[:] = io_obj.read(self.__size)
+        self.__helper.byte_array[:] = io_obj.read(self.__size)
         return self.__helper.struct_object
