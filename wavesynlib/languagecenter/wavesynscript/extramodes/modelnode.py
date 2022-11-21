@@ -1,6 +1,5 @@
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting
 from .wsshmode.modelnode import WSSh
-import hy
 from .magicmode.modelnode import Magic
 from .basemode import BaseMode
 

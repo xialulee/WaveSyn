@@ -40,10 +40,9 @@
 
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Any, Tuple
 
 import locale
-import subprocess
 import sys
 import re
 import io
@@ -83,7 +82,7 @@ class WSSh(ModelNode, BaseMode):
 
 
     @classmethod
-    def get_prefix(cls):
+    def get_prefix(cls) -> str:
         return cls._MODE_PREFIX
 
 
@@ -103,32 +102,35 @@ class WSSh(ModelNode, BaseMode):
         return returncode, stdout.read(), stderr.read()
 
 
-    def test(self, code):
-        return \
-            self.info \
-                if code.lstrip().startswith(self._MODE_PREFIX) else \
-            False
+    def test(self, code: str) -> ModeInfo | None:
+        if code.lstrip().startswith(self._MODE_PREFIX):
+            return self.info
+        else:
+            return None
 
 
     @WaveSynScriptAPI(thread_safe=True)
-    def run(self, command, display=True, input=None, store=False):
+    def run(self, 
+            command, 
+            display=True, 
+            input=None, 
+            store=False
+        ) -> dict:
         # Todo: 
         # Support store stdout & stderr;
         # Support run in thread.
         result = {
-            'returncode': None, 
-            'stdout': None, 
-            'stderr': None
+            "returncode": None, 
+            "stdout": "", 
+            "stderr": ""
         }
-        self.result['stdout'] = ''
-        self.result['stderr'] = ''
         if isinstance(input, str):
             input = input.encode(_encoding)
         returncode, stdout, stderr = self.__run_process(command, input=input)
-        result['returncode'] = returncode
+        result["returncode"] = returncode
         if store:
-            result['stdout'] = stdout
-            result['stderr'] = stderr
+            result["stdout"] = stdout
+            result["stderr"] = stderr
         if display:
             print(stdout)
             print(stderr, file=sys.stderr)
@@ -139,29 +141,31 @@ class WSSh(ModelNode, BaseMode):
         # Todo: #M! default;
         prefix_args, code = self._split_code(code)
         match_obj = re.match(self._PREFIX_ARG_PATTERN, prefix_args)
-        stdin_var = match_obj['stdin_var']
-        exec_mode = match_obj['exec_mode']
-        shell_name = match_obj['shell']
-        retvar = match_obj['return_var']
-        arg_dict = {'command': code}
+        if not match_obj:
+            raise SyntaxError("Invalid syntax.")
+        stdin_var = match_obj["stdin_var"]
+        exec_mode = match_obj["exec_mode"]
+        shell_name = match_obj["shell"]
+        retvar = match_obj["return_var"]
+        arg_dict: dict[str, Any] = {"command": code}
         if stdin_var:
-            arg_dict['input'] = ScriptCode(stdin_var)
-        if 's' in exec_mode:
-            arg_dict['store'] = True
-        if 't' in exec_mode:
+            arg_dict["input"] = ScriptCode(stdin_var)
+        if "s" in exec_mode:
+            arg_dict["store"] = True
+        if "t" in exec_mode:
             # However, "thread" is not an argument.
             # It serves as a flag indicating that
             # the command will run in a new thread. 
-            arg_dict['thread'] = True
-        if 'n' in exec_mode:
-            arg_dict['display'] = False
-        if 'f' in exec_mode:
-            arg_dict['command'] = ScriptCode('f' + repr(code))
+            arg_dict["thread"] = True
+        if "n" in exec_mode:
+            arg_dict["display"] = False
+        if "f" in exec_mode:
+            arg_dict["command"] = ScriptCode("f" + repr(code))
         if retvar:
-            arg_dict['retvar'] = retvar
-        if shell_name == 'uow':
-            command_prefix = 'f' if 'f' in exec_mode else ''
-            arg_dict['command'] = ScriptCode(
+            arg_dict["retvar"] = retvar
+        if shell_name == "uow":
+            command_prefix = "f" if "f" in exec_mode else ""
+            arg_dict["command"] = ScriptCode(
                 f"['bash', '-c', {command_prefix}{repr(code)}]")
         return arg_dict
     
@@ -195,14 +199,14 @@ class WSSh(ModelNode, BaseMode):
         return result
 
 
-    def execute(self, code):
+    def execute(self, code: str) -> dict:
         code = code.lstrip()
         try:
             arg_dict = self._arg_parse(code)
         except SyntaxError as err:
             print()
             print(err, file=sys.stderr)
-            return
+            return {}
         with code_printer(True):
             result = self.run(**arg_dict)
         return result
