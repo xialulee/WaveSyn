@@ -10,8 +10,7 @@ from ctypes import sizeof
 from io import BytesIO
 from PIL import Image, ImageGrab
 
-import hy
-from wavesynlib.languagecenter.hy.win32def import BITMAPFILEHEADER
+from wavesynlib.interfaces.os.windows.win32def import BITMAPFILEHEADER
 
 
 
