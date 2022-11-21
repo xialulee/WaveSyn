@@ -46,6 +46,8 @@ import locale
 import sys
 import re
 import io
+from dataclasses import dataclass
+
 from ..basemode import ModeInfo, BaseMode
 from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, ScriptCode, code_printer
 from .execute import run
@@ -61,24 +63,32 @@ def _get_leading_blanks(s):
 
 
 
+@dataclass
+class WSShResult:
+    returncode: int = 0
+    stdout:     str = ""
+    stderr:     str = ""
+
+
+
 class WSSh(ModelNode, BaseMode):
     _MODE_PREFIX = "#M!"
     _PREFIX_ARG_PATTERN = re.compile(
         """\
-(?P<exec_mode>[stnf]*)      
-# s for storage; 
-# t for threading; 
+(?P<exec_mode>[stnf]*)
+# s for storage;
+# t for threading;
 # n for not displaying;
 # f for using f-str as command.
 (?:\\[(?P<shell>.*)\\])?
 # Shell selection.
 # Default shell will be used if not specified.
 # [uow]: Select Ubuntu-on-Windows bash as shell.
-(?:\\((?P<stdin_var>.*)\\))?  
+(?:\\((?P<stdin_var>.*)\\))?
 # the var name of which the content will be written into stdin.
 (?:\\|(?P<return_var>\\w+)=)?
-# the var name of the run's (or run.new_thread_run's) return value."""
-        , re.VERBOSE)
+# the var name of the run's (or run.new_thread_run's) return value.""", 
+    re.VERBOSE)
 
 
     @classmethod
@@ -115,22 +125,17 @@ class WSSh(ModelNode, BaseMode):
             display=True, 
             input=None, 
             store=False
-        ) -> dict:
+        ) -> WSShResult:
         # Todo: 
-        # Support store stdout & stderr;
         # Support run in thread.
-        result = {
-            "returncode": None, 
-            "stdout": "", 
-            "stderr": ""
-        }
+        result = WSShResult()
         if isinstance(input, str):
             input = input.encode(_encoding)
         returncode, stdout, stderr = self.__run_process(command, input=input)
-        result["returncode"] = returncode
+        result.returncode = returncode
         if store:
-            result["stdout"] = stdout
-            result["stderr"] = stderr
+            result.stdout = stdout
+            result.stderr = stderr
         if display:
             print(stdout)
             print(stderr, file=sys.stderr)
@@ -199,14 +204,14 @@ class WSSh(ModelNode, BaseMode):
         return result
 
 
-    def execute(self, code: str) -> dict:
+    def execute(self, code: str) -> WSShResult | None:
         code = code.lstrip()
         try:
             arg_dict = self._arg_parse(code)
         except SyntaxError as err:
             print()
             print(err, file=sys.stderr)
-            return {}
+            return 
         with code_printer(True):
             result = self.run(**arg_dict)
         return result
