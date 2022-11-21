@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import Callable, Tuple
 from tkinter import Tk, Toplevel, Frame 
 from tkinter import Button as tkButton
 from tkinter.ttk import Button as ttkButton
@@ -6,17 +9,17 @@ import datetime
 
 
 
-def sub2ind(row, col):
+def sub2ind(row: int, col: int) -> int:
     return row*7 + col
 
 
-def ind2sub(ind):
+def ind2sub(ind: int) -> Tuple[int, int]:
     return ind//7, ind%7
 
 
 
 class MonthCalendar(Frame):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         upper_frame = Frame(self)
         upper_frame.pack(fill="x")
@@ -65,7 +68,12 @@ class MonthCalendar(Frame):
         for r in range(6):
             for c in range(7):
                 date_button = tkButton(lower_frame, **button_style)
-                date_button["command"] = lambda button=date_button: self.__picker_callback(self.__year, self.__month, int(button["text"]))
+                date_button["command"] = lambda button=date_button: \
+                    self.__picker_callback(
+                        self.__year, 
+                        self.__month, 
+                        int(button["text"])
+                    )
                 date_button.grid(row=r, column=c)
                 date_buttons.append(date_button)
 
@@ -76,10 +84,11 @@ class MonthCalendar(Frame):
         self.__date = None
         self.__default_fg = date_buttons[0]["fg"]
         self.__default_bg = date_buttons[0]["bg"]
-        self.__picker_callback = lambda day: None
+        self.__picker_callback: Callable[[int|None, int|None, int|None], None] \
+            = lambda y, m, d: None
 
 
-    def clear_buttons(self):
+    def clear_buttons(self) -> None:
         for button in self.__date_buttons:
             button["text"] = ""
             button["fg"] = self.__default_fg
@@ -87,11 +96,13 @@ class MonthCalendar(Frame):
             button["state"] = "disable"
 
 
-    def pick_date(self, callback):
+    def pick_date(self, 
+            callback: Callable[[int|None, int|None, int|None], None]
+        ) -> None:
         self.__picker_callback = callback
 
 
-    def set_month(self, year, month):
+    def set_month(self, year: int, month: int) -> None:
         self.__year = year
         self.__month = month
         self.__year_month_button["text"] = f"{year}-{month}"
@@ -125,7 +136,7 @@ class MonthCalendar(Frame):
                 break
 
 
-    def set_date(self, year, month, day):
+    def set_date(self, year: int, month: int, day: int) -> None:
         self.set_month(year, month)
         date = datetime.date(year, month, day)
         self.__date = date
@@ -135,8 +146,8 @@ class MonthCalendar(Frame):
         self.__date_buttons[index]["bg"] = "cornflower blue"
 
 
-    def month_adjust(self, inc=True):
-        if self.__month is None:
+    def month_adjust(self, inc: bool = True) -> None:
+        if self.__month is None or self.__year is None:
             return
         self.__month += 1 if inc else -1
         if self.__month == 0:
@@ -157,30 +168,29 @@ class MonthCalendar(Frame):
 
 
 
-def show_date(date):
+def show_date(date: datetime.date) -> None:
     win = Toplevel()
     win.resizable(False, False)
     win.title("WaveSyn-Calendar")
-    mc = MonthCalendar(win)
-    mc.pack(fill="both")
-    mc.set_date(date.year, date.month, date.day)
+    (calendar := MonthCalendar(win)).pack(fill="both")
+    calendar.set_date(date.year, date.month, date.day)
 
 
 
-def pick_date():
+def pick_date() -> datetime.date | None:
     win = Toplevel()
     win.resizable(False, False)
     win.title("WaveSyn-DatePicker")
-    mc = MonthCalendar(win)
+    calendar = MonthCalendar(win)
     today = datetime.date.today()
-    mc.set_date(today.year, today.month, today.day)
-    mc.pack(fill="both")
+    calendar.set_date(today.year, today.month, today.day)
+    calendar.pack(fill="both")
     retval = None
-    def callback(year, month, day):
+    def callback(year: int, month: int, day: int) -> None:
         nonlocal retval
         retval = datetime.date(year, month, day)
         win.quit()
-    mc.pick_date(callback)
+    calendar.pick_date(callback)
 
     win.protocol("WM_DELETE_WINDOW", lambda:0)
     win.focus_set()
