@@ -49,12 +49,13 @@ class MonthCalendar(Frame):
 
         for index, text in enumerate(("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")):
             if text == "Sa":
-                style = {**button_style, "fg":"lime green"}
+                fg = {"fg": "lime green"}
             elif text == "Su":
-                style = {**button_style, "fg":"red"}
+                fg = {"fg": "red"}
             else:
-                style = button_style
-            style = {**style, "text":text}
+                fg = {}
+            style = button_style | fg
+            style |= {"text": text}
             tkButton(middle_frame, **style).grid(row=0, column=index)
 
         lower_frame = Frame(self)
