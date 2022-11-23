@@ -1,5 +1,6 @@
-import hy
-from .hygeometry import *
+from __future__ import annotations
+
+from typing import Tuple, List
 
 from numpy.random import rand 
 from numpy import abs, arctan2, hstack, rad2deg, sqrt, vstack
@@ -46,3 +47,34 @@ def generate_2D_rand_points(
 
     return result
 
+
+
+def calc_fit_rect(
+        screen_size:  Tuple[int, int], 
+        image_size:   Tuple[int, int], 
+        return_float: bool = False
+    ) -> List[int] | List[float]:
+    sw, sh = screen_size
+    iw, ih = image_size
+    sratio = sw / sh
+    iratio = iw / ih
+    cx = sw / 2
+    cy = sh / 2
+    if iratio > sratio:
+        scale = sw / iw
+        nh = ih * scale
+        x = 0
+        y = cy - nh / 2
+        w = sw
+        h = nh
+    else:
+        scale = sh / ih
+        nw = iw * scale
+        x = cx - nw / 2
+        y = 0
+        w = nw
+        h = sh
+    result = [x, y, w, h]
+    if not return_float:
+        result = [int(i) for i in result]
+    return result
