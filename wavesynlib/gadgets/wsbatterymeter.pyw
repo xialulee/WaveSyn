@@ -46,7 +46,7 @@ class Battery:
         
 
 
-APPID = u'BCE44D5F-8274-432F-9164-3406EDFF8900'
+APPID = "BCE44D5F-8274-432F-9164-3406EDFF8900"
 
 def main(): 
     if not singleton(APPID):
