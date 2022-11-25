@@ -6,8 +6,7 @@ Created on Wed Aug 17 22:34:54 2016
 """
 from __future__ import annotations
 
-from typing import List
-from dataclasses import dataclass
+from typing import Any, Iterable, List, Mapping
 import html
 from html import parser
 
@@ -28,14 +27,34 @@ class Table:
         self.rows: List[List[str]] = []
         
 
+    def __getitem__(self, index: int) -> List[str]:
+        return self.rows[index]
+    
+
+    @property
+    def head(self) -> List[str] | None:
+        if self.has_head:
+            return self.rows[0]
+        return None
+    
+
+    @property
+    def body(self) -> List[List[str]]: 
+        if self.has_head:
+            return self.rows[1:]
+        return self.rows
+        
+
     def new_row(self) -> List[str]:
         row = []
         self.rows.append(row)
         return row
     
 
-    def to_dataframe(self):
-        kwargs = {"dtype": pd.StringDtype()}
+    def to_dataframe(self) -> pd.DataFrame:
+        kwargs: Mapping[str, Any] = {
+            "dtype": pd.StringDtype()
+        }
         if self.has_head: 
             kwargs["columns"] = self.rows[0]
             self.rows = self.rows[1:]
@@ -44,7 +63,7 @@ class Table:
 
 
 class TableTextExtractor(parser.HTMLParser):
-    def __init__(self, tables):
+    def __init__(self, tables: List) -> None:
         super().__init__()
         self.__tables = tables
         self.__current_table = None
@@ -53,14 +72,12 @@ class TableTextExtractor(parser.HTMLParser):
 
         
     def handle_starttag(self, tag, attrs):         
+        # Todo: support tfoot
         if tag == "table":
             table = Table()
             self.__current_table = table
             self.__tables.append(table)
         elif tag == "tr":
-#            row = []
-#            self.__current_table.rows.append(row)
-#            self.__current_row = row
             self.__current_row = self.__current_table.new_row()
         elif tag in ("td", "th"):
             self.__in_td_tag = True
@@ -84,7 +101,11 @@ class TableTextExtractor(parser.HTMLParser):
             
 
 
-def get_table_text(html_code, strip=False):
+def get_table_text(
+        html_code: str, 
+        strip: bool = False
+    ) -> List[Table]:
+    # Todo: implement strip
     retval = []
     extractor = TableTextExtractor(retval)
     extractor.feed(html_code)
@@ -92,7 +113,10 @@ def get_table_text(html_code, strip=False):
     
 
 
-def iterable_to_table(iterable, have_head=False):
+def iterable_to_table(
+        iterable: Iterable, 
+        have_head: bool = False
+    ) -> str:
     row_str = []
     for idx, row in enumerate(iterable):
         if idx==0 and have_head:
