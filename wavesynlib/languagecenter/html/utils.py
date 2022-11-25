@@ -30,6 +30,14 @@ class Table:
         return self.rows[index]
     
 
+    def __len__(self) -> int:
+        return len(self.rows)
+    
+
+    def __iter__(self) -> Iterable:
+        return iter(self.rows)
+    
+
     @property
     def head(self) -> List[str] | None:
         if self.has_head:
@@ -104,10 +112,14 @@ def get_table_text(
         html_code: str, 
         strip: bool = False
     ) -> List[Table]:
-    # Todo: implement strip
     retval = []
     extractor = TableTextExtractor(retval)
     extractor.feed(html_code)
+    if strip:
+        for table in retval:
+            for row in table:
+                for idx, item in enumerate(row):
+                    row[idx] = item.strip()
     return retval
     
 
