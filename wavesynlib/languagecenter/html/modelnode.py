@@ -4,20 +4,30 @@ Created on Sun Mar 05 17:50:52 2017
 
 @author: Feng-cong Li
 """
+from __future__ import annotations
+
+from typing import Iterable, List
+from io import IOBase
 import os
 from pathlib import Path
 
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, ModelNode
+from wavesynlib.languagecenter.wavesynscript.datatypes import Constant
 from . import utils
 
 
 
 class Utils(ModelNode):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
         
-    def _get_html_code(self, html_code=None, stream=None, file_path=None, encoding=None):
+    def _get_html_code(self, 
+            html_code: str | Constant = "", 
+            stream: IOBase | None = None, 
+            file_path: str | Path = "", 
+            encoding: str = ""
+        ) -> str:
         if hasattr(self.root_node.interfaces.os.clipboard, 'constant_handler_CLIPBOARD_HTML'):
             html_code = self.root_node.interfaces.os.clipboard.constant_handler_CLIPBOARD_HTML(html_code)
         if html_code:
@@ -36,7 +46,13 @@ class Utils(ModelNode):
     
         
     @WaveSynScriptAPI
-    def get_tables(self, html_code=None, stream=None, file_path=None, encoding=None, strip_cells=False):
+    def get_tables(self, 
+            html_code: str | Constant = "", 
+            stream: IOBase | None = None, 
+            file_path: str | Path = "", 
+            encoding: str = "", 
+            strip_cells: bool = False
+        ) -> List[utils.Table]:
         '''\
 Translate <table>s in HTML code into Python nested lists.
 On Windows platform, it can also retrive tables in clipboard, since MSOffice
@@ -57,5 +73,8 @@ encoding: the encoding of the HTML code. '''
     
     
     @WaveSynScriptAPI
-    def iterable_to_table(self, iterable, have_head=False):
-        return utils.iterable_to_table(iterable, have_head)
+    def iterable_to_table(self, 
+            iterable: Iterable, 
+            has_head: bool = False
+        ) -> str:
+        return utils.iterable_to_table(iterable, has_head)

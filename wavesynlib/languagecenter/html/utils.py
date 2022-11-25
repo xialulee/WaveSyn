@@ -114,21 +114,22 @@ def get_table_text(
 
 def iterable_to_table(
         iterable: Iterable, 
-        have_head: bool = False
+        has_head: bool = False
     ) -> str:
     row_str = []
     for idx, row in enumerate(iterable):
-        if idx==0 and have_head:
-            start = '<th>'; stop = '</th>'
+        if idx==0 and has_head:
+            start = "<th>"; stop = "</th>"
         else:
-            start = '<td>'; stop = '</td>'
+            start = "<td>"; stop = "</td>"
         items = []
         for item in row:
             item_str = escape(str(item))
-            items.append(f'{start}{item_str}{stop}')
-        a_row = ' '.join(items)
-        row_str.append(f'<tr>{a_row}</tr>')
-    table_str = '\n'.join(row_str)
-    return f'''<table>
+            items.append(f"{start}{item_str}{stop}")
+        a_row = " ".join(items)
+        row_str.append(f"<tr>{a_row}</tr>")
+    table_str = "\n".join(row_str)
+    return f"""\
+<table>
 {table_str}
-</table>'''
+</table>"""
