@@ -7,8 +7,7 @@ Created on Wed Aug 17 22:34:54 2016
 from __future__ import annotations
 
 from typing import Any, Iterable, List, Mapping
-import html
-from html import parser
+from html import parser, escape
 
 from defusedxml import ElementTree
 import pandas as pd
@@ -125,7 +124,7 @@ def iterable_to_table(
             start = '<td>'; stop = '</td>'
         items = []
         for item in row:
-            item_str = html.escape(str(item))
+            item_str = escape(str(item))
             items.append(f'{start}{item_str}{stop}')
         a_row = ' '.join(items)
         row_str.append(f'<tr>{a_row}</tr>')
