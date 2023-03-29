@@ -50,9 +50,10 @@ _retvaldisp = {}
 def load_plugin():
     selfdir = pathlib.Path(__file__).parent
     retvaldisp = selfdir / 'plugins' / 'retvaldisp'
-    for file in retvaldisp.glob('*.py'):
-        if file.name == '__init__.py':
-            continue
+    files = filter(
+        lambda p: p.stem != "__init__",
+        retvaldisp.glob('*.py'))
+    for file in files:
         mod_name = file.stem
         mod_path = f'wavesynlib.gui.tk.plugins.retvaldisp.{mod_name}'
         mod = importlib.import_module(mod_path)
