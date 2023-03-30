@@ -109,9 +109,9 @@ def _win_exe_expr(cmd):
 
 def run(
         command, 
-        stdout=None, 
-        stderr=None, 
-        wsl:bool=False
+        stdout    = None, 
+        stderr    = None, 
+        shell:str = ""
     ) -> int:
     STDOUT = stdout if stdout else sys.stdout
     STDERR = stderr if stderr else sys.stderr
@@ -131,8 +131,12 @@ def run(
         op = cmd[0]
         cmd = cmd[1:]
         
-        if wsl:
+        if shell == "wsl":
             cmd = ["wsl", *cmd]
+        elif shell == "cmd":
+            cmd = ["cmd", "/c", *cmd]
+        else:
+            pass
         
         _substitute(cmd)
         cmd = _win_exe_expr(cmd) 

@@ -42,6 +42,7 @@ from __future__ import annotations
 
 from typing import Any, Tuple
 
+import platform
 import locale
 import sys
 import re
@@ -109,11 +110,11 @@ class WSSh(ModelNode, BaseMode):
     def __run_process(self, 
             command, 
             input, 
-            wsl = False # Whether use WSL as the shell.
+            shell = "" # Whether use WSL as the shell.
         ) -> Tuple[int, str, str]:
         stdout = io.StringIO()
         stderr = io.StringIO()
-        returncode = run(command, stdout=stdout, stderr=stderr, wsl=wsl)
+        returncode = run(command, stdout=stdout, stderr=stderr, shell=shell)
         stdout.seek(0)
         stderr.seek(0)
         return returncode, stdout.read(), stderr.read()
@@ -132,15 +133,13 @@ class WSSh(ModelNode, BaseMode):
             display    = True, 
             input      = None, 
             store:bool = False,
-            wsl:bool   = False
+            shell:str  = ""
         ) -> WSShResult:
-        # Todo: 
-        # Support run in thread.
         result = WSShResult()
         if isinstance(input, str):
             input = input.encode(_encoding)
         returncode, stdout, stderr = self.__run_process(
-            command, input=input, wsl=wsl)
+            command, input=input, shell=shell)
         result.returncode = returncode
         if store:
             result.stdout = stdout
@@ -177,8 +176,13 @@ class WSSh(ModelNode, BaseMode):
             arg_dict["command"] = ScriptCode("f" + repr(code))
         if retvar:
             arg_dict["retvar"] = retvar
-        if shell_name == "wsl":
-            arg_dict["wsl"] = True
+        if shell_name:
+            arg_dict["shell"] = shell_name
+        else:
+            if platform.system() == "Windows":
+                # If current system is Windows,
+                # use cmd as the default shell.
+                arg_dict["shell"] = "cmd"
         return arg_dict
     
 
@@ -187,6 +191,7 @@ class WSSh(ModelNode, BaseMode):
         code = code.lstrip()
         arg_dict = self._arg_parse(code)
         # "thread" is a flag rather than an arg.
+        # Hence remove it from arg_dict.
         is_thread = arg_dict.pop("thread", False)
         if is_thread:
             thread_code = ".new_thread_run"
