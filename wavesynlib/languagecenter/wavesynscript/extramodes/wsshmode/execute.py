@@ -11,6 +11,7 @@ from subprocess import Popen, PIPE
 from wavesynlib.gadgets import wswhich
 
 from .parse import split, group
+from .cmdbuiltins import is_cmd_builtin
 
 
 envvar_prog = re.compile(r"^\$\w+$")
@@ -134,7 +135,8 @@ def run(
         if shell == "wsl":
             cmd = ["wsl", *cmd]
         elif shell == "cmd":
-            cmd = ["cmd", "/c", *cmd]
+            if is_cmd_builtin(cmd[0]):
+                cmd = ["cmd", "/c", *cmd]
         else:
             pass
         
