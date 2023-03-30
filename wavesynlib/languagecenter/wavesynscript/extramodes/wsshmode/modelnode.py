@@ -86,6 +86,7 @@ class WSSh(ModelNode, BaseMode):
 # Shell selection.
 # Default shell will be used if not specified.
 # [wsl]: Use WSL as the shell.
+# [cmd]: Use CMD as the shell.
 
 (?:\\((?P<stdin_var>.*)\\))?
 # the var name of which the content will be written into stdin.
@@ -110,11 +111,11 @@ class WSSh(ModelNode, BaseMode):
     def __run_process(self, 
             command, 
             input, 
-            shell = "" # Whether use WSL as the shell.
+            shell = "" 
         ) -> Tuple[int, str, str]:
         stdout = io.StringIO()
         stderr = io.StringIO()
-        returncode = run(command, stdout=stdout, stderr=stderr, shell=shell)
+        returncode = run(command, stdin=input, stdout=stdout, stderr=stderr, shell=shell)
         stdout.seek(0)
         stderr.seek(0)
         return returncode, stdout.read(), stderr.read()
@@ -136,8 +137,6 @@ class WSSh(ModelNode, BaseMode):
             shell:str  = ""
         ) -> WSShResult:
         result = WSShResult()
-        if isinstance(input, str):
-            input = input.encode(_encoding)
         returncode, stdout, stderr = self.__run_process(
             command, input=input, shell=shell)
         result.returncode = returncode

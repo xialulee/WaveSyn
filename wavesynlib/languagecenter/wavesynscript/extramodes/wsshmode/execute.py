@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 import os
 import re
@@ -76,20 +77,31 @@ def _format_string(string):
 
 
 
-def _substitute(cmd):
-    for index in range(len(cmd)):
-        token = cmd[index]
+def _substitute(cmd, shell=""):
+    for index, token in enumerate(cmd):
         if isinstance(token, list) and token[0]=="$":
-            stdout = io.StringIO()
-            run(group(token[1:]), stdout=stdout)
-            stdout.seek(0)
-            text = stdout.read().rstrip()
-            cmd[index] = text
-        elif envvar_prog.match(token):
-            cmd[index] = os.environ[token[1:]]
+            # Command substitution. 
+            # E.g. #M! dir $(echo c:\lab)
+            # cmd == ['dir', ['$', 'echo', 'c:\\lab']]
+            # token == ['$', 'echo', 'c:\\lab']
+            # Only need to implement substitution for CMD.
+            if shell != "cmd":
+                cmd[index] = f"$({' '.join(token[1:])})"
+            else:
+                stdout = io.StringIO()
+                run(group(token[1:]), stdout=stdout, shell=shell)
+                stdout.seek(0)
+                text = stdout.read().rstrip()
+                cmd[index] = text
+        elif isinstance(token, str) and envvar_prog.match(token):
+            if shell == "cmd":
+                # CMD cannot ref a env var with $.
+                # This is an extenstion to CMD syntax. 
+                cmd[index] = os.environ[token[1:]]
         elif "$" in token:
-            token = _format_string(token)
-            cmd[index] = token
+            if shell == "cmd":
+                token = _format_string(token)
+                cmd[index] = token
             
 
             
@@ -109,10 +121,11 @@ def _win_exe_expr(cmd):
 
 
 def run(
-        command, 
-        stdout    = None, 
-        stderr    = None, 
-        shell:str = ""
+        command: str|list,
+        stdin:  str|None = None,
+        stdout: io.IOBase|None = None,
+        stderr: io.IOBase|None = None,
+        shell:  str = ""
     ) -> int:
     STDOUT = stdout if stdout else sys.stdout
     STDERR = stderr if stderr else sys.stderr
@@ -140,11 +153,17 @@ def run(
         else:
             pass
         
-        _substitute(cmd)
+        _substitute(cmd, shell=shell)
+
         cmd = _win_exe_expr(cmd) 
         
         if op == "":
-            proc = Popen(cmd, **outerrpipe)
+            if stdin:
+                proc = Popen(cmd, stdin=PIPE, **outerrpipe)
+                proc.stdin.write(stdin)
+                proc.stdin.close()
+            else:
+                proc = Popen(cmd, **outerrpipe)
         elif op == "|":
             prev_proc = proc_list[index-1]
             proc = Popen(cmd, stdin=prev_proc.stdout, **outerrpipe)
