@@ -60,7 +60,7 @@ class Magic(ModelNode, BaseMode):
         else:
             return None
 
-    def run(self, command: str):
+    def run(self, command: str) -> Any:
         name, args = command_parse(command)
         args.insert(0, name)
         mod = importlib.import_module(

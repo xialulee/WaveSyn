@@ -107,7 +107,12 @@ def _win_exe_expr(cmd):
 
 
 
-def run(command, stdout=None, stderr=None):
+def run(
+        command, 
+        stdout=None, 
+        stderr=None, 
+        wsl:bool=False
+    ) -> int:
     STDOUT = stdout if stdout else sys.stdout
     STDERR = stderr if stderr else sys.stderr
     
@@ -125,6 +130,9 @@ def run(command, stdout=None, stderr=None):
     for index, cmd in enumerate(cmd_groups):
         op = cmd[0]
         cmd = cmd[1:]
+        
+        if wsl:
+            cmd = ["wsl", *cmd]
         
         _substitute(cmd)
         cmd = _win_exe_expr(cmd) 

@@ -36,7 +36,7 @@
 # #M! printf "%s" "--$PATH--"
 # Use $$ as escape of $:
 # #M! printf "%s" "$$(which python)"
-# (SHould print "$(which python)")
+# (Should print "$(which python)")
 
 from __future__ import annotations
 
@@ -80,12 +80,15 @@ class WSSh(ModelNode, BaseMode):
 # t for threading;
 # n for not displaying;
 # f for using f-str as command.
+
 (?:\\[(?P<shell>.*)\\])?
 # Shell selection.
 # Default shell will be used if not specified.
-# [uow]: Select Ubuntu-on-Windows bash as shell.
+# [wsl]: Use WSL as the shell.
+
 (?:\\((?P<stdin_var>.*)\\))?
 # the var name of which the content will be written into stdin.
+
 (?:\\|(?P<return_var>\\w+)=)?
 # the var name of the run's (or run.new_thread_run's) return value.""", 
     re.VERBOSE)
@@ -103,10 +106,14 @@ class WSSh(ModelNode, BaseMode):
             self.result = {"stdout": "", "stderr": ""}
 
 
-    def __run_process(self, command, input) -> Tuple[int, str, str]:
+    def __run_process(self, 
+            command, 
+            input, 
+            wsl = False # Whether use WSL as the shell.
+        ) -> Tuple[int, str, str]:
         stdout = io.StringIO()
         stderr = io.StringIO()
-        returncode = run(command, stdout=stdout, stderr=stderr)
+        returncode = run(command, stdout=stdout, stderr=stderr, wsl=wsl)
         stdout.seek(0)
         stderr.seek(0)
         return returncode, stdout.read(), stderr.read()
@@ -122,16 +129,18 @@ class WSSh(ModelNode, BaseMode):
     @WaveSynScriptAPI(thread_safe=True)
     def run(self, 
             command, 
-            display=True, 
-            input=None, 
-            store=False
+            display    = True, 
+            input      = None, 
+            store:bool = False,
+            wsl:bool   = False
         ) -> WSShResult:
         # Todo: 
         # Support run in thread.
         result = WSShResult()
         if isinstance(input, str):
             input = input.encode(_encoding)
-        returncode, stdout, stderr = self.__run_process(command, input=input)
+        returncode, stdout, stderr = self.__run_process(
+            command, input=input, wsl=wsl)
         result.returncode = returncode
         if store:
             result.stdout = stdout
@@ -168,10 +177,8 @@ class WSSh(ModelNode, BaseMode):
             arg_dict["command"] = ScriptCode("f" + repr(code))
         if retvar:
             arg_dict["retvar"] = retvar
-        if shell_name == "uow":
-            command_prefix = "f" if "f" in exec_mode else ""
-            arg_dict["command"] = ScriptCode(
-                f"['bash', '-c', {command_prefix}{repr(code)}]")
+        if shell_name == "wsl":
+            arg_dict["wsl"] = True
         return arg_dict
     
 
@@ -198,9 +205,9 @@ class WSSh(ModelNode, BaseMode):
             if arg_dict.get("store", ""):
                 write(
                     f"""\
-'store=True' indicating that the contents of stdout & stderr are stored in the return value. """, 
-                    'TIP'
-                ) 
+'store=True' indicating that the contents of stdout and stderr are stored in the return value. 
+""", 
+                    'TIP') 
         return result
 
 
