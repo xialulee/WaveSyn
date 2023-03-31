@@ -28,7 +28,7 @@ str_parse_pat     = "|".join((escape_ds_pat, normal_str_pat, embed_envvar_pat, c
 str_parse_prog    = re.compile(str_parse_pat)
 cmdsubs_parse_prog= re.compile(f"{cmdsubs_start_pat}|{cmdsubs_stop_pat}")
 
-def _format_string(string):
+def _format_string(string, shell):
     result = []
     subs_level = 0
     while True:
@@ -41,10 +41,15 @@ def _format_string(string):
             result.append(match_str)
             string = string[len(match_str):]
         elif lastgroup == "ESCAPE_DS":
-            result.append("$")
+            result.append("$" if shell=="cmd" else r"\$")
             string = string[len(match_str):]
         elif lastgroup == "EMBED_ENVVAR":
-            result.append(os.environ[match_str[1:]])
+            if shell == "cmd":
+                # CMD does not support access env var with $.
+                # This is an extension to CMD. 
+                result.append(os.environ[match_str[1:]])
+            else:
+                result.append(match_str)
             string = string[len(match_str):]
         elif lastgroup == "CMDSUBS_START":
             subs_level = 1
@@ -99,9 +104,8 @@ def _substitute(cmd, shell=""):
                 # This is an extenstion to CMD syntax. 
                 cmd[index] = os.environ[token[1:]]
         elif "$" in token:
-            if shell == "cmd":
-                token = _format_string(token)
-                cmd[index] = token
+            token = _format_string(token, shell=shell)
+            cmd[index] = token
             
 
             

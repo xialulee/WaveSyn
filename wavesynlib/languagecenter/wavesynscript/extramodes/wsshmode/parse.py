@@ -1,7 +1,20 @@
 # from .pattern import item_prog
 import re
 import ast
-from wavesynlib.languagecenter.python.pattern import string as string_pattern
+# from wavesynlib.languagecenter.python.pattern import string as string_pattern
+from wavesynlib.languagecenter.python.pattern import (
+    sqstring_noprefix,
+    dqstring_noprefix,
+    sq3string_noprefix,
+    dq3string_noprefix,
+    any_)
+
+stringprefix = r"(?:e\$)?(?i:\br|u|f|fr|rf|b|br|rb)?"
+sqstring = stringprefix + sqstring_noprefix
+dqstring = stringprefix + dqstring_noprefix
+sq3string = stringprefix + sq3string_noprefix
+dq3string = stringprefix + dq3string_noprefix
+string_pattern = any_("STRING", [sq3string, dq3string, sqstring, dqstring])
 
 
 
@@ -33,7 +46,14 @@ def split(command):
         elif match.lastgroup == "OP":
             result.append(match_str)
         elif match.lastgroup == "STRING":
-            result.append(ast.literal_eval(match_str))
+            if match_str.startswith("e$"):
+                tmp = ast.literal_eval(match_str[2:])
+                # Prevent $ from triggering substitution.
+                # Escape $.
+                tmp = tmp.replace("$", "$$")
+                result.append(tmp)
+            else:
+                result.append(ast.literal_eval(match_str))
         else:
             raise ValueError("Token not supported.")
         command = command[match.end():]

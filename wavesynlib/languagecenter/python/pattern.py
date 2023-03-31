@@ -29,11 +29,21 @@ builtinlist = [str(name) for name in dir(builtins)
 # 1st 'file' colorized normal, 2nd as builtin, 3rd as string
 builtin = r"([^.'\"\\#]\b|^)" + any_("BUILTIN", builtinlist) + r"\b"
 comment = any_("COMMENT", [r"#[^\n]*"])
+
 stringprefix = r"(?i:\br|u|f|fr|rf|b|br|rb)?"
-sqstring = stringprefix + r"'[^'\\\n]*(\\.[^'\\\n]*)*'?"
-dqstring = stringprefix + r'"[^"\\\n]*(\\.[^"\\\n]*)*"?'
-sq3string = stringprefix + r"'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
-dq3string = stringprefix + r'"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
+
+sqstring_noprefix = r"'[^'\\\n]*(\\.[^'\\\n]*)*'?"
+sqstring = stringprefix + sqstring_noprefix
+
+dqstring_noprefix = r'"[^"\\\n]*(\\.[^"\\\n]*)*"?'
+dqstring = stringprefix + dqstring_noprefix
+
+sq3string_noprefix = r"'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
+sq3string = stringprefix + sq3string_noprefix
+
+dq3string_noprefix = r'"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
+dq3string = stringprefix + dqstring_noprefix
+
 string = any_("STRING", [sq3string, dq3string, sqstring, dqstring])
 
 
