@@ -22,9 +22,12 @@ envvar_prog = re.compile(r"^\$\w+$")
 embed_envvar_pat  = r"(?P<EMBED_ENVVAR>\$\w+)"
 cmdsubs_start_pat = r"(?P<CMDSUBS_START>\$\()"
 cmdsubs_stop_pat  = r"(?P<CMDSUBS_STOP>\))"
-normal_str_pat    = r"(?P<NORMAL_STR>[^$]+)"
-escape_ds_pat     = r"(?P<ESCAPE_DS>\$\$)"
-str_parse_pat     = "|".join((escape_ds_pat, normal_str_pat, embed_envvar_pat, cmdsubs_start_pat, cmdsubs_stop_pat))
+# normal_str_pat    = r"(?P<NORMAL_STR>[^$]+)"
+normal_str_pat = r"(?P<NORMAL_STR>[^$]+[^\\\$])"
+normal_char_pat = r"(?P<NORMAL_CHAR>[^$])"
+single_backslash_pat = r"(?P<SINGLE_BACKSLASH>\\)"
+escape_ds_pat     = r"(?P<ESCAPE_DS>\\\$)"
+str_parse_pat     = "|".join((escape_ds_pat, normal_str_pat, normal_char_pat, single_backslash_pat, embed_envvar_pat, cmdsubs_start_pat, cmdsubs_stop_pat))
 str_parse_prog    = re.compile(str_parse_pat)
 cmdsubs_parse_prog= re.compile(f"{cmdsubs_start_pat}|{cmdsubs_stop_pat}")
 
@@ -37,7 +40,7 @@ def _format_string(string, shell):
             break
         match_str = match.group(0)
         lastgroup = match.lastgroup
-        if lastgroup == "NORMAL_STR":
+        if lastgroup in ("NORMAL_STR", "NORMAL_CHAR", "SINGLE_BACKSLASH"):
             result.append(match_str)
             string = string[len(match_str):]
         elif lastgroup == "ESCAPE_DS":
@@ -72,7 +75,7 @@ def _format_string(string, shell):
                 search_start = match.end()
             cmdsubs_str = "".join(cmdsubs_list)
             stdout = io.StringIO()
-            run(command=cmdsubs_str, stdout=stdout)
+            run(command=cmdsubs_str, stdout=stdout, shell=shell)
             stdout.seek(0)
             result.append(stdout.read().rstrip())
         else:
@@ -90,20 +93,28 @@ def _substitute(cmd, shell=""):
             # cmd == ['dir', ['$', 'echo', 'c:\\lab']]
             # token == ['$', 'echo', 'c:\\lab']
             # Only need to implement substitution for CMD.
-            if shell != "cmd":
-                cmd[index] = f"$({' '.join(token[1:])})"
-            else:
-                stdout = io.StringIO()
-                run(group(token[1:]), stdout=stdout, shell=shell)
-                stdout.seek(0)
-                text = stdout.read().rstrip()
-                cmd[index] = text
+#            if shell != "cmd":
+#                cmd[index] = f"$({' '.join(token[1:])})"
+#            else:
+            for idx_sub_token, sub_token in enumerate(token):
+                if isinstance(sub_token, list):
+                    tmp = [sub_token]
+                    _substitute(tmp, shell=shell)
+                    token[idx_sub_token] = tmp[0]
+            stdout = io.StringIO()
+            run(group(token[1:]), stdout=stdout, shell=shell)
+            stdout.seek(0)
+            text = stdout.read().rstrip()
+            cmd[index] = text
         elif isinstance(token, str) and envvar_prog.match(token):
             if shell == "cmd":
                 # CMD cannot ref a env var with $.
                 # This is an extenstion to CMD syntax. 
                 cmd[index] = os.environ[token[1:]]
-        elif "$" in token:
+        elif "$" in token and token[0] == '"':
+#            token = _format_string(token[1:-1].replace('\\"', '"'), shell=shell)
+#            token = token.replace('"', '\\"')
+#            cmd[index] = f'"{token}"'
             token = _format_string(token, shell=shell)
             cmd[index] = token
             
@@ -149,17 +160,25 @@ def run(
         op = cmd[0]
         cmd = cmd[1:]
         
-        if shell == "wsl":
-            cmd = ["wsl", *cmd]
-        elif shell == "cmd":
-            if is_cmd_builtin(cmd[0]):
-                cmd = ["cmd", "/c", *cmd]
-        else:
-            pass
+        real_shell: str = ""
+        if cmd[0] in ("cmd", "wsl"):
+            real_shell = cmd[0]
         
-        _substitute(cmd, shell=shell)
+        if not real_shell:
+            if shell == "wsl":
+                cmd = ["wsl", *cmd]
+            elif shell == "cmd":
+                if is_cmd_builtin(cmd[0]):
+                    cmd = ["cmd", "/c", *cmd]
+            else:
+                pass
+            real_shell = shell
+        
+        _substitute(cmd, shell=real_shell)
 
         cmd = _win_exe_expr(cmd) 
+        
+        cmd = ' '.join(cmd)
         
         if op == "":
             if stdin:

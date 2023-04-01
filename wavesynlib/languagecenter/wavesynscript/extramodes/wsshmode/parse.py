@@ -9,7 +9,7 @@ from wavesynlib.languagecenter.python.pattern import (
     dq3string_noprefix,
     any_)
 
-stringprefix = r"(?:e\$)?(?i:\br|u|f|fr|rf|b|br|rb)?"
+stringprefix = ""
 sqstring = stringprefix + sqstring_noprefix
 dqstring = stringprefix + dqstring_noprefix
 sq3string = stringprefix + sq3string_noprefix
@@ -18,7 +18,7 @@ string_pattern = any_("STRING", [sq3string, dq3string, sqstring, dqstring])
 
 
 
-word_pattern = r"(?P<WORD>[^\s'\"|&]+)"
+word_pattern = r"(?P<WORD>[^\s'\"|&;][^\s|&;]*)"
 op_pattern   = r"(?P<OP>[|&]|$\(|\))"
 item_pattern = f"{string_pattern}|{word_pattern}|{op_pattern}"
 item_prog = re.compile(item_pattern, re.S)
@@ -46,14 +46,7 @@ def split(command):
         elif match.lastgroup == "OP":
             result.append(match_str)
         elif match.lastgroup == "STRING":
-            if match_str.startswith("e$"):
-                tmp = ast.literal_eval(match_str[2:])
-                # Prevent $ from triggering substitution.
-                # Escape $.
-                tmp = tmp.replace("$", "$$")
-                result.append(tmp)
-            else:
-                result.append(ast.literal_eval(match_str))
+            result.append(match_str)
         else:
             raise ValueError("Token not supported.")
         command = command[match.end():]
