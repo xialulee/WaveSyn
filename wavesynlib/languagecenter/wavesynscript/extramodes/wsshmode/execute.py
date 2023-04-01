@@ -15,7 +15,7 @@ from .parse import split, group
 from .cmdbuiltins import is_cmd_builtin
 
 
-envvar_prog = re.compile(r"^\$\w+$")
+envvar_prog = re.compile(r"^\$[_A-Za-z]\w*$")
 
 
 
@@ -81,6 +81,57 @@ def _format_string(string, shell):
         else:
             raise SyntaxError("Unknown Error.")
     return "".join(result)
+
+#def _format_string(string, shell):
+#    result = []
+#    subs_level = 0
+#    while True:
+#        match = str_parse_prog.match(string)
+#        if not match:
+#            break
+#        match_str = match.group(0)
+#        lastgroup = match.lastgroup
+#        if lastgroup in ("NORMAL_STR", "NORMAL_CHAR", "SINGLE_BACKSLASH"):
+#            result.append(match_str)
+#            string = string[len(match_str):]
+#        elif lastgroup == "ESCAPE_DS":
+#            result.append("$" if shell=="cmd" else r"\$")
+#            string = string[len(match_str):]
+#        elif lastgroup == "EMBED_ENVVAR":
+#            if shell == "cmd":
+#                # CMD does not support access env var with $.
+#                # This is an extension to CMD. 
+#                result.append(os.environ[match_str[1:]])
+#            else:
+#                result.append(match_str)
+#            string = string[len(match_str):]
+#        elif lastgroup == "CMDSUBS_START":
+#            subs_level = 1
+#            string = string[len(match_str):]
+#            cmdsubs_list = []
+#            search_start = 0
+#            while subs_level > 0:
+#                match = cmdsubs_parse_prog.search(string, pos=search_start)
+#                if not match:
+#                    raise SyntaxError("Round brackets of command substitution not match.")
+#                match_str = match.group(0)
+#                lastgroup = match.lastgroup
+#                if lastgroup == "CMDSUBS_STOP":
+#                    subs_level -= 1
+#                    if subs_level == 0:
+#                        cmdsubs_list.append(string[:match.start()])
+#                        string = string[match.end():]
+#                elif lastgroup == "CMDSUBS_START":
+#                    subs_level += 1
+#                search_start = match.end()
+#            cmdsubs_str = "".join(cmdsubs_list)
+#            stdout = io.StringIO()
+#            run(command=cmdsubs_str, stdout=stdout, shell=shell)
+#            stdout.seek(0)
+#            result.append(stdout.read().rstrip())
+#        else:
+#            raise SyntaxError("Unknown Error.")
+#    return "".join(result)
 
 
 
