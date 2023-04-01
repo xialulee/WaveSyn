@@ -1,5 +1,8 @@
 # from .pattern import item_prog
-import re
+import regex
+
+from .strsubs import SUBS_ENVVAR_STR, SUBS_COMMAND
+
 from wavesynlib.languagecenter.python.pattern import (
     sqstring_noprefix,
     dqstring_noprefix,
@@ -14,68 +17,62 @@ sq3string = stringprefix + sq3string_noprefix
 dq3string = stringprefix + dq3string_noprefix
 string_pattern = any_("STRING", [sq3string, dq3string, sqstring, dqstring])
 
+word_pattern = r"""
+(?P<WORD>
+    (?:
+        # If not match escape chars, \ should be excluded.
+        [^\s'\"$|&;\\] |
+        # Match escape chars.
+        (?:\\.)
+    )+
+)"""
 
-import regex
+blanks_pattern = r"(?P<BLANKS>\s+)"
 
-word_pattern = r"(?P<WORD>[^\s'\"|&;][^\s|&;]*)"
-op_pattern   = r"(?P<OP>[|&]|$\(|\))"
-item_pattern = f"{string_pattern}|{word_pattern}|{op_pattern}"
-item_prog = re.compile(item_pattern, re.S)
-brbs_prog = re.compile(r"\)+$")
+op_pattern   = r"""
+(?P<OP>
+    [|&] |
+    $\(  |
+    \)
+)"""
+
+item_pattern = f"""
+    {string_pattern}   |
+    {word_pattern}     |
+    {op_pattern}       |
+    {blanks_pattern}   |
+    {SUBS_ENVVAR_STR}  
+"""
+item_prog = regex.compile(item_pattern, regex.DOTALL | regex.VERBOSE)
+brbs_prog = regex.compile(r"\)+$", regex.VERBOSE)
 
 
 
 def split(command):
     result = []
     while command:
-        command = command.lstrip()
         match = item_prog.match(command)
-        if match is None:
+        if not match:
+            match = SUBS_COMMAND.match(command)
+        if not match:
             break
-        match_str = match.group(0)
-        if match.lastgroup == "WORD":
-            if match_str.startswith("$(") and len(match_str) > 2:
-                result.extend([match_str[:2], match_str[2:]])
-            elif match_str.endswith(")"):
-                search = brbs_prog.search(match_str)
-                result.append(match_str[:search.start()])
-                result.extend([*match_str[search.start():]])
-            else:
-                result.append(match_str)
-        elif match.lastgroup == "OP":
-            result.append(match_str)
-        elif match.lastgroup == "STRING":
-            result.append(match_str)
-        else:
-            raise ValueError("Token not supported.")
+        result.append(match.group(0))
         command = command[match.end():]
     return result
 
 
+def _remove_leading_blanks(token_list):
+    result = [token_list[0]]        
+    index = 1
+    for index in range(1, len(token_list)):
+        if token_list[index].strip():
+            break
+    result.extend(token_list[index:])
+    return result
+
 
 def group(token_list):
     result = [[""]]
-    
-    def _group_cmdsubs(token_list, start):
-        result = ["$"]
-        consume = 0
-        assert token_list[start].startswith("$(")
-        index = start + 1
-        while index < len(token_list):
-            token = token_list[index]
-            if token.startswith("$("):
-                cons, subs = _group_cmdsubs(token_list, index)
-                result.append(subs)
-                index += cons+1
-                consume += cons+1
-                continue
-            if token == ")":
-                consume += 1
-                break
-            result.append(token)
-            index += 1
-            consume += 1
-        return consume, result
     
     index = 0
     while index < len(token_list):
@@ -84,11 +81,9 @@ def group(token_list):
             result.append(["|"])
             index += 1
             continue
-        if token.startswith("$("):
-            cons, subs = _group_cmdsubs(token_list, index)
-            result[-1].append(subs)
-            index += cons + 1
-            continue
         result[-1].append(token)
         index += 1
+
+    for index, token_list in enumerate(result):
+        result[index] = _remove_leading_blanks(token_list)
     return result

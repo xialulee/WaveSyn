@@ -32,8 +32,7 @@ str_parse_pat     = "|".join((escape_ds_pat, normal_str_pat, normal_char_pat, si
 str_parse_prog    = re.compile(str_parse_pat)
 cmdsubs_parse_prog= re.compile(f"{cmdsubs_start_pat}|{cmdsubs_stop_pat}")
 
-from .strsubs import SUBS_COMMAND_STR, SUBS_ENVVAR_STR
-# NORMAL_STR = re.compile(r"(?:[^$\\]|(?:\\.))+")
+from .strsubs import SUBS_COMMAND, SUBS_ENVVAR_STR
 NORMAL_STR = r"""
 (?P<NORMAL_STR>
     (?:
@@ -44,13 +43,18 @@ NORMAL_STR = r"""
 )
 """
 
-SUBS_PROG_STR = rf"{NORMAL_STR}|{SUBS_COMMAND_STR}|{SUBS_ENVVAR_STR}"
+# Since SUBS_COMMAND contains recursive expression
+# Use it alone. 
+SUBS_PROG_STR = rf"{NORMAL_STR}|{SUBS_ENVVAR_STR}"
 SUBS_PROG = regex.compile(SUBS_PROG_STR, regex.VERBOSE)
 
-def _format_string(string, shell):
+def _format_string(string, shell, double_quotes=False):
     result = []
     while True:
-        if not (match := SUBS_PROG.match(string)):
+        match = SUBS_PROG.match(string)
+        if not match:
+            match = SUBS_COMMAND.match(string)
+        if not match:
             break
         match_str = match.group(0)
         lastgroup = match.lastgroup
@@ -76,7 +80,8 @@ def _format_string(string, shell):
             run(command=cmdsubs_str, stdout=stdout, shell=shell)
             stdout.seek(0)
             out = stdout.read().rstrip()
-            out = out.replace('"', r'\"')
+            if double_quotes:
+                out = out.replace('"', r'\"')
             result.append(out)
         else:
             raise SyntaxError("Unknown Error.")
@@ -85,33 +90,19 @@ def _format_string(string, shell):
 
 def _substitute(cmd, shell=""):
     for index, token in enumerate(cmd):
-        if isinstance(token, list) and token[0]=="$":
-            # Command substitution. 
-            # E.g. #M! dir $(echo c:\lab)
-            # cmd == ['dir', ['$', 'echo', 'c:\\lab']]
-            # token == ['$', 'echo', 'c:\\lab']
-            # Only need to implement substitution for CMD.
-            for idx_sub_token, sub_token in enumerate(token):
-                if isinstance(sub_token, list):
-                    tmp = [sub_token]
-                    _substitute(tmp, shell=shell)
-                    token[idx_sub_token] = tmp[0]
-            stdout = io.StringIO()
-            run(group(token[1:]), stdout=stdout, shell=shell)
-            stdout.seek(0)
-            text = stdout.read().rstrip()
-            cmd[index] = text
-        elif isinstance(token, str) and envvar_prog.match(token):
+        if isinstance(token, str) and envvar_prog.match(token):
             if shell == "cmd":
                 # CMD cannot ref a env var with $.
                 # This is an extenstion to CMD syntax. 
                 cmd[index] = os.environ[token[1:]]
         elif "$" in token and token[0] == '"':
-            token = _format_string(token, shell=shell)
+            token = _format_string(token, shell=shell, double_quotes=True)
             cmd[index] = token
-            
+        elif token.startswith("$("):
+            token = _format_string(token, shell=shell, double_quotes=False)
+            cmd[index] = token
+                            
 
-            
 def _win_exe_expr(cmd):
     try:
         path = wswhich.which(cmd[0])[0]
@@ -158,19 +149,21 @@ def run(
         
         if not real_shell:
             if shell == "wsl":
-                cmd = ["wsl", *cmd]
+                cmd = ["wsl ", *cmd]
             elif shell == "cmd":
                 if is_cmd_builtin(cmd[0]):
-                    cmd = ["cmd", "/c", *cmd]
+                    cmd = ["cmd ", "/c ", *cmd]
             else:
                 pass
             real_shell = shell
         
+        # Todo: select shell dynamically.
+        # Say, use env var or command substitution to select shell.
         _substitute(cmd, shell=real_shell)
 
         cmd = _win_exe_expr(cmd) 
         
-        cmd = ' '.join(cmd)
+        cmd = ''.join(cmd)
         
         if op == "":
             if stdin:

@@ -24,28 +24,28 @@ SUBS_STR_OR_VAR_STR = rf"""
 )
 """
 
-SUBS_COMMAND_STR = rf"""
-(?P<SUBS_COMMAND>
-    \$\(  # Command substitution starts with $(
-        {SUBS_STR_OR_VAR_STR}*
-        (?:
-            (?R)  # Nested command substitution.
-            {SUBS_STR_OR_VAR_STR}
-        )*
-    \)  # Command substitution ends with )
-)
-"""
-
-#NQ_STR = rf"""
-#(?P<NQ_STR>
-#    [^\s'\"|&;]
-#    [^\s|&;]
+#SUBS_COMMAND_STR = rf"""
+#(?P<SUBS_COMMAND>
+#    \$\(  # Command substitution starts with $(
+#    {SUBS_STR_OR_VAR_STR}*
 #    (?:
-#
-#    )
+#        (?R)  # Nested command substitution.
+#        {SUBS_STR_OR_VAR_STR}
+#    )*
+#    \)  # Command substitution ends with )
 #)
 #"""
 
+SUBS_COMMAND_STR = rf"""
+(?P<SUBS_COMMAND>
+    \$\(  # Command substitution starts with $(
+    (?:
+        (?R)?  # Nested command substitution.
+        {SUBS_STR_OR_VAR_STR}?
+    )*
+    \)  # Command substitution ends with )
+)
+"""
 SUBS_COMMAND = regex.compile(SUBS_COMMAND_STR, regex.VERBOSE)
 SUBS_ENV_VAR = regex.compile(SUBS_ENVVAR_STR, regex.VERBOSE)
 SUBS_NORMAL  = regex.compile(SUBS_NORMAL_STR, regex.VERBOSE)
