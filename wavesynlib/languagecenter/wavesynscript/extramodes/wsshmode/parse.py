@@ -1,7 +1,5 @@
 # from .pattern import item_prog
 import re
-import ast
-# from wavesynlib.languagecenter.python.pattern import string as string_pattern
 from wavesynlib.languagecenter.python.pattern import (
     sqstring_noprefix,
     dqstring_noprefix,
@@ -17,6 +15,7 @@ dq3string = stringprefix + dq3string_noprefix
 string_pattern = any_("STRING", [sq3string, dq3string, sqstring, dqstring])
 
 
+import regex
 
 word_pattern = r"(?P<WORD>[^\s'\"|&;][^\s|&;]*)"
 op_pattern   = r"(?P<OP>[|&]|$\(|\))"

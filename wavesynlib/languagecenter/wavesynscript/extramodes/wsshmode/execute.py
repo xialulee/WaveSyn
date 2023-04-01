@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import regex
 import io
 import sys
 import locale
@@ -31,22 +32,35 @@ str_parse_pat     = "|".join((escape_ds_pat, normal_str_pat, normal_char_pat, si
 str_parse_prog    = re.compile(str_parse_pat)
 cmdsubs_parse_prog= re.compile(f"{cmdsubs_start_pat}|{cmdsubs_stop_pat}")
 
+from .strsubs import SUBS_COMMAND_STR, SUBS_ENVVAR_STR
+# NORMAL_STR = re.compile(r"(?:[^$\\]|(?:\\.))+")
+NORMAL_STR = r"""
+(?P<NORMAL_STR>
+    (?:
+        [^$\\]
+        |
+        (?:\\.)
+    )+
+)
+"""
+
+SUBS_PROG_STR = rf"{NORMAL_STR}|{SUBS_COMMAND_STR}|{SUBS_ENVVAR_STR}"
+SUBS_PROG = regex.compile(SUBS_PROG_STR, regex.VERBOSE)
+
 def _format_string(string, shell):
     result = []
-    subs_level = 0
     while True:
-        match = str_parse_prog.match(string)
-        if not match:
+        if not (match := SUBS_PROG.match(string)):
             break
         match_str = match.group(0)
         lastgroup = match.lastgroup
-        if lastgroup in ("NORMAL_STR", "NORMAL_CHAR", "SINGLE_BACKSLASH"):
-            result.append(match_str)
+        if lastgroup == "NORMAL_STR":
+            tmp = match_str
+            if shell == "cmd":
+                tmp = tmp.replace(r"\$", "$")
+            result.append(tmp)
             string = string[len(match_str):]
-        elif lastgroup == "ESCAPE_DS":
-            result.append("$" if shell=="cmd" else r"\$")
-            string = string[len(match_str):]
-        elif lastgroup == "EMBED_ENVVAR":
+        elif lastgroup == "SUBS_ENVVAR":
             if shell == "cmd":
                 # CMD does not support access env var with $.
                 # This is an extension to CMD. 
@@ -54,86 +68,19 @@ def _format_string(string, shell):
             else:
                 result.append(match_str)
             string = string[len(match_str):]
-        elif lastgroup == "CMDSUBS_START":
-            subs_level = 1
+        elif lastgroup == "SUBS_COMMAND":
             string = string[len(match_str):]
-            cmdsubs_list = []
-            search_start = 0
-            while subs_level > 0:
-                match = cmdsubs_parse_prog.search(string, pos=search_start)
-                if not match:
-                    raise SyntaxError("Round brackets of command substitution not match.")
-                match_str = match.group(0)
-                lastgroup = match.lastgroup
-                if lastgroup == "CMDSUBS_STOP":
-                    subs_level -= 1
-                    if subs_level == 0:
-                        cmdsubs_list.append(string[:match.start()])
-                        string = string[match.end():]
-                elif lastgroup == "CMDSUBS_START":
-                    subs_level += 1
-                search_start = match.end()
-            cmdsubs_str = "".join(cmdsubs_list)
+            # Remove starting $( and closing )
+            cmdsubs_str = match_str[2:-1]
             stdout = io.StringIO()
             run(command=cmdsubs_str, stdout=stdout, shell=shell)
             stdout.seek(0)
-            result.append(stdout.read().rstrip())
+            out = stdout.read().rstrip()
+            out = out.replace('"', r'\"')
+            result.append(out)
         else:
             raise SyntaxError("Unknown Error.")
     return "".join(result)
-
-#def _format_string(string, shell):
-#    result = []
-#    subs_level = 0
-#    while True:
-#        match = str_parse_prog.match(string)
-#        if not match:
-#            break
-#        match_str = match.group(0)
-#        lastgroup = match.lastgroup
-#        if lastgroup in ("NORMAL_STR", "NORMAL_CHAR", "SINGLE_BACKSLASH"):
-#            result.append(match_str)
-#            string = string[len(match_str):]
-#        elif lastgroup == "ESCAPE_DS":
-#            result.append("$" if shell=="cmd" else r"\$")
-#            string = string[len(match_str):]
-#        elif lastgroup == "EMBED_ENVVAR":
-#            if shell == "cmd":
-#                # CMD does not support access env var with $.
-#                # This is an extension to CMD. 
-#                result.append(os.environ[match_str[1:]])
-#            else:
-#                result.append(match_str)
-#            string = string[len(match_str):]
-#        elif lastgroup == "CMDSUBS_START":
-#            subs_level = 1
-#            string = string[len(match_str):]
-#            cmdsubs_list = []
-#            search_start = 0
-#            while subs_level > 0:
-#                match = cmdsubs_parse_prog.search(string, pos=search_start)
-#                if not match:
-#                    raise SyntaxError("Round brackets of command substitution not match.")
-#                match_str = match.group(0)
-#                lastgroup = match.lastgroup
-#                if lastgroup == "CMDSUBS_STOP":
-#                    subs_level -= 1
-#                    if subs_level == 0:
-#                        cmdsubs_list.append(string[:match.start()])
-#                        string = string[match.end():]
-#                elif lastgroup == "CMDSUBS_START":
-#                    subs_level += 1
-#                search_start = match.end()
-#            cmdsubs_str = "".join(cmdsubs_list)
-#            stdout = io.StringIO()
-#            run(command=cmdsubs_str, stdout=stdout, shell=shell)
-#            stdout.seek(0)
-#            result.append(stdout.read().rstrip())
-#        else:
-#            raise SyntaxError("Unknown Error.")
-#    return "".join(result)
-
-
 
 
 def _substitute(cmd, shell=""):
@@ -144,9 +91,6 @@ def _substitute(cmd, shell=""):
             # cmd == ['dir', ['$', 'echo', 'c:\\lab']]
             # token == ['$', 'echo', 'c:\\lab']
             # Only need to implement substitution for CMD.
-#            if shell != "cmd":
-#                cmd[index] = f"$({' '.join(token[1:])})"
-#            else:
             for idx_sub_token, sub_token in enumerate(token):
                 if isinstance(sub_token, list):
                     tmp = [sub_token]
@@ -163,9 +107,6 @@ def _substitute(cmd, shell=""):
                 # This is an extenstion to CMD syntax. 
                 cmd[index] = os.environ[token[1:]]
         elif "$" in token and token[0] == '"':
-#            token = _format_string(token[1:-1].replace('\\"', '"'), shell=shell)
-#            token = token.replace('"', '\\"')
-#            cmd[index] = f'"{token}"'
             token = _format_string(token, shell=shell)
             cmd[index] = token
             
