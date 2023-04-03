@@ -6,7 +6,7 @@ Created on Sat Sep 28 01:13:49 2019
 """
 from __future__ import annotations
 
-from typing import Callable, Iterable, Mapping 
+from typing import Callable, Iterable, Mapping
 
 from io import IOBase
 from pathlib import PurePath

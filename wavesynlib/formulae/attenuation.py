@@ -14,9 +14,9 @@ import numpy as np
 
 
 def free_space_loss(freq, dist):
-    if not isinstance(freq, collections.Iterable):
+    if not isinstance(freq, collections.abc.Iterable):
         freq = [freq]
-    if not isinstance(dist, collections.Iterable):
+    if not isinstance(dist, collections.abc.Iterable):
         dist = [dist]
         
     result = []

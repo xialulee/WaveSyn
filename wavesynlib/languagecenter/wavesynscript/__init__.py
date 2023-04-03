@@ -128,7 +128,7 @@ class FileManager(ModelNode):
                 object.__setattr__(manipulator, 'parent_node', self)
                 manipulator.lock_attribute('parent_node')
                 return manipulator
-        elif isinstance(filename, collections.Iterable):
+        elif isinstance(filename, collections.abc.Iterable):
             if self.__list_class is None:
                 raise NotImplementedError
             else:
