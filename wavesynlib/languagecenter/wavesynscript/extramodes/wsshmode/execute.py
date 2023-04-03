@@ -23,7 +23,6 @@ envvar_prog = re.compile(r"^\$[_A-Za-z]\w*$")
 embed_envvar_pat  = r"(?P<EMBED_ENVVAR>\$\w+)"
 cmdsubs_start_pat = r"(?P<CMDSUBS_START>\$\()"
 cmdsubs_stop_pat  = r"(?P<CMDSUBS_STOP>\))"
-# normal_str_pat    = r"(?P<NORMAL_STR>[^$]+)"
 normal_str_pat = r"(?P<NORMAL_STR>[^$]+[^\\\$])"
 normal_char_pat = r"(?P<NORMAL_CHAR>[^$])"
 single_backslash_pat = r"(?P<SINGLE_BACKSLASH>\\)"
@@ -111,7 +110,7 @@ def _win_exe_expr(cmd):
     if path.suffix.lower() == ".exe":
         expr = cmd
     elif path.suffix.lower() == ".py":
-        expr = ["python", str(path), *cmd[1:]]
+        expr = [f"python {str(path)}", *cmd[1:]]
     else:
         expr = cmd
     return expr
