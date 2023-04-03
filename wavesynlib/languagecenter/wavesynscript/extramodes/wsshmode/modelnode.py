@@ -1,41 +1,41 @@
 # Modelnode for WSSh
 #
 # Run ls:
-# #M! ls
+# #WS! ls
 #
 # Run ls and store the stdout and stderr in the returned dict (s for storage):
-# #M!s ls
+# #WS!s ls
 #
 # Run notepad in new thread, and the thread object is returned (the thread object can be accessed through variable "_").
-# #M!t notepad
+# #WS!t notepad
 #
 # Assign the return value to variable "retobj"
-# #M!|retobj= ls
+# #WS!|retobj= ls
 #
 # Store stdout & stderr and assign the returned dict to "retobj"
-# #M!s|retobj= ls
+# #WS!s|retobj= ls
 #
 # Using format string:
 # should print 100
 # a = 100
-# #M!f printf "%s" {a}
+# #WS!f printf "%s" {a}
 # 
 # Using quotes
 # a = "123 456"
-# #M!f printf "%s" "{a}"
+# #WS!f printf "%s" "{a}"
 # (should print "123 456")
-# #M!f printf "%s" {a}
+# #WS!f printf "%s" {a}
 # (should print "123")
 #
 # Command substitution
-# #M!t gvim $(which test.py)
+# #WS!t gvim $(which test.py)
 #
 # Use Environ var and Command substitution in strings:
-# #M! printf "%s" "--$(which python)--"
-# #M! printf "%s" "---- $(which $(echo python)) ----"
-# #M! printf "%s" "--$PATH--"
-# Use $$ as escape of $:
-# #M! printf "%s" "$$(which python)"
+# #WS! printf "%s" "--$(which python)--"
+# #WS! printf "%s" "---- $(which $(echo python)) ----"
+# #WS! printf "%s" "--$PATH--"
+# Use \$ as escape of $:
+# #WS! printf "%s" "\$(which python)"
 # (Should print "$(which python)")
 
 from __future__ import annotations
@@ -49,15 +49,20 @@ import re
 import io
 from dataclasses import dataclass
 
+from wavesynlib.languagecenter.wavesynscript import (
+    ModelNode, 
+    Scripting, 
+    WaveSynScriptAPI, 
+    ScriptCode, 
+    code_printer)
 from ..basemode import ModeInfo, BaseMode
-from wavesynlib.languagecenter.wavesynscript import ModelNode, Scripting, WaveSynScriptAPI, ScriptCode, code_printer
 from .execute import run
 
 _encoding = locale.getpreferredencoding()
 
 
 
-def _get_leading_blanks(s):
+def _get_leading_blanks(s: str) -> str:
     t = s.lstrip()
     d = len(s) - len(t)
     return s[:d]
@@ -66,6 +71,9 @@ def _get_leading_blanks(s):
 
 @dataclass
 class WSShResult:
+    """\
+Process result. 
+"""
     returncode: int = 0
     stdout:     str = ""
     stderr:     str = ""
@@ -73,7 +81,10 @@ class WSShResult:
 
 
 class WSSh(ModelNode, BaseMode):
-    _MODE_PREFIX = "#M!"
+    """\
+Node for shell mode.
+"""
+    _MODE_PREFIX = "#WS!"
     _PREFIX_ARG_PATTERN = re.compile(
         """\
 (?P<exec_mode>[stnf]*)
@@ -108,14 +119,14 @@ class WSSh(ModelNode, BaseMode):
             self.result = {"stdout": "", "stderr": ""}
 
 
-    def __run_process(self, 
-            command, 
-            input, 
-            shell = "" 
+    def __run_process(self,
+            command,
+            input_,
+            shell = ""
         ) -> Tuple[int, str, str]:
         stdout = io.StringIO()
         stderr = io.StringIO()
-        returncode = run(command, stdin=input, stdout=stdout, stderr=stderr, shell=shell)
+        returncode = run(command, stdin=input_, stdout=stdout, stderr=stderr, shell=shell)
         stdout.seek(0)
         stderr.seek(0)
         return returncode, stdout.read(), stderr.read()
@@ -129,16 +140,16 @@ class WSSh(ModelNode, BaseMode):
 
 
     @WaveSynScriptAPI(thread_safe=True)
-    def run(self, 
-            command, 
-            display    = True, 
-            input      = None, 
+    def run(self,
+            command,
+            display    = True,
+            input_     = None,
             store:bool = False,
             shell:str  = ""
         ) -> WSShResult:
         result = WSShResult()
         returncode, stdout, stderr = self.__run_process(
-            command, input=input, shell=shell)
+            command, input_=input_, shell=shell)
         result.returncode = returncode
         if store:
             result.stdout = stdout
@@ -149,8 +160,8 @@ class WSSh(ModelNode, BaseMode):
         return result
 
 
-    def _arg_parse(self, code):
-        # Todo: #M! default;
+    def _arg_parse(self, code: str) -> dict[str, Any]:
+        # Todo: #WS! default;
         prefix_args, code = self._split_code(code)
         match_obj = re.match(self._PREFIX_ARG_PATTERN, prefix_args)
         if not match_obj:
@@ -185,13 +196,16 @@ class WSSh(ModelNode, BaseMode):
         return arg_dict
     
 
-    def translate(self, code, verbose=None):
-        leading_blanks = _get_leading_blanks(code)
+    def translate(self,
+            code: str,
+            verbose: bool = False
+        ):
+        leading_blanks: str = _get_leading_blanks(code)
         code = code.lstrip()
         arg_dict = self._arg_parse(code)
         # "thread" is a flag rather than an arg.
         # Hence remove it from arg_dict.
-        is_thread = arg_dict.pop("thread", False)
+        is_thread: bool = arg_dict.pop("thread", False)
         if is_thread:
             thread_code = ".new_thread_run"
         else:
@@ -204,7 +218,9 @@ class WSSh(ModelNode, BaseMode):
             result = f"{retvar} = {result}"
         if verbose:
             write = self.root_node.stream_manager.write
-            write("The translated code is given as follows:\n", "TIP")
+            write(
+                "The translated code is given as follows:\n", 
+                "TIP")
             write(f"{result}\n", "HISTORY")
             if arg_dict.get("store", ""):
                 write(

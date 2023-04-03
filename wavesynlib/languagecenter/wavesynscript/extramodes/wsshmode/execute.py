@@ -2,24 +2,23 @@ from __future__ import annotations
 
 import os
 import re
-import regex
 import io
 import sys
 import locale
-codename = locale.getpreferredencoding()
 import pathlib
 from subprocess import Popen, PIPE
+
+import regex
 
 from wavesynlib.gadgets import wswhich
 
 from .parse import split, group
 from .cmdbuiltins import is_cmd_builtin
+from .strsubs import SUBS_COMMAND, SUBS_ENVVAR_STR
 
+codename: str = locale.getpreferredencoding()
 
 envvar_prog = re.compile(r"^\$[_A-Za-z]\w*$")
-
-
-
 embed_envvar_pat  = r"(?P<EMBED_ENVVAR>\$\w+)"
 cmdsubs_start_pat = r"(?P<CMDSUBS_START>\$\()"
 cmdsubs_stop_pat  = r"(?P<CMDSUBS_STOP>\))"
@@ -31,7 +30,6 @@ str_parse_pat     = "|".join((escape_ds_pat, normal_str_pat, normal_char_pat, si
 str_parse_prog    = re.compile(str_parse_pat)
 cmdsubs_parse_prog= re.compile(f"{cmdsubs_start_pat}|{cmdsubs_stop_pat}")
 
-from .strsubs import SUBS_COMMAND, SUBS_ENVVAR_STR
 NORMAL_STR = r"""
 (?P<NORMAL_STR>
     (?:
@@ -47,18 +45,22 @@ NORMAL_STR = r"""
 SUBS_PROG_STR = rf"{NORMAL_STR}|{SUBS_ENVVAR_STR}"
 SUBS_PROG = regex.compile(SUBS_PROG_STR, regex.VERBOSE)
 
-def _format_string(string, shell, double_quotes=False):
-    result = []
+def _format_string(
+        string: str, 
+        shell: str, 
+        double_quotes: bool = False
+    ) -> str:
+    result: list[str] = []
     while True:
-        match = SUBS_PROG.match(string)
+        match: regex.Match[str]|None = SUBS_PROG.match(string)
         if not match:
             match = SUBS_COMMAND.match(string)
         if not match:
             break
-        match_str = match.group(0)
-        lastgroup = match.lastgroup
+        match_str: str = match.group(0)
+        lastgroup: str|None = match.lastgroup
         if lastgroup == "NORMAL_STR":
-            tmp = match_str
+            tmp: str = match_str
             if shell == "cmd":
                 tmp = tmp.replace(r"\$", "$")
             result.append(tmp)
@@ -74,11 +76,11 @@ def _format_string(string, shell, double_quotes=False):
         elif lastgroup == "SUBS_COMMAND":
             string = string[len(match_str):]
             # Remove starting $( and closing )
-            cmdsubs_str = match_str[2:-1]
-            stdout = io.StringIO()
+            cmdsubs_str: str = match_str[2:-1]
+            stdout: io.IOBase = io.StringIO()
             run(command=cmdsubs_str, stdout=stdout, shell=shell)
             stdout.seek(0)
-            out = stdout.read().rstrip()
+            out: str = stdout.read().rstrip()
             if double_quotes:
                 out = out.replace('"', r'\"')
             result.append(out)
@@ -102,17 +104,16 @@ def _substitute(cmd, shell=""):
             cmd[index] = token
                             
 
-def _win_exe_expr(cmd):
+def _win_exe_expr(cmd: list[str]) -> list[str]:
     try:
-        path = wswhich.which(cmd[0])[0]
+        path: pathlib.Path = wswhich.which(cmd[0])[0]
     except IndexError:
         path = pathlib.Path(cmd[0])
-    if path.suffix.lower() == ".exe":
-        expr = cmd
-    elif path.suffix.lower() == ".py":
-        expr = [f"python {str(path)}", *cmd[1:]]
-    else:
-        expr = cmd
+    match path.suffix.lower():
+        case ".py":
+            expr = [f"python {str(path)}", *cmd[1:]]
+        case _:
+            expr = cmd
     return expr
 
 

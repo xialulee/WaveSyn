@@ -41,7 +41,7 @@ def command_parse(command: str) -> Tuple[str, List[str]]:
 
 
 class Magic(ModelNode, BaseMode):
-    _MODE_PREFIX: Final[str] = "#M%"
+    _MODE_PREFIX: Final[str] = "#WS%"
     _PREFIX_ARG_PATTERN: Final[re.Pattern] = \
         re.compile("(?P<exec_mode>[f]*)", re.VERBOSE)
 
