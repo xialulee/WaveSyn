@@ -16,7 +16,6 @@ import matplotlib
 
 from numpy import deg2rad, rad2deg, ndarray
 
-import hy
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 from wavesynlib.languagecenter.wavesynscript import (
     Scripting, WaveSynScriptAPI, code_printer)
@@ -60,8 +59,8 @@ class GridGroup(Observable, Group):
         
         self.__gui_images = []
         
-        major = IntVar(0)
-        minor = IntVar(0)
+        major = IntVar(value=0)
+        minor = IntVar(value=0)
         self.__major = major
         self.__minor = minor
         self.__figure_observer = self.FigureObserver(self)

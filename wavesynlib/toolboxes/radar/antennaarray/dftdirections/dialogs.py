@@ -1,5 +1,3 @@
-import hy
-
 from tkinter import Toplevel, StringVar 
 
 from wavesynlib.widgets.tk.desctotk import hywidgets_to_tk

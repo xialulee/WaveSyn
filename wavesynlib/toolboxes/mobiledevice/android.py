@@ -31,7 +31,6 @@ try:
 except ModuleNotFoundError:
     raise ModuleNotFoundError("Please install pycryptodome to use this toolbox.")
 
-import hy
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
 from wavesynlib.widgets.tk.desctotk import hywidgets_to_tk
 from wavesynlib.widgets.tk.scrolledcanvas import ScrolledCanvas

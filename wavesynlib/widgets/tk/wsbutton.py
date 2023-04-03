@@ -57,7 +57,7 @@ class WSButton(Button):
 if __name__ == "__main__":
     root = tkinter.Tk()
     tkinter.Label(root, text="You cannot quit until input something.").pack()
-    entry_text = tkinter.StringVar("")
+    entry_text = tkinter.StringVar(value="")
     (entry := tkinter.Entry(root, textvariable=entry_text)).pack()
     command_object = CommandObject(root.destroy, lambda: entry_text.get() != "")
     entry_text.trace("w", lambda *args: command_object.change_can_execute())

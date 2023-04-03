@@ -15,7 +15,6 @@ from scipy.io import loadmat
 import numpy as np
 import matplotlib.pyplot as plt
 
-import hy
 from wavesynlib.widgets.tk.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.group import Group 
 from wavesynlib.widgets.tk.labeledentry import LabeledEntry

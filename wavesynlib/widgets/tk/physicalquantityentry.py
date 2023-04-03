@@ -1,4 +1,3 @@
-import hy
 from .labeledentry import LabeledEntry
 
 import tkinter as tk

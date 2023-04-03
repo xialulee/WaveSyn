@@ -17,11 +17,9 @@ from ctypes import wintypes
 from collections import OrderedDict, namedtuple
 
 import threading
-# import time
 import inspect
 from os.path import abspath, dirname, join
 
-import hy
 from wavesynlib.languagecenter.designpatterns import Observable, SimpleObserver
 from wavesynlib.languagecenter.wavesynscript import Scripting, WaveSynScriptAPI, code_printer
 from wavesynlib.interfaces.timer.tk import TkTimer
@@ -257,7 +255,7 @@ class USBSPIWindow(TkToolWindow, Observable):
         self.__current_serialno = None
         dev_combo.pack(side='top')
         
-        self.__is_opened = IntVar(0)
+        self.__is_opened = IntVar(value=0)
         self.__open_check = open_check = Checkbutton(open_group, text='Open', 
             variable=self.__is_opened,
             command=self._on_open_click)
@@ -273,8 +271,8 @@ class USBSPIWindow(TkToolWindow, Observable):
         param_frame = Frame(param_group)
         param_frame.pack()
         
-        self.__CPOL = CPOL = IntVar(0)
-        self.__CPHA = CPHA = IntVar(0)
+        self.__CPOL = CPOL = IntVar(value=0)
+        self.__CPHA = CPHA = IntVar(value=0)
         Checkbutton(param_frame, text='CPOL', variable=CPOL).grid(row=0, column=0)
         Checkbutton(param_frame, text='CPHA', variable=CPHA).grid(row=1, column=0)
         

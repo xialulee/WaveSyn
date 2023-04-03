@@ -16,7 +16,6 @@ import os
 import re
 from pathlib import Path
 from typing import Callable
-import hy
 from wavesynlib.languagecenter.designpatterns import Observable
 
 

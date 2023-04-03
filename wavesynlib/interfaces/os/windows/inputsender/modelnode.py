@@ -150,7 +150,6 @@ class MacroManager(ModelNode):
 
     @property
     def _current_profile(self):
-        _hy_anon_var_20 = None
         with code_printer(print_=False):
             exec_path = self.root_node.interfaces.os.windows.processes.utils.get_execpath_from_foreground()
         condition = _ExecPathCondition(exec_path)

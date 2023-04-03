@@ -11,7 +11,6 @@ from comtypes import COMError
 import tkinter as tk
 from tkinter import ttk
 
-import hy
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree
 from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow

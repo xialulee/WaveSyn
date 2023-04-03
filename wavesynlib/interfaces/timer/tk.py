@@ -4,7 +4,6 @@ Created on Mon Mar 30 10:14:20 2015
 
 @author: Administrator
 """
-import hy
 from tkinter import Toplevel, IntVar
 from tkinter.ttk import Button, Checkbutton
 from wavesynlib.interfaces.timer.basetimer import BaseObservableTimer, Divider
@@ -32,7 +31,7 @@ and use its Toplevel's after method.
             interval.pack(side='top')
             self.interval   = interval
             
-            self.active   = IntVar(timer.active)
+            self.active   = IntVar(value=timer.active)
             Checkbutton(self, text='Activate', variable=self.active, command=self._on_active_button_click).pack(side='top')
             Button(self, text='OK', command=self._on_ok_button_click).pack(side='top')
             

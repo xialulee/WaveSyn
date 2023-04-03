@@ -1,5 +1,3 @@
-import hy
-
 from ctypes import windll, byref, sizeof
 
 from .constants import *

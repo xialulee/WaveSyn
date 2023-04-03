@@ -139,7 +139,6 @@ k_g: galactic constant: 1.6=quiet, 10=average, 60=high
 G_s: sidelobe fraction of integrated antenna pattern
 L_a: antenna loss as ratio."""
     L_a = _to_ratio(L_a)
-    #hyx_fXsuperscript_twoX·Xsuperscript_fiveX = _to_GHz(f) ** 2.5
     T0 = to_K(T_0).magnitude
     L_αt = L_α(R, θ, h_r, h_s, f)
     T_a1 = 0.75 * T0 * (1 - 1 / sqrt(L_αt))

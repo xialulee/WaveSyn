@@ -4,9 +4,6 @@ Created on Sun Aug 28 02:49:38 2016
 
 @author: Feng-cong Li
 """
-
-import hy
-
 import os
 from io import StringIO
 import pathlib
@@ -390,8 +387,8 @@ Red:   main-thread is busy.''')
                 return f'{battery_status.percent}%'
         battery_meter_tip.show_callback = battery_meter_tip_show_callback
         
-        self.__membar = IntVar(0)
-        self.__cpubar = IntVar(0)
+        self.__membar = IntVar(value=0)
+        self.__cpubar = IntVar(value=0)
         self._make_cpu_mem_status()
 
         # Transparent Scale {

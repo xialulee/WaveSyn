@@ -16,7 +16,7 @@ from scipy.io import savemat
 
 import _thread as thread
 
-import hy
+# import hy
 from wavesynlib.widgets.tk.figurewindow import FigureWindow
 from wavesynlib.widgets.tk.group import Group 
 from wavesynlib.widgets.tk.scrolledlist import ScrolledList
@@ -70,7 +70,7 @@ class OptimizeGroup(Group):
         image_display = ImageTk.PhotoImage(
             file=Scripting.root_node.get_gui_image_path('Pattern_Display_Button.png'))
         self.__gui_images.append(image_display)
-        self.__bDisplay = IntVar(0)
+        self.__bDisplay = IntVar(value=0)
         chk_display = Checkbutton(
             self, 
             text="Verbose", 

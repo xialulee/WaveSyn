@@ -9,7 +9,6 @@ from __future__ import print_function, division, unicode_literals
 import six.moves.tkinter as tk
 import six.moves.tkinter_ttk as ttk
 
-import hy
 from wavesynlib.widgets.tk.iqslider import IQSlider
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow

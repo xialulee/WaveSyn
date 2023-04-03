@@ -1,8 +1,6 @@
-import hy
-
 from tkinter import DoubleVar, StringVar, Toplevel
 from tkinter.colorchooser import askcolor
-from tkinter.ttk import Button, Combobox, Label, Radiobutton
+from tkinter.ttk import Button, Label, Radiobutton
 
 from wavesynlib.widgets.tk.desctotk import hywidgets_to_tk
 from .widgets import (

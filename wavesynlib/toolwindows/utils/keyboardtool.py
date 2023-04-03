@@ -7,7 +7,6 @@ Created on Sun Feb 14 23:32:52 2016
 import tkinter as tk
 from tkinter import ttk
 
-import hy
 from wavesynlib.interfaces.os.windows import disablekeys
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.tkbasewindow import TkToolWindow
@@ -42,7 +41,7 @@ class KeyboardToolWindow(TkToolWindow):
         for n in range(2):
             for m in range(3):
                 code = key_codes[n][m]
-                var = tk.IntVar(0)
+                var = tk.IntVar(value=0)
                 ttk.Checkbutton(grid_frame, text=disablekeys.key_name[code], variable=var, width=10, command=lambda code=code, var=var: callback(code, var)).grid(row=m, column=n)
         # }        
         

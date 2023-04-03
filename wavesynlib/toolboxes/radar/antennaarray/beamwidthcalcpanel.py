@@ -1,5 +1,3 @@
-import hy
-
 import tkinter as tk
 
 import quantities as pq

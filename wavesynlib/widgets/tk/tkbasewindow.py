@@ -12,7 +12,6 @@ from tkinter.ttk import Notebook, Label, Button, Checkbutton, Scale
 
 from PIL import ImageTk
 
-import hy
 from wavesynlib.languagecenter.wavesynscript import (
     ModelNode, NodeDict, Scripting, WaveSynScriptAPI, code_printer)
 from wavesynlib.languagecenter.utils import auto_subs, MethodDelegator
@@ -101,7 +100,7 @@ class WindowManager(ModelNode, WindowComponent):
     def _make_widgets(self):
         tool_tabs = self.window_node._tool_tabs        
         
-        self.__topmost = topmost = IntVar(0)
+        self.__topmost = topmost = IntVar(value=0)
         
         copy_id_icon = ImageTk.PhotoImage(file=Scripting.root_node.get_gui_image_path('WindowManager_CopyID.png'))
         self.__gui_images.append(copy_id_icon)

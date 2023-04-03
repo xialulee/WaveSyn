@@ -39,8 +39,6 @@ class WaveSynScriptNode(ModelNode):
         language = language.lower()
         if language in ("py", "python"):
             self.__display_language = "python"
-        elif language == "hy":
-            self.__display_language = "hy"
         else:
             raise ValueError(f"Language {language} not supported.")
 

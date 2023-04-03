@@ -1,4 +1,3 @@
-import hy
 import sys
 from dataclasses import dataclass
 from tkinter import Tk

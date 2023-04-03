@@ -15,8 +15,6 @@ from tkinter import Toplevel, Tk
 from tkinter.ttk import Button
 from six.moves.tkinter import Frame
 
-import hy
-
 # Should not use relative import.
 # Because ask_class_name will call this file in a new process.
 from wavesynlib.widgets.tk.scrolledtree import ScrolledTree

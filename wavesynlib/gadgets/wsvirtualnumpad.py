@@ -1,4 +1,3 @@
-import hy
 from wavesynlib.interfaces.os.windows.inputhook.keyboardhook import KeyboardHook
 from wavesynlib.widgets.tk.taskbaricon import TaskbarIcon
 from wavesynlib.interfaces.os.windows.shell.constants import TBPFLAG

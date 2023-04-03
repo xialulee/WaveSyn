@@ -4,7 +4,6 @@ Created on Wed Feb 03 16:00:18 2016
 
 @author: Feng-cong Li
 """
-import hy
 import tkinter as tk
 
 import os

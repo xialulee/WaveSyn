@@ -4,9 +4,6 @@ Created on Tue Jan 26 10:42:50 2016
 
 @author: Feng-cong Li
 """
-
-import hy
-
 from wavesynlib.languagecenter.wavesynscript import ModelNode
 from wavesynlib import status
 from . import window

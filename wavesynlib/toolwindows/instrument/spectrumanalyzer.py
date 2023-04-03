@@ -9,7 +9,6 @@ import numpy as np
 
 import tkinter as tk
 
-import hy
 from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.figurewindow import FigureWindow

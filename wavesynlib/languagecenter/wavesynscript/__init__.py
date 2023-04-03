@@ -10,9 +10,6 @@ from importlib import import_module
 
 import collections
 
-import hy
-from hy.contrib.hy_repr import hy_repr
-
 from wavesynlib.languagecenter.utils import MethodLock
 from wavesynlib.languagecenter.designpatterns import Observable
 
@@ -231,26 +228,6 @@ class Scripting(ModelNode):
             params = strArgs if strArgs else strKwargs
         return params
 
-
-    @staticmethod
-    def hy_convert_args_to_str(*args, **kwargs):
-        def arg_to_str(arg):
-            if isinstance(arg, ScriptCode):
-                # To-Do: Handling ScriptCode correctly.
-                return arg.code
-            elif isinstance(arg, Constant):
-                return f"{Scripting.root_name}.lang_center.wavesynscript.constants.{arg.name}"
-            else:
-                return hy_repr(arg)
-        str_args   = ' '.join([arg_to_str(arg) for arg in args])
-        str_kwargs = ' '.join([f":{key} {arg_to_str(kwargs[key])}" for key in kwargs]) if kwargs else ""
-
-        if str_args and str_kwargs:
-            result = f"{str_args} {str_kwargs}"
-        else:
-            result = str_args if str_args else str_kwargs
-        return result
-    
         
     def __init__(self, root_node):
         super().__init__()
@@ -259,8 +236,8 @@ class Scripting(ModelNode):
             
     def executeFile(self, filename):
         exec(compile(open(filename, "rb").read(), filename, 'exec'), 
-             self.namespaces['globals'], 
-             self.namespaces['locals'])
+            self.namespaces['globals'], 
+            self.namespaces['locals'])
 
         
     @classmethod
@@ -293,12 +270,8 @@ class WaveSynScriptAPIMethod:
             try:
                 # Set False preventing recursive.
                 Scripting._print_code_flag = False
-                display_language = root.lang_center.wavesynscript.display_language
                 expr_str = f"{obj.node_path}.{name}({Scripting.convert_args_to_str(*args, **kwargs)})"
-                if display_language == "python":
-                    display_str = expr_str
-                elif display_language == "hy":
-                    display_str = f"(.{name} {obj.hy_node_path} {Scripting.hy_convert_args_to_str(*args, **kwargs)})"
+                display_str = expr_str
                 ret = root.lang_center.wavesynscript.display_and_eval(expr=expr_str, display=display_str)
             finally:
                 # Restore
@@ -322,14 +295,8 @@ class WaveSynScriptAPIMethod:
             try:
                 # Set False preventing recursive.
                 Scripting._print_code_flag = False
-                display_language = root.lang_center.wavesynscript.display_language
                 expr_str = f"{obj.node_path}.{name}.new_thread_run({Scripting.convert_args_to_str(*args, **kwargs)})"
-                if display_language == "python":
-                    display_str = expr_str
-                elif display_language == "hy":
-                    display_str = f"(.new_thread_run {obj.hy_node_path[:-1]} {name}) {Scripting.hy_convert_args_to_str(*args, **kwargs)})"
-                else:
-                    raise ValueError("Display language not supported.")
+                display_str = expr_str
                 ret = root.lang_center.wavesynscript.display_and_eval(expr=expr_str, display=display_str)
                 return ret
             finally:

@@ -11,7 +11,6 @@ from skrf.io.touchstone import Touchstone
 
 import six.moves.tkinter as tk
 
-import hy
 from wavesynlib.widgets.tk.desctotk import json_to_tk
 from wavesynlib.widgets.tk.group import Group
 from wavesynlib.widgets.tk.figurewindow import FigureWindow

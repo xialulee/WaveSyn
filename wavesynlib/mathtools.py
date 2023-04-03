@@ -1,5 +1,3 @@
-import hy
-
 from collections import OrderedDict, Iterable
 import importlib
 from imp import reload

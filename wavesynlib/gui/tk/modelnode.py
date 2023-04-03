@@ -7,9 +7,7 @@ Created on Fri Apr 07 17:08:49 2017
 import tkinter
 import ctypes
 
-import hy
-
-from wavesynlib.languagecenter.wavesynscript import Scripting, ModelNode, WaveSynScriptAPI
+from wavesynlib.languagecenter.wavesynscript import ModelNode, WaveSynScriptAPI
 from wavesynlib.widgets.tk.valuechecker import ValueChecker 
 from wavesynlib.widgets.tk.balloon import Balloon
 from wavesynlib.widgets.tk.taskbaricon import TaskbarIcon
