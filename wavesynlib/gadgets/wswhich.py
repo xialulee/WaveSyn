@@ -9,7 +9,7 @@ Created on Fri Nov 06 09:30:21 2015
 import os
 import sys
 import getopt
-import pathlib
+from pathlib import Path
 import platform
 
 from itertools import product
@@ -23,21 +23,23 @@ ERROR_NOERROR, ERROR_NOTFOUND, ERROR_PARAM = range(3)
 
 def usage():
     pass # TODO
-    
-    
 
-def which(name, all_=False, cwd=False):
-    p = pathlib.Path(name)
-    suffixes = p.suffixes
-    ext = suffixes[-1] if suffixes else ''
-    paths = os.environ['PATH'].split(os.path.pathsep)
+
+def which(
+        name: str,
+        all_: bool = False,
+        cwd: bool = False
+    ) -> tuple[Path, ...]:
+    p: Path = Path(name)
+    suffixes: list[str] = p.suffixes
+    ext: str = suffixes[-1] if suffixes else ''
+    paths: list[str] = os.environ['PATH'].split(os.path.pathsep)
     if platform.system() == 'Windows':
-        exts = os.environ['PATHEXT'].split(os.path.pathsep)
+        exts: list[str] = os.environ['PATHEXT'].split(os.path.pathsep)
         if ext:
             if ext.upper() not in [e.upper() for e in exts]:
                 raise TypeError(f'The file {name} is not executable.')
-            else:
-                exts = [ext]
+            exts = [ext]
     else:
         if ext:
             exts = [ext]
@@ -46,27 +48,28 @@ def which(name, all_=False, cwd=False):
     if cwd:
         paths.insert(0, '.')
     
-    file_paths = OrderedDict()    
+    # Use OrderedDict as an Ordered Set.
+    file_paths: OrderedDict[Path, bool] = OrderedDict()
     
-    for path, ext in product(paths, exts):
-        path = pathlib.Path(path)
-        test_path = path / f'{str(name)}{ext}'
+    for path_str, ext in product(paths, exts):
+        path: Path = Path(path_str)
+        test_path: Path = path / f'{str(name)}{ext}'
         try:
-            exists = test_path.exists()
+            exists: bool = test_path.exists()
         except OSError:
-            # happens when the path is not authorized to access. 
+            # happens when the path is not authorized to access.
             exists = False
         if exists:
-            abs_test_path = test_path.absolute()
+            abs_test_path: Path = test_path.resolve()
             file_paths[abs_test_path] = True
             if not all_:
-                break        
+                break
     
     return tuple(file_paths)
     
 
 
-def main(argv):
+def main(argv: list[str]) -> int:
     try:
         opts, args = getopt.getopt(argv[1:], \
             'a',\
@@ -77,11 +80,11 @@ def main(argv):
         usage()
         return ERROR_PARAM
         
-    all_cmd = False
-    wopen = False
-    json_output = False
-    cmd_order = -1
-    cwdfirst = False
+    all_cmd: bool = False
+    wopen: bool = False
+    json_output: bool = False
+    cmd_order: int = -1
+    cwdfirst: bool = False
     for o, a in opts:
         if o in ('-a', '--all'):
             all_cmd = True
@@ -95,11 +98,14 @@ def main(argv):
             cmd_order = int(a)
             all_cmd = True
     
-    name = args[0]
+    name: str = args[0]
     try:
-        file_paths = which(name, all_=all_cmd, cwd=cwdfirst)
-    except TypeError as err:
-        print('The file {} is not executable.'.format(args[0]), file=sys.stderr) 
+        file_paths: tuple[Path, ...] = which(
+            name, all_=all_cmd, cwd=cwdfirst)
+    except TypeError:
+        print(
+            f"The file {name} is not executable.", 
+            file=sys.stderr)
         return ERROR_NOTFOUND
             
     if file_paths:
@@ -113,8 +119,9 @@ def main(argv):
                 if wopen:
                     winopen(file_path)
     else:
-        print(f'wswhich.py: no {name} in ({os.environ["PATH"]})', 
-              file=sys.stderr)
+        print(
+            f'wswhich.py: no {name} in ({os.environ["PATH"]})',
+            file=sys.stderr)
         return ERROR_NOTFOUND
     return ERROR_NOERROR
     
