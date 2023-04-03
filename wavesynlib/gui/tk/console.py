@@ -326,6 +326,8 @@ class ConsoleText(ModelNode, ScrolledText):
             # Return
             if event.keysym == 'Return': 
                 code = self.text.get(f'{r}.4', f'{r}.end')
+                if code.strip() == "exit":
+                    code = code.replace("exit", "exit()")
                 self.__history.put(code)
                 try:
                     status, funcobj = self.__shell.feed(code)
