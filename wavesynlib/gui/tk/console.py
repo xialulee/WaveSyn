@@ -245,15 +245,17 @@ class ConsoleText(ModelNode, ScrolledText):
                 Scripting.namespaces['globals']])
 
         completions = script.complete()
-
-        if len(completions)==0:
-            return 
-
-        if len(completions)==1:
-            completion = completions[0]
-            cstr = completion.complete
-            self.text.insert('end', cstr)
-            return 
+        
+        match len(completions):
+            case 0:
+                return
+            case 1:
+                completion = completions[0]
+                cstr = completion.complete
+                self.text.insert('end', cstr)
+                return
+            case _:
+                pass
 
         self.candidate_list.launch(completions)
 
@@ -321,9 +323,8 @@ class ConsoleText(ModelNode, ScrolledText):
                 return 'break'
             rend = self.get_cursor_pos('end-1c')[0]
             if r < rend:
-                return 'break'  
+                return 'break'
             
-            # Return
             if event.keysym == 'Return': 
                 code = self.text.get(f'{r}.4', f'{r}.end')
                 if code.strip() == "exit":
@@ -419,8 +420,9 @@ Red:   main-thread is busy.''')
         # } End Topmost Button 
         
         # Doc Button {
-        docbtn = tkinter.Button(self, text='DOC', relief='groove')
-        docbtn.pack(side='right')
+        (docbtn := \
+            tkinter.Button(self, text='DOC', relief='groove')
+        ).pack(side="right")
         
         def on_click():
             docwin = Scripting.root_node.gui.console.doc_window
@@ -432,8 +434,9 @@ Red:   main-thread is busy.''')
         #} End Doc Window        
         
         # Debug Button {
-        debbtn = tkinter.Button(self, text='DEB', relief='groove')
-        debbtn.pack(side='right')
+        (debbtn := \
+            tkinter.Button(self, text='DEB', relief='groove')
+        ).pack(side='right')
         
         def on_click():
             debwin = Scripting.root_node.gui.console.debug_window
@@ -565,9 +568,7 @@ class ConsoleWindow(ModelNode):
                 # are not ready to use. 
                 os.chdir(directory)
 
-        dir_indicator = CWDIndicator(chdir_func=chdir_func)
-        dir_indicator.pack(fill='x')
-
+        CWDIndicator(chdir_func=chdir_func).pack(fill="x")
         self.__status_bar = status_bar = StatusBar(root)
         status_bar.pack(side='bottom', fill='x')
         
@@ -712,44 +713,44 @@ class ConsoleWindow(ModelNode):
         for item in contents:
             end = item.get('end', '\n')
 
-            if item['type'] == 'text':
-                stream_manager.write(f'{item["content"]}{end}', 'TIP')
-                return_list.append(None)
-            elif item['type'] == 'link':
-                command = item['command']
-                tag_name = console_text.create_link_tag(command, self.default_cursor)                
-                stream_manager.write(item['content'], tag_name)
-                #r, c = text.index(END).split('.')
-                stream_manager.write(end)
-                return_list.append(None)
-            elif item['type'] == 'pil_image':               
-                text.insert('end', '\n')
-                pil_frame = PILImageFrame(text, pil_image=item['content'], balloon=self.root_node.gui.balloon)
-                text.window_create('end', window=pil_frame)
-                text.insert('end', '\n')
-                stream_manager.write(end)
-                return_list.append(id(pil_frame))
-            elif item['type'] == 'file_list':
-                file_list = item['content']                 
-                for file_path in file_list:
-                    open_func = new_open_func(file_path)
-                    open_tag_name = console_text.create_link_tag(open_func, self.default_cursor)
-                    stream_manager.write('open', open_tag_name)
-                    stream_manager.write(' ')
+            match item["type"]:
+                case "text":
+                    stream_manager.write(f'{item["content"]}{end}', 'TIP')
+                    return_list.append(None)
+                case "link":
+                    command = item['command']
+                    tag_name = console_text.create_link_tag(command, self.default_cursor)                
+                    stream_manager.write(item['content'], tag_name)
+                    stream_manager.write(end)
+                    return_list.append(None)
+                case "pil_image":
+                    text.insert('end', '\n')
+                    pil_frame = PILImageFrame(text, pil_image=item['content'], balloon=self.root_node.gui.balloon)
+                    text.window_create('end', window=pil_frame)
+                    text.insert('end', '\n')
+                    stream_manager.write(end)
+                    return_list.append(id(pil_frame))
+                case "file_list":
+                    file_list = item['content']                 
+                    for file_path in file_list:
+                        open_func = new_open_func(file_path)
+                        open_tag_name = console_text.create_link_tag(open_func, self.default_cursor)
+                        stream_manager.write('open', open_tag_name)
+                        stream_manager.write(' ')
 
-                    browse_func = new_browse_func(file_path)                    
-                    browse_tag_name = console_text.create_link_tag(browse_func, self.default_cursor)
-                    stream_manager.write('browse', browse_tag_name)                    
-                    stream_manager.write(' ')
-                    
-                    stream_manager.write(f'{file_path}{end}', 'TIP')
-                return_list.append(None)
-            elif item['type'] == 'directories':
-                dir_list = item['content']
-                for dir_path in dir_list:
-                    browse_func = new_browse_func(dir_path)
-                    browse_tag_name = console_text.create_link_tag(browse_func, self.default_cursor)
-                    stream_manager.write('browse', browse_tag_name)
-                    stream_manager.write(' ')
-                    stream_manager.write(f'{dir_path}{end}', 'TIP')
-        return return_list        
+                        browse_func = new_browse_func(file_path)                    
+                        browse_tag_name = console_text.create_link_tag(browse_func, self.default_cursor)
+                        stream_manager.write('browse', browse_tag_name)                    
+                        stream_manager.write(' ')
+                        
+                        stream_manager.write(f'{file_path}{end}', 'TIP')
+                    return_list.append(None)
+                case "directories":
+                    dir_list = item['content']
+                    for dir_path in dir_list:
+                        browse_func = new_browse_func(dir_path)
+                        browse_tag_name = console_text.create_link_tag(browse_func, self.default_cursor)
+                        stream_manager.write('browse', browse_tag_name)
+                        stream_manager.write(' ')
+                        stream_manager.write(f'{dir_path}{end}', 'TIP')
+        return return_list
