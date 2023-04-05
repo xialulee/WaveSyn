@@ -8,7 +8,7 @@ Created on Fri Nov 06 09:30:21 2015
 
 import os
 import sys
-import getopt
+import argparse
 from pathlib import Path
 import platform
 
@@ -20,9 +20,6 @@ from wavesynlib.languagecenter.datatypes import Table
 
 ERROR_NOERROR, ERROR_NOTFOUND, ERROR_PARAM = range(3)
 
-
-def usage():
-    pass # TODO
 
 
 def which(
@@ -70,35 +67,31 @@ def which(
 
 
 def main(argv: list[str]) -> int:
-    try:
-        opts, args = getopt.getopt(argv[1:], \
-            'a',\
-            ['all', 'winopen', 'jsontable', 'cwd', 'order=']\
-        ) # TODO
-    except getopt.GetoptError as err:
-        print(str(err), file=sys.stderr)
-        usage()
-        return ERROR_PARAM
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument("name")
+    parser.add_argument("-a", "--all",
+                        dest="all_cmd", action="store_true")
+    parser.add_argument("--winopen",
+                        dest="wopen", action="store_true")
+    parser.add_argument("--jsontable",
+                        dest="json_output", action="store_true")
+    parser.add_argument("--cwd",
+                        dest="cwdfirst", action="store_true")
+    parser.add_argument("--order",
+                        dest="order",
+                        action="store", type=int, default=-1)
+
+    args = parser.parse_args(argv[1:])
         
-    all_cmd: bool = False
-    wopen: bool = False
-    json_output: bool = False
-    cmd_order: int = -1
-    cwdfirst: bool = False
-    for o, a in opts:
-        if o in ('-a', '--all'):
-            all_cmd = True
-        if o == '--winopen':
-            wopen   = True
-        if o == '--jsontable':
-            json_output = True
-        if o == '--cwd':
-            cwdfirst = True
-        if o == '--order':
-            cmd_order = int(a)
-            all_cmd = True
-    
-    name: str = args[0]
+    cmd_order = args.order
+    all_cmd: bool = args.all_cmd
+    if not all_cmd and cmd_order >= 0:
+        all_cmd = True
+    wopen: bool = args.wopen
+    json_output: bool = args.json_output
+    cwdfirst: bool = args.cwdfirst
+    name = args.name
+
     try:
         file_paths: tuple[Path, ...] = which(
             name, all_=all_cmd, cwd=cwdfirst)
