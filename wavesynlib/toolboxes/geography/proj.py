@@ -230,10 +230,11 @@ def enu_to_lla(*args, **kwargs):
 
 
 def aer_to_enu(*,
-    a: Union[float, np.ndarray, pq.Quantity]=None, 
-    e: Union[float, np.ndarray, pq.Quantity]=None, 
-    r: Union[float, np.ndarray, pq.Quantity]=None,
-    aer: QuantityFrame=None):
+        a: float|np.ndarray|pq.Quantity|None = None,
+        e: float|np.ndarray|pq.Quantity|None = None,
+        r: float|np.ndarray|pq.Quantity|None = None,
+        aer: QuantityFrame|None = None
+    ):
 
     df_index = None
 
