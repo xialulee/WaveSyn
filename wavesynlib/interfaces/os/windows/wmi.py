@@ -89,6 +89,24 @@ class WQL:
             'json': to_json
         }[output_format](items)
         
+
+    def gpt_query(self, prompt_str, output_format="python"):
+        import openai
+        response = openai.ChatCompletion.create(
+            model='gpt-3.5-turbo',
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": f"""\
+Convert the following query to WMI query language:
+{prompt_str} 
+Only WQL code in your response.
+"""}
+            ]
+        )       
+        wql_str = response.choices[0].message.content
+        return self.query(wql_str=wql_str, output_format=output_format)
+        
+        
         
     def set_sink(self, sink, wql_str):
         self.__com_sink = com_sink = client.CreateObject('WbemScripting.SWbemSink')

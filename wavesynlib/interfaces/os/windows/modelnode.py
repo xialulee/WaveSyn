@@ -114,20 +114,21 @@ class WMI(ModelNode):
         self.__init_services()
         return self.__services
         
-       
+
     @WaveSynScriptAPI
     def query(self, wql, output_format='original'):
-        '''Launch a WQL query and return the result.
-    wql: WQL string.
-    output_format: the format of the result.
-        "original": return the raw comtypes pointer (default).
-        "comtypes": equivalent to "original".
-        "native": result converted to Python builtin data types.
-        "python": equivalent to "comtypes".
-        "json": result converted to JSON string.
-        
-    Return Value: the result of the query, of which the data type depends on 
-        the value of output_format.'''
+        '''\
+Launch a WQL query and return the result.
+wql: WQL string.
+output_format: the format of the result.
+    "original": return the raw comtypes pointer (default).
+    "comtypes": equivalent to "original".
+    "native": result converted to Python builtin data types.
+    "python": equivalent to "comtypes".
+    "json": result converted to JSON string.
+    
+Return Value: the result of the query, of which the data type depends on 
+    the value of output_format.'''
         wql = self.root_node.gui.dialogs.constant_handler_ASK_STRING(
             wql,
             title='WQL',
@@ -135,6 +136,28 @@ class WMI(ModelNode):
         self.__init_services()
         return self.__wql.query(wql, output_format)
     
+
+    @WaveSynScriptAPI
+    def gpt_query(self, prompt, output_format='original'):
+        '''\
+Launch a WQL query and return the result.
+wql: WQL string.
+output_format: the format of the result.
+    "original": return the raw comtypes pointer (default).
+    "comtypes": equivalent to "original".
+    "native": result converted to Python builtin data types.
+    "python": equivalent to "comtypes".
+    "json": result converted to JSON string.
+    
+Return Value: the result of the query, of which the data type depends on 
+    the value of output_format.'''
+#        wql = self.root_node.gui.dialogs.constant_handler_ASK_STRING(
+#            wql,
+#            title='WQL',
+#            prompt='Please input the WQL string.')
+        self.__init_services()
+        return self.__wql.gpt_query(prompt, output_format)
+
         
     @WaveSynScriptAPI
     def set_sink(self, sink, wql):
