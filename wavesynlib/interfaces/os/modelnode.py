@@ -110,6 +110,11 @@ if the clipboard on this OS supports rich text format.'''
         self.write(text)
         
 
+    @WaveSynScriptAPI
+    def langchain_summarize(self):
+        return self.root_node.toolboxes["openai"].langchain.summarize(self.read().replace("\r\n", "\n"))
+        
+
         
 class TkMouse(ModelNode):
     '''The very basic mouse node which is platform independent.'''
