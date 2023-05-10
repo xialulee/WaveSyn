@@ -40,7 +40,7 @@ class TkClipboard(ModelNode):
     def constant_handler_CLIPBOARD_IMAGE(self, arg, **kwargs):
         '''Get image object on clipboard.'''
         return self.read_image()
-       
+
 
     @WaveSynScriptAPI
     def clear(self):
@@ -131,7 +131,7 @@ class TkMouse(ModelNode):
     
     
 if platform.system().lower() == 'windows':
-    from six.moves import cStringIO as StringIO
+    from io import StringIO
     from wavesynlib.interfaces.os.windows.clipboard import clipb
     import win32clipboard as cw  
     import win32con
@@ -293,7 +293,7 @@ convert it to an image object and put this object onto the clipboard.'''
             'middle_button_up':     win32con.MOUSEEVENTF_MIDDLEUP
         }
 
-              
+
         @WaveSynScriptAPI
         def set_x(self, x):
             '''Set the x-coord of the mouse pointer.
@@ -333,10 +333,10 @@ convert it to an image object and put this object onto the clipboard.'''
                 
         #To Do: Keyboard class. Use keybd_event.
                 
-           
+
     from comtypes import CoCreateInstance
     from wavesynlib.interfaces.os.windows.shell import desktopwallpaper           
-           
+
     class DesktopWallpaper(ModelNode):
         '''The wallpaper node on Windows.'''
         def __init__(self, *args, **kwargs):
@@ -439,8 +439,8 @@ provided by the Operating System.'''
         '''Display the contents of the given directory using system file browser.
 
 path: string or pathlib.Path. The path of the given directory or file.
-  if a path of a file is given, the file browser will highlight that file
-  (if the explorer support this feature).
+    if a path of a file is given, the file browser will highlight that file
+    (if the explorer support this feature).
 '''
         func = self._obj_map['winopen']
         return func(path)
