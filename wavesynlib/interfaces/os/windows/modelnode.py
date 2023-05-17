@@ -98,7 +98,7 @@ return value: the corresponding UoW path.'''
 class WMI(ModelNode):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__wql = None
+        self.__wql: WQL|None = None
         self.__services = None
         
         
@@ -134,7 +134,10 @@ Return Value: the result of the query, of which the data type depends on
             title='WQL',
             prompt='Please input the WQL string.')
         self.__init_services()
-        return self.__wql.query(wql, output_format)
+        if self.__wql:
+            return self.__wql.query(wql, output_format)
+        else:
+            raise AttributeError("WMI not initialized.")
     
 
     @WaveSynScriptAPI
@@ -156,13 +159,19 @@ Return Value: the result of the query, of which the data type depends on
 #            title='WQL',
 #            prompt='Please input the WQL string.')
         self.__init_services()
-        return self.__wql.gpt_query(prompt, output_format)
+        if self.__wql:
+            return self.__wql.gpt_query(prompt, output_format)
+        else:
+            raise AttributeError("WMI not initialized.")
 
         
     @WaveSynScriptAPI
     def set_sink(self, sink, wql):
         self.__init_services()
-        self.__wql.set_sink(sink, wql)
+        if self.__wql:
+            self.__wql.set_sink(sink, wql)
+        else:
+            raise AttributeError("WMI not initialized.")
     
 
 
