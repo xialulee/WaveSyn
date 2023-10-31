@@ -1,5 +1,6 @@
 from itertools import product
 from pathlib import Path
+from typing import Tuple
 
 import numpy as np
 from numpy import pi as π
@@ -52,20 +53,33 @@ class MatrixPhaseDiagram:
 
 
     def draw(self):
-        target = Image.new(mode="RGBA", size=self.get_canvas_size(), color=255)
-        face = self.__face.resize(size=(self.__d_px,)*2)
-        hand = self.__hand.resize(size=(self.__d_px,)*2)
-        P = np.angle(self.__A) / π * 180
-        Ny, Nx = self.__A.shape
+        # Create a new image with an RGBA color mode
+        canvas: Image.Image = Image.new(mode="RGBA", size=self.get_canvas_size(), color=255)
+        # Resize the clock face image to the specified dimensions
+        resized_face: Image.Image = self.__face.resize(size=(self.__d_px,)*2)
+        # Resize the clock hand image to the specified dimensions
+        resized_hand: Image.Image = self.__hand.resize(size=(self.__d_px,)*2)
+        # Calculate the hand angle in degrees from the complex amplitude
+        hand_angle_deg: np.ndarray = np.angle(self.__A) / π * 180
+        # Get the dimensions of the amplitude matrix
+        num_rows: int
+        num_cols: int
+        num_rows, num_cols = self.__A.shape
 
-        for r, c in product(range(Ny), range(Nx)):
-            pos = (c*self.__Δx_px, r*self.__Δy_px)
-            target.paste(face, pos)
-            rothand = hand.rotate(P[r, c])
-            # See https://stackoverflow.com/a/9459208
-            target.paste(rothand, pos, mask=rothand.split()[3])
+        # Iterate through each cell in the amplitude matrix
+        for row, col in product(range(num_rows), range(num_cols)):
+            # Calculate the position to place the clock face and hand
+            position: Tuple[int, int] = (col * self.__Δx_px, row * self.__Δy_px)
+            # Paste the clock face onto the canvas
+            canvas.paste(resized_face, position)
+            # Rotate the hand image based on the angle at the current cell
+            rotated_hand: Image.Image = resized_hand.rotate(hand_angle_deg[row, col])
+            # Paste the rotated hand onto the canvas with a mask to maintain transparency
+            # Reference: https://stackoverflow.com/a/9459208
+            canvas.paste(rotated_hand, position, mask=rotated_hand.split()[3])
         
-        return target
+        # Return the final canvas image
+        return canvas
 
 
 
