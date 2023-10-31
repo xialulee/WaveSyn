@@ -1,6 +1,6 @@
 from itertools import product
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union, Optional, Self
 
 import numpy as np
 from numpy import pi as π
@@ -15,7 +15,13 @@ def _get_path():
 
 
 class MatrixPhaseDiagram:
-    def __init__(self, matrix, delta_x, delta_y, elem_size, ppi=None):
+    def __init__(
+            self, 
+            matrix: np.ndarray, 
+            delta_x: Union[float, pq.Quantity], 
+            delta_y: Union[float, pq.Quantity], 
+            elem_size: Union[float, pq.Quantity], 
+            ppi: Optional[Union[float, pq.Quantity]] = None):
         self.__A = matrix
         self.__Δx = delta_x
         self.__Δy = delta_y
@@ -52,7 +58,7 @@ class MatrixPhaseDiagram:
         return width, height
 
 
-    def draw(self):
+    def draw(self: Self) -> Image.Image:
         # Create a new image with an RGBA color mode
         canvas: Image.Image = Image.new(mode="RGBA", size=self.get_canvas_size(), color=255)
         # Resize the clock face image to the specified dimensions
