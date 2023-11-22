@@ -7,7 +7,7 @@ from ..basetoolboxnode import BaseToolboxNode
 class BingMapsNode(ModelNode):
     def display_multiple_points(self, names, lla=None, wgs84=None):
         from . import bingmaps
-        bingmaps.display_multiple_points(names, lla=lla, wgs84=wgs84)
+        bingmaps.display_multiple_points(names, lla=lla, ecef=wgs84)
 
 
 

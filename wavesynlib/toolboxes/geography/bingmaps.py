@@ -7,7 +7,7 @@ from wavesynlib.languagecenter.datatypes.physicalquantities.containers import Qu
 
 
 
-def display_multiple_points(names, latlon=None, wgs84=None):
+def display_multiple_points(names, latlon=None, ecef=None):
     if latlon is not None:
         if isinstance(latlon, (list, tuple)):
             latlon = np.array(latlon)
@@ -20,7 +20,7 @@ def display_multiple_points(names, latlon=None, wgs84=None):
                 "longitude/deg": latlon[:, 1]})
         else:
             raise NotImplementedError()
-    elif wgs84 is not None:
+    elif ecef is not None:
         raise NotImplementedError()
     else:
         raise ValueError("No coordinate given.")
