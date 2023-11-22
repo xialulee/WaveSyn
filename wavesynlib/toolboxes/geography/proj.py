@@ -229,13 +229,31 @@ def enu_to_lla(*args, **kwargs):
     return ecef_to_lla(xyz=xyz)
 
 
-def aer_to_enu(*,
-        a: float|np.ndarray|pq.Quantity|None = None,
-        e: float|np.ndarray|pq.Quantity|None = None,
-        r: float|np.ndarray|pq.Quantity|None = None,
-        aer: QuantityFrame|None = None
-    ):
 
+def aer_to_enu(*,
+                a: float | np.ndarray | pq.Quantity | None = None,
+                e: float | np.ndarray | pq.Quantity | None = None,
+                r: float | np.ndarray | pq.Quantity | None = None,
+                aer: QuantityFrame | None = None
+    ) -> QuantityFrame:
+    """
+    Convert azimuth/elevation/range (AER) coordinates to east/north/up (ENU) coordinates.
+
+    This function accepts either individual azimuth, elevation, and range values or a QuantityFrame
+    containing these values and converts them to ENU coordinates.
+
+    Args:
+        a (float | np.ndarray | pq.Quantity, optional): Azimuth in degrees or Quantity.
+        e (float | np.ndarray | pq.Quantity, optional): Elevation in degrees or Quantity.
+        r (float | np.ndarray | pq.Quantity, optional): Slant range in meters or Quantity.
+        aer (QuantityFrame, optional): A QuantityFrame containing azimuth, elevation, and slant range.
+
+    Returns:
+        QuantityFrame: A QuantityFrame containing the ENU coordinates.
+
+    Raises:
+        ValueError: If AER coordinates are incomplete or not provided.
+    """
     df_index = None
 
     if _all_not_None(a, e, r):
@@ -252,21 +270,22 @@ def aer_to_enu(*,
     else:
         raise ValueError("AER coordinates a/e/r not given.")
     
-    a = np.array(a).ravel() / 180 * np.pi
-    e = np.array(e).ravel() / 180 * np.pi
-    sr = r
+    a_rad = np.array(a).ravel() / 180 * np.pi  # Convert to radians
+    e_rad = np.array(e).ravel() / 180 * np.pi  # Convert to radians
 
-    up    = sr * np.sin(e)
-    r     = sr * np.cos(e)
-    east  = r * np.sin(a)
-    north = r * np.cos(a)
+    up = r * np.sin(e_rad)
+    horizontal = r * np.cos(e_rad)
+    east = horizontal * np.sin(a_rad)
+    north = horizontal * np.cos(a_rad)
 
     data = np.vstack((east, north, up)).transpose()
-    head = ["east/m", "north/m", "up/m"]
-    kwargs = {"data":data, "columns":head}
+    columns = ["east/m", "north/m", "up/m"]
+    kwargs = {"data": data, "columns": columns}
     if df_index is not None:
         kwargs["index"] = df_index
+
     return QuantityFrame(**kwargs)
+
     
 
 def calc_euclid_dist(*,
