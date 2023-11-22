@@ -37,7 +37,7 @@ def _to_km(x: pq.Quantity | np.ndarray | float) -> np.ndarray | float:
 
 
 def _to_square_meter(x: pq.Quantity | np.ndarray | float) -> np.ndarray | float:
-    return _to_unit(x, pq.m ** 2)
+    return _to_unit(x, pq.m**2)
 
 
 def _to_rad(x: pq.Quantity | np.ndarray | float) -> np.ndarray | float:
@@ -71,7 +71,7 @@ def T_g(
 f:   the frequency, in GHz or a instance of Quantity;
 k_g: galactic constant: 1.6=quiet, 10=average, 60=high"""
     f = _to_GHz(f)
-    return 5 + k_g / f ** 2.5
+    return 5 + k_g / f**2.5
 
 
 def k_α(f: pq.Quantity | np.ndarray | float) -> pq.Quantity:
