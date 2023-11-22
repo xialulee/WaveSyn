@@ -8,61 +8,61 @@ from wavesynlib.interfaces.os.windows.inputhook.keyboardhook import KeyboardHook
 
 
 @dataclass
-class Status:
+class CapsLockStatus:
     # -1 for keydown; 0 for nothing; 1 for keyup
-    caps: int = 0
+    state: int = 0
 
 
-class CapsAction(KeyToAction):
-    def __init__(self, status: Status):
-        self.__status = status
+class CapsLockAction(KeyToAction):
+    def __init__(self, status: CapsLockStatus):
+        self._status = status
 
     def on_keydown(self) -> bool:
-        self.__status.caps = -1
+        self._status.state = -1
         return True
 
     def on_keyup(self) -> bool:
-        self.__status.caps = 1
+        self._status.state = 1
         return True
 
 
-class KeyToKeyWithStatus(KeyToKey):
-    def __init__(self, new_key_code: int, status:Status, modifiers=[]):
-        self.__status = status
+class KeyMapperWithStatus(KeyToKey):
+    def __init__(self, new_key_code: int, status: CapsLockStatus, modifiers=[]):
+        self._status = status
         super().__init__(new_key_code, modifiers=modifiers)
 
     def on_keydown(self) -> bool:
-        if self.__status.caps == -1:
+        if self._status.state == -1:
             return super().on_keydown()
         else:
             return False
 
     def on_keyup(self) -> bool:
-        if self.__status.caps == -1:
+        if self._status.state == -1:
             return super().on_keyup()
         else:
             return False
 
 
-class KeyToMouseWithStatus(KeyToMouse):
-    def __init__(self, mouse_btn: str, status:Status):
+class MouseMapperWithStatus(KeyToMouse):
+    def __init__(self, mouse_btn: str, status: CapsLockStatus):
         self.__status = status
         super().__init__(mouse_btn)
 
     def on_keydown(self) -> bool:
-        if self.__status.caps == -1:
+        if self.__status.state == -1:
             return super().on_keydown()
         else:
             return False
 
     def on_keyup(self) -> bool:
-        if self.__status.caps == -1:
+        if self.__status.state == -1:
             return super().on_keyup()
         else:
             return False
 
 
-default_map = {
+key_mapping_defaults = {
     ord("A"): win32con.VK_LEFT,
     ord("S"): win32con.VK_DOWN,
     ord("D"): win32con.VK_RIGHT,
@@ -88,20 +88,20 @@ default_map = {
 
 
 if __name__ == "__main__":
-    khook = KeyboardHook()
-    khook.unhook_at_exit()
-    status = Status()
-    caps_action = CapsAction(status=status)
-    khook.add_key_to_action(win32con.VK_CAPITAL, caps_action)
-    for k, v in default_map.items():
+    keyboard_hook = KeyboardHook()
+    keyboard_hook.unhook_at_exit()
+    status = CapsLockStatus()
+    caps_lock_action = CapsLockAction(status=status)
+    keyboard_hook.add_key_to_action(win32con.VK_CAPITAL, caps_lock_action)
+    for k, v in key_mapping_defaults.items():
         if isinstance(v, tuple):
-            khook.add_key_to_action(k, KeyToKeyWithStatus(v[0], status, modifiers=v[1]))
+            keyboard_hook.add_key_to_action(k, KeyMapperWithStatus(v[0], status, modifiers=v[1]))
         elif isinstance(v, str):
-            khook.add_key_to_action(k, KeyToMouseWithStatus(v, status))
+            keyboard_hook.add_key_to_action(k, MouseMapperWithStatus(v, status))
         else:
-            khook.add_key_to_action(k, KeyToKeyWithStatus(v, status))
+            keyboard_hook.add_key_to_action(k, KeyMapperWithStatus(v, status))
     try:
-        khook.hook()
+        keyboard_hook.hook()
     except OSError:
         msgbox.showerror("Error", "Failed to setup a global keyboard hook.")
         sys.exit(1)
