@@ -37,7 +37,7 @@ _split_qframe_enu = lambda q: (q.qcol("east"), q.qcol("north"), q.qcol("up"))
 
 
 
-def wgs84_to_lla(*,
+def ecef_to_lla(*,
     x: Union[float, np.ndarray, pq.Quantity]=None, 
     y: Union[float, np.ndarray, pq.Quantity]=None, 
     z: Union[float, np.ndarray, pq.Quantity]=None,
@@ -69,7 +69,7 @@ def wgs84_to_lla(*,
 
 
 
-def lla_to_wgs84(lat, lon, alt):
+def lla_to_ecef(lat, lon, alt):
     lat = _to_degree_if_quantity(_flatten_if_array(lat))
     lon = _to_degree_if_quantity(_flatten_if_array(lon))
     alt = _to_meter_if_quantity(_flatten_if_array(alt))
@@ -80,7 +80,7 @@ def lla_to_wgs84(lat, lon, alt):
 
 
 
-def wgs84_to_enu(*,
+def ecef_to_enu(*,
     x:    Union[float, np.ndarray, pq.Quantity]=None, 
     y:    Union[float, np.ndarray, pq.Quantity]=None, 
     z:    Union[float, np.ndarray, pq.Quantity]=None, 
@@ -94,13 +94,13 @@ def wgs84_to_enu(*,
     df_index = None
 
     if _all_not_None(x0, y0, z0):
-        lla0 = wgs84_to_lla(x=x0, y=y0, z=z0)
+        lla0 = ecef_to_lla(x=x0, y=y0, z=z0)
     elif _any_not_None(x0, y0, z0):
         raise ValueError("WGS84 x0/y0/z0 incomplete.")
     elif xyz0 is not None:
         if xyz0.shape[0] > 1:
             raise ValueError("Multiple origin given.")
-        lla0 = wgs84_to_lla(xyz=xyz0)
+        lla0 = ecef_to_lla(xyz=xyz0)
     else:
         raise ValueError("The origin of ENU is not given.")
     lon0 = lla0.iloc[0]['longitude/deg']
@@ -108,11 +108,11 @@ def wgs84_to_enu(*,
     alt0 = lla0.iloc[0]['altitude/m']
 
     if _all_not_None(x, y, z):
-        lla = wgs84_to_lla(x=x, y=y, z=z)
+        lla = ecef_to_lla(x=x, y=y, z=z)
     elif _any_not_None(x, y, z):
         raise ValueError("WGS84 x/y/z incomplete.")
     elif xyz is not None:
-        lla = wgs84_to_lla(xyz=xyz)
+        lla = ecef_to_lla(xyz=xyz)
         df_index = xyz.index
     else:
         raise ValueError("No WGS84 coordinates given.")
@@ -187,7 +187,7 @@ def lla_to_enu(*,
     return QuantityFrame(**kwargs)
 
 
-def enu_to_wgs84(
+def enu_to_ecef(
     e: Union[float, np.ndarray, Quantity], 
     n: Union[float, np.ndarray, Quantity], 
     u: Union[float, np.ndarray, Quantity],
@@ -205,7 +205,7 @@ def enu_to_wgs84(
     e, n, u = (_to_meter_if_quantity(v) for v in (e, n, u))
 
     if _all_not_None(x0, y0, z0):
-        lla_0 = wgs84_to_lla(x=x0, y=y0, z=z0)
+        lla_0 = ecef_to_lla(x=x0, y=y0, z=z0)
         lat0 = lla_0["latitude/deg"][0]
         lon0 = lla_0["longitude/deg"][0]
         alt0 = lla_0["altitude/m"][0]
@@ -220,22 +220,40 @@ def enu_to_wgs84(
         raise NotImplementedError("The type of given observer coord is not implemented.")
 
     lat, lon, alt = pymap3d.enu.enu2geodetic(e, n, u, lat0=lat0, lon0=lon0, h0=alt0)
-    return lla_to_wgs84(lat=lat, lon=lon, alt=alt)
+    return lla_to_ecef(lat=lat, lon=lon, alt=alt)
 
 
 
 def enu_to_lla(*args, **kwargs):
-    xyz = enu_to_wgs84(*args, **kwargs)
-    return wgs84_to_lla(xyz=xyz)
+    xyz = enu_to_ecef(*args, **kwargs)
+    return ecef_to_lla(xyz=xyz)
+
 
 
 def aer_to_enu(*,
-        a: float|np.ndarray|pq.Quantity|None = None,
-        e: float|np.ndarray|pq.Quantity|None = None,
-        r: float|np.ndarray|pq.Quantity|None = None,
-        aer: QuantityFrame|None = None
-    ):
+                a: float | np.ndarray | pq.Quantity | None = None,
+                e: float | np.ndarray | pq.Quantity | None = None,
+                r: float | np.ndarray | pq.Quantity | None = None,
+                aer: QuantityFrame | None = None
+    ) -> QuantityFrame:
+    """
+    Convert azimuth/elevation/range (AER) coordinates to east/north/up (ENU) coordinates.
 
+    This function accepts either individual azimuth, elevation, and range values or a QuantityFrame
+    containing these values and converts them to ENU coordinates.
+
+    Args:
+        a (float | np.ndarray | pq.Quantity, optional): Azimuth in degrees or Quantity.
+        e (float | np.ndarray | pq.Quantity, optional): Elevation in degrees or Quantity.
+        r (float | np.ndarray | pq.Quantity, optional): Slant range in meters or Quantity.
+        aer (QuantityFrame, optional): A QuantityFrame containing azimuth, elevation, and slant range.
+
+    Returns:
+        QuantityFrame: A QuantityFrame containing the ENU coordinates.
+
+    Raises:
+        ValueError: If AER coordinates are incomplete or not provided.
+    """
     df_index = None
 
     if _all_not_None(a, e, r):
@@ -252,21 +270,22 @@ def aer_to_enu(*,
     else:
         raise ValueError("AER coordinates a/e/r not given.")
     
-    a = np.array(a).ravel() / 180 * np.pi
-    e = np.array(e).ravel() / 180 * np.pi
-    sr = r
+    a_rad = np.array(a).ravel() / 180 * np.pi  # Convert to radians
+    e_rad = np.array(e).ravel() / 180 * np.pi  # Convert to radians
 
-    up    = sr * np.sin(e)
-    r     = sr * np.cos(e)
-    east  = r * np.sin(a)
-    north = r * np.cos(a)
+    up = r * np.sin(e_rad)
+    horizontal = r * np.cos(e_rad)
+    east = horizontal * np.sin(a_rad)
+    north = horizontal * np.cos(a_rad)
 
     data = np.vstack((east, north, up)).transpose()
-    head = ["east/m", "north/m", "up/m"]
-    kwargs = {"data":data, "columns":head}
+    columns = ["east/m", "north/m", "up/m"]
+    kwargs = {"data": data, "columns": columns}
     if df_index is not None:
         kwargs["index"] = df_index
+
     return QuantityFrame(**kwargs)
+
     
 
 def calc_euclid_dist(*,
@@ -322,8 +341,8 @@ def calc_euclid_dist(*,
             lat1, lon1, alt1 = _split_qframe_lla(lla1)
         if lat2 is None:
             lat2, lon2, alt2 = _split_qframe_lla(lla2)
-        wgs84_1 = lla_to_wgs84(lat=lat1, lon=lon1, alt=alt1)
-        wgs84_2 = lla_to_wgs84(lat=lat2, lon=lon2, alt=alt2)
+        wgs84_1 = lla_to_ecef(lat=lat1, lon=lon1, alt=alt1)
+        wgs84_2 = lla_to_ecef(lat=lat2, lon=lon2, alt=alt2)
         x1, y1, z1 = get_fields(wgs84_1)
         x2, y2, z2 = get_fields(wgs84_2)
     elif (_all_not_None(e1, n1, u1) or enu1 is not None) and (_all_not_None(e2, n2, u2) or enu2 is not None):
@@ -345,8 +364,8 @@ def calc_euclid_dist(*,
             e1, n1, u1 = _split_qframe_enu(enu1)
         if e2 is None:
             e2, n2, u2 = _split_qframe_enu(enu2)
-        wgs84_1 = enu_to_wgs84(e=e1, n=n1, u=u1, **kwargs)
-        wgs84_2 = enu_to_wgs84(e=e2, n=n2, u=u2, **kwargs)
+        wgs84_1 = enu_to_ecef(e=e1, n=n1, u=u1, **kwargs)
+        wgs84_2 = enu_to_ecef(e=e2, n=n2, u=u2, **kwargs)
         x1, y1, z1 = get_fields(wgs84_1)
         x2, y2, z2 = get_fields(wgs84_2)
     else:

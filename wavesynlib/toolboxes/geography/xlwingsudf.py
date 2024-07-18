@@ -23,7 +23,7 @@ lla:       LLA coordinates of the given points;
 alt_unit:  the altitude unit of the LLA coordinates;
 xyz_unit:  the unit of the WGS84 coordinates;
 """
-    xyz = proj.lla_to_wgs84(
+    xyz = proj.lla_to_ecef(
         lat = lla[:, 0],
         lon = lla[:, 1],
         alt = lla[:, 2] * pq.CompoundUnit(alt_unit))
@@ -40,7 +40,7 @@ xyz_unit:  the unit of the WGS84 coordinates;
 alt_unit:  the altitude unit of LLA coordinates;
 """
     xyz = xyz * pq.CompoundUnit(xyz_unit)
-    lla = proj.wgs84_to_lla(
+    lla = proj.ecef_to_lla(
         x = xyz[:, 0],
         y = xyz[:, 1],
         z = xyz[:, 2])
