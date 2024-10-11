@@ -229,6 +229,47 @@ def enu_to_lla(*args, **kwargs):
     return ecef_to_lla(xyz=xyz)
 
 
+def direction_to_azimuth(direction: str) -> float:
+    """
+    Converts a cardinal direction abbreviation (e.g., "N", "NW", "E+20") to the corresponding azimuth angle.
+    
+    Parameters:
+    direction (str): A string representing the direction abbreviation. It can be:
+                     - A standard cardinal direction (e.g., "N", "NE", "W")
+                     - A cardinal direction with an offset (e.g., "E+20", "W-30")
+    
+    Returns:
+    float: The azimuth angle in degrees.
+    """
+    # Dictionary for base cardinal directions and their corresponding azimuth angles
+    base_azimuths = {
+        "N": 0,
+        "NE": 45,
+        "E": 90,
+        "SE": 135,
+        "S": 180,
+        "SW": 225,
+        "W": 270,
+        "NW": 315
+    }
+
+    if "+" in direction:
+        sign = 1
+        direction, offset = direction.split("+")
+    elif "-" in direction:
+        sign = -1
+        direction, offset = direction.split("-")
+    else:
+        sign = 0
+        direction, offset = direction, "0"
+    
+    # If no offset, simply return the base azimuth
+    if direction in base_azimuths:
+        return (base_azimuths[direction] + sign*float(offset)) % 360
+    
+    # Raise an error if the input is not valid
+    raise ValueError(f"Invalid direction: {direction}")
+
 
 def aer_to_enu(*,
                 a: float | np.ndarray | pq.Quantity | None = None,
