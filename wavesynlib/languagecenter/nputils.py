@@ -37,10 +37,14 @@ class NamedAxesArray:
     def __imul__(self, other):
         return self.__inplaceop(other, op=operator.imul)
 
+    def __getitem__(self, index):
+        return self.__arr[index]
+
+    def __setitem__(self, index, value):
+        self.__arr[index] = value
 
     def add1d(self, other, axis):
         return self.__binop1d(other, op=operator.add, axis=axis)
-
 
     def iadd1d(self, other, axis):
         return self.__inplace1dop(other, op=operator.iadd, axis=axis)
@@ -134,6 +138,10 @@ A@np.array([[10], [100]])"""
 
 
     def indexing(self, **kwargs):
+        if len(kwargs) < len(self.__axis_names):
+            for name in self.__axis_names:
+                if name not in kwargs:
+                    kwargs[name] = np.s_[:]
         axes = sorted((self.name_to_axis_indices(item[0]), item[1]) for item in kwargs.items())
         indexing = tuple(i[1] for i in axes)
         new_names = [] 
