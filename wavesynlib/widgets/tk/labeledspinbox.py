@@ -6,10 +6,12 @@ from .utils.loadicon import load_icon
 class LabeledSpinbox(Frame):
 
     def __init__(self, *args, **kwargs):
+        from_ = kwargs.pop("from_", 0)
+        to = kwargs.pop("to", 100)
         super().__init__(*args, **kwargs)
         (label := Label(self)).pack(side="left")
         self.__label = label
-        (spinbox := Spinbox(self, from_=0, to=100)).pack(side="left", fill="x", expand="yes")
+        (spinbox := Spinbox(self, from_=from_, to=to)).pack(side="left", fill="x", expand="yes")
         self.__spinbox = spinbox
         (button := Button(self, text="\u2699", command=self.__open_increment_dialog)).pack(side="right")
         self.__button = button
@@ -92,6 +94,22 @@ class LabeledSpinbox(Frame):
     @label_compound.setter
     def label_compound(self, val) -> None:
         self.__label["compound"] = val
+
+    @property
+    def spinbox_from(self):
+        return self.__spinbox["from_"]
+
+    @spinbox_from.setter
+    def spinbox_from(self, val) -> None:
+        self.__spinbox["from_"] = val
+
+    @property
+    def spinbox_to(self):
+        return self.__spinbox["to"]
+
+    @spinbox_to.setter
+    def spinbox_to(self, val) -> None:
+        self.__spinbox["to"] = val
 
     @property
     def spinbox_width(self):
