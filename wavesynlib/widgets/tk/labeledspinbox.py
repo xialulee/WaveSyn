@@ -1,21 +1,37 @@
-from tkinter import Frame, Spinbox, Toplevel, Entry, Button
+from tkinter import Frame, Spinbox, Toplevel, Entry, Button, StringVar
 from tkinter.ttk import Label
 from .utils.loadicon import load_icon
 
+from wavesynlib.languagecenter.designpatterns import Observable
 
-class LabeledSpinbox(Frame):
+
+class LabeledSpinbox(Frame, Observable):
 
     def __init__(self, *args, **kwargs):
         from_ = kwargs.pop("from_", 0)
         to = kwargs.pop("to", 100)
-        super().__init__(*args, **kwargs)
+        # super().__init__(*args, **kwargs)
+        Frame.__init__(self, *args, **kwargs)
+        Observable.__init__(self)
         (label := Label(self)).pack(side="left")
         self.__label = label
-        (spinbox := Spinbox(self, from_=from_, to=to)).pack(side="left", fill="x", expand="yes")
+        self.__spin_var = StringVar()
+        (spinbox := Spinbox(
+            self, from_=from_, to=to, 
+            textvariable=self.__spin_var,
+            command=self.__on_command
+        )).pack(side="left", fill="x", expand="yes")
         self.__spinbox = spinbox
         (button := Button(self, text="\u2699", command=self.__open_increment_dialog)).pack(side="right")
         self.__button = button
         self.__image = None
+        self.__spin_var.trace_add('write', self.__on_value_change)
+
+    def __on_value_change(self, *args):
+        self.notify_observers("value change", self.spinbox_value)
+
+    def __on_command(self, *args):
+        self.notify_observers("command", self.spinbox_value)
 
     def __open_increment_dialog(self):
         dialog = Toplevel(self)
