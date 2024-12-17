@@ -21,10 +21,20 @@ TIME_UNIT_INFO = {
     "ps": pq.ps
 }
 
+LENGTH_UNIT_INFO = {
+    "km": pq.km,
+    "m": pq.m, 
+    "cm": pq.cm,
+    "mm": pq.mm,
+    "μm": pq.um,
+    "nm": pq.nm
+}
+
 # A dictionary to associate unit types with their corresponding unit dictionaries
 UNIT_TYPE_DICT = {
     "frequency": FREQ_UNIT_INFO,
-    "time": TIME_UNIT_INFO
+    "time": TIME_UNIT_INFO,
+    "length": LENGTH_UNIT_INFO
 }
 
 class PhysicalQuantityEntry(LabeledEntry):
