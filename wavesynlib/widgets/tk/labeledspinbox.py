@@ -10,7 +10,6 @@ class LabeledSpinbox(Frame, Observable):
     def __init__(self, *args, **kwargs):
         from_ = kwargs.pop("from_", 0)
         to = kwargs.pop("to", 100)
-        # super().__init__(*args, **kwargs)
         Frame.__init__(self, *args, **kwargs)
         Observable.__init__(self)
         (label := Label(self)).pack(side="left")
