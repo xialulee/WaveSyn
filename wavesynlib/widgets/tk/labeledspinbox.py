@@ -1,6 +1,7 @@
-from tkinter import Frame, Spinbox, Toplevel, Entry, Button, StringVar
-from tkinter.ttk import Label
+from tkinter import Toplevel, StringVar
+from tkinter.ttk import Frame, Spinbox, Entry, Button, Label
 from .utils.loadicon import load_icon
+from .labeledentry import LabeledEntry
 
 from wavesynlib.languagecenter.designpatterns import Observable
 
@@ -37,13 +38,14 @@ class LabeledSpinbox(Frame, Observable):
         dialog.title("Set Increment Value")
         dialog.geometry("200x100")
 
-        Label(dialog, text="Increment Value:").pack(pady=5)
-        increment_entry = Entry(dialog)
+        increment_entry = LabeledEntry(dialog)
+        increment_entry.label_text = "Increment Value: "
+        increment_entry.entry_text = "1"
         increment_entry.pack(pady=5)
 
         def set_increment():
             try:
-                increment_value = float(increment_entry.get())
+                increment_value = increment_entry.get_float()
                 self.__spinbox.config(increment=increment_value)
                 dialog.destroy()
             except ValueError:
